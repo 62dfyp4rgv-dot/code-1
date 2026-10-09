@@ -58,7 +58,7 @@ describe('single instruction levers are not free upgrades', () => {
   const levers: [string, Partial<Tactics>][] = [
     ['counterAttack', { counterAttack: true }], ['pressing 90', { pressing: 90 }], ['pressing 10', { pressing: 10 }],
     ['line 90', { defensiveLine: 90 }], ['line 10', { defensiveLine: 10 }], ['directness 90', { directness: 90 }], ['directness 10', { directness: 10 }],
-    ['tempo 85', { tempo: 85 }], ['width 85', { width: 85 }], ['mentality 2', { mentality: 2 }], ['mentality -2', { mentality: -2 }],
+    ['tempo 85', { tempo: 85 }], ['marking man', { marking: 'man' }], ['marking mixed', { marking: 'mixed' }], ['width 85', { width: 85 }], ['mentality 2', { mentality: 2 }], ['mentality -2', { mentality: -2 }],
   ];
   for (const [name, mod] of levers) {
     it(`${name}: |goal difference vs balanced| stays small`, () => {
@@ -88,5 +88,37 @@ describe('tactic validation', () => {
     for (const r of Object.values(ROLES)) expect(r.positions.some((p) => slots.has(p))).toBe(true);
     for (const f of Object.values(FORMATIONS)) { expect(f.slots).toHaveLength(11); expect(f.slots.filter((s) => s === 'GK')).toHaveLength(1); }
     expect(() => formationOf('9-9-9')).toThrow();
+  });
+});
+
+describe('marking and weather have measurable, non-free effects', () => {
+  const base = defaultTactics('4-3-3');
+  const run = (a: Partial<Tactics>, b: Partial<Tactics>, n: number, mk: (i: number) => { qa: number; qb: number }, over: Parameters<typeof syntheticMatch>[4] = {}) => {
+    let fouls = 0; let g = 0; let fat = 0;
+    for (let i = 0; i < n; i++) {
+      const { qa, qb } = mk(i);
+      const r = simulateMatch(syntheticMatch(`m${i}`, `mk${i}`, syntheticSheet({ id: 'A', quality: qa, seed: `${i}`, tactics: { ...base, ...a } }), syntheticSheet({ id: 'B', quality: qb, seed: `${i}`, tactics: { ...base, ...b } }), over));
+      fouls += r.stats.home.fouls; g += r.score.home + r.score.away; fat += r.players.filter((p) => p.side === 'home').reduce((s2, p) => s2 + p.fatigueEnd, 0);
+    }
+    return { fouls: fouls / n, g: g / n, fat: fat / n };
+  };
+  it('man-marking costs fitness and commits more fouls than zonal marking', () => {
+    const man = run({ marking: 'man' }, {}, 500, () => ({ qa: 62, qb: 62 }));
+    const zonal = run({ marking: 'zonal' }, {}, 500, () => ({ qa: 62, qb: 62 }));
+    expect(man.fouls).toBeGreaterThan(zonal.fouls);
+    expect(man.fat).toBeGreaterThan(zonal.fat);
+  });
+  it('rain makes possession football harder than direct football', () => {
+    const rain = { conditions: { neutral: true, attendanceFrac: 0.8, weather: 'rain' as const, refereeStrictness: 1, importance: 0.5 } };
+    const clear = { conditions: { neutral: true, attendanceFrac: 0.8, weather: 'clear' as const, refereeStrictness: 1, importance: 0.5 } };
+    const gdOf = (over: typeof rain | typeof clear): number => {
+      let d = 0; const n = 900;
+      for (let i = 0; i < n; i++) {
+        const r = simulateMatch(syntheticMatch(`w${i}`, `w${i}`, syntheticSheet({ id: 'A', quality: 62, seed: `${i}`, tactics: { ...base, directness: 10 } }), syntheticSheet({ id: 'B', quality: 62, seed: `${i}`, tactics: { ...base, directness: 90 } }), over));
+        d += r.score.home - r.score.away;
+      }
+      return d / n;
+    };
+    expect(gdOf(clear) - gdOf(rain)).toBeGreaterThan(0);
   });
 });

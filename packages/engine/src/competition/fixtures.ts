@@ -50,24 +50,32 @@ export function dayOfFixture(spec: ScheduleSpec, roundIdx: number, fixtureIdx: n
 
 // ---------------------------------------------------------------- round robin
 
-/** Circle-method round-robin. Returns rounds of pairings; second leg mirrors the first with sides swapped. */
+/**
+ * Round-robin using Berger tables: n-1 teams sit on a circle, the last team is fixed. In round r the fixed team meets
+ * circle team r, and circle teams (r-i) and (r+i) meet for i = 1..n/2-1. Home/away is assigned so that no team ever
+ * has more than two consecutive home or away matches and home counts differ by at most one. The second leg mirrors
+ * the first with sides swapped. For an odd field a bye is added (its opponent rests that round).
+ */
 export function roundRobin(ids: readonly string[], legs: 1 | 2, rng: Rng): Pairing[][] {
   const arr: (string | null)[] = rng.shuffle(ids);
   if (arr.length % 2 === 1) arr.push(null);
   const n = arr.length;
+  const m = n - 1;
   const first: Pairing[][] = [];
-  for (let r = 0; r < n - 1; r++) {
+  for (let r = 0; r < m; r++) {
     const round: Pairing[] = [];
-    for (let i = 0; i < n / 2; i++) {
-      const a = arr[i] as string | null;
-      const b = arr[n - 1 - i] as string | null;
-      if (a === null || b === null) continue;
-      const flip = i === 0 ? r % 2 === 1 : (i + r) % 2 === 1;
-      round.push(flip ? { home: b, away: a } : { home: a, away: b });
+    const add = (home: string | null, away: string | null): void => {
+      if (home !== null && away !== null) round.push({ home, away });
+    };
+    const fixed = arr[n - 1] as string | null;
+    const circ = arr[r] as string | null;
+    if (r % 2 === 0) add(fixed, circ); else add(circ, fixed);
+    for (let i = 1; i <= n / 2 - 1; i++) {
+      const a = arr[(((r - i) % m) + m) % m] as string | null;
+      const b = arr[(r + i) % m] as string | null;
+      if (i % 2 === 1) add(a, b); else add(b, a);
     }
     first.push(round);
-    // rotate everything except the first element
-    arr.splice(1, 0, arr.pop() as string | null);
   }
   if (legs === 1) return first;
   const second = first.map((round) => round.map((p) => ({ home: p.away, away: p.home })));

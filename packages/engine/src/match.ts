@@ -203,6 +203,13 @@ export const MATCH_PARAMS = {
   /** Rating points gained per +100% function capacity vs reference formation. */
   capacityK: 14,
   seqSeconds: { build: [9, 17], progress: [6, 13], create: [6, 12] },
+  /**
+   * Marking: man-marking neutralises a share of the opponent's best creator but pulls defenders out of shape
+   * (weaker against pace in behind, more fouls, more running). Zonal marking is sturdier on set pieces and keeps shape
+   * but lets a star creator operate freely.
+   */
+  marking: { starNeutralised: 0.38, manShapeCost: 1.8, manFoulBoost: 0.14, manBehindBoost: 0.25, manFatigue: 0.05, zonalSetPieceBonus: 3.0 },
+  weather: { rainBuildLoss: 0.12, rainCreate: 0.06 },
 } as const;
 
 // ------------------------------------------------------------------ internal state
@@ -231,6 +238,8 @@ interface SimPlayer {
 interface Ratings {
   buildUp: number; progress: number; create: number; press: number; defend: number;
   aerial: number; pace: number; setPiece: number; keeper: number;
+  /** Creative skill of the team's best creator (what man-marking tries to shut down). */
+  starCreate: number;
 }
 
 interface TeamState {
@@ -308,7 +317,9 @@ function computeRatings(t: TeamState): void {
   const wsum = {} as Record<Fn, number>;
   for (const fn of FNS) { sum[fn] = 0; wsum[fn] = 0; }
   let keeper = FILL_SKILL;
+  let starCreate = 0;
   for (const sp of on) {
+    if (sp.slotPos !== 'GK') starCreate = Math.max(starCreate, sp.skills.create);
     const base = POSITION_FN_WEIGHTS[sp.slotPos];
     for (const fn of FNS) {
       const w = base[fn] * (sp.role.mod[fn] ?? 1) * dutyMult(sp.role.duty, fn);
@@ -338,6 +349,7 @@ function computeRatings(t: TeamState): void {
   out.pace = get('pace');
   out.setPiece = get('setPiece');
   out.keeper = keeper;
+  out.starCreate = starCreate;
   t.ratings = out;
   for (const fn of ['buildUp', 'progress', 'create'] as const) {
     const cum: number[] = [];
@@ -479,6 +491,12 @@ function shotXg(c: Ctx, mean: number, quality: number): number {
   return clamp(mean * quality * g, 0.008, 0.85);
 }
 
+
+/** 1 for man-marking, 0.5 for mixed, 0 for zonal. */
+function manShare(t: TeamState): number {
+  return t.base.marking === 'man' ? 1 : t.base.marking === 'mixed' ? 0.5 : 0;
+}
+
 /** How disorganised a team is when it loses the ball: high line, attacking mentality and pressing leave space behind. */
 function exposureOf(t: TeamState): number {
   return clamp(0.15 + 0.38 * t.prof.line + 0.12 * t.prof.mentality + 0.34 * (t.prof.pressing - 0.5), 0, 1.3);
@@ -510,7 +528,8 @@ function runSequence(
   // ---- Phase 1: build-up (skipped for high transitions)
   if (!transition) {
     const pressW = P.build.pressWeightMin + P.build.pressWeightRange * dp.pressing * (1 - 0.5 * ap.directness);
-    const extra = P.build.directnessLoss * (ap.directness - 0.5) - ha;
+    const rain = c.rainPassPenalty ? P.weather.rainBuildLoss * (1.4 - ap.directness) : 0;
+    const extra = P.build.directnessLoss * (ap.directness - 0.5) + rain - ha;
     const pLose = prob(P.build.loseBase, (dr.press - r.buildUp) * pressW, extra);
     const n1 = poisson(c, 3.4 * (1 - 0.72 * ap.directness) * (0.8 + 0.4 * (1 - ap.tempo)));
     seconds += rangeSeconds(c, P.seqSeconds.build, durMult * (0.7 + 0.5 * (1 - ap.directness)));
@@ -523,7 +542,7 @@ function runSequence(
 
   // ---- Phase 2: progression into the final third
   if (mode !== 'transitionHigh') {
-    const behind = P.progress.behindLine * (ap.directness * 0.6) * dp.line * P.beta * (r.pace - dr.pace);
+    const behind = P.progress.behindLine * (ap.directness * 0.6) * dp.line * P.beta * (r.pace - dr.pace) * (1 + P.marking.manBehindBoost * manShare(D));
     const C = P.counter;
     const exposure = exposureOf(D);
     const transBonus = transition ? C.progressBase + C.progressExposure * exposure * (ap.counter ? C.specialistMult : 1) : 0;
@@ -578,7 +597,10 @@ function runSequence(
     P.create.directPenalty * (ap.directness - 0.5) -
     (!transition && ap.counter ? C3.settledCreatePenalty : 0) +
     ha;
-  const pChance = prob(P.create.chanceBase, r.create - defEff, extra3);
+  const mShare = manShare(D);
+  const createEff = r.create - mShare * P.marking.starNeutralised * Math.max(0, r.starCreate - r.create);
+  const defMarked = defEff - mShare * P.marking.manShapeCost;
+  const pChance = prob(P.create.chanceBase, createEff - defMarked, extra3 - (c.rainPassPenalty ? P.weather.rainCreate : 0));
   const n3 = poisson(c, 1.5);
   seconds += rangeSeconds(c, P.seqSeconds.create, durMult);
   const foulBox = maybeFoul(c, A, D, true);
@@ -603,7 +625,7 @@ function runSequence(
   const creator = pickCreator(c, A, kind);
   const shooter = pickShooter(c, A, kind, creator);
   if (!shooter) return turnover(c, A, D, 'final', seconds, mode);
-  const quality = Math.exp(P.qualityBeta * (r.create - defEff)) * (highTrans ? 1.22 : 1) * (1 + 0.18 * (dp.line - 0.5)) *
+  const quality = Math.exp(P.qualityBeta * (createEff - defMarked)) * (highTrans ? 1.22 : 1) * (1 + 0.18 * (dp.line - 0.5)) *
     (kind === 'longShot' ? 1 + 0.9 * (0.5 - dp.line) : 1);
   const mean = XG_MEAN[kind] ?? 0.1;
   const xg = shotXg(c, mean, quality);
@@ -747,7 +769,7 @@ function turnover(c: Ctx, A: TeamState, D: TeamState, zone: 'build' | 'mid' | 'f
 function maybeFoul(c: Ctx, A: TeamState, D: TeamState, finalThird: boolean): SeqResult | null {
   const F = MATCH_PARAMS.foul;
   const rng = c.rng;
-  const rate = F.perSequence * (finalThird ? 0.55 : 0.6) * (0.75 + 0.5 * D.prof.pressing) * (0.85 + 0.3 * (c.conditions.refereeStrictness - 0.7));
+  const rate = F.perSequence * (finalThird ? 0.55 : 0.6) * (0.75 + 0.5 * D.prof.pressing) * (0.85 + 0.3 * (c.conditions.refereeStrictness - 0.7)) * (1 + MATCH_PARAMS.marking.manFoulBoost * manShare(D));
   if (!rng.chance(rate)) return null;
   const fouler = weightedPlayer(c, outfield(D), (p) => 0.2 + (p.mp.attrs.aggression / 50) * (0.4 + 0.2 * POSITION_FN_WEIGHTS[p.slotPos].defend) * (1.1 - p.mp.attrs.composure / 200));
   const victim = weightedPlayer(c, outfield(A), (p) => 0.3 + POSITION_FN_WEIGHTS[p.slotPos].create * 0.3 + p.skills.progress / 100);
@@ -850,7 +872,9 @@ function takePenalty(c: Ctx, A: TeamState, D: TeamState): ShotRes {
 function runCorner(c: Ctx, A: TeamState, D: TeamState): SeqResult {
   const rng = c.rng;
   const short = A.base.setPieceFocus === 'short' ? 0.6 : A.base.setPieceFocus === 'mixed' ? 0.25 : 0.1;
-  const edge = (A.ratings.setPiece + 0.5 * A.ratings.aerial) - (D.ratings.aerial * 0.7 + D.ratings.defend * 0.5 + 0.0);
+  const zonal = 1 - manShare(D);
+  const defence = D.ratings.aerial * (0.85 - 0.3 * zonal) + D.ratings.defend * (0.35 + 0.3 * zonal);
+  const edge = (A.ratings.setPiece + 0.5 * A.ratings.aerial) - defence - MATCH_PARAMS.marking.zonalSetPieceBonus * (zonal - 0.5);
   const pShot = shiftOdds(0.27, 0.0165 * edge * (1 - short * 0.3) + (A.base.setPieceFocus === 'near' ? 0.05 : 0));
   if (!rng.chance(pShot)) {
     if (rng.chance(0.45)) {
@@ -893,7 +917,7 @@ function updateFatigue(c: Ctx, dtSeconds: number): void {
       const work = p.mp.attrs.workRate;
       const posLoad = p.slotPos === 'GK' ? 0.25 : p.slotPos === 'CB' ? 0.8 : p.slotPos === 'CM' || p.slotPos === 'LB' || p.slotPos === 'RB' ? 1.15 : 1;
       const extra = c.period >= 3 ? 1.35 : 1;
-      p.fatigue = clamp(p.fatigue + per * T.prof.fatigueRate * posLoad * extra * (1.35 - stam / 130) * (0.85 + work / 400 + c.conditions.importance * 0.1), 0, 100);
+      p.fatigue = clamp(p.fatigue + per * T.prof.fatigueRate * (1 + MATCH_PARAMS.marking.manFatigue * manShare(T)) * posLoad * extra * (1.35 - stam / 130) * (0.85 + work / 400 + c.conditions.importance * 0.1), 0, 100);
     }
   }
 }

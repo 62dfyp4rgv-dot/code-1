@@ -23,3 +23,6 @@ for (const [k, lo, hi] of [['tempo', 20, 85], ['width', 15, 85], ['directness', 
 }
 for (const m of [-2, -1, 1, 2] as const) vsBalanced(`mentality=${m}`, { mentality: m });
 vsBalanced('counterAttack=true', { counterAttack: true });
+for (const m of ['man', 'mixed'] as const) vsBalanced(`marking=${m}`, { marking: m });
+vsBalanced('setPieceFocus=near', { setPieceFocus: 'near' });
+vsBalanced('setPieceFocus=short', { setPieceFocus: 'short' });
