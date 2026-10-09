@@ -120,6 +120,8 @@ export interface Player {
   retired: boolean;
   /** Free agent: day they became available. */
   freeSince: number | null;
+  /** Day of the last club change (blocks immediate re-transfers). */
+  lastMoveDay: number | null;
 }
 
 export interface Tactics {
@@ -159,6 +161,10 @@ export interface ClubFinance {
   /** Consecutive seasons over the league's squad-cost ratio limit. */
   overspendStrikes: number;
   embargoUntilDay: number;
+  /** Non-wage operating costs, EUR per year (stadium, staff, travel, academy). */
+  opexAnnual: number;
+  /** Average ticket price in EUR. */
+  ticketPrice: number;
 }
 
 export type ManagerStyle =
@@ -206,6 +212,8 @@ export interface Club {
   leagueId: string;
   rivals: string[];
   fictional: boolean;
+  /** 0..1 squad chemistry; rises with continuity and tenure, falls with turnover. */
+  cohesion: number;
 }
 
 export interface TransferRecord {

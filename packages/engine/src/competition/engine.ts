@@ -542,7 +542,13 @@ function completeTableStage(comp: CompetitionState, def: CompetitionDef, rules: 
     let nPlayoff = stage.advancePlayoff;
     if (smallest < nDirect + nPlayoff) {
       if (nPlayoff === 0) nDirect = Math.min(nDirect, smallest);
-      else { nDirect = Math.max(2, 2 * Math.floor(smallest / 6)); nPlayoff = 2 * nDirect; }
+      else {
+        // direct qualifiers must be a power of two so the bracket stays balanced
+        let p2 = 2;
+        while (p2 * 2 <= Math.floor(smallest / 3)) p2 *= 2;
+        nDirect = p2;
+        nPlayoff = 2 * nDirect;
+      }
     }
     // for multi-zone, interleave by rank so that ordering stays global (rank 1 of each zone first, ...)
     const maxLen = Math.max(...zoneTables.map((t) => t.length));
@@ -607,12 +613,15 @@ function advanceKnockout(comp: CompetitionState, def: CompetitionDef, rules: Rul
   const nextTies: Tie[] = [];
   for (let i = 0; i < winners.length; i += 2) {
     const a = winners[i] as string;
-    const b = winners[i + 1] as string;
+    const b = winners[i + 1];
+    const id = `${comp.id}:${comp.season}:${stage.id}:t${nextRound}:${i / 2}`;
+    if (b === undefined) {
+      // odd number of survivors (unbalanced zones): the last club receives a bye
+      nextTies.push({ id, round: nextRound, index: i / 2, home: a, away: '', fixtureIds: [], winner: a, decidedBy: 'bye' });
+      continue;
+    }
     const [h, w] = ctx.info(a).coefficient >= ctx.info(b).coefficient ? [a, b] : [b, a];
-    nextTies.push({
-      id: `${comp.id}:${comp.season}:${stage.id}:t${nextRound}:${i / 2}`, round: nextRound, index: i / 2, home: h, away: w,
-      fixtureIds: [], winner: null, decidedBy: null,
-    });
+    nextTies.push({ id, round: nextRound, index: i / 2, home: h, away: w, fixtureIds: [], winner: null, decidedBy: null });
   }
   st.ties.push(nextTies);
   st.currentRound = nextRound;

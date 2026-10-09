@@ -49,23 +49,29 @@ export function pickLineup(squad: readonly Player[], tactics: Tactics, a: Availa
   assigned[0] = gk;
   taken.add(gk.id);
 
-  // Outfield: iterate best (slot, player) pair first.
-  const open = new Set<number>();
-  for (let i = 1; i < slots.length; i++) open.add(i);
-  const outfield = avail.filter((p) => !taken.has(p.id) && p.primary !== 'GK');
-  const pool = outfield.length >= 10 ? outfield : avail.filter((p) => !taken.has(p.id));
-  const pairs: { s: number; p: Player; v: number }[] = [];
-  for (const s of open) {
-    const pos = slots[s] as Position;
-    for (const p of pool) pairs.push({ s, p, v: selectionScore(p, pos, rotation) });
-  }
-  pairs.sort((x, y) => y.v - x.v);
-  for (const pr of pairs) {
-    if (!open.has(pr.s) || taken.has(pr.p.id)) continue;
-    assigned[pr.s] = pr.p;
-    open.delete(pr.s);
-    taken.add(pr.p.id);
-    if (open.size === 0) break;
+  // Outfield: fill the scarcest slots first, each with the best remaining player for that slot.
+  const outfieldPool = avail.filter((p) => !taken.has(p.id) && p.primary !== 'GK');
+  const pool = outfieldPool.length >= 10 ? outfieldPool : avail.filter((p) => !taken.has(p.id));
+  const slotIdx: number[] = [];
+  for (let i = 1; i < slots.length; i++) slotIdx.push(i);
+  const natural = (pos: Position): number => {
+    let n = 0;
+    for (const p of pool) if (p.primary === pos) n++;
+    return n;
+  };
+  const scarcity = new Map<Position, number>();
+  for (const i of slotIdx) { const pos = slots[i] as Position; if (!scarcity.has(pos)) scarcity.set(pos, natural(pos) / slotIdx.filter((j) => slots[j] === pos).length); }
+  slotIdx.sort((a, b) => (scarcity.get(slots[a] as Position) as number) - (scarcity.get(slots[b] as Position) as number));
+  for (const i of slotIdx) {
+    const pos = slots[i] as Position;
+    let best: Player | null = null;
+    let bv = -Infinity;
+    for (const p of pool) {
+      if (taken.has(p.id)) continue;
+      const v = selectionScore(p, pos, rotation);
+      if (v > bv) { bv = v; best = p; }
+    }
+    if (best) { assigned[i] = best; taken.add(best.id); }
   }
   if (assigned.some((x) => x === null)) return null;
   const starters = assigned as Player[];

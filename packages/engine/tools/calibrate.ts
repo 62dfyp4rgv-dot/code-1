@@ -33,3 +33,21 @@ run(n, 62, 62, 'equal 62');
 run(n, 70, 55, 'strong vs weak (+15)');
 run(n, 75, 50, 'huge (+25)');
 run(n, 55, 70, 'weak vs strong');
+
+// League-like scenario: both sides drawn from N(mu, sd) so heterogeneity is included in the calibration.
+import { Rng } from '../src/rng';
+function leagueLike(n: number, mu: number, sd: number): void {
+  const rng = Rng.fromSeed('league-like');
+  let g = 0, hw = 0, d = 0, aw = 0, y = 0, r = 0, shots = 0, cs = 0, inj = 0, fouls = 0, corners = 0, xg = 0;
+  for (let i = 0; i < n; i++) {
+    const qh = rng.normal(mu, sd); const qa = rng.normal(mu, sd);
+    const res = simulateMatch(syntheticMatch(`m${i}`, `s${i}`, syntheticSheet({ id: 'H', quality: qh, seed: String(i) }), syntheticSheet({ id: 'A', quality: qa, seed: String(i) })));
+    g += res.score.home + res.score.away; if (res.score.home > res.score.away) hw++; else if (res.score.home < res.score.away) aw++; else d++;
+    y += res.stats.home.yellow + res.stats.away.yellow; r += res.stats.home.red + res.stats.away.red; shots += res.stats.home.shots + res.stats.away.shots;
+    cs += (res.score.home === 0 ? 1 : 0) + (res.score.away === 0 ? 1 : 0); inj += res.injuries.length; fouls += res.stats.home.fouls + res.stats.away.fouls; corners += res.stats.home.corners + res.stats.away.corners; xg += res.stats.home.xg + res.stats.away.xg;
+  }
+  const f = (x: number, k = 2): string => (x / n).toFixed(k);
+  console.log(`league-like N(${mu},${sd}) G/m ${f(g)} xG ${f(xg)} W/D/L ${f(hw)}/${f(d)}/${f(aw)} CS/team ${(cs / (2 * n)).toFixed(2)} shots ${f(shots, 1)} fouls ${f(fouls, 1)} corners ${f(corners, 1)} Y ${f(y)} R ${f(r, 3)} inj/team ${(inj / (2 * n)).toFixed(3)}`);
+}
+leagueLike(n, 62, 5.5);
+leagueLike(n, 62, 8);

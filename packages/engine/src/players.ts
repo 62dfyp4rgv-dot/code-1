@@ -274,6 +274,7 @@ export function generatePlayer(rng: Rng, spec: PlayerSpec): Player {
     history: [],
     retired: false,
     freeSince: null,
+    lastMoveDay: null,
   };
 }
 

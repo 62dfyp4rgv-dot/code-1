@@ -181,9 +181,15 @@ export interface MatchResult {
 export const MATCH_PARAMS = {
   beta: 0.0155, // generic logit shift per rating point
   homeAdvantageLogit: 0.17, // total home-vs-away swing for a full stadium, applied half each way
-  build: { loseBase: 0.205, pressWeightMin: 0.35, pressWeightRange: 0.9, directnessLoss: 0.7 },
-  progress: { successBase: 0.44, compression: 0.55, behindLine: 1.1, mentality: 0.11 },
-  create: { chanceBase: 0.222, mentality: 0.12 },
+  build: { loseBase: 0.205, pressWeightMin: 0.35, pressWeightRange: 0.9, directnessLoss: 0.5 },
+  progress: { successBase: 0.44, compression: 0.85, behindLine: 1.1, mentality: 0.11, directBypass: 0.95, directAerial: 0.013 },
+  create: { chanceBase: 0.222, mentality: 0.12, directPenalty: 0.3 },
+  /**
+   * Counter-attacking: transitions only pay off when the opponent is *exposed* (high line, attacking mentality,
+   * pressing). A counter-oriented team converts more turnovers into transitions and exploits space better, but plays
+   * its settled possessions more cautiously.
+   */
+  counter: { convertMid: 0.30, convertCounterExtra: 0.05, convertFinal: 0.18, progressBase: 0.08, progressExposure: 0.4, createBase: 0.04, createExposure: 0.22, specialistMult: 1.2, settledProgressPenalty: 0.22, settledCreatePenalty: 0.14 },
   /** Chance quality scales with rating edge with this coefficient (separate from quantity beta). */
   qualityBeta: 0.0055,
   xgGammaShape: 1.5,
@@ -470,6 +476,11 @@ function shotXg(c: Ctx, mean: number, quality: number): number {
   return clamp(mean * quality * g, 0.008, 0.85);
 }
 
+/** How disorganised a team is when it loses the ball: high line, attacking mentality and pressing leave space behind. */
+function exposureOf(t: TeamState): number {
+  return clamp(0.15 + 0.38 * t.prof.line + 0.12 * t.prof.mentality + 0.34 * (t.prof.pressing - 0.5), 0, 1.3);
+}
+
 function runSequence(
   c: Ctx, A: TeamState, D: TeamState, mode: SeqResult['next']['mode'],
 ): SeqResult {
@@ -509,13 +520,20 @@ function runSequence(
 
   // ---- Phase 2: progression into the final third
   if (mode !== 'transitionHigh') {
-    const behind = P.progress.behindLine * (ap.directness * 0.6 + (ap.counter && transition ? 0.4 : 0)) * dp.line * P.beta * (r.pace - dr.pace);
+    const behind = P.progress.behindLine * (ap.directness * 0.6) * dp.line * P.beta * (r.pace - dr.pace);
+    const C = P.counter;
+    const exposure = exposureOf(D);
+    const transBonus = transition ? C.progressBase + C.progressExposure * exposure * (ap.counter ? C.specialistMult : 1) : 0;
+    const settledPenalty = !transition && ap.counter ? C.settledProgressPenalty : 0;
+    // long balls bypass midfield; they work better with aerial/physical superiority
+    const direct = P.progress.directBypass * (ap.directness - 0.5) + P.progress.directAerial * ap.directness * (r.aerial - dr.aerial);
     const extra =
       -P.progress.compression * (dp.line - 0.5) * (1 - ap.directness) +
       behind +
+      direct +
       P.progress.mentality * ap.mentality +
-      0.1 * dp.mentality + // an attacking opponent leaves gaps behind its own line
-      (transition && ap.counter ? 0.35 : 0) +
+      0.15 * dp.mentality + // an attacking opponent leaves gaps behind its own line
+      transBonus - settledPenalty +
       ha;
     const defLevel = dr.defend * (0.85 + 0.15 * (1 - dp.line));
     const pProg = prob(P.progress.successBase, 0.55 * r.progress + 0.45 * r.buildUp - defLevel, extra);
@@ -545,10 +563,17 @@ function runSequence(
   // ---- Phase 3: chance creation
   const highTrans = mode === 'transitionHigh';
   const defEff = dr.defend * (1 + 0.1 * (0.5 - dp.line));
+  const C3 = P.counter;
+  const exposure3 = exposureOf(D);
+  const transCreate = highTrans
+    ? 0.2 + 0.35 * exposure3
+    : transition ? C3.createBase + C3.createExposure * exposure3 * (ap.counter ? C3.specialistMult : 1) : 0;
   const extra3 =
     P.create.mentality * ap.mentality +
-    0.05 * dp.mentality +
-    (highTrans ? 0.45 : transition ? 0.15 : 0) +
+    0.09 * dp.mentality +
+    transCreate -
+    P.create.directPenalty * (ap.directness - 0.5) -
+    (!transition && ap.counter ? C3.settledCreatePenalty : 0) +
     ha;
   const pChance = prob(P.create.chanceBase, r.create - defEff, extra3);
   const n3 = poisson(c, 1.5);
@@ -704,9 +729,11 @@ function turnover(c: Ctx, A: TeamState, D: TeamState, zone: 'build' | 'mid' | 'f
     if (tackle) { winner.line.tackles++; D.stats.tackles++; } else { winner.line.interceptions++; D.stats.interceptions++; }
   }
   let mode: SeqResult['next']['mode'] = 'build';
-  if (zone === 'build') mode = rng.chance(pressWin * 0.55) ? 'transitionHigh' : rng.chance(0.3) ? 'transitionMid' : 'build';
-  else if (zone === 'mid') mode = rng.chance(0.35 + 0.2 * (D.prof.counter ? 1 : 0)) ? 'transitionMid' : 'build';
-  else mode = rng.chance(0.2 + (D.prof.counter ? 0.25 : 0)) ? 'transitionMid' : 'build';
+  const C = MATCH_PARAMS.counter;
+  const x = D.prof.counter ? C.convertCounterExtra : 0;
+  if (zone === 'build') mode = rng.chance(pressWin * 0.55) ? 'transitionHigh' : rng.chance(C.convertMid - 0.05 + x) ? 'transitionMid' : 'build';
+  else if (zone === 'mid') mode = rng.chance(C.convertMid + x) ? 'transitionMid' : 'build';
+  else mode = rng.chance(C.convertFinal + x) ? 'transitionMid' : 'build';
   return { end: 'turnover', seconds, next: { side: D.side, mode } };
 }
 
@@ -1007,9 +1034,9 @@ function finaliseLine(p: SimPlayer, matchSeconds: number): void {
 function playPeriod(c: Ctx, endSeconds: number, nextStart: { side: Side; mode: SeqResult['next']['mode'] }): { side: Side; mode: SeqResult['next']['mode'] } {
   let next = nextStart;
   let lastFatigueRefresh = c.clock;
-  let lastInjuryCheckClock = c.clock;
   let lastAdapt = c.clock;
   let lastSub = c.clock;
+  let pendingSeconds = 0;
   while (c.clock < endSeconds) {
     const A = teamOf(c, next.side);
     const D = teamOf(c, other(next.side));
@@ -1017,8 +1044,13 @@ function playPeriod(c: Ctx, endSeconds: number, nextStart: { side: Side; mode: S
     const dt = Math.max(3, res.seconds);
     c.clock += dt;
     A.possessionSeconds += dt;
-    updateFatigue(c, dt);
-    checkInjuries(c, dt);
+    pendingSeconds += dt;
+    // fatigue and injury hazards are integrated in ~1 minute chunks (same expectation, fewer passes over the squad)
+    if (pendingSeconds >= 60 || c.clock >= endSeconds) {
+      updateFatigue(c, pendingSeconds);
+      checkInjuries(c, pendingSeconds);
+      pendingSeconds = 0;
+    }
     next = res.next;
     if (c.clock - lastFatigueRefresh >= 600) {
       refreshSkillsForFatigue(c);
@@ -1037,8 +1069,6 @@ function playPeriod(c: Ctx, endSeconds: number, nextStart: { side: Side; mode: S
       lastSub = c.clock;
       for (const T of [c.home, c.away]) considerSubstitutions(c, T, T.score - teamOf(c, other(T.side)).score, minute);
     }
-    void lastInjuryCheckClock;
-    lastInjuryCheckClock = c.clock;
   }
   return next;
 }

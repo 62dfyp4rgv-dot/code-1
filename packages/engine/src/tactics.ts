@@ -184,7 +184,7 @@ export function tacticalProfile(t: Tactics): TacticalProfile {
     line,
     mentality,
     counter: t.counterAttack,
-    fatigueRate: 0.82 + 0.28 * pressing + 0.2 * tempo + 0.05 * Math.abs(mentality),
+    fatigueRate: 0.76 + 0.46 * pressing + 0.22 * tempo + 0.05 * Math.abs(mentality),
     durationMult: 1.2 - 0.4 * tempo,
   };
 }
