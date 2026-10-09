@@ -20,6 +20,14 @@ export function seasonStartDay(season: number): number {
   return (season - 1) * DAYS_PER_SEASON;
 }
 
+/** Contract end aligned to the last day of the season in which `years` have elapsed (contracts run to season end). */
+export function alignedContractEnd(currentDay: number, season: number, years: number): number {
+  const seasonsAhead = Math.max(1, Math.round(years));
+  const end = seasonStartDay(season) + seasonsAhead * DAYS_PER_SEASON - 1;
+  // signed in the last weeks of a season: the first partial season does not count
+  return currentDay > seasonStartDay(season) + DAYS_PER_SEASON - 45 ? end + DAYS_PER_SEASON : end;
+}
+
 export function isLastDayOfSeason(world: WorldState): boolean {
   return world.day === seasonStartDay(world.season) + DAYS_PER_SEASON - 1;
 }
@@ -65,7 +73,10 @@ export function startSeason(world: WorldState): void {
     p.yellows = {};
     p.suspensions = {};
   }
-  for (const c of Object.values(world.clubs)) c.finance.seasonLedger = {};
+  for (const c of Object.values(world.clubs)) {
+    c.finance.seasonLedger = {};
+    c.finance.seasonStartCash = c.finance.cash;
+  }
 
   // all clubs registered anywhere (including clubs just promoted/relegated)
   const allMembers: Record<string, string[]> = world.leagueMembers;

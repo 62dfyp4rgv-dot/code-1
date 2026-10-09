@@ -1,0 +1,10 @@
+import { generateWorld, defaultWorldConfig } from '../src/world/generate';
+import { startSeason } from '../src/world/calendar';
+import { validateWorld } from '../src/world/invariants';
+import { refreshAiTactics } from '../src/world/managers';
+const w = generateWorld(defaultWorldConfig('inv-std', 'standard'));
+for (const c of Object.values(w.clubs)) refreshAiTactics(w, c);
+startSeason(w);
+const v = validateWorld(w, { checkLedger: true });
+console.log('standard world: comps', Object.keys(w.competitions).length, 'violations', v.length);
+for (const x of v.slice(0, 15)) console.log(x.code, x.message);

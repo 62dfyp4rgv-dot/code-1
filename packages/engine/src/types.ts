@@ -165,6 +165,8 @@ export interface ClubFinance {
   opexAnnual: number;
   /** Average ticket price in EUR. */
   ticketPrice: number;
+  /** Cash at the start of the current season: cash === seasonStartCash + sum(seasonLedger). */
+  seasonStartCash: number;
 }
 
 export type ManagerStyle =

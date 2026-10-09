@@ -207,6 +207,9 @@ export const MATCH_PARAMS = {
 
 // ------------------------------------------------------------------ internal state
 
+/** Relative likelihood that a player in each slot takes a given open-play shot (before skill and role). */
+const SHOT_BASE: Record<Position, number> = { GK: 0, CB: 0.5, LB: 0.55, RB: 0.55, DM: 0.4, CM: 1.1, AM: 1.8, LW: 1.8, RW: 1.8, ST: 2.3 };
+
 const FILL_SKILL = 22; // used for a missing goalkeeper (outfielder in goal)
 
 interface SimPlayer {
@@ -345,10 +348,10 @@ function computeRatings(t: TeamState): void {
     }
     t.passCum[fn] = cum;
   }
-  // Shooter weights
+  // Shooter weights: a flatter, dedicated distribution (a lone striker takes roughly a third of a team's shots).
   for (const sp of on) {
-    const base = POSITION_FN_WEIGHTS[sp.slotPos].shoot * (sp.role.mod.shoot ?? 1) * sp.role.shotShare;
-    sp.wShoot = base * Math.pow(Math.max(sp.skills.shoot, 5) / 55, 1.6);
+    const base = SHOT_BASE[sp.slotPos] * Math.pow(sp.role.shotShare, 0.7) * (sp.role.mod.shoot ?? 1) ** 0.5;
+    sp.wShoot = base * Math.pow(Math.max(sp.skills.shoot, 5) / 55, 0.8);
   }
   void prof;
 }
@@ -638,8 +641,12 @@ function pickShooter(c: Ctx, A: TeamState, kind: GoalKind, creator: SimPlayer | 
   return weightedPlayer(c, pool, (p) => {
     if (p === creator && pool.length > 1) return p.wShoot * 0.15;
     let w = p.wShoot;
-    if (kind === 'header') w *= 0.4 + Math.pow(Math.max(p.skills.aerial, 5) / 55, 2.2) * (p.mp.traits.includes('aerialThreat') ? 1.5 : 1);
-    if (kind === 'longShot') w = (0.15 + w) * (p.mp.traits.includes('longShots') ? 3 : 1) * (['CM', 'DM', 'AM'].includes(p.slotPos) ? 1.8 : 1);
+    if (kind === 'header') {
+      // crosses and set pieces: tall, strong players, but wide and midfield players still get on the end of some
+      w = (0.35 + 0.65 * w) * (0.5 + Math.pow(Math.max(p.skills.aerial, 5) / 55, 1.4)) * (p.mp.traits.includes('aerialThreat') ? 1.4 : 1);
+    } else if (kind === 'longShot') {
+      w = (0.5 + 0.5 * Math.sqrt(w)) * (p.mp.traits.includes('longShots') ? 3 : 1) * (['CM', 'DM', 'AM'].includes(p.slotPos) ? 1.5 : 1);
+    }
     return w;
   });
 }
@@ -1110,7 +1117,7 @@ export function simulateMatch(input: MatchInput): MatchResult {
   const stop1 = stoppageSeconds(ctx, 0, true);
   next = playPeriod(ctx, 45 * 60 + stop1, next);
   ctx.clock = Math.max(ctx.clock, 45 * 60 + stop1);
-  emit(ctx, { type: 'halftime', side: 'home', minute: Math.floor(ctx.clock / 60) });
+  emit(ctx, { type: 'halftime', side: 'home', minute: Math.max(45, minuteOf(ctx)) });
   // Half-time: recovery, substitution window.
   for (const T of [home, away]) for (const p of T.onPitch) p.fatigue = Math.max(0, p.fatigue - 4);
   refreshSkillsForFatigue(ctx);
@@ -1127,7 +1134,7 @@ export function simulateMatch(input: MatchInput): MatchResult {
   next = playPeriod(ctx, 90 * 60, next);
   const stop2 = stoppageSeconds(ctx, eventsBeforeSecond, false);
   next = playPeriod(ctx, 90 * 60 + stop2, next);
-  emit(ctx, { type: 'fulltime', side: 'home', minute: Math.floor(ctx.clock / 60) });
+  emit(ctx, { type: 'fulltime', side: 'home', minute: Math.max(90, minuteOf(ctx)) });
   const regular = { home: home.score, away: away.score };
   let extraTimePlayed = false;
   let penalties: MatchResult['penalties'] = null;

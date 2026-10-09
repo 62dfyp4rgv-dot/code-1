@@ -13,10 +13,10 @@ import { LEAGUE_BY_ID } from '../competition/registry';
 import { POSITION_GROUP, type Club, type Player, type Position } from '../types';
 import { formationOf } from '../tactics';
 import { allPlayers, assignPlayer, freeAgents, squadOf } from './runtime';
-import { leagueSquadRules, MIN_SQUAD, pay, receive, recordTransfer, registrationError, releasePlayer, signFreeAgent } from './squad';
+import { createYouthPlayer, leagueSquadRules, MIN_SQUAD, pay, receive, recordTransfer, registrationError, releasePlayer, signFreeAgent } from './squad';
 import type { WorldState } from './types';
 import { baseWageWeekly, contractYearsFor, marketValue } from './valuation';
-import { seasonStartDay } from './calendar';
+import { alignedContractEnd, seasonStartDay } from './calendar';
 import { nextId } from './generate';
 
 // ---------------------------------------------------------------- windows
@@ -209,7 +209,7 @@ export function executeTransfer(world: WorldState, offer: Offer): string | null 
   assignPlayer(world, p, buyer.id);
   const ahead = squadOf(world, buyer.id).filter((q) => q !== p && q.primary === p.primary && positionalOverall(q, p.primary) > overall(p)).length;
   p.contract = {
-    clubId: buyer.id, wageWeekly: offer.wageWeekly, startDay: world.day, endDay: world.day + Math.round(offer.years * 365), signingBonus: bonus,
+    clubId: buyer.id, wageWeekly: offer.wageWeekly, startDay: world.day, endDay: alignedContractEnd(world.day, world.season, offer.years), signingBonus: bonus,
     releaseClause: null, squadRole: ahead === 0 ? 'first' : ahead === 1 ? 'rotation' : 'backup',
   };
   p.loan = null;
@@ -520,7 +520,7 @@ export function aiContractRenewals(world: WorldState): void {
       const score = (wage / Math.max(1, p.contract.wageWeekly) - 1) * 3 + (p.morale - 55) / 60 + (club.reputation - 50) / 100;
       if (score > -0.15) {
         p.contract = {
-          ...p.contract, wageWeekly: wage, startDay: world.day, endDay: world.day + Math.round(contractYearsFor(age, rng.next()) * 365),
+          ...p.contract, wageWeekly: wage, startDay: world.day, endDay: alignedContractEnd(world.day, world.season, contractYearsFor(age, rng.next())),
           signingBonus: 0, squadRole: i < 11 ? 'first' : i < 16 ? 'rotation' : 'backup',
         };
         room -= extra;
@@ -583,9 +583,16 @@ export function aiFillSquad(world: WorldState, club: Club, target = 21): void {
       .filter((p) => p.clubId === null && !p.retired && (p.primary === pos || (POSITION_GROUP[p.primary] === POSITION_GROUP[pos] && (p.positions[pos] ?? 0) >= 0.8)))
       .filter((p) => rules.maxForeign === null || p.nationality === club.country || squadOf(world, club.id).filter((q) => q.nationality !== club.country).length < rules.maxForeign)
       .sort((a, b) => overall(b) - overall(a));
+    let signed = false;
     for (const c of cands.slice(0, 4)) {
       const wage = Math.round(Math.max(800, wageDemand(world, club, c) * 0.85) / 100) * 100;
-      if (signFreeAgent(world, club, c, { wageWeekly: wage, years: 1.5, role: 'backup' }) === null) break;
+      if (signFreeAgent(world, club, c, { wageWeekly: wage, years: 1.5, role: 'backup' }) === null) { signed = true; break; }
+    }
+    // Nobody suitable is unattached: the academy provides emergency cover (a goalkeeper is mandatory).
+    if (!signed && (pos === 'GK' || squadOf(world, club.id).length < 16)) {
+      const rng = Rng.fromSeed(`${world.config.seed}:cover:${club.id}:${world.day}:${pos}`);
+      const base = clamp(club.reputation * 0.4 + 15 + rng.normal(0, 4), 25, 60);
+      createYouthPlayer(world, club, rng, pos, base, rng.float(18, 21), base + 8);
     }
   }
 }

@@ -8,6 +8,7 @@ import type { Club, Contract, Player, Position, TransferRecord } from '../types'
 import { cultureOfNation, playerName } from './names';
 import { addPlayer, assignPlayer, squadOf } from './runtime';
 import { nextId } from './generate';
+import { alignedContractEnd } from './calendar';
 import type { WorldState } from './types';
 import { baseWageWeekly, marketValue } from './valuation';
 
@@ -94,7 +95,7 @@ export function signFreeAgent(world: WorldState, club: Club, player: Player, par
   const first = Math.round(params.wageWeekly * 1);
   if (club.finance.cash + club.finance.debt * 0 < -1e12 || first < 0) return 'invalid terms';
   player.contract = {
-    clubId: club.id, wageWeekly: params.wageWeekly, startDay: world.day, endDay: world.day + Math.round(params.years * 365),
+    clubId: club.id, wageWeekly: params.wageWeekly, startDay: world.day, endDay: alignedContractEnd(world.day, world.season, params.years),
     signingBonus: bonus, releaseClause: params.releaseClause ?? null, squadRole: params.role ?? 'rotation',
   };
   player.freeSince = null;
@@ -113,7 +114,7 @@ export function createYouthPlayer(world: WorldState, club: Club, rng: Rng, posit
   p.clubId = null;
   addPlayer(world, p);
   const wage = Math.max(700, baseWageWeekly(marketValue(p, world.day), ability) * 0.5);
-  p.contract = { clubId: club.id, wageWeekly: Math.round(wage / 100) * 100, startDay: world.day, endDay: world.day + 365 * 3, signingBonus: 0, releaseClause: null, squadRole: 'prospect' };
+  p.contract = { clubId: club.id, wageWeekly: Math.round(wage / 100) * 100, startDay: world.day, endDay: alignedContractEnd(world.day, world.season, 3), signingBonus: 0, releaseClause: null, squadRole: 'prospect' };
   assignPlayer(world, p, club.id);
   recordTransfer(world, { day: world.day, playerId: id, fromClubId: null, toClubId: club.id, kind: 'youth', fee: 0, wageWeekly: p.contract.wageWeekly });
   return p;

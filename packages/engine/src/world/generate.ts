@@ -127,7 +127,7 @@ function createClub(world: WorldState, prof: LeagueProfile, idx: number, n: numb
       cash: Math.round(revenue * rng.float(0.05, 0.45)), debt: Math.round(revenue * (rng.chance(0.4) ? rng.float(0.05, 0.9) : 0)),
       transferBudget: 0, wageBudgetWeekly: 0, broadcastingAnnual: Math.round(tvShare), sponsorshipAnnual: Math.round(sponsorship),
       seasonLedger: {}, installments: [], overspendStrikes: 0, embargoUntilDay: -1,
-      opexAnnual: Math.round(revenue * (0.17 + 0.1 * (facilityBase / 100))), ticketPrice: ticket,
+      opexAnnual: Math.round(revenue * (0.17 + 0.1 * (facilityBase / 100))), ticketPrice: ticket, seasonStartCash: 0,
     },
     boardExpectation: clamp(1 - (z + 2) / 4.2, 0.02, 0.95), boardPatience: clamp(Math.round(rng.normal(55, 15) + (kind === 'members' ? 10 : -5)), 15, 95),
     leagueId: prof.id, rivals: [], fictional: true, cohesion: 0.5,
@@ -192,10 +192,10 @@ function createClub(world: WorldState, prof: LeagueProfile, idx: number, n: numb
   players.forEach((p, i) => {
     const ageNow = (0 - p.birthDay) / 365.25;
     const years = contractYearsFor(ageNow, squadRng.next());
-    const elapsed = squadRng.between(0, years * 300);
+    const seasonsLeft = Math.max(1, Math.round(years * squadRng.float(0.35, 1)));
     p.contract = {
       clubId: id, wageWeekly: Math.max(800, Math.round(((raw[i] as number) * scale) / 52 / 100) * 100),
-      startDay: -elapsed, endDay: Math.max(60, Math.round(years * 365 - elapsed)), signingBonus: 0, releaseClause: null,
+      startDay: -squadRng.between(0, 700), endDay: seasonsLeft * 364 - 1, signingBonus: 0, releaseClause: null,
       squadRole: i < 11 ? 'first' : i < 17 ? 'rotation' : 'backup',
     };
     p.morale = clamp(Math.round(squadRng.normal(65, 8)), 30, 95);

@@ -331,11 +331,11 @@ function concacafCup(): CompetitionDef {
 function oflCup(): CompetitionDef {
   const groups: GroupsStage = {
     id: 'groups', name: 'Group Stage', type: 'groups', groups: 2, legs: 1, advance: 2, pots: 4, avoidSameCountry: false,
-    tiebreakers: ['points', 'h2hPoints', 'goalDifference', 'goalsFor', 'drawLots'], schedule: { startWeek: 10, weekStep: 2, dow: 5, weeks: [10, 12, 14] },
+    tiebreakers: ['points', 'h2hPoints', 'goalDifference', 'goalsFor', 'drawLots'], schedule: { startWeek: 10, weekStep: 2, dow: 2, weeks: [10, 12, 14] },
   };
   const ko: KnockoutStage = {
     id: 'knockout', name: 'Knockout Stage', type: 'knockout', legs: 1, finalSingle: true, extraTime: true, penalties: true, awayGoalsRule: false,
-    pairing: 'regionalSeeded', neutralFinal: true, byes: false, schedule: { startWeek: 16, weekStep: 2, dow: 5, weeks: [16], finalWeek: 18, finalDow: 5 },
+    pairing: 'regionalSeeded', neutralFinal: true, byes: false, schedule: { startWeek: 16, weekStep: 2, dow: 2, weeks: [16], finalWeek: 18, finalDow: 2 },
   };
   return {
     id: 'OCL', name: 'OFC Champions League', shortName: 'OCL', kind: 'continental', confederation: 'OFC', country: null, tier: null, period: 1, firstSeason: 1, priority: 1,
