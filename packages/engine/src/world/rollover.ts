@@ -7,10 +7,11 @@ import type { Club, Player } from '../types';
 import { endSeason, seasonStartDay, startSeason, clubRecord } from './calendar';
 import { annualRetirements, revisePotentials, youthIntake } from './development';
 import { applyRegulation, reviewClubFinance, updateRevenueDeals } from './finance';
-import { assignPlayer, squadOf } from './runtime';
+import { assignPlayer, endLoan, squadOf } from './runtime';
 import { pay, releasePlayer } from './squad';
+import { ageOf } from '../players';
 import { seasonEndManagerReview } from './managers';
-import { trimSquad } from './transfers';
+import { aiFillSquad, trimSquad } from './transfers';
 import type { SeasonSummary, WorldState } from './types';
 import { marketValue } from './valuation';
 
@@ -73,7 +74,7 @@ function expireContracts(world: WorldState): number {
     if (p.loan) {
       // loans end with the season: player returns to the parent club (contract may also have expired)
       const parent = world.clubs[p.loan.parentClubId];
-      p.loan = null;
+      endLoan(world, p);
       if (parent && p.contract.endDay > nextSeasonStart) {
         assignPlayer(world, p, parent.id);
         continue;
@@ -103,8 +104,52 @@ export function investSurplus(world: WorldState, club: Club): void {
     pay(club, 'facilities', Math.round(points * revenue * 0.02));
   }
   if (club.ownership.kind !== 'members') {
-    const div = Math.round((surplus - invest) * 0.4);
+    const div = Math.round((surplus - invest) * 0.6);
     if (div > 0) pay(club, 'dividends', div);
+  }
+}
+
+/**
+ * End of scholarship: academy prospects aged 18+ either earn a senior contract (if good enough for the squad or
+ * clearly promising) or are released. Keeps the age structure stable and the free-agent pool bounded.
+ */
+export function academyReview(world: WorldState, club: Club, rng: Rng): void {
+  const squad = squadOf(world, club.id);
+  const seniors = squad.filter((p) => p.contract?.squadRole !== 'prospect').map(overall).sort((a, b) => b - a);
+  const bar = seniors[Math.min(seniors.length - 1, 20)] ?? 40;
+  for (const p of [...squad]) {
+    if (p.contract?.squadRole !== 'prospect') continue;
+    const age = ageOf(p, world.day);
+    if (age < 18.4) continue;
+    const ov = overall(p);
+    const promising = p.pot >= bar + 6 || ov >= bar - 3;
+    if (promising || rng.chance(0.08)) {
+      p.contract = { ...p.contract, squadRole: 'backup', wageWeekly: Math.max(p.contract.wageWeekly, 1200) };
+    } else {
+      releasePlayer(world, p, 0, 'free');
+    }
+  }
+}
+
+/**
+ * Annual wage review: clubs with unused wage budget give raises to their best players (agents and rival offers push
+ * wages towards what clubs can afford), so wage bills track revenue instead of drifting far below it.
+ */
+export function annualWageReview(world: WorldState, club: Club): void {
+  const squad = squadOf(world, club.id);
+  const bill = squad.reduce((a, p) => a + (p.contract && !p.loan ? p.contract.wageWeekly : 0), 0);
+  let room = club.finance.wageBudgetWeekly * 0.97 - bill;
+  if (room <= 0) return;
+  const ranked = squad.filter((p) => p.contract && !p.loan).sort((a, b) => overall(b) - overall(a)).slice(0, 18);
+  const weight = ranked.reduce((a, p) => a + (p.contract?.wageWeekly ?? 0), 0) || 1;
+  const pool = room * 0.7;
+  for (const p of ranked) {
+    const c = p.contract;
+    if (!c) continue;
+    const raise = Math.min(c.wageWeekly * 0.3, pool * (c.wageWeekly / weight));
+    if (raise < 100) continue;
+    c.wageWeekly = Math.round((c.wageWeekly + raise) / 100) * 100;
+    room -= raise;
   }
 }
 
@@ -130,8 +175,8 @@ export function rolloverSeason(world: WorldState): SeasonSummary {
       const parent = world.clubs[p.loan.parentClubId];
       if (parent) {
         world.transfers.push({ id: `lr-${p.id}-${world.season}`, day: world.day, playerId: p.id, fromClubId: p.clubId, toClubId: parent.id, kind: 'loanReturn', fee: 0, wageWeekly: p.contract?.wageWeekly ?? 0 });
+        endLoan(world, p);
         assignPlayer(world, p, parent.id);
-        p.loan = null;
       }
     }
   }
@@ -139,9 +184,12 @@ export function rolloverSeason(world: WorldState): SeasonSummary {
   revisePotentials(world, rng.derive('pot'));
   annualRetirements(world, rng.derive('ret'));
   expireContracts(world);
+  for (const club of Object.values(world.clubs)) annualWageReview(world, club);
   for (const club of Object.values(world.clubs)) {
+    academyReview(world, club, rng.derive(`academy:${club.id}`));
     youthIntake(world, club, rng.derive(`youth:${club.id}`));
   }
+  for (const club of Object.values(world.clubs)) if (club.id !== world.config.humanClubId) aiFillSquad(world, club, 21);
   // revenue deals for the coming season based on final positions
   for (const [lid, table] of Object.entries(summary.tables)) {
     table.forEach((cid, i) => updateRevenueDeals(world, world.clubs[cid] as Club, i + 1, table.length));

@@ -13,8 +13,9 @@ import { clamp } from '../math';
 import { ageOf, overall, POSITION_WEIGHTS } from '../players';
 import { Rng } from '../rng';
 import { attrGroup, ATTR_KEYS, type AttrGroup, type AttrKey, type Club, type Player, type Position } from '../types';
+import { LEAGUE_BY_ID } from '../competition/registry';
 import { createYouthPlayer } from './squad';
-import { allPlayers, assignPlayer } from './runtime';
+import { allPlayers, assignPlayer, endLoan } from './runtime';
 import type { WorldState } from './types';
 
 const PEAK_AGE: Record<AttrGroup, number> = { physical: 25, technical: 27, mental: 29, goalkeeping: 29 };
@@ -131,7 +132,7 @@ export function retirePlayer(world: WorldState, p: Player): void {
   assignPlayer(world, p, null);
   p.retired = true;
   p.contract = null;
-  p.loan = null;
+  endLoan(world, p);
   delete world.transferList[p.id];
   if (club && apps >= 300) {
     world.news.push({ id: `ret-${p.id}`, day: world.day, kind: 'retire', clubIds: [club.id], playerIds: [p.id], text: `${p.name} retires after ${apps} appearances and ${goals} goals.`, ref: p.id });
@@ -140,20 +141,25 @@ export function retirePlayer(world: WorldState, p: Player): void {
 
 const INTAKE_POSITIONS: Position[] = ['GK', 'CB', 'CB', 'LB', 'RB', 'DM', 'CM', 'CM', 'AM', 'LW', 'RW', 'ST', 'ST'];
 
-/** Academy intake: quantity and quality depend on the youth facility rating and the manager's eye for talent. */
+/**
+ * Academy intake. Each graduate gets a hidden adult level `L` drawn around the club's league standard (shifted by
+ * the youth facility and the manager's eye for talent), and a current ability that is a fraction of `L` at his age.
+ * The league-relative distribution keeps the talent pool stationary over many seasons (checked by the long-run test).
+ */
 export function youthIntake(world: WorldState, club: Club, rng: Rng): number {
   const mgr = club.managerId ? world.managers[club.managerId] : undefined;
   const youth = club.facilities.youth;
+  const q = LEAGUE_BY_ID[club.leagueId]?.quality ?? 55;
   const count = clamp(Math.round(1.5 + youth / 30 + rng.normal(0, 0.8)), 1, 6);
-  const leagueQuality = club.reputation * 0.35 + 18;
+  const eye = mgr ? (mgr.youthEye - 50) / 50 : 0;
   for (let i = 0; i < count; i++) {
     const pos = INTAKE_POSITIONS[rng.int(INTAKE_POSITIONS.length)] as Position;
-    const ability = clamp(leagueQuality - 6 + youth * 0.1 + rng.normal(0, 5), 22, 62);
-    const eye = mgr ? mgr.youthEye / 100 : 0.5;
-    const spread = 14 + youth * 0.16;
-    let pot = ability + Math.max(2, rng.normal(spread * 0.9, spread * 0.5)) + eye * 4;
-    if (rng.chance(0.02 + youth / 2500)) pot += rng.float(8, 18); // wonderkid
-    createYouthPlayer(world, club, rng, pos, ability, rng.float(15.5, 17.9), clamp(pot, ability + 1, 97));
+    let adult = rng.normal(q - 6 + (youth - 50) * 0.08 + eye * 2, 7.5);
+    if (rng.chance(0.012 + youth / 4000)) adult += rng.float(7, 14); // wonderkid
+    adult = clamp(adult, 32, 94);
+    const age = rng.float(15.5, 17.9);
+    const ability = clamp(adult * (0.55 + 0.07 * (age - 15.5)) + rng.normal(0, 2.5), 18, adult);
+    createYouthPlayer(world, club, rng, pos, ability, age, adult);
   }
   return count;
 }

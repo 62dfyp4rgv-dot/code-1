@@ -12,8 +12,8 @@ import { keyedNoise, Rng } from '../rng';
 import { LEAGUE_BY_ID } from '../competition/registry';
 import { POSITION_GROUP, type Club, type Player, type Position } from '../types';
 import { formationOf } from '../tactics';
-import { allPlayers, assignPlayer, freeAgents, squadOf } from './runtime';
-import { createYouthPlayer, leagueSquadRules, MIN_SQUAD, pay, receive, recordTransfer, registrationError, releasePlayer, signFreeAgent } from './squad';
+import { allPlayers, assignPlayer, endLoan, freeAgents, squadOf, startLoan } from './runtime';
+import { createYouthPlayer, leagueSquadRules, MIN_SQUAD, registeredCount, pay, receive, recordTransfer, registrationError, releasePlayer, signFreeAgent } from './squad';
 import type { WorldState } from './types';
 import { baseWageWeekly, contractYearsFor, marketValue } from './valuation';
 import { alignedContractEnd, seasonStartDay } from './calendar';
@@ -145,7 +145,10 @@ export function wageDemand(world: WorldState, buyer: Club, p: Player): number {
   const repGap = from ? (from.reputation - buyer.reputation) / 60 : 0;
   const leagueGap = (LEAGUE_BY_ID[from?.leagueId ?? buyer.leagueId]?.quality ?? 55) - (LEAGUE_BY_ID[buyer.leagueId]?.quality ?? 55);
   const wantsMore = 1 + clamp(repGap, -0.1, 0.35) + clamp(leagueGap / 80, -0.1, 0.2);
-  return Math.round(Math.max(current * 1.05, base * 0.9) * wantsMore / 100) * 100;
+  // players (and their agents) ask more from clubs with visible wage headroom
+  const bill = squadOf(world, buyer.id).reduce((a, q) => a + (q.contract?.wageWeekly ?? 0), 0);
+  const slack = clamp(buyer.finance.wageBudgetWeekly / Math.max(1, bill) - 1, 0, 1);
+  return Math.round((Math.max(current * 1.05, base * 0.9) * wantsMore * (1 + 0.35 * slack)) / 100) * 100;
 }
 
 export function playerResponse(world: WorldState, offer: Offer): Response {
@@ -177,6 +180,7 @@ export function executeTransfer(world: WorldState, offer: Offer): string | null 
   if (!p || !buyer) return 'unknown player or club';
   if (p.retired) return 'player is retired';
   if (p.clubId === null) return 'player is a free agent; use signFreeAgent';
+  if (p.loan && !offer.loan) return 'player is on loan and cannot be sold';
   const seller = world.clubs[p.clubId] as Club;
   if (seller.id === buyer.id) return 'buyer and seller are the same club';
   if (!isWindowOpen(world, buyer) || !isWindowOpen(world, seller)) return 'transfer window is closed';
@@ -212,7 +216,6 @@ export function executeTransfer(world: WorldState, offer: Offer): string | null 
     clubId: buyer.id, wageWeekly: offer.wageWeekly, startDay: world.day, endDay: alignedContractEnd(world.day, world.season, offer.years), signingBonus: bonus,
     releaseClause: null, squadRole: ahead === 0 ? 'first' : ahead === 1 ? 'rotation' : 'backup',
   };
-  p.loan = null;
   p.lastMoveDay = world.day;
   p.morale = clamp(p.morale + 6, 10, 100);
   delete world.transferList[p.id];
@@ -238,8 +241,8 @@ function executeLoan(world: WorldState, offer: Offer, p: Player, buyer: Club, se
     pay(buyer, 'loanFees', offer.fee);
     receive(seller, 'loanFees', offer.fee);
   }
-  p.loan = { parentClubId: seller.id, startDay: world.day, endDay: loan.endDay, parentWageShare: loan.parentWageShare, recallAllowed: loan.recallAllowed, buyOption: loan.buyOption };
   assignPlayer(world, p, buyer.id);
+  startLoan(world, p, { parentClubId: seller.id, startDay: world.day, endDay: loan.endDay, parentWageShare: loan.parentWageShare, recallAllowed: loan.recallAllowed, buyOption: loan.buyOption });
   p.lastMoveDay = world.day;
   recordTransfer(world, { day: world.day, playerId: p.id, fromClubId: seller.id, toClubId: buyer.id, kind: 'loan', fee: offer.fee, wageWeekly: p.contract?.wageWeekly ?? 0 });
   return null;
@@ -252,7 +255,7 @@ export function processLoans(world: WorldState): void {
     if (world.day >= p.loan.endDay) {
       const parent = world.clubs[p.loan.parentClubId];
       recordTransfer(world, { day: world.day, playerId: p.id, fromClubId: p.clubId, toClubId: p.loan.parentClubId, kind: 'loanReturn', fee: 0, wageWeekly: p.contract?.wageWeekly ?? 0 });
-      p.loan = null;
+      endLoan(world, p);
       if (parent) assignPlayer(world, p, parent.id);
       else releasePlayer(world, p, 0, 'free');
     }
@@ -333,17 +336,20 @@ export function aiTryBuy(world: WorldState, club: Club, rng: Rng, pool: Player[]
   if (world.day < club.finance.embargoUntilDay) return false;
   const rules = leagueSquadRules(world, club);
   const squad = squadOf(world, club.id);
-  if (squad.length >= rules.maxSquadSize + 3) return false;
+  if (registeredCount(world, club) >= rules.maxSquadSize + 1) return false;
   if (world.day - ai.lastReviewDay >= 7 || Object.keys(ai.needs).length === 0) {
     ai.needs = assessNeeds(world, club);
     ai.lastReviewDay = world.day;
   }
   let pos = positionWeightedPick(rng, ai.needs);
   if (!pos) {
-    // rich ambitious clubs occasionally pursue a marquee upgrade even without a gap
-    if (club.ownership.wealth > 75 && club.finance.transferBudget > 4e7 && rng.chance(0.25)) {
-      pos = (['ST', 'AM', 'CM', 'LW', 'RW', 'CB'] as Position[])[rng.int(6)] as Position;
-    } else return false;
+    // Clubs with spare budget look to upgrade their weakest starting slot; rich owners chase marquee signings.
+    const revenue = club.finance.broadcastingAnnual + club.finance.sponsorshipAnnual;
+    const upgradeChance = clamp(club.finance.transferBudget / Math.max(1, revenue * 0.35), 0, 0.55) + (club.ownership.wealth > 75 ? 0.1 : 0);
+    if (!rng.chance(upgradeChance)) return false;
+    const fm = formationOf(club.tactics.formation);
+    const weakest = [...new Set(fm.slots)].map((sp) => ({ sp, v: Math.max(0, ...squad.filter((q) => q.primary === sp).map(overall)) })).sort((a, b) => a.v - b.v)[0];
+    pos = (rng.chance(0.3) ? (['ST', 'AM', 'CM', 'LW', 'RW', 'CB'] as Position[])[rng.int(6)] : weakest?.sp) as Position;
   }
   const cands = pickCandidates(world, club, pos, rng, pool);
   const aggression = (LEAGUE_BY_ID[club.leagueId]?.transferAggression ?? 1) * (club.ownership.wealth > 80 ? 1.12 : 1);
@@ -416,11 +422,11 @@ export function runTransferDay(world: WorldState): void {
     if (club.id === world.config.humanClubId) continue;
     if (!isWindowOpen(world, club)) continue;
     const ai = world.ai[club.id];
-    if (!ai || ai.dealsThisWindow >= 7) continue;
+    if (!ai || ai.dealsThisWindow >= 6) continue;
     const left = windowDaysLeft(world, club);
     const rel = world.day - seasonStartDay(world.season);
     const dayInWindow = left;
-    const rate = (left <= 3 ? 0.55 : left <= 10 ? 0.22 : 0.1) + (rel % 7 === 0 ? 0.05 : 0);
+    const rate = (left <= 3 ? 0.55 : left <= 10 ? 0.3 : 0.16) + (rel % 7 === 0 ? 0.05 : 0);
     void dayInWindow;
     if (!rng.chance(rate)) continue;
     if (rel % 14 === 0 || left === windowDaysLeft(world, club)) aiReviewSurplus(world, club, rng.derive(`s:${club.id}`));
@@ -452,7 +458,7 @@ function resolveListedPlayersOfHuman(world: WorldState, rng: Rng, pool: Player[]
 export function trimSquad(world: WorldState, club: Club): void {
   const rules = leagueSquadRules(world, club);
   if (club.id === world.config.humanClubId) return;
-  const squad = [...squadOf(world, club.id)];
+  const squad = squadOf(world, club.id).filter((p) => p.contract?.squadRole !== 'prospect');
   let over = squad.length - rules.maxSquadSize;
   if (over <= 0) return;
   const ranked = squad
@@ -564,13 +570,14 @@ function retireFree(world: WorldState, p: Player): void {
 /** Emergency cover: a club below the minimum squad size signs the best free agents regardless of window. */
 export function aiFillSquad(world: WorldState, club: Club, target = 21): void {
   const squad = squadOf(world, club.id);
-  if (squad.length >= target) return;
+  const keepers = squad.filter((p) => p.primary === 'GK').length;
+  if (squad.length >= target && keepers >= 2) return;
   const rules = leagueSquadRules(world, club);
   const have = (pos: Position): number => squad.filter((p) => p.primary === pos).length;
   const wanted: Position[] = [];
   if (have('GK') < 2) wanted.push('GK');
   const order: Position[] = ['CB', 'CM', 'LB', 'RB', 'ST', 'DM', 'AM', 'LW', 'RW'];
-  const needSigns = Math.max(0, target - squad.length);
+  const needSigns = Math.max(0, target - squad.length, wanted.length);
   for (let i = 0; wanted.length < needSigns; i++) {
     const pos = order[i % order.length] as Position;
     if (have(pos) + wanted.filter((w) => w === pos).length < 3 || i > 20) wanted.push(pos);
@@ -578,7 +585,7 @@ export function aiFillSquad(world: WorldState, club: Club, target = 21): void {
   }
   const pool = freeAgents(world);
   for (const pos of wanted) {
-    if (squadOf(world, club.id).length >= target) break;
+    if (squadOf(world, club.id).length >= target && pos !== 'GK') break;
     const cands = pool
       .filter((p) => p.clubId === null && !p.retired && (p.primary === pos || (POSITION_GROUP[p.primary] === POSITION_GROUP[pos] && (p.positions[pos] ?? 0) >= 0.8)))
       .filter((p) => rules.maxForeign === null || p.nationality === club.country || squadOf(world, club.id).filter((q) => q.nationality !== club.country).length < rules.maxForeign)

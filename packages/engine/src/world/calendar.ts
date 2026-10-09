@@ -102,9 +102,10 @@ export function startSeason(world: WorldState): void {
   for (const club of Object.values(world.clubs)) {
     const f = club.finance;
     const revenue = f.broadcastingAnnual + f.sponsorshipAnnual + club.stadium.capacity * 0.72 * f.ticketPrice * 19;
-    f.transferBudget = Math.max(0, Math.round(Math.max(0, f.cash) * 0.25 + (club.ownership.wealth / 100) * revenue * 0.12));
+    f.transferBudget = Math.max(0, Math.round(Math.max(0, f.cash) * 0.4 + (club.ownership.wealth / 100) * revenue * 0.12));
     const limit = COMPETITIONS[club.leagueId] ? activeRules(COMPETITIONS[club.leagueId] as CompetitionDef, season).squadCostRatioLimit : null;
-    const ratio = Math.min(limit ?? 0.9, 0.6 + (club.ownership.kind === 'investor' || club.ownership.kind === 'state' ? 0.14 : 0) + club.ownership.wealth / 1000);
+    const flush = f.cash > revenue * 0.5 ? 0.06 : 0; // cash-rich clubs let wages grow
+    const ratio = Math.min(limit ?? 0.9, 0.66 + flush + (club.ownership.kind === 'investor' || club.ownership.kind === 'state' ? 0.14 : 0) + club.ownership.wealth / 1000);
     const bill = squadOf(world, club.id).reduce((a, p) => a + (p.contract && !p.loan ? p.contract.wageWeekly : 0), 0);
     f.wageBudgetWeekly = Math.round(Math.max(bill * 1.03, (revenue * ratio) / 52));
   }

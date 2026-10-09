@@ -98,12 +98,31 @@ function validateFormation(id: string): string {
   try { formationOf(id); return id; } catch { return '4-3-3'; }
 }
 
+/** The human's chosen XI, if every selected player is still available; otherwise null (automatic selection takes over). */
+function overrideLineup(world: WorldState, club: Club, a: Availability): ReturnType<typeof pickLineup> {
+  const ids = club.lineupOverride;
+  if (!ids || ids.length !== 11) return null;
+  const squad = squadOf(world, club.id);
+  const starters: Player[] = [];
+  for (const id of ids) {
+    const p = squad.find((q) => q.id === id);
+    if (!p || !isAvailable(p, a)) return null;
+    starters.push(p);
+  }
+  if (new Set(ids).size !== 11 || starters[0]?.primary !== 'GK') return null;
+  const chosen = new Set(ids);
+  const rest = squad.filter((p) => !chosen.has(p.id) && isAvailable(p, a)).sort((x, y) => overall(y) - overall(x));
+  const gk = rest.find((p) => p.primary === 'GK');
+  const bench = [...(gk ? [gk] : []), ...rest.filter((p) => p !== gk).slice(0, gk ? 8 : 9)];
+  return { starters, bench, rating: 0 };
+}
+
 export function buildSheet(world: WorldState, club: Club, f: Fixture, rotation: number, rng: Rng): TeamSheet {
   const a: Availability = { day: f.day, competitionId: f.competitionId };
   ensureFieldable(world, club, a, rng);
   sanitizeTactics(club);
   const squad = squadOf(world, club.id);
-  let lineup = pickLineup(squad, club.tactics, a, rotation);
+  let lineup = overrideLineup(world, club, a) ?? pickLineup(squad, club.tactics, a, rotation);
   if (!lineup) {
     // Last resort: ignore injuries/suspensions so a match can always be played, preferring the least unavailable.
     const all = [...squad].sort((x, y) => selectionScore(y, y.primary, 0) - selectionScore(x, x.primary, 0));

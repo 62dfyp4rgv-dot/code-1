@@ -7,6 +7,8 @@ import type { WorldState } from './types';
  */
 interface Runtime {
   squads: Map<string, Player[]>;
+  /** Players currently loaned out, keyed by parent club (they still count against the parent's registration limits). */
+  loansOut: Map<string, Player[]>;
   free: Set<Player>;
   /** Every player ever created (including retired), in creation order. */
   all: Player[];
@@ -37,14 +39,16 @@ function insertCanonical(list: Player[], p: Player): void {
 function build(world: WorldState): Runtime {
   const squads = new Map<string, Player[]>();
   const free = new Set<Player>();
+  const loansOut = new Map<string, Player[]>();
   for (const p of Object.values(world.players)) {
     if (p.retired) continue;
+    if (p.loan) loansOut.set(p.loan.parentClubId, [...(loansOut.get(p.loan.parentClubId) ?? []), p]);
     if (p.clubId === null) { free.add(p); continue; }
     const list = squads.get(p.clubId);
     if (list) list.push(p); // world.players is in creation (= ascending id) order, so this is already canonical
     else squads.set(p.clubId, [p]);
   }
-  const rt = { squads, free, all: Object.values(world.players) };
+  const rt = { squads, loansOut, free, all: Object.values(world.players) };
   caches.set(world, rt);
   return rt;
 }
@@ -107,6 +111,27 @@ export function removeFromIndex(world: WorldState, player: Player): void {
     const i = list.indexOf(player);
     if (i >= 0) list.splice(i, 1);
   }
+}
+
+export function loanedOutOf(world: WorldState, clubId: string): readonly Player[] {
+  return rt(world).loansOut.get(clubId) ?? EMPTY;
+}
+
+/** Begin a loan (updates the loans-out index). The caller moves the player with `assignPlayer`. */
+export function startLoan(world: WorldState, player: Player, deal: NonNullable<Player['loan']>): void {
+  const r = rt(world);
+  player.loan = deal;
+  r.loansOut.set(deal.parentClubId, [...(r.loansOut.get(deal.parentClubId) ?? []), player]);
+}
+
+export function endLoan(world: WorldState, player: Player): void {
+  const r = rt(world);
+  if (player.loan) {
+    const list = (r.loansOut.get(player.loan.parentClubId) ?? []).filter((q) => q !== player);
+    if (list.length > 0) r.loansOut.set(player.loan.parentClubId, list);
+    else r.loansOut.delete(player.loan.parentClubId);
+  }
+  player.loan = null;
 }
 
 export function freeAgents(world: WorldState): Player[] {

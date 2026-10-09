@@ -6,7 +6,7 @@ import { COMPETITIONS } from '../competition/registry';
 import { activeRules } from '../competition/engine';
 import type { Club, Contract, Player, Position, TransferRecord } from '../types';
 import { cultureOfNation, playerName } from './names';
-import { addPlayer, assignPlayer, squadOf } from './runtime';
+import { addPlayer, assignPlayer, endLoan, loanedOutOf, squadOf } from './runtime';
 import { nextId } from './generate';
 import { alignedContractEnd } from './calendar';
 import type { WorldState } from './types';
@@ -23,12 +23,13 @@ export function leagueSquadRules(world: WorldState, club: Club): { maxSquadSize:
 
 /** Number of registered players that are not nationals of the club's country. */
 export function foreignCount(world: WorldState, club: Club): number {
-  return squadOf(world, club.id).filter((p) => p.nationality !== club.country).length;
+  // players loaned out remain registered by their parent until the loan ends
+  return squadOf(world, club.id).filter((p) => p.nationality !== club.country).length + loanedOutOf(world, club.id).filter((p) => p.nationality !== club.country).length;
 }
 
-/** Squad numbers reserved for academy/prospect contracts do not count toward the registered cap. */
+/** Senior squad size: academy prospects (youth-team contracts) do not count toward the registered cap. */
 export function registeredCount(world: WorldState, club: Club): number {
-  return squadOf(world, club.id).filter((p) => p.contract?.squadRole !== 'prospect' || overall(p) > 50).length;
+  return squadOf(world, club.id).filter((p) => p.contract?.squadRole !== 'prospect').length;
 }
 
 /** Returns a human-readable reason if `player` cannot be registered by `club`, otherwise null. */
@@ -37,7 +38,7 @@ export function registrationError(world: WorldState, club: Club, player: Player)
   if (player.clubId === club.id) return 'player already registered with this club';
   if (world.day < club.finance.embargoUntilDay) return 'club is under a registration embargo';
   const rules = leagueSquadRules(world, club);
-  if (squadOf(world, club.id).length >= rules.maxSquadSize + 8) return 'squad is full';
+  if (registeredCount(world, club) >= rules.maxSquadSize + 4) return 'squad is full';
   if (rules.maxForeign !== null && player.nationality !== club.country && foreignCount(world, club) >= rules.maxForeign) return `foreign-player limit (${rules.maxForeign}) reached`;
   return null;
 }
@@ -73,7 +74,7 @@ export function releasePlayer(world: WorldState, player: Player, settlementFract
   recordTransfer(world, { day: world.day, playerId: player.id, fromClubId: player.clubId, toClubId: null, kind, fee: 0, wageWeekly: player.contract?.wageWeekly ?? 0 });
   assignPlayer(world, player, null);
   player.contract = null;
-  player.loan = null;
+  endLoan(world, player);
   player.freeSince = world.day;
   delete world.transferList[player.id];
 }

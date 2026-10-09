@@ -110,9 +110,9 @@ function createClub(world: WorldState, prof: LeagueProfile, idx: number, n: numb
   const tvShare = prof.tvPool * (n / prof.clubs) * (0.55 / n + 0.45 * ((weights[idx] ?? 1) / wsum));
   const attendance = clamp(0.55 + 0.3 * z + rng.normal(0, 0.05), 0.35, 1);
   const ticket = Math.round(prof.ticket * (0.65 + reputation / 160) * (investor ? 1.1 : 1));
-  const matchday = capacity * attendance * ticket * nHome * 1.15;
-  const sponsorship = tvShare * 0.5 * Math.pow(reputation / 60, 1.6) + (investor ? wealth * 40000 : 0);
-  const revenue = tvShare + matchday + sponsorship;
+  const matchday = capacity * attendance * ticket * nHome * 1.6; // incl. hospitality and cup/European home games
+  const sponsorship = tvShare * 0.34 * Math.pow(reputation / 60, 1.5) + (investor ? wealth * 30000 : 0);
+  const revenue = (tvShare + matchday + sponsorship) * 1.08; // 8% allowance for prize money
   const club: Club = {
     id, name: nm.name, shortName: nm.short, country: prof.country, city: nm.city,
     colors: [`#${rng.int(0xffffff).toString(16).padStart(6, '0')}`, `#${rng.int(0xffffff).toString(16).padStart(6, '0')}`],
@@ -127,10 +127,10 @@ function createClub(world: WorldState, prof: LeagueProfile, idx: number, n: numb
       cash: Math.round(revenue * rng.float(0.05, 0.45)), debt: Math.round(revenue * (rng.chance(0.4) ? rng.float(0.05, 0.9) : 0)),
       transferBudget: 0, wageBudgetWeekly: 0, broadcastingAnnual: Math.round(tvShare), sponsorshipAnnual: Math.round(sponsorship),
       seasonLedger: {}, installments: [], overspendStrikes: 0, embargoUntilDay: -1,
-      opexAnnual: Math.round(revenue * (0.17 + 0.1 * (facilityBase / 100))), ticketPrice: ticket, seasonStartCash: 0,
+      opexAnnual: Math.round(revenue * (0.14 + 0.08 * (facilityBase / 100))), ticketPrice: ticket, seasonStartCash: 0,
     },
     boardExpectation: clamp(1 - (z + 2) / 4.2, 0.02, 0.95), boardPatience: clamp(Math.round(rng.normal(55, 15) + (kind === 'members' ? 10 : -5)), 15, 95),
-    leagueId: prof.id, rivals: [], fictional: true, cohesion: 0.5,
+    leagueId: prof.id, rivals: [], fictional: true, cohesion: 0.5, lineupOverride: null,
   };
   world.clubs[id] = club;
 
@@ -185,7 +185,7 @@ function createClub(world: WorldState, prof: LeagueProfile, idx: number, n: numb
   for (const p of players) world.players[p.id] = p;
 
   // --- contracts and wages scaled to the club's revenue
-  const wageTarget = revenue * clamp(rng.normal(0.62, 0.07) + (investor ? 0.12 : 0) - (idx > n * 0.7 ? 0.04 : 0), 0.45, 0.9);
+  const wageTarget = revenue * clamp(rng.normal(0.7, 0.07) + (investor ? 0.1 : 0) - (idx > n * 0.7 ? 0.03 : 0), 0.5, 0.95);
   const raw = players.map((p) => baseWageWeekly(marketValue(p, 0), 0) * 52);
   const rawSum = raw.reduce((a, b) => a + b, 0);
   const scale = clamp(wageTarget / rawSum, 0.3, 4);

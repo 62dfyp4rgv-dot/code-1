@@ -38,7 +38,8 @@ export function validateWorld(world: WorldState, opts: ValidateOptions = {}): Vi
       if (p.clubId !== club.id) add('INDEX_DRIFT', `squad index lists ${p.id} under ${club.id} but player.clubId=${p.clubId}`);
     }
     if (rules) {
-      if (squad.length > rules.maxSquadSize + 10) add('SQUAD_TOO_LARGE', `${club.name} has ${squad.length} players`, 'high');
+      const seniors = squad.filter((p) => p.contract?.squadRole !== 'prospect').length;
+      if (seniors > rules.maxSquadSize + 8) add('SQUAD_TOO_LARGE', `${club.name} has ${seniors} senior players`, 'high');
       if (rules.maxForeignRegistered !== null && club.id !== world.config.humanClubId) {
         const foreign = squad.filter((p) => p.nationality !== club.country).length;
         if (foreign > rules.maxForeignRegistered) add('FOREIGN_LIMIT', `${club.name} has ${foreign} foreign players (limit ${rules.maxForeignRegistered})`, 'high');

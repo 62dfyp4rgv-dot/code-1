@@ -1,0 +1,26 @@
+{
+  "expo": {
+    "name": "Football Universe",
+    "slug": "football-universe",
+    "scheme": "footballuniverse",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": { "image": "./assets/splash-icon.png", "resizeMode": "contain", "backgroundColor": "#0B3D2E" },
+    "ios": { "supportsTablet": true, "bundleIdentifier": "app.footballuniverse.mobile" },
+    "android": {
+      "package": "app.footballuniverse.mobile",
+      "adaptiveIcon": {
+        "backgroundColor": "#0B3D2E",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": { "bundler": "metro", "output": "single", "favicon": "./assets/favicon.png" },
+    "plugins": ["expo-router", "expo-sqlite"]
+  }
+}

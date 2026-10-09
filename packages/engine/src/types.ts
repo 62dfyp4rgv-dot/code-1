@@ -216,6 +216,8 @@ export interface Club {
   fictional: boolean;
   /** 0..1 squad chemistry; rises with continuity and tenure, falls with turnover. */
   cohesion: number;
+  /** Human-chosen starting XI (player ids in formation-slot order). Null = automatic selection. */
+  lineupOverride: string[] | null;
 }
 
 export interface TransferRecord {

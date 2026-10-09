@@ -16,6 +16,7 @@ export const MIGRATIONS: Record<number, (s: Snap) => Snap> = {
         if (c.finance.ticketPrice === undefined) c.finance.ticketPrice = 20;
       }
       if (c.cohesion === undefined) c.cohesion = 0.5;
+      if ((c as { lineupOverride?: unknown }).lineupOverride === undefined) (c as { lineupOverride?: unknown }).lineupOverride = null;
     }
     const players = (s.players ?? {}) as Record<string, { lastMoveDay?: number | null }>;
     for (const p of Object.values(players)) if (p.lastMoveDay === undefined) p.lastMoveDay = null;
