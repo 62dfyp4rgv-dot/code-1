@@ -70,6 +70,8 @@ export interface SeasonSummary {
   relegated: { clubId: string; from: string; to: string }[];
   managerChanges: { day: number; clubId: string; out: string | null; in: string }[];
   biggestWins: { fixtureId: string; margin: number }[];
+  breakouts?: { playerId: string; clubId: string; from: number; to: number }[];
+  decliners?: { playerId: string; clubId: string; from: number; to: number }[];
   /** Aggregate statistics per league, derived from played fixtures (used for calibration reports). */
   leagueStats: Record<string, LeagueSeasonStats>;
 }
@@ -95,6 +97,8 @@ export interface ClubRecord {
   bestFinish: Record<string, number>; // leagueId -> best position
   seasons: { season: number; leagueId: string; position: number; points: number }[];
   longestUnbeaten: number;
+  /** Running league streaks (updated after every league match). */
+  streaks?: { unbeaten: number; wins: number; winless: number; longestWins: number };
 }
 
 export interface WorldHistory {

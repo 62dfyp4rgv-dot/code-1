@@ -214,7 +214,8 @@ export function executeTransfer(world: WorldState, offer: Offer): string | null 
   const ahead = squadOf(world, buyer.id).filter((q) => q !== p && q.primary === p.primary && positionalOverall(q, p.primary) > overall(p)).length;
   p.contract = {
     clubId: buyer.id, wageWeekly: offer.wageWeekly, startDay: world.day, endDay: alignedContractEnd(world.day, world.season, offer.years), signingBonus: bonus,
-    releaseClause: null, squadRole: ahead === 0 ? 'first' : ahead === 1 ? 'rotation' : 'backup',
+    releaseClause: offer.fee >= 2e7 && keyedNoise(p.id, buyer.id, 'rc') > 0.2 ? Math.round((offer.fee * 1.7) / 1e6) * 1e6 : null,
+    squadRole: ahead === 0 ? 'first' : ahead === 1 ? 'rotation' : 'backup',
   };
   p.lastMoveDay = world.day;
   p.morale = clamp(p.morale + 6, 10, 100);
@@ -250,8 +251,20 @@ function executeLoan(world: WorldState, offer: Offer, p: Player, buyer: Club, se
 
 /** Return finished loans and process recalls. */
 export function processLoans(world: WorldState): void {
-  for (const p of Object.values(world.players)) {
+  for (const p of allPlayers(world)) {
     if (!p.loan || p.retired) continue;
+    // Recall clause: the parent club recalls a loanee when it is short of healthy players in his position group.
+    const parentClub = world.clubs[p.loan.parentClubId];
+    if (parentClub && p.loan.recallAllowed && isWindowOpen(world, parentClub) && p.clubId !== p.loan.parentClubId) {
+      const healthy = squadOf(world, parentClub.id).filter((q) => POSITION_GROUP[q.primary] === POSITION_GROUP[p.primary] && !(q.injury && q.injury.returnDay > world.day + 21));
+      const need = p.primary === 'GK' ? 2 : 4;
+      if (healthy.length < need) {
+        recordTransfer(world, { day: world.day, playerId: p.id, fromClubId: p.clubId, toClubId: parentClub.id, kind: 'recall', fee: 0, wageWeekly: p.contract?.wageWeekly ?? 0 });
+        endLoan(world, p);
+        assignPlayer(world, p, parentClub.id);
+        continue;
+      }
+    }
     if (world.day >= p.loan.endDay) {
       const parent = world.clubs[p.loan.parentClubId];
       recordTransfer(world, { day: world.day, playerId: p.id, fromClubId: p.clubId, toClubId: p.loan.parentClubId, kind: 'loanReturn', fee: 0, wageWeekly: p.contract?.wageWeekly ?? 0 });

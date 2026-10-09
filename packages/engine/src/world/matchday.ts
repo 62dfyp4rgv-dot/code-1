@@ -17,6 +17,7 @@ import { assignPlayer, freeAgents, squadOf } from './runtime';
 import { createYouthPlayer, pay, receive, signFreeAgent } from './squad';
 import type { NewsItem, StatLine, StoredMatch, WorldState } from './types';
 import { nextId } from './generate';
+import { checkGoalMilestone, updateStreaks } from './records';
 import { baseWageWeekly, marketValue } from './valuation';
 
 export function clubCoefficient(world: WorldState, clubId: string): number {
@@ -234,6 +235,7 @@ export function applyMatchResult(world: WorldState, comp: CompetitionState, def:
       if (line.started) hl.starts++;
       hl.minutes += line.minutes;
       hl.goals += line.goals;
+      if (line.goals > 0) checkGoalMilestone(world, p, line.goals, f.id);
       hl.assists += line.assists;
       hl.yellow += line.yellow;
       hl.red += line.red;
@@ -302,6 +304,11 @@ export function applyMatchResult(world: WorldState, comp: CompetitionState, def:
     const prize = stageRules.prize;
     if (prize.perMatch > 0) receive(club, 'prizeMoney', prize.perMatch);
     if (prize.perWin > 0 && goalDiff(side) > 0) receive(club, 'prizeMoney', prize.perWin);
+  }
+  if (def.kind === 'league') {
+    const rs = (g: number, o: number): 'W' | 'D' | 'L' => (g > o ? 'W' : g === o ? 'D' : 'L');
+    updateStreaks(world, home, rs(res.score.home, res.score.away), f.id);
+    updateStreaks(world, away, rs(res.score.away, res.score.home), f.id);
   }
   // matchday revenue for non-neutral fixtures
   if (!f.neutral) {

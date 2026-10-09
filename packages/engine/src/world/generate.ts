@@ -198,6 +198,7 @@ function createClub(world: WorldState, prof: LeagueProfile, idx: number, n: numb
       startDay: -squadRng.between(0, 700), endDay: seasonsLeft * 364 - 1, signingBonus: 0, releaseClause: null,
       squadRole: i < 11 ? 'first' : i < 17 ? 'rotation' : 'backup',
     };
+    if (squadRng.chance(0.2) && marketValue(p, 0) > 1.5e7) p.contract.releaseClause = Math.round(marketValue(p, 0) * squadRng.float(1.5, 2.2) / 1e6) * 1e6;
     p.morale = clamp(Math.round(squadRng.normal(65, 8)), 30, 95);
     p.confidence = clamp(Math.round(squadRng.normal(60, 8)), 30, 95);
   });

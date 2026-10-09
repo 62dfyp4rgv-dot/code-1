@@ -122,6 +122,8 @@ export interface Player {
   freeSince: number | null;
   /** Day of the last club change (blocks immediate re-transfers). */
   lastMoveDay: number | null;
+  /** Overall ability at the start of the current season (used for breakout/decline narratives). */
+  ovMark?: number;
 }
 
 export interface Tactics {

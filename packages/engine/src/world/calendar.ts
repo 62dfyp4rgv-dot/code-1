@@ -10,11 +10,14 @@ import type { CompetitionDef, CompetitionState } from '../competition/types';
 import type { Club } from '../types';
 import { engineContext, playFixture } from './matchday';
 import { nextId } from './generate';
-import { squadOf } from './runtime';
+import { breakoutsAndDecliners, clubRecord, markSeasonStartAbility } from './records';
+import { allPlayers, squadOf } from './runtime';
 import { receive } from './squad';
 import type { LeagueSeasonStats, SeasonSummary, WorldState } from './types';
 
 export const DAYS_PER_SEASON = 364;
+
+export { clubRecord };
 
 export function seasonStartDay(season: number): number {
   return (season - 1) * DAYS_PER_SEASON;
@@ -73,6 +76,7 @@ export function startSeason(world: WorldState): void {
     p.yellows = {};
     p.suspensions = {};
   }
+  markSeasonStartAbility(allPlayers(world));
   for (const c of Object.values(world.clubs)) {
     c.finance.seasonLedger = {};
     c.finance.seasonStartCash = c.finance.cash;
@@ -220,6 +224,13 @@ export function endSeason(world: WorldState): SeasonSummary {
       world.news.push({ id: nextId(world, 'news'), day: world.day, kind: 'promotion', clubIds: [c], playerIds: [], text: `${(world.clubs[c] as Club).name} are relegated from the ${LEAGUE_BY_ID[link.upper]?.name}.`, ref: link.upper });
     }
   }
+  const bd = breakoutsAndDecliners(world, allPlayers(world), season);
+  summary.breakouts = bd.breakouts;
+  summary.decliners = bd.decliners;
+  for (const b of bd.breakouts.slice(0, 2)) {
+    const pl = world.players[b.playerId];
+    if (pl) world.news.push({ id: nextId(world, 'news'), day: world.day, kind: 'milestone', clubIds: [b.clubId], playerIds: [b.playerId], text: `Breakout star: ${pl.name} improved from ${b.from} to ${b.to} this season.`, ref: b.playerId });
+  }
   world.history.seasons.push(summary);
   return summary;
 }
@@ -248,9 +259,6 @@ function leagueStats(comp: CompetitionState): LeagueSeasonStats {
   };
 }
 
-export function clubRecord(world: WorldState, clubId: string): import('./types').ClubRecord {
-  return (world.history.clubs[clubId] ??= { trophies: {}, bestFinish: {}, seasons: [], longestUnbeaten: 0 });
-}
 
 export function fixturesToday(world: WorldState): { comp: CompetitionState; def: CompetitionDef; fixtureId: string }[] {
   const out: { comp: CompetitionState; def: CompetitionDef; fixtureId: string }[] = [];
