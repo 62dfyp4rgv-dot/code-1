@@ -1,0 +1,13 @@
+{
+  "name": "football-universe",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": ["packages/*", "apps/*"],
+  "scripts": {
+    "test": "npm run test -w @fu/engine",
+    "typecheck": "npm run typecheck -w @fu/engine",
+    "lint": "npm run lint -w @fu/engine",
+    "sim": "npm run sim -w @fu/engine --"
+  },
+  "engines": { "node": ">=22" }
+}
