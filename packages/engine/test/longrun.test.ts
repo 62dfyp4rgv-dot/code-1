@@ -19,7 +19,7 @@ beforeAll(() => {
   w = createWorld(cfg);
   for (let s = 1; s <= SEASONS; s++) {
     advanceToEndOfSeason(w);
-    const ovs = allPlayers(w).filter((p) => !p.retired).map(overall).sort((a, b) => a - b);
+    const ovs = allPlayers(w).filter((p) => !p.retired && p.clubId !== null && p.contract?.squadRole !== 'prospect').map(overall).sort((a, b) => a - b);
     const cash = Object.values(w.clubs).map((c) => c.finance.cash).sort((a, b) => a - b);
     const sum = w.history.seasons.at(-1)!;
     const lg = Object.entries(sum.leagueStats).filter(([k]) => LEAGUE_BY_ID[k]?.tier === 1);

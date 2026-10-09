@@ -129,6 +129,9 @@ export function academyReview(world: WorldState, club: Club, rng: Rng): void {
       releasePlayer(world, p, 0, 'free');
     }
   }
+  // youth squads are finite: keep the eight most promising prospects
+  const left = squadOf(world, club.id).filter((p) => p.contract?.squadRole === 'prospect').sort((a, b) => b.pot - a.pot);
+  for (const p of left.slice(8)) releasePlayer(world, p, 0, 'free');
 }
 
 /**

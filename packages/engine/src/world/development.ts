@@ -18,10 +18,10 @@ import { createYouthPlayer } from './squad';
 import { allPlayers, assignPlayer, endLoan } from './runtime';
 import type { WorldState } from './types';
 
-const PEAK_AGE: Record<AttrGroup, number> = { physical: 25, technical: 27, mental: 29, goalkeeping: 29 };
-const DECLINE_START: Record<AttrGroup, number> = { physical: 28, technical: 31, mental: 33, goalkeeping: 34 };
-const DECLINE_COEF: Record<AttrGroup, number> = { physical: 0.0001, technical: 0.00006, mental: 0.00003, goalkeeping: 0.00006 };
-const MAX_GROWTH_WEEKLY = 0.0105;
+const PEAK_AGE: Record<AttrGroup, number> = { physical: 26, technical: 28, mental: 30, goalkeeping: 30 };
+const DECLINE_START: Record<AttrGroup, number> = { physical: 27, technical: 30, mental: 32, goalkeeping: 33 };
+const DECLINE_COEF: Record<AttrGroup, number> = { physical: 0.00022, technical: 0.00012, mental: 0.00007, goalkeeping: 0.00012 };
+const MAX_GROWTH_WEEKLY = 0.0058;
 
 export function growthRate(group: AttrGroup, age: number): number {
   const peak = PEAK_AGE[group];
@@ -150,11 +150,11 @@ export function youthIntake(world: WorldState, club: Club, rng: Rng): number {
   const mgr = club.managerId ? world.managers[club.managerId] : undefined;
   const youth = club.facilities.youth;
   const q = LEAGUE_BY_ID[club.leagueId]?.quality ?? 55;
-  const count = clamp(Math.round(1.5 + youth / 30 + rng.normal(0, 0.8)), 1, 6);
+  const count = clamp(Math.round(1 + youth / 45 + rng.normal(0, 0.7)), 1, 4);
   const eye = mgr ? (mgr.youthEye - 50) / 50 : 0;
   for (let i = 0; i < count; i++) {
     const pos = INTAKE_POSITIONS[rng.int(INTAKE_POSITIONS.length)] as Position;
-    let adult = rng.normal(q - 6 + (youth - 50) * 0.08 + eye * 2, 7.5);
+    let adult = rng.normal(q - 3 + (youth - 50) * 0.08 + eye * 2, 7.5);
     if (rng.chance(0.012 + youth / 4000)) adult += rng.float(7, 14); // wonderkid
     adult = clamp(adult, 32, 94);
     const age = rng.float(15.5, 17.9);

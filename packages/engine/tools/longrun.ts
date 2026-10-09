@@ -23,7 +23,7 @@ for (let s = 0; s < seasons; s++) {
   const sum = w.history.seasons.at(-1)!;
   for (const lid of Object.keys(sum.tables)) if (LEAGUE_BY_ID[lid]?.tier === 1) (champs[lid] ??= []).push(w.clubs[w.history.champions[lid]![sum.season]!.winner!]!.shortName);
   const players = allPlayers(w).filter((p) => !p.retired);
-  const ovs = players.map(overall).sort((a, b) => b - a);
+  const ovs = players.filter((p) => p.contract?.squadRole !== 'prospect').map(overall).sort((a, b) => b - a);
   const clubs = Object.values(w.clubs);
   const cash = clubs.map((c) => c.finance.cash / 1e6).sort((a, b) => a - b);
   const wagesPerClub = clubs.map((c) => squadOf(w, c.id).reduce((a, p) => a + (p.contract?.wageWeekly ?? 0), 0) * 52 / 1e6).sort((a, b) => a - b);

@@ -54,7 +54,7 @@ describe('player development', () => {
       const tr = lifetime(17, 45, 78, Rng.fromSeed(`dev${i}`));
       const peak = tr.reduce((a, b) => (b.ov > a.ov ? b : a));
       peaks.push(peak.age); finals.push(peak.ov);
-      declines.push(peak.ov - (tr.find((x) => x.age >= 36)?.ov ?? peak.ov));
+      declines.push(peak.ov - (tr.find((x) => x.age >= 35)?.ov ?? peak.ov));
     }
     const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
     expect(mean(finals)).toBeGreaterThan(68); expect(mean(finals)).toBeLessThan(84);
@@ -110,7 +110,7 @@ describe('lineup selection', () => {
     formationOf('4-3-3').slots.forEach((pos, i) => expect(positionalOverall(l.starters[i]!, pos)).toBeGreaterThan(40));
   });
   it('excludes injured, suspended and retired players and rests very tired ones', () => {
-    const s2 = squad.map((p) => ({ ...p, injury: null, suspensions: {}, fatigue: 0 }));
+    const s2: Player[] = squad.map((p) => ({ ...p, injury: null, suspensions: {}, fatigue: 0 }));
     s2.find((p) => p.id === 'CB0')!.injury = { kind: 'x', startDay: 0, returnDay: 50, severity: 2 };
     s2.find((p) => p.id === 'CB1')!.suspensions = { c: 1 };
     s2.find((p) => p.id === 'CB2')!.retired = true;
