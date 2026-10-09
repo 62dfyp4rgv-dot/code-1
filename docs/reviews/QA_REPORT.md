@@ -10,13 +10,17 @@ Run one file: `npx vitest run --config vitest.qa.config.ts qa/<file>.qa.test.ts`
 
 | ID | Severity | Module | Title |
 |----|----------|--------|-------|
-| QA-001 | High | world/rollover + squad | Clubs relegated from Saudi Pro League exceed SAU2 foreign cap (10 > 8) and nothing corrects it for 1-3 seasons |
+| QA-001 | High (FIXED during this run) | world/rollover + squad | Clubs relegated from Saudi Pro League exceeded the SAU2 foreign cap (10 > 8); `enforceForeignLimit` added in rollover.ts while testing, regression test now passes |
 | QA-002 | High | world/actions + transfers | Human asking price is paid verbatim: free agents worth €0.13–1M sold for €15M |
 | QA-003 | Medium | world/actions | NaN / Infinity wage and years accepted by renewal and free-agent signing; corrupts cash (-Infinity) and creates never-expiring contracts that `validateWorld` does not detect |
 | QA-004 | Medium | world/actions | `releasePlayerAction` can release the last goalkeeper; world then violates NO_GOALKEEPER |
 | QA-005 | Low | world/actions | Ids such as `constructor` / `__proto__` throw TypeError (bid, loan, profile) or return ok (scout, terms) |
 | QA-006 | Low | match | First-half stoppage-time minutes (46-48) precede second-half minutes (46-47): event minutes are not monotone in 75% of matches |
 | QA-007 | Low | world/actions | `setTactics` accepts fractional `maxSubs`; `listForTransfer` accepts Infinity / 1e300 asking price |
+
+| QA-008 | Medium | world/finance | Richest club hoards cash without bound (1.1x -> 6.1x TV+sponsor revenue in 10 seasons, ~+75M/season) |
+| QA-009 | Medium | persistence/codec + repository | `importSlot`/`decodeWorld` store worlds that fail `validateWorld` (negative wages, attribute 1e300, missing clubs chunk, season -3/day 1e15) and surface raw TypeError/SyntaxError instead of SaveCorruptedError |
+| QA-010 | Medium | match archive / persistence | Stored match `replay` inputs alias live player/tactics objects: 68 of 116 stored replays re-simulate to a different score after 420 days, and a live world differs from its reloaded twin in the `matches` chunk |
 
 (More findings are added below as testing continues.)
 
@@ -55,6 +59,21 @@ Run one file: `npx vitest run --config vitest.qa.config.ts qa/<file>.qa.test.ts`
 
 ### QA-007 Minor input validation
 * `setTactics` accepts `maxSubs: 2.5`; `listForTransfer` accepts `Infinity`/`1e300` (becomes `null` after JSON save).
+
+### QA-008 Unbounded cash hoarding
+* Test `[QA-008]` in `qa/realism.qa.test.ts` (ITA1+GER1 standard, seed `qa-real`, 10 seasons). Max over clubs of cash/(broadcasting+sponsorship) after each season: 1.1, 1.7, 2.2, 2.7, 3.3, 4.2, 5.2, 5.4, 5.8, 6.1. Script run for 12 seasons: richest club 161M -> 900M cash while its TV+sponsor income is ~130-180M and its transfer budget grows to 371M that is never spent. Median club cash is stable (63M -> 190M).
+* Expected: surplus is invested/distributed (the spec mentions annual surplus investment/dividends); cash must plateau. Projected: +75M/season linear -> multi-billion by season 50 and an ever-richer `transferBudget` (40% of cash).
+* Fix: cap `transferBudget` growth, pay dividends above N x revenue, or let AI spend on facilities (`investSurplus`).
+
+### QA-009 Imports are not validated
+* Test names: `[QA-009] ...` in `qa/persistence.qa.test.ts` (4 tests). A save document whose checksum is valid (a buggy exporter or hand edit recomputes it) is imported verbatim. Evidence: wage -5 and attribute 1e300 -> accepted, `validateWorld` = WAGE_INVALID, ATTR_RANGE; clubs chunk removed -> accepted, UNKNOWN_CLUB; season -3/day 1e15 -> accepted with 1008 violations; players chunk `"hello"` -> raw `TypeError: Cannot read properties of undefined (reading 'finishing')`; truncated chunk JSON -> raw SyntaxError.
+* Expected (DATA_AND_LICENSING.md: "Save import verifies a checksum and the schema version before accepting a file"): additionally reject worlds with hard `validateWorld` violations and wrap decode failures in SaveCorruptedError.
+* Fix: in `decodeWorld`/`importSlot` run `assertValid` and wrap in try/catch -> `SaveCorruptedError`.
+
+### QA-010 Replay inputs alias live objects
+* Tests: `[QA-010] a stored match replay input reproduces the stored score ...` and `[QA-010] live and reloaded worlds are byte-identical including the match archive ...` in `qa/persistence.qa.test.ts`.
+* Evidence: after 420 days of `qa-det` (ENG1+ESP1 compact) 68 of 116 retained replays give a different score when fed back to `simulateMatch`. `toMatchPlayer` stores `attrs: p.attrs` (same object); `buildSheet` stores `tactics: club.tactics`; later weekly development mutates them in place, so `world.matches[id].replay` silently changes. Because loaded worlds hold copies, `encodeWorld(live)` != `encodeWorld(loaded)` for the `matches` chunk after further play (first diff: `matches.42.replay.away.players.2.attrs.pace 71.22 vs 71.82`). All other chunks stayed byte-identical (so simulation determinism itself is intact - verified).
+* Fix: deep-copy attrs/tactics when building `MatchInput` (`structuredClone` or `{...attrs}`).
 
 ## Verified OK (so far)
 * 4000 synthetic matches (mixed strengths, 50% knockout, 25% with extra time allowed): goal events equal score, running score increments by one, scorer/assist belong to correct team, no self-assist, no own-goal assist, no second yellow without secondYellow event, no action by a sent-off player, Σ player goals + own goals = score, ET only when allowed and level after 90, penalties only when level, shoot-out events equal reported pens, kick counts differ by <=1, no ET/pens in league matches, substitutions <=5 in 90 minutes (<=6 with ET).

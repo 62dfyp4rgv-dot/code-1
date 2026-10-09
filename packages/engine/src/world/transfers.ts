@@ -317,6 +317,8 @@ export function pickCandidates(world: WorldState, club: Club, pos: Position, rng
     if (POSITION_GROUP[p.primary] !== POSITION_GROUP[pos]) continue;
     if (p.primary !== pos && (p.positions[pos] ?? 0) < 0.8) continue;
     if (p.loan) continue;
+    // The human club's players are sold only through the user's listing (see resolveListedPlayersOfHuman), never by AI haggling.
+    if (p.clubId !== null && p.clubId === world.config.humanClubId && !(p.contract?.releaseClause != null)) continue;
     if (p.injury && p.injury.returnDay - world.day > 45) continue;
     if (p.lastMoveDay !== null && world.day - p.lastMoveDay < 120) continue;
     if (rules.maxForeign !== null && p.nationality !== club.country && squad.filter((q) => q.nationality !== club.country).length >= rules.maxForeign) continue;
