@@ -7,7 +7,8 @@ import type { Club, Player } from '../types';
 import { endSeason, seasonStartDay, startSeason, clubRecord } from './calendar';
 import { annualRetirements, revisePotentials, youthIntake } from './development';
 import { applyRegulation, reviewClubFinance, updateRevenueDeals } from './finance';
-import { assignPlayer, endLoan, squadOf } from './runtime';
+import { assignPlayer, endLoan, loanedOutOf, squadOf } from './runtime';
+import { activeRules } from '../competition/engine';
 import { pay, releasePlayer } from './squad';
 import { ageOf } from '../players';
 import { seasonEndManagerReview } from './managers';
@@ -156,6 +157,26 @@ export function annualWageReview(world: WorldState, club: Club): void {
   }
 }
 
+/**
+ * A club that changes league (promotion/relegation) must comply with the new league's foreign-player registration
+ * limit: AI clubs release their weakest surplus foreigners. Human clubs are warned instead.
+ */
+export function enforceForeignLimit(world: WorldState, club: Club): void {
+  const def = COMPETITIONS[club.leagueId];
+  const cap = def ? activeRules(def, world.season + 1).squad.maxForeignRegistered : null;
+  if (cap === null || cap === undefined) return;
+  const foreign = () => squadOf(world, club.id).filter((p) => p.nationality !== club.country && !p.loan);
+  while (foreign().length + loanedOutOf(world, club.id).filter((p) => p.nationality !== club.country).length > cap) {
+    const worst = [...foreign()].sort((a, b) => overall(a) - overall(b))[0];
+    if (!worst) break;
+    if (club.id === world.config.humanClubId) {
+      world.news.push({ id: `fl-${club.id}-${world.day}`, day: world.day, kind: 'finance', clubIds: [club.id], playerIds: [], text: `${club.name} exceed the foreign-player limit (${cap}) of their new league and must reduce their squad.`, ref: club.id });
+      break;
+    }
+    releasePlayer(world, worst, 0.5);
+  }
+}
+
 export function rolloverSeason(world: WorldState): SeasonSummary {
   const summary = endSeason(world);
   const rng = Rng.fromSeed(`${world.config.seed}:rollover:${world.season}`);
@@ -187,6 +208,7 @@ export function rolloverSeason(world: WorldState): SeasonSummary {
   revisePotentials(world, rng.derive('pot'));
   annualRetirements(world, rng.derive('ret'));
   expireContracts(world);
+  for (const club of Object.values(world.clubs)) enforceForeignLimit(world, club);
   for (const club of Object.values(world.clubs)) annualWageReview(world, club);
   for (const club of Object.values(world.clubs)) {
     academyReview(world, club, rng.derive(`academy:${club.id}`));

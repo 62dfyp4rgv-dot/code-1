@@ -138,6 +138,15 @@ function topN<T>(items: T[], key: (t: T) => number, n: number): T[] {
 
 export function endSeason(world: WorldState): SeasonSummary {
   const warnings = drainRemaining(world);
+  // Safety net: a competition that is still active with nothing left to play is stuck (degenerate field). Close it
+  // explicitly and report it instead of letting it silently survive the season.
+  for (const comp of Object.values(world.competitions)) {
+    if (comp.status === 'active' && !comp.fixtures.some((f) => f.status === 'scheduled')) {
+      comp.status = 'complete';
+      comp.winner ??= comp.tableOrder[0] ?? null;
+      warnings.push(`competition ${comp.id} was stuck without fixtures and was closed`);
+    }
+  }
   const season = world.season;
   const summary: SeasonSummary = {
     season, champions: {}, tables: {}, topScorers: {}, topAssists: {}, bestPlayers: {}, promoted: [], relegated: [], managerChanges: [], biggestWins: [], leagueStats: {},

@@ -133,8 +133,12 @@ function effectivePots(n: number, requested: number): number {
 }
 
 function startLeaguePhase(comp: CompetitionState, stage: LeaguePhaseStage, st: StageState, teams: string[], ctx: EngineContext, rng: Rng): void {
-  const zoneIds = stage.zones?.map((z) => z.id) ?? ['main'];
   const infos = teams.map((t) => ctx.info(t));
+  // A zoned league phase needs every zone to be viable; otherwise fall back to a single table (degenerate fields).
+  const zoneCounts = (stage.zones ?? []).map((z) => infos.filter((t) => t.zone === z.id).length);
+  const zonesViable = !stage.zones || zoneCounts.every((n) => n >= 4);
+  if (!zonesViable) stage = { ...stage, zones: undefined };
+  const zoneIds = stage.zones?.map((z) => z.id) ?? ['main'];
   const byZone = new Map<string, TeamInfo[]>();
   for (const z of zoneIds) byZone.set(z, []);
   if (stage.zones) {
