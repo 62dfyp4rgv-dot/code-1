@@ -14,6 +14,26 @@ interface Runtime {
 
 const caches = new WeakMap<WorldState, Runtime>();
 
+/**
+ * Squads are kept in canonical order (ascending numeric player id) so that iteration order, and therefore random
+ * number consumption, is identical for a live world and one rebuilt from a save.
+ */
+function idNum(p: Player): number {
+  return Number.parseInt(p.id.slice(1), 10);
+}
+
+function insertCanonical(list: Player[], p: Player): void {
+  const n = idNum(p);
+  let lo = 0;
+  let hi = list.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (idNum(list[mid] as Player) < n) lo = mid + 1;
+    else hi = mid;
+  }
+  list.splice(lo, 0, p);
+}
+
 function build(world: WorldState): Runtime {
   const squads = new Map<string, Player[]>();
   const free = new Set<Player>();
@@ -21,7 +41,7 @@ function build(world: WorldState): Runtime {
     if (p.retired) continue;
     if (p.clubId === null) { free.add(p); continue; }
     const list = squads.get(p.clubId);
-    if (list) list.push(p);
+    if (list) list.push(p); // world.players is in creation (= ascending id) order, so this is already canonical
     else squads.set(p.clubId, [p]);
   }
   const rt = { squads, free, all: Object.values(world.players) };
@@ -73,7 +93,7 @@ export function assignPlayer(world: WorldState, player: Player, clubId: string |
   if (clubId === null && !player.retired) r.free.add(player);
   if (clubId !== null && !player.retired) {
     const list = r.squads.get(clubId);
-    if (list) list.push(player);
+    if (list) insertCanonical(list, player);
     else r.squads.set(clubId, [player]);
   }
 }
@@ -90,5 +110,5 @@ export function removeFromIndex(world: WorldState, player: Player): void {
 }
 
 export function freeAgents(world: WorldState): Player[] {
-  return [...rt(world).free];
+  return [...rt(world).free].sort((a, b) => idNum(a) - idNum(b));
 }
