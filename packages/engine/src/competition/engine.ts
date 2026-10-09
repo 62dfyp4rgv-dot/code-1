@@ -171,6 +171,7 @@ function startLeaguePhase(comp: CompetitionState, stage: LeaguePhaseStage, st: S
         const r = zrng.derive(`a${attempt}`);
         const res = leaguePhasePairings(zteams, pots, stage.maxSameCountryOpponents, r);
         pairings = res.pairings;
+        if (res.relaxed !== 'none') (comp.notes ??= []).push(`Draw constraint relaxed in zone ${zid}: ${res.relaxed === 'countryCap' ? 'more than the usual number of opponents from one association' : 'same-association pairings were unavoidable'}.`);
         colours = colourMatchdays(zteams.map((t) => t.id), pairings, nMatches, r.derive('col'));
         if (colours) {
           pairings.forEach((p, i) => comp.fixtures.push(makeFixture(comp, stage, (colours as number[])[i] as number + 1, i, 1, p.home, p.away,

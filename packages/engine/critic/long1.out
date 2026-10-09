@@ -1,0 +1,65 @@
+clubs 250 players 6382 createWorld ms 1
+S1 22835ms players 6935 (active 6382, retired 553) squad[min 21 max 28] ov[max 93.7 p99 79.4 mean 53.1]
+   cash[min 0M max 202M] debt[max 115M] wage/rev[min 0.31 max 4.37] mgrAge max 68 noMgr 0 pool 20
+   news 793 transfers 2149 matches 2400 hist 1 saveJSON 45.9MB goals/match 3.10 schedWarn 0 violations 0 
+S2 21308ms players 7491 (active 6580, retired 911) squad[min 21 max 29] ov[max 93.7 p99 79.9 mean 52.5]
+   cash[min 0M max 233M] debt[max 33M] wage/rev[min 0.48 max 3.02] mgrAge max 69 noMgr 0 pool 20
+   news 1535 transfers 4326 matches 2400 hist 2 saveJSON 47.9MB goals/match 2.96 schedWarn 0 violations 0 
+S3 22078ms players 8043 (active 6543, retired 1500) squad[min 21 max 30] ov[max 93.6 p99 79.8 mean 52.3]
+   cash[min 0M max 277M] debt[max 16M] wage/rev[min 0.55 max 7.90] mgrAge max 70 noMgr 0 pool 20
+   news 2261 transfers 6480 matches 2400 hist 3 saveJSON 50.1MB goals/match 3.02 schedWarn 0 violations 0 
+S4 29901ms players 8580 (active 6476, retired 2104) squad[min 21 max 31] ov[max 93.6 p99 80.4 mean 52.2]
+   cash[min 0M max 314M] debt[max 1M] wage/rev[min 0.55 max 8.02] mgrAge max 71 noMgr 0 pool 20
+   news 3029 transfers 8590 matches 2400 hist 4 saveJSON 52.2MB goals/match 2.96 schedWarn 0 violations 0 
+S5 26265ms players 9140 (active 6417, retired 2723) squad[min 21 max 31] ov[max 93.6 p99 80.8 mean 52.0]
+   cash[min 0M max 392M] debt[max 2M] wage/rev[min 0.58 max 8.74] mgrAge max 72 noMgr 0 pool 20
+   news 2856 transfers 10668 matches 2400 hist 5 saveJSON 54.3MB goals/match 2.90 schedWarn 0 violations 0 
+S6 23698ms players 9684 (active 6433, retired 3251) squad[min 20 max 32] ov[max 93.5 p99 80.9 mean 51.8]
+   cash[min 0M max 472M] debt[max 0M] wage/rev[min 0.59 max 7.61] mgrAge max 73 noMgr 0 pool 20
+   news 2699 transfers 12685 matches 2400 hist 6 saveJSON 56.3MB goals/match 2.89 schedWarn 0 violations 0 
+S7 25660ms players 10231 (active 6415, retired 3816) squad[min 19 max 30] ov[max 93.1 p99 80.7 mean 51.7]
+   cash[min 0M max 591M] debt[max 0M] wage/rev[min 0.49 max 6.15] mgrAge max 74 noMgr 0 pool 19
+   news 2975 transfers 14884 matches 2400 hist 7 saveJSON 58.2MB goals/match 2.87 schedWarn 0 violations 0 
+S8 25753ms players 10803 (active 6403, retired 4400) squad[min 20 max 31] ov[max 93.3 p99 80.6 mean 51.5]
+   cash[min 0M max 699M] debt[max 1M] wage/rev[min 0.57 max 5.90] mgrAge max 75 noMgr 0 pool 18
+   news 2780 transfers 17143 matches 2400 hist 8 saveJSON 60.2MB goals/match 2.83 schedWarn 0 violations 0 
+S9 28141ms players 11370 (active 6405, retired 4965) squad[min 17 max 30] ov[max 93.3 p99 80.3 mean 51.3]
+   cash[min 0M max 804M] debt[max 3M] wage/rev[min 0.48 max 6.73] mgrAge max 76 noMgr 0 pool 17
+   news 2600 transfers 19465 matches 2400 hist 9 saveJSON 62.3MB goals/match 2.82 schedWarn 0 violations 0 
+S10 30529ms players 11933 (active 6421, retired 5512) squad[min 16 max 31] ov[max 93.3 p99 80.8 mean 51.4]
+   cash[min 0M max 930M] debt[max 3M] wage/rev[min 0.41 max 6.00] mgrAge max 77 noMgr 0 pool 17
+   news 2941 transfers 21760 matches 2400 hist 10 saveJSON 64.5MB goals/match 2.80 schedWarn 0 violations 0 
+titles by league (club:count) top share
+  ALG1 Tayriyada FC(cl169):5 Qasrkhobar SC(cl170):4 FC Darsalam(cl172):1 distinct winners 3/10
+  ARG1 Unión Vallenorte(cl213):4 Club Altosol(cl215):3 Unión Realluna(cl214):2 distinct winners 4/10
+  AUS1 Greenley County(cl127):4 Greenchester Athletic(cl128):3 Lowhaven Albion(cl129):1 distinct winners 5/10
+  BEL1 Hoogdam DVV(cl071):4 Groothorst FC(cl074):3 Grootveld Excelsior(cl073):2 distinct winners 4/10
+  BRA1 Boamar FC(cl205):5 Belaforte Associação(cl204):2 Associação Belavista(cl203):2 distinct winners 4/10
+  CAM1 Villamar Unión(cl199):2 Valleblanca Deportivo(cl201):2 Altodorada Club(cl202):2 distinct winners 6/10
+  CHI1 Torreclaro Athletic(cl227):5 Unión Sierrasol(cl231):2 Villaleon Sporting(cl230):1 distinct winners 5/10
+  CHN1 Haijing Phoenix(cl121):3 Beining Phoenix(cl122):3 Xizhou Phoenix(cl126):2 distinct winners 5/10
+  COL1 Vallesur Club(cl221):5 Sierraclaro Atlético(cl222):2 Sporting Playamarina(cl223):1 distinct winners 5/10
+  CRC1 Athletic Puebloverde(cl191):3 Santaluna Atlético(cl195):3 Athletic Santamar(cl193):2 distinct winners 5/10
+  EGY1 Shamsbadr SC(cl145):6 Club Qasrbadr(cl147):1 Hajartabuk United(cl150):1 distinct winners 5/10
+  ENG1 Ashdale Albion(cl001):6 Brookmouth Albion(cl002):2 Brookbridge Rovers(cl003):1 distinct winners 4/10
+  ESP1 Atlético Sanluna(cl011):6 Sporting Playaverde(cl015):2 Realbella Sporting(cl014):1 distinct winners 4/10
+  FIJ1 Korokau FC(cl245):4 Ratawai Navigators(cl246):2 Nadiviti Athletic(cl247):2 distinct winners 4/10
+  FRA1 Pontval Athletic(cl042):4 FC Lacpierre(cl041):3 Stade Pontlune(cl045):1 distinct winners 5/10
+  GER1 Borussia Rheinfurt(cl031):4 Rheinfeld Union(cl032):2 Sport Lindenheim(cl035):1 distinct winners 6/10
+  ITA1 FC Villabello(cl021):3 Sportiva Valbello(cl024):2 Sportiva Roccaverde(cl027):2 distinct winners 6/10
+  JPN1 Higashiura Athletic(cl105):5 Hokumizu Gamba(cl110):3 Tamashima Vortis(cl106):1 distinct winners 4/10
+  KOR1 Pohangbuk United(cl113):4 Chungjin FC(cl114):2 Gyeongwon Dynamos(cl118):2 distinct winners 5/10
+  MAR1 FC Dirataawoun(cl152):4 Sports Club Qasrriyada(cl154):2 Shamsriyada FC(cl153):2 distinct winners 4/10
+  MEX1 Sandorada Sporting(cl183):4 Playaleon Deportivo(cl184):4 Campoleon Unión(cl185):1 distinct winners 4/10
+  NED1 Groenwijk AFC(cl061):4 Nieuwhoek Vitesse(cl063):3 Vliedam Excelsior(cl062):2 distinct winners 4/10
+  NZL1 Langworth Albion(cl242):3 Elmcastle Town(cl241):2 Stoneford City(cl239):2 distinct winners 5/10
+  POR1 Desportivo Pontebranca(cl055):4 Sporting Altobranca(cl053):3 União Riominho(cl052):1 distinct winners 5/10
+  QAT1 Sports Club Wadisalam(cl139):3 Nakhlmansur FC(cl141):2 Najdsafa Athletic(cl144):2 distinct winners 6/10
+  RSA1 Sowetovale United(cl159):3 Sunkop Stars(cl158):2 Durtoria Pirates(cl161):2 distinct winners 5/10
+  SAU1 Hajarmansur Club(cl095):5 Diraraed SC(cl097):3 Nakhljawf Athletic(cl098):1 distinct winners 4/10
+  SCO1 Marshhaven Wanderers(cl080):6 Oakley County(cl079):3 Highhaven Rangers(cl086):1 distinct winners 3/10
+  TUN1 Shamsamal Athletic(cl165):3 Jabalkhobar United(cl164):3 Hajarittihad Athletic(cl163):2 distinct winners 5/10
+  TUR1 SK Akköy(cl088):6 Bağkent Futbol(cl090):2 Futbol Denizkoy(cl089):1 distinct winners 4/10
+  UAE1 Dirakhobar Sports Club(cl135):3 Jabalnasr Club(cl133):3 Qasrtaawoun FC(cl134):2 distinct winners 5/10
+  URU1 CF Villanova(cl233):4 Ríomar Atlético(cl235):3 Racing Altoblanca(cl237):1 distinct winners 5/10
+  USA1 Millley Wanderers(cl173):6 Kingbury United(cl176):2 Greenbury United(cl182):1 distinct winners 4/10

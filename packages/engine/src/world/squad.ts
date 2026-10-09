@@ -1,5 +1,4 @@
 import { clamp } from '../math';
-import { overall } from '../players';
 import { generatePlayer } from '../players';
 import { Rng } from '../rng';
 import { COMPETITIONS } from '../competition/registry';
@@ -94,12 +93,13 @@ export function signFreeAgent(world: WorldState, club: Club, player: Player, par
   if (err) return err;
   const bonus = params.signingBonus ?? 0;
   const first = Math.round(params.wageWeekly * 1);
-  if (club.finance.cash + club.finance.debt * 0 < -1e12 || first < 0) return 'invalid terms';
+  if (first < 0 || !Number.isFinite(first)) return 'invalid terms';
   player.contract = {
     clubId: club.id, wageWeekly: params.wageWeekly, startDay: world.day, endDay: alignedContractEnd(world.day, world.season, params.years),
     signingBonus: bonus, releaseClause: params.releaseClause ?? null, squadRole: params.role ?? 'rotation',
   };
   player.freeSince = null;
+  player.lastMoveDay = world.day;
   assignPlayer(world, player, club.id);
   if (bonus > 0) pay(club, 'signingBonuses', bonus);
   recordTransfer(world, { day: world.day, playerId: player.id, fromClubId: null, toClubId: club.id, kind: 'free', fee: 0, wageWeekly: params.wageWeekly });
@@ -109,7 +109,7 @@ export function signFreeAgent(world: WorldState, club: Club, player: Player, par
 
 /** Create an academy graduate for a club. Used for annual intake and emergency cover. */
 export function createYouthPlayer(world: WorldState, club: Club, rng: Rng, position: Position, ability: number, age: number, potential?: number): Player {
-  const nat = rng.chance(0.85) ? club.country : club.country;
+  const nat = club.country;
   const id = nextId(world, 'player');
   const p = generatePlayer(rng, { id, name: playerName(cultureOfNation(nat), rng), nationality: nat, age, day: world.day, position, ability: clamp(ability, 20, 90), potential });
   p.clubId = null;

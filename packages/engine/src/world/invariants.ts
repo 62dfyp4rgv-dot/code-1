@@ -5,7 +5,6 @@
 import { ATTR_KEYS } from '../types';
 import { COMPETITIONS } from '../competition/registry';
 import { activeRules } from '../competition/engine';
-import { LEAGUE_BY_ID } from '../competition/registry';
 import { allPlayers, squadOf } from './runtime';
 import type { WorldState } from './types';
 
@@ -64,7 +63,7 @@ export function validateWorld(world: WorldState, opts: ValidateOptions = {}): Vi
       else {
         const expectClub = p.loan ? p.loan.parentClubId : p.clubId;
         if (p.contract.clubId !== expectClub) add('CONTRACT_CLUB_MISMATCH', `player ${p.id} contract club ${p.contract.clubId} != ${expectClub}`);
-        if (p.contract.endDay <= p.contract.startDay) add('CONTRACT_DATES', `player ${p.id} contract ends before it starts`);
+        if (!Number.isFinite(p.contract.endDay) || !Number.isFinite(p.contract.startDay) || p.contract.endDay <= p.contract.startDay) add('CONTRACT_DATES', `player ${p.id} contract ends before it starts`);
         if (p.contract.endDay < world.day - 1) add('CONTRACT_EXPIRED', `player ${p.id} still registered on an expired contract`, 'high');
         if (!(p.contract.wageWeekly >= 0) || !Number.isFinite(p.contract.wageWeekly)) add('WAGE_INVALID', `player ${p.id} wage invalid`);
       }
@@ -163,7 +162,6 @@ export function validateWorld(world: WorldState, opts: ValidateOptions = {}): Vi
   world.history.seasons.forEach((s, i) => {
     if (s.season !== i + 1) add('HISTORY_GAP', `history season ${s.season} at index ${i}`, 'high');
   });
-  void LEAGUE_BY_ID;
   return v;
 }
 

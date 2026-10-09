@@ -209,7 +209,7 @@ export function validateTactics(t: Tactics): string[] {
     if (!(t[k] >= 0 && t[k] <= 100)) errors.push(`${k} out of range`);
   }
   if (![-2, -1, 0, 1, 2].includes(t.mentality)) errors.push('invalid mentality');
-  if (t.maxSubs < 0 || t.maxSubs > 9) errors.push('invalid maxSubs');
+  if (!Number.isInteger(t.maxSubs) || t.maxSubs < 0 || t.maxSubs > 9) errors.push('invalid maxSubs');
   return errors;
 }
 

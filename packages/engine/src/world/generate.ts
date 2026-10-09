@@ -5,12 +5,12 @@
 import { clamp } from '../math';
 import { generatePlayer } from '../players';
 import { Rng } from '../rng';
-import { LEAGUE_BY_ID, LEAGUE_PROFILES, PYRAMIDS, type LeagueProfile } from '../competition/registry';
+import { LEAGUE_PROFILES, PYRAMIDS, type LeagueProfile } from '../competition/registry';
 import { archetypeTactics, STYLE_TO_ARCHETYPE } from '../tactics';
 import { bestFormation, pickLineup, suggestRoles } from '../lineup';
 import type { Club, Manager, ManagerStyle, Player, Position } from '../types';
 import { clubName, cultureOfNation, managerName, playerName } from './names';
-import { assignPlayer, reindex, squadOf } from './runtime';
+import { reindex, squadOf } from './runtime';
 import { baseWageWeekly, contractYearsFor, marketValue } from './valuation';
 import { WORLD_SCHEMA_VERSION, type WorldConfig, type WorldState } from './types';
 
@@ -205,7 +205,6 @@ function createClub(world: WorldState, prof: LeagueProfile, idx: number, n: numb
   const wageBill = players.reduce((a, p) => a + (p.contract?.wageWeekly ?? 0), 0);
   club.finance.wageBudgetWeekly = Math.round(wageBill * 1.1);
   club.finance.transferBudget = Math.round(Math.max(0, club.finance.cash * 0.3 + (wealth / 100) * revenue * 0.25));
-  void marketValue;
   return club;
 }
 
@@ -273,7 +272,5 @@ export function generateWorld(config: WorldConfig): WorldState {
     world.managerPool.push(mid);
   }
   for (const club of Object.values(world.clubs)) world.ai[club.id] = { needs: {}, lastReviewDay: -999, cooldown: {}, dealsThisWindow: 0 };
-  void assignPlayer;
-  void LEAGUE_BY_ID;
   return world;
 }

@@ -30,7 +30,7 @@ export function engineContext(world: WorldState): EngineContext {
     seed: `${world.config.seed}:s${world.season}`,
     info: (id) => {
       const c = world.clubs[id] as Club;
-      return { id, country: c.country, coefficient: clubCoefficient(world, id) + (c.finance.cash > 0 ? 0 : 0), zone: LEAGUE_BY_ID[c.leagueId]?.zone };
+      return { id, country: c.country, coefficient: clubCoefficient(world, id), zone: LEAGUE_BY_ID[c.leagueId]?.zone };
     },
   };
 }
@@ -367,7 +367,6 @@ function narrate(world: WorldState, comp: CompetitionState, def: CompetitionDef,
       pushNews(world, { day: f.day, kind: 'milestone', clubIds: [f.home, f.away], playerIds: [pid], text: `${p.name} scores a hat-trick in ${home.name} ${hs}-${as} ${away.name} (${def.shortName}).`, ref: f.id });
     }
   }
-  const strengthGap = away.reputation - home.reputation;
   const winnerSide = hs > as ? 'home' : as > hs ? 'away' : null;
   if (winnerSide && Math.abs(hs - as) >= 1) {
     const w = winnerSide === 'home' ? home : away;
@@ -379,8 +378,6 @@ function narrate(world: WorldState, comp: CompetitionState, def: CompetitionDef,
   if (Math.abs(hs - as) >= 5) {
     pushNews(world, { day: f.day, kind: 'record', clubIds: [f.home, f.away], playerIds: [], text: `${hs > as ? home.name : away.name} thrash ${hs > as ? away.name : home.name} ${Math.max(hs, as)}-${Math.min(hs, as)} (${def.shortName}).`, ref: f.id });
   }
-  void strengthGap;
-  void comp;
 }
 
 // ---------------------------------------------------------------- driver

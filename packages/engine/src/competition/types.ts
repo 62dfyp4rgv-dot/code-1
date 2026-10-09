@@ -234,6 +234,8 @@ export interface CompetitionState {
   tableOrder: string[];
   /** Entrants ordered by how far they got (winner first); filled when complete. */
   finalRanking: string[];
+  /** Human-readable notes about draw constraints that had to be relaxed (never silent). */
+  notes?: string[];
 }
 
 export interface ClubTableInfo {

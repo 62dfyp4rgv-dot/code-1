@@ -438,33 +438,38 @@ export function runTransferDay(world: WorldState): void {
     if (!ai || ai.dealsThisWindow >= 6) continue;
     const left = windowDaysLeft(world, club);
     const rel = world.day - seasonStartDay(world.season);
-    const dayInWindow = left;
     const rate = (left <= 3 ? 0.55 : left <= 10 ? 0.3 : 0.16) + (rel % 7 === 0 ? 0.05 : 0);
-    void dayInWindow;
     if (!rng.chance(rate)) continue;
-    if (rel % 14 === 0 || left === windowDaysLeft(world, club)) aiReviewSurplus(world, club, rng.derive(`s:${club.id}`));
+    if (rel % 14 === 0) aiReviewSurplus(world, club, rng.derive(`s:${club.id}`));
     aiTryBuy(world, club, rng.derive(`b:${club.id}`), pool);
     trimSquad(world, club);
   }
   // sell-side: AI accepts bids for the human club's listed players
-  if (world.config.humanClubId) resolveListedPlayersOfHuman(world, rng.derive('human-listed'), pool);
+  if (world.config.humanClubId) resolveListedPlayersOfHuman(world, rng.derive('human-listed'));
 }
 
-function resolveListedPlayersOfHuman(world: WorldState, rng: Rng, pool: Player[]): void {
+/**
+ * AI clubs buy the human club's listed players, but never pay more than their own valuation: the asking price is a
+ * floor the user sets, not money the AI is obliged to hand over (prevents list-at-absurd-price exploits).
+ */
+function resolveListedPlayersOfHuman(world: WorldState, rng: Rng): void {
   const humanId = world.config.humanClubId as string;
   for (const [pid, entry] of Object.entries(world.transferList)) {
     const p = world.players[pid];
     if (!p || p.clubId !== humanId) continue;
     if (!rng.chance(0.06)) continue;
     // a random interested AI club bids at or above the asking price if it fits
-    const buyers = Object.values(world.clubs).filter((c) => c.id !== humanId && isWindowOpen(world, c) && c.finance.transferBudget >= entry.askingPrice && c.reputation >= (world.clubs[humanId]?.reputation ?? 50) - 25);
+    const value = marketValue(p, world.day);
+    const buyers = Object.values(world.clubs).filter((c) => c.id !== humanId && isWindowOpen(world, c) && c.reputation >= (world.clubs[humanId]?.reputation ?? 50) - 25);
     if (buyers.length === 0) continue;
     const buyer = buyers[rng.int(buyers.length)] as Club;
+    const aggression = (LEAGUE_BY_ID[buyer.leagueId]?.transferAggression ?? 1) * (buyer.ownership.wealth > 80 ? 1.12 : 1);
+    const maxPay = Math.round(value * (0.95 + 0.1 * aggression));
+    if (entry.askingPrice > maxPay || buyer.finance.transferBudget < entry.askingPrice) continue; // asking more than the AI values him at: no deal
     const wage = wageDemand(world, buyer, p);
     const offer: Offer = { buyerId: buyer.id, playerId: pid, fee: entry.askingPrice, wageWeekly: wage, years: contractYearsFor(ageOf(p, world.day), 0.5) };
     if (playerResponse(world, offer).status === 'accepted') executeTransfer(world, offer);
   }
-  void pool;
 }
 
 /** Keep squads inside registration limits by releasing the least valuable surplus players. */
@@ -488,10 +493,9 @@ export function trimSquad(world: WorldState, club: Club): void {
 
 function tryLoanOut(world: WorldState, parent: Club, p: Player): boolean {
   const rng = Rng.fromSeed(`${world.config.seed}:loan:${p.id}:${world.day}`);
-  const borrowers = Object.values(world.clubs)
-    .filter((c) => c.id !== parent.id && c.country === parent.country && c.reputation < parent.reputation && squadOf(world, c.id).length < leagueSquadRules(world, c).maxSquadSize - 1)
-    .sort(() => rng.next() - 0.5)
-    .slice(0, 6);
+  const candidates = Object.values(world.clubs)
+    .filter((c) => c.id !== parent.id && c.country === parent.country && c.reputation < parent.reputation && squadOf(world, c.id).length < leagueSquadRules(world, c).maxSquadSize - 1);
+  const borrowers = rng.shuffle(candidates).slice(0, 6);
   for (const b of borrowers) {
     const offer: Offer = {
       buyerId: b.id, playerId: p.id, fee: 0, wageWeekly: p.contract?.wageWeekly ?? 1000, years: 1,

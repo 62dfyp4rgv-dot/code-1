@@ -88,7 +88,8 @@ export type Side = 'home' | 'away';
 export type GoalKind = 'open' | 'header' | 'penalty' | 'freeKick' | 'corner' | 'counter' | 'longShot' | 'ownGoal';
 export type ShotOutcome = 'goal' | 'saved' | 'off' | 'blocked' | 'post';
 
-interface EvBase { minute: number; period: 1 | 2 | 3 | 4; side: Side }
+/** `minute` is the regulation minute (stoppage time is reported as minute 45/90 plus `added`), so (period, minute, added) sorts chronologically. */
+interface EvBase { minute: number; added?: number; period: 1 | 2 | 3 | 4; side: Side }
 export type MatchEvent =
   | (EvBase & { type: 'kickoff' })
   | (EvBase & { type: 'halftime' })
@@ -311,7 +312,6 @@ function makeSimPlayer(mp: MatchPlayer, side: Side, pos: Position, roleId: strin
 
 function computeRatings(t: TeamState): void {
   const on = t.onPitch;
-  const prof = t.prof;
   const out = {} as Ratings;
   const sum = {} as Record<Fn, number>;
   const wsum = {} as Record<Fn, number>;
@@ -365,7 +365,6 @@ function computeRatings(t: TeamState): void {
     const base = SHOT_BASE[sp.slotPos] * Math.pow(sp.role.shotShare, 0.7) * (sp.role.mod.shoot ?? 1) ** 0.5;
     sp.wShoot = base * Math.pow(Math.max(sp.skills.shoot, 5) / 55, 0.8);
   }
-  void prof;
 }
 
 function refreshProfile(t: TeamState): void {
@@ -422,8 +421,20 @@ const minuteOf = (c: Ctx): number => Math.max(1, Math.floor(c.clock / 60) + 1);
 
 type DistOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
 
-function emit(c: Ctx, ev: DistOmit<MatchEvent, 'minute' | 'period'> & { minute?: number }): void {
-  c.events.push({ minute: minuteOf(c), period: c.period, ...ev } as MatchEvent);
+function stamp(c: Ctx): { minute: number; added?: number } {
+  const m = minuteOf(c);
+  if (c.period === 1 && m > 45) return { minute: 45, added: m - 45 };
+  if (c.period === 2 && m > 90) return { minute: 90, added: m - 90 };
+  return { minute: m };
+}
+
+function emit(c: Ctx, ev: DistOmit<MatchEvent, 'minute' | 'period' | 'added'> & { minute?: number }): void {
+  c.events.push({ ...stamp(c), period: c.period, ...ev } as MatchEvent);
+}
+
+/** Substitution cap: the lower of the club's tactical setting and the competition rule; one extra in extra time. */
+function subCap(c: Ctx, T: TeamState): number {
+  return Math.min(T.base.maxSubs, c.input.rules.maxSubsRegular) + (c.period >= 3 ? 1 : 0);
 }
 
 function weightedPlayer(c: Ctx, pool: readonly SimPlayer[], w: (p: SimPlayer) => number): SimPlayer | null {
@@ -823,7 +834,7 @@ function removeFromPitch(c: Ctx, T: TeamState, p: SimPlayer, state: 'off' | 'sen
 function handleKeeperLoss(c: Ctx, T: TeamState): void {
   if (keeperOf(T)) return;
   const benchGk = T.squad.find((p) => p.state === 'bench' && p.mp.primary === 'GK');
-  const canSub = T.subsUsed < T.base.maxSubs + (c.period >= 3 ? 1 : 0);
+  const canSub = T.subsUsed < subCap(c, T);
   if (benchGk && canSub) {
     const sacrifice = [...outfield(T)].sort((a, b) => a.skills.shoot + a.skills.create - (b.skills.shoot + b.skills.create))[0];
     if (sacrifice) {
@@ -962,7 +973,7 @@ function checkInjuries(c: Ctx, dtSeconds: number): void {
     // Minor knocks: player may continue; otherwise must leave.
     if (severity === 1 && c.rng.chance(0.45)) continue;
     const bench = T.squad.filter((p) => p.state === 'bench');
-    const canSub = T.subsUsed < T.base.maxSubs + (c.period >= 3 ? 1 : 0) && bench.length > 0;
+    const canSub = T.subsUsed < subCap(c, T) && bench.length > 0;
     const wasGk = victim.slotPos === 'GK';
     removeFromPitch(c, T, victim, 'off');
     if (canSub) {
@@ -989,7 +1000,7 @@ function chooseReplacement(T: TeamState, pos: Position, requireGk: boolean): Sim
 }
 
 function considerSubstitutions(c: Ctx, T: TeamState, scoreDiff: number, minute: number): void {
-  const cap = T.base.maxSubs + (c.period >= 3 ? 1 : 0);
+  const cap = subCap(c, T);
   if (T.subsUsed >= cap) return;
   const bench = T.squad.filter((p) => p.state === 'bench');
   if (bench.length === 0) return;
@@ -1040,7 +1051,7 @@ function adaptTactics(c: Ctx, T: TeamState, scoreDiff: number, minute: number, m
   let shift = 0;
   const left = 90 - minute;
   if (scoreDiff < 0 && left <= 35) shift = scoreDiff <= -2 || left <= 15 ? 2 : 1;
-  else if (scoreDiff > 0 && left <= 25) shift = scoreDiff >= 2 || left <= 10 ? -1 : -1;
+  else if (scoreDiff > 0 && left <= 25) shift = -1;
   if (manDown > 0 && scoreDiff >= 0) shift = Math.min(shift, -1);
   if (T.base.mentality + shift > 2) shift = 2 - T.base.mentality;
   if (T.base.mentality + shift < -2) shift = -2 - T.base.mentality;
@@ -1141,7 +1152,7 @@ export function simulateMatch(input: MatchInput): MatchResult {
   const stop1 = stoppageSeconds(ctx, 0, true);
   next = playPeriod(ctx, 45 * 60 + stop1, next);
   ctx.clock = Math.max(ctx.clock, 45 * 60 + stop1);
-  emit(ctx, { type: 'halftime', side: 'home', minute: Math.max(45, minuteOf(ctx)) });
+  emit(ctx, { type: 'halftime', side: 'home' });
   // Half-time: recovery, substitution window.
   for (const T of [home, away]) for (const p of T.onPitch) p.fatigue = Math.max(0, p.fatigue - 4);
   refreshSkillsForFatigue(ctx);
@@ -1158,7 +1169,7 @@ export function simulateMatch(input: MatchInput): MatchResult {
   next = playPeriod(ctx, 90 * 60, next);
   const stop2 = stoppageSeconds(ctx, eventsBeforeSecond, false);
   next = playPeriod(ctx, 90 * 60 + stop2, next);
-  emit(ctx, { type: 'fulltime', side: 'home', minute: Math.max(90, minuteOf(ctx)) });
+  emit(ctx, { type: 'fulltime', side: 'home' });
   const regular = { home: home.score, away: away.score };
   let extraTimePlayed = false;
   let penalties: MatchResult['penalties'] = null;
@@ -1176,7 +1187,7 @@ export function simulateMatch(input: MatchInput): MatchResult {
       refreshSkillsForFatigue(ctx);
       next = playPeriod(ctx, 105 * 60, next);
       ctx.period = 4;
-      next = playPeriod(ctx, 120 * 60, next);
+      playPeriod(ctx, 120 * 60, next);
       emit(ctx, { type: 'fulltime', side: 'home', minute: 120 });
       duration = 120;
     }
@@ -1203,7 +1214,7 @@ export function simulateMatch(input: MatchInput): MatchResult {
   for (const T of [home, away]) {
     for (const p of T.squad) if (p.state !== 'bench') lines.push(p.line);
   }
-  assignRatings(lines, home.score, away.score, duration);
+  assignRatings(lines, home.score, away.score);
 
   let winner: MatchResult['winner'] = 'draw';
   const th = home.score + agg.home;
@@ -1287,14 +1298,14 @@ function shootout(c: Ctx): { home: number; away: number } {
 
 // ------------------------------------------------------------------ ratings and derived stats
 
-function assignRatings(lines: PlayerLine[], homeGoals: number, awayGoals: number, duration: number): void {
+function assignRatings(lines: PlayerLine[], homeGoals: number, awayGoals: number): void {
   for (const l of lines) {
     const own = l.side === 'home' ? homeGoals : awayGoals;
     const opp = l.side === 'home' ? awayGoals : homeGoals;
     const grp = l.position === 'GK' ? 'GK' : ['CB', 'LB', 'RB'].includes(l.position) ? 'DEF' : ['DM', 'CM', 'AM'].includes(l.position) ? 'MID' : 'FWD';
     let r = 6.0;
     r += 0.85 * l.goals + 0.5 * l.assists;
-    r += 0.1 * l.shotsOnTarget + 0.05 * (l.shots - l.shotsOnTarget) + 0.25 * (l.xg - l.goals * 0) * 0.5;
+    r += 0.1 * l.shotsOnTarget + 0.05 * (l.shots - l.shotsOnTarget) + 0.125 * l.xg;
     r += 0.07 * l.keyPasses + 0.045 * (l.tackles + l.interceptions);
     r += 0.012 * (l.passesCompleted - 0.82 * l.passes);
     r += 0.1 * l.saves * (grp === 'GK' ? 1 : 0);
@@ -1309,7 +1320,6 @@ function assignRatings(lines: PlayerLine[], homeGoals: number, awayGoals: number
     if (l.minutes < 30) r = 6 + (r - 6) * (0.4 + l.minutes / 50);
     l.rating = Math.round(clamp(r, 3, 10) * 10) / 10;
   }
-  void duration;
 }
 
 function clampInt(x: number, lo: number, hi: number): number {

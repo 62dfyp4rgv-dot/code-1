@@ -20,6 +20,22 @@ export type ActionResult<T = undefined> = { ok: true; value: T; message?: string
 
 const fail = (error: string): { ok: false; error: string } => ({ ok: false, error });
 
+/** Own-property lookup: ids such as `constructor` or `__proto__` must never resolve through Object.prototype. */
+function playerById(world: WorldState, id: unknown): Player | undefined {
+  return typeof id === 'string' && Object.hasOwn(world.players, id) ? world.players[id] : undefined;
+}
+
+const inRange = (x: unknown, lo: number, hi: number): x is number => typeof x === 'number' && Number.isFinite(x) && x >= lo && x <= hi;
+const MAX_FEE = 2e9;
+const MAX_WAGE = 5e7;
+
+function termsError(fee: number, wageWeekly: number, years: number): string | null {
+  if (!inRange(fee, 0, MAX_FEE)) return 'fee must be a finite amount between 0 and 2,000,000,000';
+  if (!inRange(wageWeekly, 0, MAX_WAGE)) return 'wage must be a finite weekly amount between 0 and 50,000,000';
+  if (!inRange(years, 0.5, 6)) return 'contract length must be between 0.5 and 6 years';
+  return null;
+}
+
 function humanOf(world: WorldState): Club | null {
   return world.config.humanClubId ? (world.clubs[world.config.humanClubId] ?? null) : null;
 }
@@ -57,9 +73,9 @@ export function setLineup(world: WorldState, playerIds: string[] | null): Action
 
 export function listForTransfer(world: WorldState, playerId: string, askingPrice: number): ActionResult {
   const club = humanOf(world);
-  const p = world.players[playerId];
+  const p = playerById(world, playerId);
   if (!club || !p || p.clubId !== club.id) return fail('player is not in your squad');
-  if (!(askingPrice >= 0)) return fail('invalid price');
+  if (!inRange(askingPrice, 0, MAX_FEE)) return fail('invalid price');
   world.transferList[playerId] = { askingPrice: Math.round(askingPrice), day: world.day };
   return { ok: true, value: undefined };
 }
@@ -79,9 +95,11 @@ export interface BidOutcome {
 /** Make a permanent-transfer offer as the human club. */
 export function bidForPlayer(world: WorldState, playerId: string, fee: number, wageWeekly: number, years: number): ActionResult<BidOutcome> {
   const club = humanOf(world);
-  const p = world.players[playerId];
+  const p = playerById(world, playerId);
   if (!club) return fail('no club under your control');
   if (!p || p.retired) return fail('unknown player');
+  const terr = termsError(fee, wageWeekly, years);
+  if (terr) return fail(terr);
   if (p.clubId === null) return fail('player is a free agent; use signFreeAgentAction');
   if (p.clubId === club.id) return fail('player already at your club');
   const offer: Offer = { buyerId: club.id, playerId, fee: Math.round(fee), wageWeekly: Math.round(wageWeekly), years };
@@ -98,8 +116,9 @@ export function bidForPlayer(world: WorldState, playerId: string, fee: number, w
 
 export function bidLoan(world: WorldState, playerId: string, parentWageShare: number, endDay: number): ActionResult<BidOutcome> {
   const club = humanOf(world);
-  const p = world.players[playerId];
+  const p = playerById(world, playerId);
   if (!club || !p || p.clubId === null) return fail('invalid loan request');
+  if (!inRange(parentWageShare, 0, 1) || !inRange(endDay, world.day + 1, world.day + 3 * 364)) return fail('invalid loan terms');
   const offer: Offer = {
     buyerId: club.id, playerId, fee: 0, wageWeekly: p.contract?.wageWeekly ?? 0, years: 1,
     loan: { parentWageShare: clamp(parentWageShare, 0, 1), endDay, buyOption: null, recallAllowed: true },
@@ -115,8 +134,10 @@ export function bidLoan(world: WorldState, playerId: string, parentWageShare: nu
 
 export function signFreeAgentAction(world: WorldState, playerId: string, wageWeekly: number, years: number): ActionResult<BidOutcome> {
   const club = humanOf(world);
-  const p = world.players[playerId];
+  const p = playerById(world, playerId);
   if (!club || !p || p.retired) return fail('invalid request');
+  const terr = termsError(0, wageWeekly, years);
+  if (terr) return fail(terr);
   if (p.clubId !== null) return fail('player is not a free agent');
   const offer: Offer = { buyerId: club.id, playerId, fee: 0, wageWeekly: Math.round(wageWeekly), years };
   const pr = playerResponse(world, offer);
@@ -127,9 +148,11 @@ export function signFreeAgentAction(world: WorldState, playerId: string, wageWee
 
 export function offerRenewal(world: WorldState, playerId: string, wageWeekly: number, years: number): ActionResult<BidOutcome> {
   const club = humanOf(world);
-  const p = world.players[playerId];
+  const p = playerById(world, playerId);
   if (!club || !p || p.clubId !== club.id || !p.contract) return fail('player is not in your squad');
   if (p.loan) return fail('loaned-in players cannot be renewed');
+  const terr = termsError(0, wageWeekly, years);
+  if (terr) return fail(terr);
   const demand = Math.max(p.contract.wageWeekly, baseWageWeekly(marketValue(p, world.day), overall(p)) * 0.95);
   const score = (wageWeekly / demand - 1) * 3 + (p.morale - 55) / 60 + (club.reputation - 50) / 100;
   if (score <= -0.15) return { ok: true, value: { status: 'rejectedByPlayer', reason: 'wage below expectations', demandedWage: Math.round(demand) } };
@@ -139,10 +162,12 @@ export function offerRenewal(world: WorldState, playerId: string, wageWeekly: nu
 
 export function releasePlayerAction(world: WorldState, playerId: string): ActionResult {
   const club = humanOf(world);
-  const p = world.players[playerId];
+  const p = playerById(world, playerId);
   if (!club || !p || p.clubId !== club.id) return fail('player is not in your squad');
   if (p.loan) return fail('loaned-in players must be returned, not released');
-  if (squadOf(world, club.id).length <= MIN_SQUAD) return fail(`squad would fall below ${MIN_SQUAD} players`);
+  const squadNow = squadOf(world, club.id);
+  if (squadNow.length <= MIN_SQUAD) return fail(`squad would fall below ${MIN_SQUAD} players`);
+  if (p.primary === 'GK' && squadNow.filter((q) => q.primary === 'GK').length <= 2) return fail('you must keep at least two goalkeepers');
   releasePlayer(world, p, 0.5);
   return { ok: true, value: undefined };
 }
@@ -160,7 +185,7 @@ export interface ScoutReport {
 /** What the human club's scouting network believes about a player. Own players are known exactly. */
 export function scoutReport(world: WorldState, playerId: string): ActionResult<ScoutReport> {
   const club = humanOf(world);
-  const p = world.players[playerId];
+  const p = playerById(world, playerId);
   if (!club || !p) return fail('unknown player');
   if (p.clubId === club.id) return { ok: true, value: { playerId, abilityLow: overall(p), abilityHigh: overall(p), potentialLow: p.pot, potentialHigh: p.pot, confidence: 1 } };
   const e = scoutedEstimate(world, club, p);
@@ -177,7 +202,7 @@ export function scoutReport(world: WorldState, playerId: string): ActionResult<S
 /** Suggested contract terms for a player (what the human club would need to offer to be accepted). */
 export function suggestTerms(world: WorldState, playerId: string): ActionResult<{ fee: number; wageWeekly: number; years: number }> {
   const club = humanOf(world);
-  const p = world.players[playerId];
+  const p = playerById(world, playerId);
   if (!club || !p) return fail('unknown player');
   const wage = wageDemand(world, club, p);
   const fee = p.clubId === null || p.clubId === club.id ? 0 : Math.round(marketValue(p, world.day) * 1.05);

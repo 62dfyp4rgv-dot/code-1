@@ -2,7 +2,6 @@
  * Season lifecycle: build every competition instance for a season (entrants from league membership, cups,
  * qualification), close the season (awards, history, prize money, promotion/relegation).
  */
-import { Rng } from '../rng';
 import { COMPETITIONS, LEAGUE_BY_ID, PYRAMIDS } from '../competition/registry';
 import { activeRules, createCompetition, fixturesOnDay, isHeldIn } from '../competition/engine';
 import { allocateEntrants, buildQualSpecs, type QualSpec } from '../competition/qualification';
@@ -266,6 +265,5 @@ export function fixturesToday(world: WorldState): { comp: CompetitionState; def:
     const def = COMPETITIONS[comp.id] as CompetitionDef;
     for (const f of fixturesOnDay(comp, world.day)) out.push({ comp, def, fixtureId: f.id });
   }
-  void Rng;
   return out;
 }

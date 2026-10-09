@@ -7,7 +7,7 @@ import { ageOf, overall, positionalOverall } from '../players';
 import { COMPETITIONS, LEAGUE_BY_ID } from '../competition/registry';
 import { activeRules, currentTable } from '../competition/engine';
 import type { CompetitionDef, Fixture, TableRow } from '../competition/types';
-import { ATTR_KEYS, GK_ATTRS, MENTAL_ATTRS, PHYSICAL_ATTRS, TECHNICAL_ATTRS, type Club, type Player, type Position } from '../types';
+import { GK_ATTRS, MENTAL_ATTRS, PHYSICAL_ATTRS, TECHNICAL_ATTRS, type Club, type Player, type Position } from '../types';
 import { engineContext } from './matchday';
 import { squadOf, freeAgents, allPlayers } from './runtime';
 import { seasonStartDay } from './calendar';
@@ -122,7 +122,7 @@ export function fixturesOnDayView(world: WorldState, day: number): FixtureView[]
   return out;
 }
 
-export interface MatchEventView { minute: number; period: number; side: 'home' | 'away'; type: string; text: string }
+export interface MatchEventView { minute: number; added: number | null; period: number; side: 'home' | 'away'; type: string; text: string }
 export interface MatchView {
   fixture: FixtureView;
   stats: StoredMatch['stats'];
@@ -140,7 +140,7 @@ export function matchView(world: WorldState, fixtureId: string): MatchView | nul
   if (!m || !f) return null;
   const nm = (id: string): string => world.players[id]?.name ?? id;
   const events: MatchEventView[] | null = m.events
-    ? m.events.map((e) => ({ minute: e.minute, period: e.period, side: e.side, type: e.type, text: describeEvent(e, nm) }))
+    ? m.events.map((e) => ({ minute: e.minute, added: e.added ?? null, period: e.period, side: e.side, type: e.type, text: describeEvent(e, nm) }))
     : null;
   return {
     fixture: fixtureView(world, f), stats: m.stats,
@@ -237,7 +237,7 @@ export interface PlayerProfile {
 }
 
 export function playerProfile(world: WorldState, playerId: string): PlayerProfile | null {
-  const p = world.players[playerId];
+  const p = Object.hasOwn(world.players, playerId) ? world.players[playerId] : undefined;
   if (!p) return null;
   const row = playerRow(world, p);
   const exact = row.exact;
@@ -246,7 +246,6 @@ export function playerProfile(world: WorldState, playerId: string): PlayerProfil
   const positions = (Object.keys({ GK: 0, CB: 0, LB: 0, RB: 0, DM: 0, CM: 0, AM: 0, LW: 0, RW: 0, ST: 0 }) as Position[])
     .map((pos) => ({ position: pos, familiarity: pos === p.primary ? 1 : (p.positions[pos] ?? 0), rating: Math.round(positionalOverall(p, pos)) }))
     .filter((x) => x.familiarity >= 0.6);
-  void ATTR_KEYS;
   return {
     row, traits: p.traits, foot: p.foot, weakFoot: p.weakFoot, positions,
     attributes: { technical: group(TECHNICAL_ATTRS), mental: group(MENTAL_ATTRS), physical: group(PHYSICAL_ATTRS), goalkeeping: group(GK_ATTRS) },
@@ -308,6 +307,7 @@ export function financeView(world: WorldState, clubId: string): FinanceView | nu
 export interface CompetitionOverview {
   id: string; name: string; kind: string; confederation: string | null; status: string; season: number; entrants: number;
   verification: { status: string; note: string };
+  drawNotes: string[];
   stages: { id: string; name: string; type: string; status: string; groups: { id: string; table: TableRowView[] }[]; rounds: { round: number; ties: { home: string; away: string; winner: string | null; aggregate: string }[] }[] }[];
   winner: string | null; runnerUp: string | null;
 }
@@ -335,7 +335,7 @@ export function competitionOverview(world: WorldState, compId: string): Competit
   });
   return {
     id: def.id, name: def.name, kind: def.kind, confederation: def.confederation, status: comp.status, season: comp.season, entrants: comp.entrants.length,
-    verification: def.verification, stages, winner: comp.winner ? nm(comp.winner) : null, runnerUp: comp.runnerUp ? nm(comp.runnerUp) : null,
+    verification: def.verification, drawNotes: comp.notes ?? [], stages, winner: comp.winner ? nm(comp.winner) : null, runnerUp: comp.runnerUp ? nm(comp.runnerUp) : null,
   };
 }
 

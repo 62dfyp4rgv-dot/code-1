@@ -50,10 +50,6 @@ const UEFA_SLOTS: Record<string, [number, number, number]> = {
 
 const range = (league: string, from: number, to: number): QualSlot => ({ kind: 'league', league, from, to });
 
-function present(ids: string[], available: ReadonlySet<string>): string[] {
-  return ids.filter((i) => available.has(i));
-}
-
 /** Build qualification specs for the selected leagues. Missing leagues simply contribute no slots. */
 export function buildQualSpecs(activeLeagues: readonly string[]): QualSpec[] {
   const active = new Set(activeLeagues);
@@ -157,7 +153,6 @@ export function buildQualSpecs(activeLeagues: readonly string[]): QualSpec[] {
       }],
     });
   }
-  void present;
   return specs;
 }
 

@@ -29,7 +29,6 @@ export function updateReputations(world: WorldState, summary: SeasonSummary): vo
       const lastWon = rec.trophies[lid]?.includes(summary.season) ? 3 : 0;
       club.reputation = clamp(Math.round(club.reputation + delta * 0.35 + lastWon + (hist - club.reputation) * 0.04), 8, 99);
       club.historicalPrestige = clamp(Math.round(hist + (club.reputation - hist) * 0.04), 5, 99);
-      void lid;
     });
   }
   for (const [compId, h] of Object.entries(summary.champions)) {
@@ -58,12 +57,11 @@ export function updateReputations(world: WorldState, summary: SeasonSummary): vo
     club.continentalReputation = clamp(Math.round(club.continentalReputation + (anchor - club.continentalReputation) * 0.08), 5, 99);
   }
   // board expectation follows relative standing inside each league
-  for (const [lid, members] of Object.entries(world.leagueMembers)) {
+  for (const members of Object.values(world.leagueMembers)) {
     const ranked = [...members].sort((a, b) => (world.clubs[b] as Club).reputation - (world.clubs[a] as Club).reputation);
     ranked.forEach((cid, i) => {
       (world.clubs[cid] as Club).boardExpectation = clamp(ranked.length > 1 ? i / (ranked.length - 1) - 0.04 : 0.1, 0.02, 0.95);
     });
-    void lid;
   }
 }
 
@@ -217,9 +215,8 @@ export function rolloverSeason(world: WorldState): SeasonSummary {
   }
   for (const club of Object.values(world.clubs)) if (club.id !== world.config.humanClubId) aiFillSquad(world, club, 21);
   // revenue deals for the coming season based on final positions
-  for (const [lid, table] of Object.entries(summary.tables)) {
+  for (const table of Object.values(summary.tables)) {
     table.forEach((cid, i) => updateRevenueDeals(world, world.clubs[cid] as Club, i + 1, table.length));
-    void lid;
   }
   world.season += 1;
   world.day = seasonStartDay(world.season);
@@ -229,7 +226,6 @@ export function rolloverSeason(world: WorldState): SeasonSummary {
     club.cohesion = clamp(club.cohesion * 0.85, 0.1, 1);
   }
   startSeason(world);
-  void squadOf; void overall; void marketValue;
   return summary;
 }
 

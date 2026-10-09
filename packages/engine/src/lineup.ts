@@ -102,8 +102,6 @@ export function pickLineup(squad: readonly Player[], tactics: Tactics, a: Availa
 export function bestFormation(squad: readonly Player[], a: Availability, candidates: readonly string[] = Object.keys(FORMATIONS), preferred?: string): string {
   let best = preferred ?? candidates[0] ?? '4-3-3';
   let bv = -Infinity;
-  const base = squad.length ? undefined : undefined;
-  void base;
   for (const id of candidates) {
     const l = pickLineup(squad, { formation: id } as Tactics, a, 0);
     if (!l) continue;

@@ -6,7 +6,6 @@ import { clamp } from '../math';
 import { bestFormation, pickLineup, suggestRoles } from '../lineup';
 import { Rng } from '../rng';
 import { archetypeTactics, STYLE_TO_ARCHETYPE } from '../tactics';
-import { COMPETITIONS } from '../competition/registry';
 import type { Club, Manager } from '../types';
 import { squadOf } from './runtime';
 import type { SeasonSummary, WorldState } from './types';
@@ -141,7 +140,7 @@ export function seasonEndManagerReview(world: WorldState, summary: SeasonSummary
       world.managerPool = world.managerPool.filter((id) => id !== m.id);
     }
   }
-  for (const [lid, table] of Object.entries(summary.tables)) {
+  for (const table of Object.values(summary.tables)) {
     const n = table.length;
     table.forEach((cid, i) => {
       const club = world.clubs[cid] as Club;
@@ -165,7 +164,5 @@ export function seasonEndManagerReview(world: WorldState, summary: SeasonSummary
         mgr.contractEndDay = world.day + 365 * rng.between(1, 3);
       }
     });
-    void lid;
   }
-  void COMPETITIONS;
 }

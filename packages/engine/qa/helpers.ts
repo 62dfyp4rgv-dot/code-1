@@ -105,6 +105,7 @@ export function auditLeague(comp: CompetitionState): string[] {
       if (tied === 2 && pairCompare(a.id, b.id, rows, fx, rules) === -1) out.push(`${comp.id}: tie-break violated between ${a.id} and ${b.id}`);
     }
   }
-  if (comp.winner !== order[0]) out.push(`${comp.id}: winner ${comp.winner} != table leader ${order[0]}`);
+  const hasPlayoffs = def.rules[0]!.stages.length > 1; // e.g. MLS: champion is the play-off winner, not the table leader
+  if (!hasPlayoffs && comp.winner !== order[0]) out.push(`${comp.id}: winner ${comp.winner} != table leader ${order[0]}`);
   return out;
 }
