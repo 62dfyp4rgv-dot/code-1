@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>3D Cube</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #0e1116; overflow: hidden; }
+  canvas { display: block; width: 100%; height: 100%; cursor: grab; touch-action: none; }
+  canvas.dragging { cursor: grabbing; }
+  #hint {
+    position: fixed; bottom: 16px; left: 0; right: 0; text-align: center;
+    font: 14px system-ui, sans-serif; color: #8b949e; pointer-events: none;
+  }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hint">Drag to rotate · scroll to zoom</div>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+
+// Cube geometry: 8 vertices, 6 quad faces (wound counter-clockwise from outside).
+const vertices = [
+  [-1, -1, -1], [ 1, -1, -1], [ 1,  1, -1], [-1,  1, -1],
+  [-1, -1,  1], [ 1, -1,  1], [ 1,  1,  1], [-1,  1,  1],
+];
+const faces = [
+  { idx: [4, 5, 6, 7], color: [231,  76,  60] }, // front  (+z)
+  { idx: [1, 0, 3, 2], color: [230, 126,  34] }, // back   (-z)
+  { idx: [5, 1, 2, 6], color: [ 46, 204, 113] }, // right  (+x)
+  { idx: [0, 4, 7, 3], color: [ 52, 152, 219] }, // left   (-x)
+  { idx: [3, 7, 6, 2], color: [241, 196,  15] }, // top    (+y)
+  { idx: [0, 1, 5, 4], color: [155,  89, 182] }, // bottom (-y)
+];
+
+const light = normalize([0.4, 0.8, 0.6]);
+let rotX = -0.5, rotY = 0.7;
+let velX = 0.004, velY = 0.008;   // radians per frame; decays to a gentle idle spin
+let zoom = 1;
+let dragging = false, lastX = 0, lastY = 0;
+
+function normalize(v) {
+  const l = Math.hypot(...v);
+  return v.map(c => c / l);
+}
+const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+const cross = (a, b) => [
+  a[1] * b[2] - a[2] * b[1],
+  a[2] * b[0] - a[0] * b[2],
+  a[0] * b[1] - a[1] * b[0],
+];
+const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+
+function rotate([x, y, z]) {
+  // around Y
+  let c = Math.cos(rotY), s = Math.sin(rotY);
+  [x, z] = [x * c + z * s, -x * s + z * c];
+  // around X
+  c = Math.cos(rotX); s = Math.sin(rotX);
+  [y, z] = [y * c - z * s, y * s + z * c];
+  return [x, y, z];
+}
+
+function resize() {
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = canvas.clientWidth * dpr;
+  canvas.height = canvas.clientHeight * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+window.addEventListener('resize', resize);
+resize();
+
+function draw() {
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  ctx.clearRect(0, 0, w, h);
+
+  const scale = Math.min(w, h) * 0.22 * zoom;
+  const camDist = 6;   // camera sits on +z looking toward the origin
+  const rotated = vertices.map(rotate);
+  const projected = rotated.map(([x, y, z]) => {
+    const f = camDist / (camDist - z);   // perspective divide
+    return [w / 2 + x * scale * f, h / 2 - y * scale * f];
+  });
+
+  // Painter's algorithm: draw back faces first, skip faces pointing away.
+  const visible = [];
+  for (const face of faces) {
+    const [a, b, c] = face.idx.map(i => rotated[i]);
+    const n = normalize(cross(sub(b, a), sub(c, a)));
+    const center = face.idx.reduce((s, i) => s + rotated[i][2], 0) / 4;
+    const toCam = normalize([-a[0], -a[1], camDist - a[2]]);
+    if (dot(n, toCam) <= 0) continue;   // back-face cull
+    visible.push({ face, n, depth: center });
+  }
+  visible.sort((p, q) => p.depth - q.depth);
+
+  ctx.lineJoin = 'round';
+  for (const { face, n } of visible) {
+    const shade = 0.35 + 0.65 * Math.max(0, dot(n, light));
+    const [r, g, b] = face.color.map(c => Math.round(c * shade));
+    ctx.beginPath();
+    face.idx.forEach((i, k) => {
+      const [px, py] = projected[i];
+      k ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+    });
+    ctx.closePath();
+    ctx.fillStyle = `rgb(${r},${g},${b})`;
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+}
+
+function tick() {
+  if (!dragging) {
+    rotX += velX;
+    rotY += velY;
+    // Ease momentum from a flick back toward the idle spin.
+    velX += (0.004 - velX) * 0.02;
+    velY += (0.008 - velY) * 0.02;
+  }
+  draw();
+  requestAnimationFrame(tick);
+}
+
+canvas.addEventListener('pointerdown', e => {
+  dragging = true;
+  lastX = e.clientX; lastY = e.clientY;
+  canvas.setPointerCapture(e.pointerId);
+  canvas.classList.add('dragging');
+});
+canvas.addEventListener('pointermove', e => {
+  if (!dragging) return;
+  velY = (e.clientX - lastX) * 0.01;
+  velX = (e.clientY - lastY) * 0.01;
+  rotY += velY;
+  rotX += velX;
+  lastX = e.clientX; lastY = e.clientY;
+});
+const endDrag = () => { dragging = false; canvas.classList.remove('dragging'); };
+canvas.addEventListener('pointerup', endDrag);
+canvas.addEventListener('pointercancel', endDrag);
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  zoom = Math.min(2.5, Math.max(0.4, zoom * Math.exp(-e.deltaY * 0.001)));
+}, { passive: false });
+
+tick();
+</script>
+</body>
+</html>
