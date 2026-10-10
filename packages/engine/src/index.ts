@@ -19,3 +19,4 @@ export { encodeWorld, decodeWorld, checksumOf, canonicalOrder, assertChunkList, 
 export { parseDataPack, applyDataPack, DataPackError, type DataPack, type PackClub, type PackPlayer, type PackManager } from './world/datapack';
 export { REAL_CLUB_NAMES } from './data/realClubNames';
 export { REAL_CLUBS_WITH_SQUADS } from './data/realSquads';
+export { competitionName, competitionShortName } from './world/compnames';

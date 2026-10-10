@@ -6,6 +6,7 @@
  * Club names are factual; all trademarks belong to their respective owners.
  */
 import type { DataPack, PackClub } from '../world/datapack';
+import { REAL_COMPETITION_NAMES } from './realCompetitionNames';
 
 type Row = [name: string, short: string, city?: string];
 const clubs = (rows: Row[]): PackClub[] => rows.map(([name, shortName, city]) => ({ name, shortName, ...(city ? { city } : {}) }));
@@ -16,6 +17,7 @@ export const REAL_CLUB_NAMES: DataPack = {
   name: 'Real club names (unofficial)',
   source: 'Compiled by the project authors from general public knowledge; not verified against an official source',
   licence: 'Names only; trademarks belong to their owners; no logos or player data included',
+  competitions: REAL_COMPETITION_NAMES,
   leagues: {
     ENG1: clubs([
       ['Manchester City', 'MCI', 'Manchester'], ['Liverpool', 'LIV', 'Liverpool'], ['Arsenal', 'ARS', 'London'], ['Chelsea', 'CHE', 'London'],

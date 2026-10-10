@@ -12,6 +12,7 @@ import { nextId } from './generate';
 import { breakoutsAndDecliners, clubRecord, markSeasonStartAbility } from './records';
 import { allPlayers, squadOf } from './runtime';
 import { receive } from './squad';
+import { competitionName } from './compnames';
 import type { LeagueSeasonStats, SeasonSummary, WorldState } from './types';
 
 export const DAYS_PER_SEASON = 364;
@@ -165,7 +166,7 @@ export function endSeason(world: WorldState): SeasonSummary {
       (rec.trophies[comp.id] ??= []).push(season);
       if (def.kind === 'league' || def.kind === 'continental' || def.kind === 'cup' || def.kind === 'intercontinental') {
         const club = world.clubs[comp.winner] as Club;
-        world.news.push({ id: nextId(world, 'news'), day: world.day, kind: 'title', clubIds: [comp.winner], playerIds: [], text: `${club.name} win the ${def.name} (season ${season}).`, ref: comp.id });
+        world.news.push({ id: nextId(world, 'news'), day: world.day, kind: 'title', clubIds: [comp.winner], playerIds: [], text: `${club.name} win the ${competitionName(world, def.id)} (season ${season}).`, ref: comp.id });
       }
     }
     if (def.kind === 'league') {
@@ -215,12 +216,12 @@ export function endSeason(world: WorldState): SeasonSummary {
     for (const c of up) {
       (world.clubs[c] as Club).leagueId = link.upper;
       summary.promoted.push({ clubId: c, from: link.lower, to: link.upper });
-      world.news.push({ id: nextId(world, 'news'), day: world.day, kind: 'promotion', clubIds: [c], playerIds: [], text: `${(world.clubs[c] as Club).name} are promoted to the ${LEAGUE_BY_ID[link.upper]?.name}.`, ref: link.upper });
+      world.news.push({ id: nextId(world, 'news'), day: world.day, kind: 'promotion', clubIds: [c], playerIds: [], text: `${(world.clubs[c] as Club).name} are promoted to the ${competitionName(world, link.upper)}.`, ref: link.upper });
     }
     for (const c of down) {
       (world.clubs[c] as Club).leagueId = link.lower;
       summary.relegated.push({ clubId: c, from: link.upper, to: link.lower });
-      world.news.push({ id: nextId(world, 'news'), day: world.day, kind: 'promotion', clubIds: [c], playerIds: [], text: `${(world.clubs[c] as Club).name} are relegated from the ${LEAGUE_BY_ID[link.upper]?.name}.`, ref: link.upper });
+      world.news.push({ id: nextId(world, 'news'), day: world.day, kind: 'promotion', clubIds: [c], playerIds: [], text: `${(world.clubs[c] as Club).name} are relegated from the ${competitionName(world, link.upper)}.`, ref: link.upper });
     }
   }
   const bd = breakoutsAndDecliners(world, allPlayers(world), season);

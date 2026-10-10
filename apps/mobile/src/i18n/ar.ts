@@ -216,7 +216,7 @@ export const ar: Record<keyof typeof en, string> = {
   'pack.applying': 'جارٍ تطبيق الأسماء… قد يتوقف التطبيق لبضع ثوانٍ.',
   'pack.noneApplied': 'لم تُطبَّق أي حزمة بيانات: جميع الأندية واللاعبين والمدربين مولَّدون وخياليون.',
   'pack.applied': 'المطبَّقة: {name}',
-  'pack.counts': 'تغيّر {clubs} ناديًا · {players} لاعبًا · {managers} مدربًا · {crests} شعارًا',
+  'pack.counts': 'تغيّر {clubs} ناديًا · {players} لاعبًا · {managers} مدربًا · {crests} شعارًا · {competitions} اسم مسابقة',
   'pack.remainder': 'كل ما لا تغطيه الحزمة يبقى مولَّدًا وخياليًا: الأندية واللاعبون والمدربون الآخرون، وجميع التقييمات والماليات والنتائج.',
   'pack.source': 'المصدر: {source}',
   'pack.licence': 'الترخيص: {licence}',

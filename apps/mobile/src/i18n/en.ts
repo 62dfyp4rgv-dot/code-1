@@ -236,7 +236,7 @@ export const en = {
   'pack.applying': 'Applying names… the app may pause for a few seconds.',
   'pack.noneApplied': 'No data pack applied: all clubs, players and managers are generated and fictional.',
   'pack.applied': 'Applied: {name}',
-  'pack.counts': '{clubs} clubs · {players} players · {managers} coaches · {crests} crests changed',
+  'pack.counts': '{clubs} clubs · {players} players · {managers} coaches · {crests} crests · {competitions} competition names changed',
   'pack.remainder': 'Anything the pack does not cover stays generated and fictional: other clubs, players and coaches, all ratings, finances and results.',
   'pack.source': 'Source: {source}',
   'pack.licence': 'Licence: {licence}',

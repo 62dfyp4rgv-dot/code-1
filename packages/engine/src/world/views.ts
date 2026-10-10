@@ -12,6 +12,7 @@ import { keyedNoise } from '../rng';
 import { engineContext } from './matchday';
 import { squadOf, freeAgents, allPlayers } from './runtime';
 import { seasonStartDay } from './calendar';
+import { competitionName, competitionShortName } from './compnames';
 import { clubRecord } from './records';
 import { scoutedEstimate } from './transfers';
 import { marketValue } from './valuation';
@@ -102,7 +103,7 @@ function fixtureView(world: WorldState, f: Fixture): FixtureView {
   const stage = activeRules(def, f.season).stages.find((s) => s.id === f.stageId);
   const r = f.result;
   return {
-    id: f.id, competitionId: f.competitionId, competition: def.shortName, stage: stage?.name ?? f.stageId, round: f.round, leg: f.leg, day: f.day, date: dateInfo(f.day).label,
+    id: f.id, competitionId: f.competitionId, competition: competitionShortName(world, def.id), stage: stage?.name ?? f.stageId, round: f.round, leg: f.leg, day: f.day, date: dateInfo(f.day).label,
     home: { id: f.home, name: (world.clubs[f.home] as Club).name }, away: { id: f.away, name: (world.clubs[f.away] as Club).name }, status: f.status,
     score: r ? `${r.homeGoals}-${r.awayGoals}${r.extraTime ? ' aet' : ''}` : null, pens: r?.pens ? `${r.pens.home}-${r.pens.away} pens` : null, neutral: f.neutral,
   };
@@ -282,9 +283,9 @@ export function clubView(world: WorldState, clubId: string): ClubView | null {
   const pos = table.find((r) => r.clubId === clubId)?.position ?? null;
   const rec = clubRecord(world, clubId);
   return {
-    id: c.id, name: c.name, country: c.country, city: c.city, leagueId: c.leagueId, league: COMPETITIONS[c.leagueId]?.name ?? c.leagueId, reputation: c.reputation,
+    id: c.id, name: c.name, country: c.country, city: c.city, leagueId: c.leagueId, league: competitionName(world, c.leagueId), reputation: c.reputation,
     stadium: c.stadium, facilities: c.facilities, manager: mgr ? { id: mgr.id, name: mgr.name, style: mgr.style, reputation: mgr.reputation } : null, philosophy: c.philosophy,
-    ownership: c.ownership, position: pos, honours: Object.entries(rec.trophies).map(([competition, seasons]) => ({ competition: COMPETITIONS[competition]?.name ?? competition, seasons })),
+    ownership: c.ownership, position: pos, honours: Object.entries(rec.trophies).map(([competition, seasons]) => ({ competition: competitionName(world, competition), seasons })),
     rivals: c.rivals.map((r) => world.clubs[r]?.name ?? r), squadSize: squadOf(world, clubId).length, tactics: c.tactics,
   };
 }
@@ -343,7 +344,7 @@ export function competitionOverview(world: WorldState, compId: string): Competit
     return { id: s.id, name: s.name, type: s.type, status: st?.status ?? 'pending', groups, rounds };
   });
   return {
-    id: def.id, name: def.name, kind: def.kind, confederation: def.confederation, status: comp.status, season: comp.season, entrants: comp.entrants.length,
+    id: def.id, name: competitionName(world, def.id), kind: def.kind, confederation: def.confederation, status: comp.status, season: comp.season, entrants: comp.entrants.length,
     verification: def.verification, drawNotes: comp.notes ?? [], stages, winner: comp.winner ? nm(comp.winner) : null, runnerUp: comp.runnerUp ? nm(comp.runnerUp) : null,
   };
 }
@@ -351,7 +352,7 @@ export function competitionOverview(world: WorldState, compId: string): Competit
 export function competitionList(world: WorldState): { id: string; name: string; kind: string; confederation: string | null; country: string | null; status: string }[] {
   return Object.values(world.competitions).map((c) => {
     const d = COMPETITIONS[c.id] as CompetitionDef;
-    return { id: c.id, name: d.name, kind: d.kind, confederation: d.confederation, country: d.country, status: c.status };
+    return { id: c.id, name: competitionName(world, c.id), kind: d.kind, confederation: d.confederation, country: d.country, status: c.status };
   }).sort((a, b) => (a.kind === 'league' ? 0 : 1) - (b.kind === 'league' ? 0 : 1) || a.name.localeCompare(b.name));
 }
 

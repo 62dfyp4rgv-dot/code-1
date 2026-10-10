@@ -237,7 +237,7 @@ export default function NewCareer(): ReactNode {
     return (
       <View style={{ gap: spacing.xs }} testID="pack-applied">
         <Txt variant="small" style={{ fontWeight: '700' }}>{t('pack.applied', { name: dp.name })}</Txt>
-        <Txt variant="small" testID="pack-counts">{t('pack.counts', { clubs: dig(a.clubs), players: dig(a.players), managers: dig(a.managers), crests: dig(a.crests) })}</Txt>
+        <Txt variant="small" testID="pack-counts">{t('pack.counts', { clubs: dig(a.clubs), players: dig(a.players), managers: dig(a.managers), crests: dig(a.crests), competitions: dig(a.competitions ?? 0) })}</Txt>
         <Txt variant="small">{t('pack.remainder')}</Txt>
         <Txt variant="caption" color="muted">{t('pack.source', { source: dp.source })}</Txt>
         <Txt variant="caption" color="muted">{t('pack.licence', { licence: dp.licence })}</Txt>

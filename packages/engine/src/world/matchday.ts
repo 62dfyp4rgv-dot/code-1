@@ -19,6 +19,7 @@ import type { NewsItem, StatLine, StoredMatch, WorldState } from './types';
 import { nextId } from './generate';
 import { checkGoalMilestone, updateStreaks } from './records';
 import { baseWageWeekly, marketValue } from './valuation';
+import { competitionName, competitionShortName } from './compnames';
 
 export function clubCoefficient(world: WorldState, clubId: string): number {
   const c = world.clubs[clubId] as Club;
@@ -369,7 +370,7 @@ function narrate(world: WorldState, comp: CompetitionState, def: CompetitionDef,
   for (const [pid, n] of Object.entries(scorerCount)) {
     if (n >= 3) {
       const p = world.players[pid] as Player;
-      pushNews(world, { day: f.day, kind: 'milestone', clubIds: [f.home, f.away], playerIds: [pid], text: `${p.name} scores a hat-trick in ${home.name} ${hs}-${as} ${away.name} (${def.shortName}).`, ref: f.id });
+      pushNews(world, { day: f.day, kind: 'milestone', clubIds: [f.home, f.away], playerIds: [pid], text: `${p.name} scores a hat-trick in ${home.name} ${hs}-${as} ${away.name} (${competitionShortName(world, def.id)}).`, ref: f.id });
     }
   }
   const winnerSide = hs > as ? 'home' : as > hs ? 'away' : null;
@@ -377,11 +378,11 @@ function narrate(world: WorldState, comp: CompetitionState, def: CompetitionDef,
     const w = winnerSide === 'home' ? home : away;
     const l = winnerSide === 'home' ? away : home;
     if (l.reputation - w.reputation >= 28 && def.kind !== 'superCup') {
-      pushNews(world, { day: f.day, kind: 'upset', clubIds: [w.id, l.id], playerIds: [], text: `Upset: ${w.name} beat ${l.name} ${Math.max(hs, as)}-${Math.min(hs, as)} in the ${def.name}.`, ref: f.id });
+      pushNews(world, { day: f.day, kind: 'upset', clubIds: [w.id, l.id], playerIds: [], text: `Upset: ${w.name} beat ${l.name} ${Math.max(hs, as)}-${Math.min(hs, as)} in the ${competitionName(world, def.id)}.`, ref: f.id });
     }
   }
   if (Math.abs(hs - as) >= 5) {
-    pushNews(world, { day: f.day, kind: 'record', clubIds: [f.home, f.away], playerIds: [], text: `${hs > as ? home.name : away.name} thrash ${hs > as ? away.name : home.name} ${Math.max(hs, as)}-${Math.min(hs, as)} (${def.shortName}).`, ref: f.id });
+    pushNews(world, { day: f.day, kind: 'record', clubIds: [f.home, f.away], playerIds: [], text: `${hs > as ? home.name : away.name} thrash ${hs > as ? away.name : home.name} ${Math.max(hs, as)}-${Math.min(hs, as)} (${competitionShortName(world, def.id)}).`, ref: f.id });
   }
 }
 

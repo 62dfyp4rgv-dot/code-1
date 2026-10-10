@@ -154,7 +154,7 @@ export function importCrestsToPending(files: PickedImage[]): CrestReport {
   if (report.matched > 0) {
     const dp = w.dataPack;
     if (dp) dp.applied.crests += added;
-    else w.dataPack = { id: 'user-crest-images', name: 'Your imported crest images', source: 'Image files picked on this device', licence: 'Supplied by you; you are responsible for having the right to use them', applied: { clubs: 0, players: 0, managers: 0, crests: added } };
+    else w.dataPack = { id: 'user-crest-images', name: 'Your imported crest images', source: 'Image files picked on this device', licence: 'Supplied by you; you are responsible for having the right to use them', applied: { clubs: 0, players: 0, managers: 0, crests: added, competitions: 0 } };
   }
   return report;
 }

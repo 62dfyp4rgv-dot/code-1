@@ -18,6 +18,7 @@ import { clamp } from '../math';
 import { defaultTactics, FORMATIONS } from '../tactics';
 import { ATTR_KEYS, POSITIONS, type Club, type Manager, type Player, type Position } from '../types';
 import { overall } from '../players';
+import { COMPETITIONS } from '../competition/registry';
 import { squadOf } from './runtime';
 import { leagueSquadRules } from './squad';
 import type { DataPackInfo, WorldState } from './types';
@@ -57,6 +58,8 @@ export interface DataPack {
   licence: string;
   /** League id (e.g. `ENG1`) -> clubs, strongest first. */
   leagues: Record<string, PackClub[]>;
+  /** Optional display names for competitions (leagues, cups, super cups, continental), keyed by competition id (e.g. `ENG-CUP`). */
+  competitions?: Record<string, { name: string; shortName?: string }>;
 }
 
 export class DataPackError extends Error {
@@ -68,6 +71,7 @@ export class DataPackError extends Error {
 
 const LIMITS = { clubs: 600, playersPerClub: 60, text: 80, crestBytes: 300_000, json: 20_000_000 } as const;
 const LEAGUE_ID = /^[A-Z]{3}[0-9]$/;
+const COMP_ID = /^[A-Z0-9]{2,6}(-[A-Z0-9]{2,6})?$/;
 const CODE = /^[A-Z]{3}$/;
 const HEX = /^#[0-9a-fA-F]{6}$/;
 const POSITION_SET: ReadonlySet<string> = new Set(POSITIONS);
@@ -167,7 +171,22 @@ export function parseDataPack(input: string | unknown): DataPack {
       return club;
     });
   }
+  let competitions: DataPack['competitions'];
+  if (o.competitions !== undefined) {
+    const raw = o.competitions as Record<string, Record<string, unknown>>;
+    if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) throw new DataPackError('competitions must be an object');
+    competitions = Object.create(null) as NonNullable<DataPack['competitions']>;
+    const entries = Object.entries(raw);
+    if (entries.length > 400) throw new DataPackError('too many competitions');
+    for (const [cid, v] of entries) {
+      if (!COMP_ID.test(cid)) throw new DataPackError(`invalid competition id ${JSON.stringify(cid.slice(0, 16))}`);
+      if (typeof v !== 'object' || v === null) throw new DataPackError(`competitions.${cid} must be an object`);
+      const name = clean(v.name, `competitions.${cid}.name`);
+      competitions[cid] = { name, ...(v.shortName !== undefined ? { shortName: clean(v.shortName, `competitions.${cid}.shortName`, 14) } : {}) };
+    }
+  }
   return {
+    ...(competitions ? { competitions } : {}),
     format: 'football-universe-data-pack', version: 1, id: clean(o.id, 'id', 40), name: clean(o.name, 'name'),
     source: clean(o.source, 'source', 200), licence: clean(o.licence, 'licence', 200), leagues,
   };
@@ -190,7 +209,7 @@ function rescale(p: Player, target: number): void {
  * on the world and the pack. Returns the provenance record that is also stored on the world.
  */
 export function applyDataPack(world: WorldState, pack: DataPack): DataPackInfo {
-  const applied = { clubs: 0, players: 0, managers: 0, crests: 0 };
+  const applied = { clubs: 0, players: 0, managers: 0, crests: 0, competitions: 0 };
   const taken = new Set<string>(Object.values(world.clubs).map((c) => c.name));
   const usedPlayerIds = new Set<string>();
   for (const [leagueId, packClubs] of Object.entries(pack.leagues)) {
@@ -223,6 +242,15 @@ export function applyDataPack(world: WorldState, pack: DataPack): DataPackInfo {
       }
       if (pc.players) applied.players += applyPlayers(world, club, pc.players, usedPlayerIds);
     }
+  }
+  if (pack.competitions) {
+    const names: NonNullable<WorldState['overrides']['competitionNames']> = {};
+    for (const [cid, v] of Object.entries(pack.competitions)) {
+      if (!COMPETITIONS[cid]) continue; // ids from a newer registry are ignored, never invented
+      names[cid] = { name: v.name, shortName: v.shortName ?? v.name.replace(/[^A-Za-zÀ-ÿ0-9 ]/g, '').split(/\s+/).map((w) => w[0]).join('').slice(0, 5).toUpperCase() };
+      applied.competitions++;
+    }
+    world.overrides.competitionNames = names;
   }
   const info: DataPackInfo = { id: pack.id, name: pack.name, source: pack.source, licence: pack.licence, applied };
   world.dataPack = info;

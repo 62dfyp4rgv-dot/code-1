@@ -101,7 +101,7 @@ describe('data pack in the new-career store flow', () => {
     closeCareer(); // lookups prefer the loaded career's club records
     await generateWorldForSelection('pack-user', 'compact');
     const info = await applyDataPackToPending(pack);
-    expect(info!.applied).toEqual({ clubs: 1, players: 1, managers: 1, crests: 1 });
+    expect(info!.applied).toEqual({ clubs: 1, players: 1, managers: 1, crests: 1, competitions: 0 });
     const w = getPendingWorld()!;
     const club = Object.values(w.clubs).find((c) => c.name === 'Testville FC')!;
     expect(clubCrestUri(club.id)).toBe(TINY_PNG);

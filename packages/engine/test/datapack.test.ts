@@ -70,7 +70,7 @@ describe('applying a pack', () => {
       }] },
     }));
     const info = applyDataPack(w, p);
-    expect(info.applied).toEqual({ clubs: 1, players: 3, managers: 1, crests: 1 });
+    expect(info.applied).toEqual({ clubs: 1, players: 3, managers: 1, crests: 1, competitions: 0 });
     expect(w.clubs[top.id]!.crest).toBe('asset:crests/test.png');
     expect(w.managers[w.clubs[top.id]!.managerId!]!.name).toBe('Coach Example');
     const squad = squadOf(w, top.id);
@@ -146,5 +146,27 @@ describe('starter squads: ratings, formations and consistency', () => {
     const haaland = squadOf(w, city.id).find((p) => p.name === 'Erling Haaland')!;
     expect(Math.abs(overall(haaland) - 91)).toBeLessThan(2);
     assertValid(w);
+  }, 120_000);
+});
+
+describe('real competition names', () => {
+  it('overlays names on leagues, cups and continental trophies in views, news and saves', async () => {
+    const { competitionName, competitionShortName, REAL_CLUB_NAMES: pk } = await import('../src');
+    const { competitionList, clubView, leagueTableView } = await import('../src/world/views');
+    const w = createWorld(defaultWorldConfig('dp-comp', 'compact'));
+    expect(competitionName(w, 'SAU-CUP')).toBe('Saudi Arabia Cup');
+    const info = applyDataPack(w, parseDataPack(JSON.stringify(pk)));
+    expect(info.applied.competitions).toBeGreaterThan(50);
+    expect(competitionName(w, 'SAU-CUP')).toBe("King's Cup");
+    expect(competitionName(w, 'ESP-CUP')).toBe('Copa del Rey');
+    expect(competitionShortName(w, 'ENG1')).toBe('EPL');
+    expect(competitionList(w).some((c) => c.name === 'La Liga' || c.name === 'Premier League')).toBe(true);
+    const some = Object.values(w.clubs).find((c) => c.leagueId === 'ENG1')!;
+    expect(clubView(w, some.id)!.league).toBe('Premier League');
+    expect(leagueTableView(w, 'ENG1').length).toBeGreaterThan(0);
+    const back = decodeWorld(encodeWorld(w));
+    expect(competitionName(back, 'SAU-CUP')).toBe("King's Cup");
+    expect(() => parseDataPack(JSON.stringify(pack({ competitions: { 'bad id': { name: 'x' } } })))).toThrow(DataPackError);
+    advanceDays(w, 20);
   }, 120_000);
 });
