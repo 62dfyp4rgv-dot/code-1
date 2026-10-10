@@ -519,6 +519,7 @@ try {
   const realNames = await clubLabels();
   check('club picker shows real names (Manchester City, Liverpool, Arsenal)', ['Manchester City', 'Liverpool', 'Arsenal'].every((n) => realNames.includes(n)), realNames.join('|'));
   check('club picker shows the unofficial/generated note', /generated and fictional/.test(await text('club-pack-note')));
+  await page.locator('[data-testid^="club-cl"]:visible').first().scrollIntoViewIfNeeded();
   await shot('46c-real-names-club-picker');
   await page.setViewportSize({ width: 320, height: 568 }); await page.waitForTimeout(300);
   await noHScroll('club picker with real names'); await shot('46d-real-names-club-picker-320');
@@ -555,10 +556,11 @@ try {
   await page.waitForTimeout(800);
   const crestImgs = await page.locator('[data-testid="crest-image"]:visible').count();
   check('embedded crest renders as an image and the unreachable one fell back to the generated crest', crestImgs === 1, String(crestImgs));
-  check('the fallback crest keeps the club name as accessible label', (await page.locator('[role=image][aria-label="Brokencrest Rovers"]').count()) >= 1);
-  check('the image crest keeps the club name as accessible label', (await page.locator('[role=image][aria-label="Testville FC"]').count()) >= 1);
+  check('the fallback crest keeps the club name as accessible label', (await page.locator('[role="img"][aria-label="Brokencrest Rovers"]').count()) >= 1);
+  check('the image crest keeps the club name as accessible label', (await page.locator('[role="img"][aria-label="Testville FC"]').count()) >= 1);
+  await page.locator('[data-testid^="club-cl"]:visible').first().scrollIntoViewIfNeeded();
   await shot('46g-user-pack-crests');
-  check('no request left the origin for a crest', requests.every((u) => u.startsWith(base) || u.startsWith('data:') || u.startsWith('blob:')), requests.filter((u) => !u.startsWith(base)).join(' '));
+  check('no network request left the origin (file:// crests are local, blocked by the browser, and fell back)', requests.every((u) => !/^https?:/.test(u) || u.startsWith(base)), requests.filter((u) => /^https?:/.test(u) && !u.startsWith(base)).join(' '));
 
   // start with the user pack: home hero crest + start screen / about honesty
   await tid('club-' + (await page.locator('[data-testid^="club-cl"]:visible:not([aria-hidden="true"] *)').first().getAttribute('data-testid')).slice(5)).first().click();

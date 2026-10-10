@@ -2,8 +2,8 @@
 
 The player-facing app for the deterministic football engine in `packages/engine` (`@fu/engine`). It uses **only** the engine's
 public API (`packages/engine/src/index.ts`): world generation, `*View` view-models, validated `actions`, `advanceDay`, and
-`SaveRepository`/`encodeWorld`/`decodeWorld`. All clubs, players and managers are fictional; competition rules are the engine's
-**unverified scenario defaults** and the UI says so.
+`SaveRepository`/`encodeWorld`/`decodeWorld`. By default all clubs, players and managers are fictional; an optional, unofficial **data pack**
+(see below) can overlay real club names. Competition rules are the engine's **unverified scenario defaults** and the UI says so.
 
 Stack: Expo SDK 57, React Native 0.86, React 19, Expo Router (routes in `src/app`), zustand, react-native-svg, expo-sqlite
 (native saves), IndexedDB (web saves), expo-haptics (iOS feedback; no-op on web). Versions are pinned to `node_modules/expo/bundledNativeModules.json`.
@@ -34,6 +34,26 @@ Key design decisions
 * Money is EUR everywhere in the engine; the UI converts with a **fixed approximate** `SAR_PER_EUR = 4.06` (`core/format.ts`).
 * RTL: `<html dir>` on web; a root `direction` style + `I18nManager.forceRTL` on native (full native widget mirroring needs an
   app restart — the app tells the user). Layout uses logical `start/end` styles and mirrored chevrons.
+
+## Real-world names (data packs)
+
+New career > *Generate world* > League step has a **Real-world names** section:
+* a switch *Use real club names (unofficial starter pack)* applies the engine's `REAL_CLUB_NAMES` (names, short codes and cities only; no
+  logos, players or coaches; unverified, approximate 2025/26 league membership) to the pending world before the club picker is shown;
+* *Import a data pack (.json)* reads a file (`core/files*.ts` `pickTextFile`: `<input type=file>` on web, `expo-document-picker` + `expo-file-system` on native),
+  runs `parseDataPack` and shows the precise `DataPackError` message on failure. Format: `docs/DATA_PACKS.md`.
+* After applying, the screen lists the `DataPackInfo` counts (clubs / players / coaches / crests changed) and states that everything the pack
+  does not cover stays generated and fictional. The club picker repeats that note.
+
+How it stays consistent (`state/gameStore.ts`): `applyDataPackToPending(pack | text | null)` validates the pack first (`parseDataPack`, also for
+already-parsed objects), then rebuilds the pending world from the same seed/preset (generation is deterministic), applies the pack **once** to that
+fresh copy, runs `validateWorld`, and only then swaps it in. A failure at any point leaves the previous pending world untouched. Applying the same
+pack twice, or removing it (`null`), is therefore idempotent, and *Generate world* always starts fictional again. `startCareer` and saving are unchanged;
+`world.dataPack` and `club.crest` are part of the save (reload keeps both).
+Crests: `ui/ClubVisuals.tsx` `Crest` is the only crest component (every screen uses it). It renders `club.crest` with `Image` when it is a `file://` or
+`data:image/(png|jpeg|webp)` URI and falls back to the generated shield on `onError`, for `asset:` URIs (not resolvable by the app) and for anything else; remote
+URLs are never fetched. The accessible label stays the club name. Start screen and About state when real names are an unofficial overlay (about screen: no logos/players/coaches bundled,
+pack ratings are the author's estimates, trademarks belong to their owners).
 
 ## Run
 
@@ -90,11 +110,11 @@ npx expo export --platform android   # Hermes bytecode bundle (verifies native b
 ```bash
 cd apps/mobile
 npx tsc --noEmit        # typecheck (strict, noUncheckedIndexedAccess)
-npx vitest run          # unit + integration tests (56 tests, ~15 s)
+npx vitest run          # unit + integration tests (62 tests, ~50 s)
 npm run export:web && node e2e/run.mjs     # Playwright e2e against dist/ (Chromium from PLAYWRIGHT_BROWSERS_PATH)
 ```
 The e2e script starts its own static server, drives a real browser (393×852 = iPhone 15 points, then 320×568), asserts visible text / DOM state
-(113 assertions, includes the animated match reveal, Reduce Motion, RTL and a tap-target audit) and writes ~55 screenshots to `docs/screenshots/`.
+(138 assertions, includes the animated match reveal, Reduce Motion, RTL, a tap-target audit and the real-names/data-pack flow incl. file import at 393 and 320 px) and writes ~64 screenshots to `docs/screenshots/`.
 The iOS bundle is checked with `EXPO_OFFLINE=1 CI=1 npx expo export --platform ios` (Hermes bytecode).
 
 ## What is verified vs not
@@ -106,7 +126,9 @@ document-picker) and `I18nManager` RTL behaviour are unverified. The SQLite adap
 double of the expo-sqlite async API only.
 
 ## Known limitations
-* Engine text (match events, news, error reasons, verification notes) is English only; names stay as generated.
+* Engine text (match events, news, error reasons, verification notes) is English only; names stay as generated (or as the data pack provides). `DataPackError` messages are English.
+* The start screen cannot know whether a *saved* career used a data pack (save slots carry no pack info); it shows the generic "fictional unless you choose a pack" text and only switches to the data-pack wording when a career with `world.dataPack` is loaded. The About screen names the loaded career's pack.
+* `asset:` crest URIs in a pack are accepted by the engine but this app cannot resolve them (generated crest shown). `file://` crests depend on the file still existing on the device (unverified on device); on web only embedded `data:` crests can load.
 * Engine calls are synchronous: world generation and each simulated day run on the JS thread (no worker). The UI stays responsive
   between days; on slow devices a single day can still cause a visible pause. Compact world ≈1.5 s to generate and ≈0.1 s per
   simulated day on desktop Node; saves are large (≈18 MB of JSON for a compact world after two months).

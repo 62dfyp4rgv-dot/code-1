@@ -7,6 +7,7 @@ light/dark, EN/AR; viewport 393×852 = iPhone 15 points) · **Device ✘**: not 
 |---|---|---|---|---|
 | Start menu, continue last save | `/start` | yes | ✔ | ✘ |
 | New career (seed, preset, league, club) | `/new-career` | yes | ✔ (compact; standard only warning shown) | ✘ |
+| Real-world names: starter pack switch, `.json` data-pack import (precise errors, applied counts, "rest stays fictional"), local/embedded crest images with fallback | `/new-career`, `Crest`, `/about`, `/start` | yes | ✔ (starter pack, bad/remote-crest pack, user pack with embedded + unreachable crest, 393 + 320 px, reload keeps pack) + 6 store tests | **✘** (native picker + `file://` crests untested) |
 | Home: next-match hero + Play CTA, first-run checklist, season glance (position sparkline, W/D/L form chips), simulation controls (end-of-season confirm) | `/` | yes | ✔ (393 + 320 px) | ✘ |
 | Squad (sort/filter/search, condition, injuries) | `/squad` | yes | ✔ | ✘ |
 | Player profile (attributes, positions, history, transfers, scout report, actions) | `/player/[id]` | yes | ✔ | ✘ |
@@ -48,3 +49,12 @@ Unit tests added in `test/ux.test.ts` (form guide, timeline vs the real engine, 
 
 Known gaps: see "Remaining gaps" in the UX report. The match reveal is a presentation of an already simulated match (no in-match decisions).
 The league-position sparkline is reconstructed from fixtures (3-1-0, GD, GF) and pinned to the engine's real current position.
+
+## Real-world data packs (this revision)
+
+Integrated the engine's `parseDataPack` / `applyDataPack` / `REAL_CLUB_NAMES` (see README "Real-world names"). Tests: `test/dataPack.test.ts` (starter pack ->
+real names -> start career -> save -> reload keeps names and `dataPack`; idempotent re-apply/remove; bad text/object leaves the pending world untouched; regenerate resets;
+user pack with crest/coach/player survives save+reload; crest URI safety) and e2e section 9. Honest limits: names/cities come from an unverified starter list;
+no logos, players or coaches are bundled; ratings in a pack are the author's estimates; the native document picker, `file://` crest loading and the
+`expo-file-system` read path were not run on a device; `asset:` crests always fall back to the generated crest; the start screen's pack wording only applies when a pack career is loaded (saves
+carry no pack flag before loading). `docs/DATA_PACKS.md` (pack format) is written separately.
