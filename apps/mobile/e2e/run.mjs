@@ -507,14 +507,45 @@ try {
   check('before the pack the English clubs are generated names', fictionalNames.length >= 6 && !fictionalNames.includes('Manchester City'), fictionalNames.join('|'));
   await click('btn-career-back');
   await shot('46a-real-names-off');
-  await click('switch-real-names');
+  check('pack choice defaults to Fictional', (await tid('pack-choice-none').getAttribute('aria-checked')) === 'true');
+  await click('pack-choice-names');
   await visible('pack-applied', 90000);
   const counts = await text('pack-counts');
   check('applied counts are shown (clubs > 0, 0 players/coaches/crests for names-only pack)', /\d+ clubs · 0 players · 0 coaches · 0 crests changed/.test(counts) && !/^0 clubs/.test(counts), counts);
   const applied = await text('pack-applied');
   check('applied panel says anything not covered stays generated and fictional', /stays generated and fictional/.test(applied) && /Unofficial/.test(applied) && /trademarks belong to their owners/.test(applied), applied);
-  check('switch is on', (await tid('switch-real-names').getAttribute('aria-checked')) === 'true');
+  check('Real club names is selected', (await tid('pack-choice-names').getAttribute('aria-checked')) === 'true' && (await tid('pack-choice-none').getAttribute('aria-checked')) === 'false');
   await shot('46b-real-names-applied');
+  // starter squads (unverified) + crest image import by file name
+  await click('pack-choice-squads');
+  await page.waitForFunction(() => /squads/i.test(document.querySelector('[data-testid="pack-counts"]')?.textContent ?? '') || /[1-9]\d* players/.test(document.querySelector('[data-testid="pack-counts"]')?.textContent ?? ''), null, { timeout: 90000 });
+  const sqCounts = await text('pack-counts');
+  check('squads option applies players and coaches', /[1-9]\d* players · [1-9]\d* coaches/.test(sqCounts), sqCounts);
+  check('squads option is labelled unverified and possibly outdated', /UNVERIFIED and possibly outdated/.test(await text('pack-choice-hint')), await text('pack-choice-hint'));
+  await shot('46b2-real-names-squads');
+  const pngB64 = 'iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAFklEQVR42mNk+M9Qz0AEYBxVSF+FAP5FDvcfRYWgAAAAAElFTkSuQmCC';
+  const pick = async (files) => {
+    const [fc] = await Promise.all([page.waitForEvent('filechooser'), click('btn-import-crests')]);
+    await fc.setFiles(files.map(([name, buffer, mimeType]) => ({ name, mimeType, buffer })));
+  };
+  await pick([['manchester-city.png', Buffer.from(pngB64, 'base64'), 'image/png'], ['Liverpool.png', Buffer.from(pngB64, 'base64'), 'image/png'], ['unknown-club.png', Buffer.from(pngB64, 'base64'), 'image/png'],
+    ['arsenal.png', Buffer.alloc(300000, 1), 'image/png'], ['chelsea.gif', Buffer.from('GIF89a'), 'image/gif']]);
+  await visible('crest-report');
+  check('crest import reports matched / unmatched / too big / unsupported', /2 matched · 1 not matched · 1 too big \(max 300 KB\) · 1 unsupported/.test(await text('crest-report')), await text('crest-report'));
+  check('crest import names the unmatched and too-big files', /unknown-club\.png/.test(await text('crest-report')) && /arsenal\.png/.test(await text('crest-report')));
+  check('crest count is included in the applied counts', /[1-9]\d* players · [1-9]\d* coaches · 2 crests changed/.test(await text('pack-counts')), await text('pack-counts'));
+  await shot('46b3-crest-import-report');
+  await click('league-ENG1'); await visible('btn-start-career');
+  await page.waitForTimeout(500);
+  const sqNames = await clubLabels();
+  check('club picker still shows real names with squads pack', ['Manchester City', 'Liverpool'].every((n) => sqNames.includes(n)));
+  check('imported crests render as images (Manchester City, Liverpool) and others stay generated', (await page.locator('[data-testid="crest-image"]:visible').count()) === 2, String(await page.locator('[data-testid="crest-image"]:visible').count()));
+  await page.locator('[data-testid^="club-cl"]:visible').first().scrollIntoViewIfNeeded();
+  await shot('46b4-club-picker-imported-crests');
+  await click('btn-career-back');
+  await click('pack-choice-names');
+  await visible('pack-applied', 90000);
+  check('switching the option drops imported crests', /0 crests changed/.test(await text('pack-counts')), await text('pack-counts'));
   await click('league-ENG1'); await visible('btn-start-career');
   const realNames = await clubLabels();
   check('club picker shows real names (Manchester City, Liverpool, Arsenal)', ['Manchester City', 'Liverpool', 'Arsenal'].every((n) => realNames.includes(n)), realNames.join('|'));
@@ -549,7 +580,7 @@ try {
     leagues: { ENG1: [{ name: 'Testville FC', shortName: 'TST', crest: png, manager: { name: 'Pat Coach' } }, { name: 'Brokencrest Rovers', crest: 'file:///nonexistent/crest.png' }] } });
   await page.waitForFunction(() => /E2E user pack/.test(document.body.innerText), null, { timeout: 90000 });
   check('user pack applied: 2 clubs, 1 coach, 2 crests', /2 clubs · 0 players · 1 coaches · 2 crests changed/.test(await text('pack-counts')), await text('pack-counts'));
-  check('switch is off for a custom pack', (await tid('switch-real-names').getAttribute('aria-checked')) === 'false');
+  check('no preset option is selected for a custom pack', (await Promise.all(['none', 'names', 'squads'].map((k) => tid('pack-choice-' + k).getAttribute('aria-checked')))).every((v) => v === 'false'));
   await click('league-ENG1'); await visible('btn-start-career');
   const userNames = await clubLabels();
   check('club picker shows the pack clubs', userNames.includes('Testville FC') && userNames.includes('Brokencrest Rovers'), userNames.join('|'));
@@ -574,6 +605,7 @@ try {
   await click('btn-continue');
   await visible('screen-home', 60000);
   check('saved career reloads with the pack club', (await text('home-club-name')) === 'Testville FC', await text('home-club-name'));
+  check('the embedded crest survives save and reload (home hero shows an image crest)', (await page.locator('[data-testid="crest-image"]:visible').count()) >= 1);
   await goMore('nav-about'); await visible('screen-about');
   const lim = await tid('about-limits').innerText();
   check('about explains unofficial overlay, no bundled logos/players/coaches, estimates, trademarks and docs/DATA_PACKS.md',

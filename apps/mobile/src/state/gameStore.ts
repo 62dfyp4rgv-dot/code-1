@@ -7,6 +7,8 @@ import { runSimulation, yieldToUi, type SimPlan, type SimProgress } from '../cor
 import { storeKind } from '../core/saves/createStore';
 import { MAX_SLOT, MIN_SLOT } from '../core/saves/types';
 import type { TKey, TParams } from '../i18n/translate';
+import { planCrestImport, type CrestReport, type PickedImage } from '../core/crestImport';
+import { isRenderableCrest } from './lookups';
 import { getPendingWorld, getWorld, requireWorld, setPendingWorld, setWorld } from './worldHost';
 import { getSaveStore } from './storeHost';
 import { useSettings } from './settings';
@@ -129,6 +131,32 @@ export async function applyDataPackToPending(input: DataPack | string | null): P
   } finally {
     set({ busy: null });
   }
+}
+
+/**
+ * Match picked image files to the pending world's clubs by file name and embed them as `club.crest` data URIs (user-supplied logos;
+ * the user is responsible for having the right to use them). Changes nothing when no file matches. Crests live in the club record, so
+ * they are saved and re-validated by the engine on load. Choosing a different names option rebuilds the world and drops them.
+ */
+export function importCrestsToPending(files: PickedImage[]): CrestReport {
+  const w = getPendingWorld();
+  if (!w) throw new Error('no generated world');
+  const clubs = Object.values(w.clubs).map((c) => ({ id: c.id, name: c.name, shortName: c.shortName }));
+  const { results, report } = planCrestImport(files, clubs);
+  let added = 0;
+  for (const r of results) {
+    if (r.status !== 'matched' || !r.clubId || !r.uri || !isRenderableCrest(r.uri)) continue;
+    const club = w.clubs[r.clubId];
+    if (!club) continue;
+    if (!club.crest) added++;
+    club.crest = r.uri;
+  }
+  if (report.matched > 0) {
+    const dp = w.dataPack;
+    if (dp) dp.applied.crests += added;
+    else w.dataPack = { id: 'user-crest-images', name: 'Your imported crest images', source: 'Image files picked on this device', licence: 'Supplied by you; you are responsible for having the right to use them', applied: { clubs: 0, players: 0, managers: 0, crests: added } };
+  }
+  return report;
 }
 
 export function firstFreeSlot(slots: SlotInfo[]): number | null {

@@ -38,8 +38,14 @@ Key design decisions
 ## Real-world names (data packs)
 
 New career > *Generate world* > League step has a **Real-world names** section:
-* a switch *Use real club names (unofficial starter pack)* applies the engine's `REAL_CLUB_NAMES` (names, short codes and cities only; no
-  logos, players or coaches; unverified, approximate 2025/26 league membership) to the pending world before the club picker is shown;
+* a 3-way choice applied to the pending world before the club picker is shown: **Fictional** (default) / **Real club names**
+  (`REAL_CLUB_NAMES`: names, short codes and cities only; unverified, approximate 2025/26 league membership) / **Real names + squads**
+  (`REAL_CLUBS_WITH_SQUADS`: adds head coaches and starter squads for ~30 clubs, written from memory, labelled UNVERIFIED and possibly outdated, no ratings);
+* *Import crest images* (`core/files*.ts` `pickImageFiles`: multi-select `<input type=file>` on web, `expo-document-picker` `multiple` + `expo-file-system` on native;
+  png/jpeg/webp) matches each file to a pending-world club by normalised file name (`core/crestImport.ts`: lowercase, accents and extension stripped, non-alphanumerics -> `-`;
+  compared with the club name, then with the short code only when it is unique, e.g. `manchester-city.png`, `MCI.png`), embeds it as a `data:image/...;base64,` URI
+  (the engine's limit of 300 KB applies to the whole URI; larger files are reported as too big and never read), sets `club.crest` and reports matched / not matched / too big / unsupported.
+  The images are the user's own files and the user is responsible for the right to use them; nothing is downloaded. Picking another option above rebuilds the world and drops imported crests;
 * *Import a data pack (.json)* reads a file (`core/files*.ts` `pickTextFile`: `<input type=file>` on web, `expo-document-picker` + `expo-file-system` on native),
   runs `parseDataPack` and shows the precise `DataPackError` message on failure. Format: `docs/DATA_PACKS.md`.
 * After applying, the screen lists the `DataPackInfo` counts (clubs / players / coaches / crests changed) and states that everything the pack
@@ -49,7 +55,7 @@ How it stays consistent (`state/gameStore.ts`): `applyDataPackToPending(pack | t
 already-parsed objects), then rebuilds the pending world from the same seed/preset (generation is deterministic), applies the pack **once** to that
 fresh copy, runs `validateWorld`, and only then swaps it in. A failure at any point leaves the previous pending world untouched. Applying the same
 pack twice, or removing it (`null`), is therefore idempotent, and *Generate world* always starts fictional again. `startCareer` and saving are unchanged;
-`world.dataPack` and `club.crest` are part of the save (reload keeps both).
+`world.dataPack` and `club.crest` are part of the save (reload keeps both; the engine re-validates crests on load). Imported crests without any pack create a `user-crest-images` provenance record.
 Crests: `ui/ClubVisuals.tsx` `Crest` is the only crest component (every screen uses it). It renders `club.crest` with `Image` when it is a `file://` or
 `data:image/(png|jpeg|webp)` URI and falls back to the generated shield on `onError`, for `asset:` URIs (not resolvable by the app) and for anything else; remote
 URLs are never fetched. The accessible label stays the club name. Start screen and About state when real names are an unofficial overlay (about screen: no logos/players/coaches bundled,
@@ -110,11 +116,11 @@ npx expo export --platform android   # Hermes bytecode bundle (verifies native b
 ```bash
 cd apps/mobile
 npx tsc --noEmit        # typecheck (strict, noUncheckedIndexedAccess)
-npx vitest run          # unit + integration tests (62 tests, ~50 s)
+npx vitest run          # unit + integration tests (70 tests, ~55 s)
 npm run export:web && node e2e/run.mjs     # Playwright e2e against dist/ (Chromium from PLAYWRIGHT_BROWSERS_PATH)
 ```
 The e2e script starts its own static server, drives a real browser (393×852 = iPhone 15 points, then 320×568), asserts visible text / DOM state
-(138 assertions, includes the animated match reveal, Reduce Motion, RTL, a tap-target audit and the real-names/data-pack flow incl. file import at 393 and 320 px) and writes ~64 screenshots to `docs/screenshots/`.
+(148 assertions, includes the animated match reveal, Reduce Motion, RTL, a tap-target audit and the real-names/data-pack flow incl. file import at 393 and 320 px) and writes ~67 screenshots to `docs/screenshots/`.
 The iOS bundle is checked with `EXPO_OFFLINE=1 CI=1 npx expo export --platform ios` (Hermes bytecode).
 
 ## What is verified vs not

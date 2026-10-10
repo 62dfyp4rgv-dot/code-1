@@ -8,7 +8,7 @@ import { getWorld } from '../state/worldHost';
 import { useGame } from '../state/gameStore';
 import type { TKey } from '../i18n/translate';
 
-const LIMITS: TKey[] = ['about.l1', 'about.l2', 'about.l3', 'about.l4', 'about.l5', 'about.l6', 'about.l7', 'about.l8', 'about.l9', 'about.l10', 'about.l11', 'about.l12'];
+const LIMITS: TKey[] = ['about.l1', 'about.l2', 'about.l3', 'about.l4', 'about.l5', 'about.l6', 'about.l7', 'about.l8', 'about.l9', 'about.l10', 'about.l11', 'about.l12', 'about.l13'];
 
 export default function About(): ReactNode {
   const { t, dig, num } = useI18n();
