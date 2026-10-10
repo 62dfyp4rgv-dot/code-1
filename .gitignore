@@ -1,3 +1,5 @@
 __pycache__/
 .pytest_cache/
 ai_hands/drawing_output/
+secondfall/out/
+secondfall/__pycache__/
