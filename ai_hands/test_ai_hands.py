@@ -588,3 +588,86 @@ def test_the_plan_does_not_depend_on_playback_speed(tmp_path):
 
 def test_planner_keeps_its_hud_colour_in_every_mode():
     assert _plan_all(color=True).color == ah.PlannerAgent.color == (120, 190, 255)   # regression: a bool once overwrote it
+
+
+# ------------------------------------------------------------------ v5: the fruit bowl scene, object ids, per-object hatching, detail dial
+def test_fruit_bowl_reference_is_a_real_scene_with_distinct_objects():
+    import random
+    d = ah.concept_fruit_bowl(ah.RES, random.Random(1))
+    aux = ah.CONCEPT_AUX[("fruit_bowl", ah.RES)]
+    assert d.shape == (ah.RES, ah.RES) and 0.0 <= d.min() and d.max() <= 1.0 and d.max() > 0.5
+    assert aux["regions"].max() - 1 >= 20                                    # bowl, 3 fruits + stems, pear, lemon, banana, 13 grapes...
+    r = aux["regions"]
+    border = np.concatenate([r[:3].ravel(), r[-3:].ravel(), r[:, :3].ravel(), r[:, -3:].ravel()])
+    assert (border <= 1).all()                                               # nothing but table/paper touches the frame: no fruit is cropped
+    assert d[:24].max() < 0.06                                               # the far edge of the table dissolves into clean paper
+    assert d[ah.RES // 3:ah.RES // 2, ah.RES // 3:2 * ah.RES // 3].max() > 0.5   # while the bowl itself has real dark values
+    rgb = ah.concept_colors("fruit_bowl", ah.RES)
+    assert rgb.shape == (ah.RES, ah.RES, 3)
+    assert rgb.reshape(-1, 3).std(axis=0).max() > 0.12
+
+
+def test_red_apple_is_drawn_darker_than_the_white_bowl_it_sits_in():
+    import random
+    d = ah.concept_fruit_bowl(ah.RES, random.Random(1))
+    rgb = ah._FRUIT_RGB[ah.RES]
+    reddish = (rgb[..., 0] > 0.7) & (rgb[..., 1] < 0.2) & (rgb[..., 2] < 0.2)
+    whitish = (rgb.min(axis=2) > 0.78)
+    assert reddish.sum() > 100 and whitish.sum() > 100
+    assert d[reddish].mean() > d[whitish & (d > 0)].mean() + 0.1             # colour contrast survives in the tone map
+
+
+def test_neighbouring_objects_never_share_a_hatch_direction():
+    pl = _plan_all("fruit_bowl", detail=0.5)
+    assert len(pl.hatch_classes) >= 3
+    r = pl.regions
+    angle_of = {}
+    for ang, mask in pl.hatch_classes:
+        for g in np.unique(r[mask]):
+            angle_of.setdefault(int(g), set()).add(ang)
+    pairs = set(zip(r[:, :-1].ravel().tolist(), r[:, 1:].ravel().tolist())) | set(zip(r[:-1].ravel().tolist(), r[1:].ravel().tolist()))
+    clashes = [(a, b) for a, b in pairs if a != b and a in angle_of and b in angle_of and angle_of[a] & angle_of[b] and a > 1 and b > 1]
+    assert not clashes
+
+
+def test_silhouettes_come_from_the_object_map_and_are_drawn():
+    pl = _plan_all("fruit_bowl", detail=1.0)
+    assert pl.regions is not None
+    outline = np.zeros((ah.RES, ah.RES), bool)
+    r = pl.regions
+    outline[:, :-1] |= (r[:, :-1] != r[:, 1:]) & (r[:, :-1] > 1) & (r[:, 1:] > 1)       # a boundary between two objects
+    ys, xs = np.nonzero(outline)
+    drawn = np.zeros((ah.RES, ah.RES), bool)
+    for p in pl.paths:
+        if p["layer"] == "contours":
+            pts = np.array([pt for seg in p["segments"] for pt in seg]) / ah.SCALE
+            drawn[np.clip(pts[:, 1].astype(int), 0, ah.RES - 1), np.clip(pts[:, 0].astype(int), 0, ah.RES - 1)] = True
+    near = ah.box_blur(drawn.astype(float), 4) > 0.001
+    assert near[ys, xs].mean() > 0.6                                         # most object-to-object boundaries have a contour on them
+
+
+def test_detail_dial_draws_more_of_what_the_eye_sees():
+    lo, hi = _plan_all("fruit_bowl", detail=0.0), _plan_all("fruit_bowl", detail=1.0)
+    n = lambda pl, layer: sum(p["layer"] == layer for p in pl.paths)  # noqa: E731
+    assert n(hi, "contours") > n(lo, "contours")
+    assert n(hi, "details") > n(lo, "details")
+    assert n(hi, "shading") >= n(lo, "shading")
+
+
+def test_texture_marks_are_light_strokes_on_textured_fruit_only():
+    pl = _plan_all("fruit_bowl", detail=0.5)
+    marks = [p for p in pl.paths if p["kind"] == "sketch" and p["layer"] == "details" and p["tone"] > 0]
+    assert marks
+    pts = np.array([p["segments"][0][0] for p in marks]) / ah.SCALE
+    tex = pl.texmap[np.clip(pts[:, 1].astype(int), 0, ah.RES - 1), np.clip(pts[:, 0].astype(int), 0, ah.RES - 1)]
+    assert ((tex == 1) | (tex == 2)).mean() > 0.9
+
+
+def test_fruit_bowl_end_to_end_in_colour_and_graphite(tmp_path):
+    for flags, sub in (([], "g"), (["--color", "--detail", "1.0"], "c")):
+        out = run_cli("--concept", "fruit_bowl", "--speed", "400", "--out", str(tmp_path / sub), *flags)
+        assert out.returncode == 0, out.stderr[-800:]
+        log = json.loads((tmp_path / sub / "run_log_fruit_bowl.json").read_text())
+        assert log["score"] >= 0.6
+        assert any("object map" in e["msg"] for e in log["log"])
+        assert (tmp_path / sub / "drawing_fruit_bowl.svg").exists()

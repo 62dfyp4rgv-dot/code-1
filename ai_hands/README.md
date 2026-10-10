@@ -4,13 +4,14 @@ Autonomous multi-agent simulation of an AI drawing vector art stroke by stroke (
 
     pip install pygame numpy
     python ai_hands.py                          # still life, 4x speed, live window
-    python ai_hands.py --concept landscape      # still_life | landscape | mandala
+    python ai_hands.py --concept landscape      # still_life | landscape | mandala | fruit_bowl
     python ai_hands.py --image photo.jpg        # trace and draw your own image
+    python ai_hands.py --concept fruit_bowl --detail 1 --color   # the fully detailed fruit bowl, in colour pencil
     python ai_hands.py --color                  # colour pencils: hatch with the reference's colours
     python ai_hands.py --sketchiness 0.9 --skill 0.2   # loose overshooting outlines; skill 0 = shaky novice, 1 = master
     python ai_hands.py --timelapse lapse.gif    # also record an animated GIF of the whole process (needs Pillow)
     python ai_hands.py --headless --speed 100   # no window; writes PNG + SVG + plan.json + run_log.json
-    pytest -q test_ai_hands.py                  # 41 tests
+    pytest -q test_ai_hands.py                  # 48 tests
 
 Keys: `+`/`-` speed, `space` pause, `h` HUD, `esc` quit (saves what is drawn so far).
 Mouse: drag the **pace slider** (log scale 0.25x-200x) or use the wheel; click the paper to pause.
@@ -40,3 +41,12 @@ Planner (Eye) -> Kinematics (Muscle) -> Hand -> Critic (Mind) -> refine requests
   segment is stamped exactly once), so a drawing at 400x is the same plan as one at 1x.
 - Colour mode uses the built-in palette for the three procedural concepts (they are monochrome references); the sky of the
   landscape stays paper-white because it is too light to be hatched.
+
+## Fruit bowl (`--concept fruit_bowl`, best with `--detail 1 --color`)
+A small ray-traced reference scene: a striped bowl with a red apple, an orange, a green apple and a leaf, a pear, a lemon, a banana
+and a bunch of grapes on a wooden table, lit by one lamp (cast shadows, glossy highlights). Examples in `examples/`.
+- **The Eye is given an object map** for this scene (which object each pixel belongs to), so silhouettes are exact and every object
+  gets its own hatching direction (neighbours never share one). This is a property of the procedural reference, not something
+  the program works out from a photo; `--image` traces still use plain edge detection and one hatch direction.
+- Peel dimples and lenticels are added as small light marks; highlights are left as bare paper.
+- `--detail 0..1` sets how much of what the Eye sees is drawn in the first pass (0 = economical, 1 = fully detailed).

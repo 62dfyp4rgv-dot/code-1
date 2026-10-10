@@ -478,7 +478,164 @@ def concept_mandala(res: int, rng: random.Random) -> np.ndarray:
     return np.clip(gaussian_blur(dark, 0.7), 0, 1)
 
 
-CONCEPTS = {"still_life": concept_still_life, "landscape": concept_landscape, "mandala": concept_mandala}
+_FRUIT_RGB: dict[int, np.ndarray] = {}                   # colour map of the last fruit-bowl render (for --color)
+CONCEPT_AUX: dict[tuple, dict] = {}                       # (concept, res) -> {"regions": object-id map, "tex": texture map}
+
+
+def concept_fruit_bowl(res: int, rng: random.Random) -> np.ndarray:
+    """A fruit bowl, ray traced: decorated bowl on a wooden table with apples, an orange (peel dimples), a pear, a lemon,
+    a banana and a bunch of grapes. Ellipsoids / spheres, an open bowl shell with a rim, one lamp with hard shadows,
+    glossy highlights and procedural surface texture. Returns the darkness map; the per-object colours are kept for
+    colour-pencil mode (concept_colors)."""
+    ax = (np.arange(res) - res / 2) / (res / 2)
+    X, Y = np.meshgrid(ax, -ax)
+    O = np.array([0.0, 3.9, -5.4])
+    D = np.stack([X * 0.44, Y * 0.44 - 0.52, np.ones_like(X)], -1)
+    D /= np.linalg.norm(D, axis=-1, keepdims=True)
+    L = np.array([-0.60, 0.80, -0.45])
+    L /= np.linalg.norm(L)
+    H = np.array(L + np.array([0.0, 0.0, -1.0]))
+    H /= np.linalg.norm(H)
+
+    # primitive: (name, centre, radii, rgb, albedo, specular, texture)
+    P: list[dict] = []
+
+    groups: dict[str, int] = {}
+
+    def ell(c, r, rgb, alb=0.8, spec=0.0, tex="", clip=None, inner=False, g=None):
+        r = (r, r, r) if np.isscalar(r) else r
+        g = g or f"obj{len(P)}"
+        groups.setdefault(g, len(groups) + 2)                              # 0 = paper, 1 = table, 2.. = objects
+        P.append(dict(c=np.array(c, float), r=np.array(r, float), rgb=np.array(rgb, float), alb=alb, spec=spec, tex=tex, clip=clip,
+                      inner=inner, grp=groups[g]))
+
+    rim = 1.78
+    bowl_c = (0.0, 1.20, 0.9)
+    ell(bowl_c, 1.20, (0.30, 0.45, 0.75), 0.62, 0.35, "bands", clip=rim, g="bowl")                       # outer wall
+    ell(bowl_c, 1.13, (0.80, 0.75, 0.65), 0.78, 0.0, "", clip=rim, inner=True, g="bowl_inside")                # inner wall
+    ell((-0.50, 1.80, 0.35), 0.46, (0.80, 0.10, 0.10), 0.70, 0.55, "speck", g="apple_red")                  # red apple
+    ell((-0.50, 2.24, 0.35), (0.03, 0.12, 0.03), (0.30, 0.18, 0.08), 0.5, g="stem1")                    # its stem
+    ell((0.52, 1.86, 0.45), 0.43, (0.95, 0.55, 0.08), 0.72, 0.25, "dimple", g="orange")                  # orange
+    ell((0.02, 2.08, 1.15), 0.40, (0.55, 0.78, 0.15), 0.72, 0.5, "speck", g="apple_green")                    # green apple (behind, higher)
+    ell((0.02, 2.52, 1.15), (0.03, 0.12, 0.03), (0.30, 0.20, 0.08), 0.5, g="stem2")
+    ell((0.24, 2.50, 1.15), (0.20, 0.025, 0.09), (0.25, 0.55, 0.15), 0.6, 0.2, g="leaf")               # a leaf
+    ell((0.70, 0.40, -0.60), (0.34, 0.40, 0.34), (0.78, 0.70, 0.20), 0.72, 0.3, "speck", g="pear")     # pear on the table: body
+    ell((0.70, 0.80, -0.60), (0.20, 0.27, 0.20), (0.78, 0.70, 0.20), 0.72, 0.3, "speck", g="pear")     #   neck
+    ell((0.70, 1.10, -0.60), (0.025, 0.10, 0.025), (0.30, 0.20, 0.08), 0.5, g="stem3")                  #   stem
+    ell((-1.60, 0.30, 0.95), (0.40, 0.29, 0.29), (0.95, 0.85, 0.15), 0.78, 0.25, "dimple", g="lemon")   # lemon on the table
+    for i, a in enumerate(np.linspace(-1.0, 1.0, 17)):                                         # banana: a chain of spheres on an arc
+        r = 0.17 * (1 - 0.30 * abs(a)) + 0.02
+        ell((-0.80 + 1.05 * math.sin(a), r - 0.01, -0.95 + 0.76 * (1 - math.cos(a))), r,
+            (0.35, 0.22, 0.08) if i in (0, 16) else (0.95, 0.80, 0.12), 0.72, 0.2, "ridge", g="banana")
+    pile = np.random.default_rng(5)
+    for lvl, (n, y, rr) in enumerate([(7, 0.13, 0.45), (4, 0.34, 0.28), (2, 0.54, 0.10)]):    # grapes
+        for k in range(n):
+            th = 2 * np.pi * (k + 0.3 * lvl) / n + pile.uniform(-0.2, 0.2)
+            ell((1.50 + rr * np.cos(th), y, -0.20 + rr * np.sin(th)), 0.145, (0.36, 0.14, 0.50), 0.55, 0.7, g=f"grape{lvl}_{k}")
+    table_y = 0.0
+
+    def hit(o, d):
+        """nearest hit over all primitives + the table: returns t, index (-1 = table, -2 = rim ring), normal."""
+        best = np.where(d[..., 1] < -1e-6, (table_y - o[..., 1]) / np.where(d[..., 1] > -1e-6, -1e-6, d[..., 1]), np.inf)
+        idx = np.full(best.shape, -1)
+        nrm = np.zeros(best.shape + (3,))
+        nrm[..., 1] = 1.0
+        for k, p in enumerate(P):
+            oc, dd = (o - p["c"]) / p["r"], d / p["r"]
+            a, b, c = (dd * dd).sum(-1), (oc * dd).sum(-1), (oc * oc).sum(-1) - 1
+            disc = b * b - a * c
+            sq = np.sqrt(np.maximum(disc, 0))
+            t = (-b + sq) / a if p["inner"] else (-b - sq) / a
+            ok = (disc > 0) & (t > 1e-3)
+            if p["clip"] is not None:
+                ok &= (o[..., 1] + t * d[..., 1]) < p["clip"]
+            t = np.where(ok, t, np.inf)
+            upd = t < best
+            if upd.any():
+                Q = o + d * np.where(upd, t, 0)[..., None]
+                n = (Q - p["c"]) / (p["r"] ** 2)
+                n /= np.linalg.norm(n, axis=-1, keepdims=True) + 1e-9
+                if p["inner"]:
+                    n = -n
+                nrm = np.where(upd[..., None], n, nrm)
+                idx = np.where(upd, k, idx)
+                best = np.where(upd, t, best)
+        # the thin rim of the bowl (an annulus at y = rim)
+        tr = (rim - o[..., 1]) / np.where(np.abs(d[..., 1]) < 1e-9, 1e-9, d[..., 1])
+        Q = o + d * np.where(tr > 0, tr, 0)[..., None]
+        rr = np.hypot(Q[..., 0] - bowl_c[0], Q[..., 2] - bowl_c[2])
+        r_in, r_out = math.sqrt(1.13**2 - (rim - 1.2) ** 2), math.sqrt(1.20**2 - (rim - 1.2) ** 2)
+        ring = (tr > 1e-3) & (tr < best) & (rr > r_in) & (rr < r_out)
+        best = np.where(ring, tr, best)
+        idx = np.where(ring, -2, idx)
+        nrm = np.where(ring[..., None], np.array([0.0, 1.0, 0.0]), nrm)
+        return best, idx, nrm
+
+    def noise(Q, f):
+        return np.sin(f * Q[..., 0] + 1.3) * np.sin(f * 1.1 * Q[..., 1] + 0.4) * np.sin(f * 0.9 * Q[..., 2] + 2.1)
+
+    Oo = O[None, None, :] * np.ones_like(D)
+    t, idx, N = hit(Oo, D)
+    Q = Oo + D * np.where(np.isfinite(t), t, 0)[..., None]
+    alb = np.full(t.shape, 0.92)
+    rgb = np.ones(t.shape + (3,))
+    spec = np.zeros(t.shape)
+    for k, p in enumerate(P):
+        m = idx == k
+        if not m.any():
+            continue
+        a_, c_ = np.full(m.sum(), p["alb"]), np.tile(p["rgb"], (m.sum(), 1))
+        q, nn = Q[m], N[m]
+        if p["tex"] == "dimple":                                          # orange / lemon peel: little dents
+            nn = nn + 0.09 * np.stack([noise(q, 70), noise(q, 83), noise(q, 61)], -1)
+            a_ = a_ * (0.9 + 0.1 * noise(q, 55))
+        elif p["tex"] == "speck":                                         # apple / pear: lenticels and mottling
+            a_ = a_ * (0.94 + 0.08 * noise(q, 38)) * (1 - 0.30 * (noise(q, 120) > 0.88))
+            c_ = c_ * (0.85 + 0.25 * (0.5 + 0.5 * noise(q, 7))[:, None])
+        elif p["tex"] == "ridge":                                         # banana: ridges along its length
+            a_ = a_ * (0.94 + 0.06 * np.sin(q[:, 2] * 55))
+        elif p["tex"] == "bands":                                         # painted bands around the bowl
+            band = (np.sin(q[:, 1] * 16) > 0.55) | (np.abs(q[:, 1] - 1.62) < 0.05)
+            a_ = np.where(band, a_ * 0.45, a_)
+            c_ = np.where(band[:, None], np.array([0.12, 0.2, 0.5]), np.array([0.90, 0.88, 0.82]))
+        nn = nn / (np.linalg.norm(nn, axis=-1, keepdims=True) + 1e-9)
+        N[m] = nn
+        a_ = a_ * (0.30 + 0.85 * (c_ @ [0.299, 0.587, 0.114]))              # a red apple reflects less light than a white bowl
+        alb[m], rgb[m], spec[m] = a_, c_, p["spec"]
+    tb = idx == -1                                                         # table: planks with grain
+    grain = 0.5 + 0.5 * np.sin(Q[..., 2] * 9 + 3 * np.sin(Q[..., 0] * 2.3) + 18 * np.sin(Q[..., 0] * 7.1) * 0.15)
+    alb = np.where(tb, 0.66 + 0.10 * grain, alb)
+    rgb = np.where(tb[..., None], np.array([0.62, 0.42, 0.25]), rgb)
+    rim_m = idx == -2
+    alb = np.where(rim_m, 0.5, alb)
+    rgb = np.where(rim_m[..., None], np.array([0.15, 0.22, 0.55]), rgb)
+    # shadows
+    ts, _, _ = hit(Q + N * 2e-3, np.broadcast_to(L, Q.shape))
+    lit = np.where(np.isfinite(ts), 0.0, 1.0)
+    dif = np.clip((N * L).sum(-1), 0, 1) * lit
+    sp = spec * np.clip((N * H).sum(-1), 0, 1) ** 40 * lit
+    amb = 0.20 + 0.10 * np.clip(N[..., 1], 0, 1)
+    lum = np.clip(amb + 0.80 * dif, 0, 1) * alb + 0.9 * sp
+    lum = np.where(np.isfinite(t), lum, 1.0)
+    dark = 1 - np.clip(lum, 0, 1)
+    near = np.hypot(Q[..., 0] - 0.1, Q[..., 2] - 0.6)                      # the tabletop dissolves into the paper
+    fade = np.clip(1.30 - near / 3.4, 0, 1) ** 1.2
+    dark = np.where(tb, dark * fade, dark)
+    col = np.where(np.isfinite(t)[..., None], rgb, 1.0)
+    col = np.where(tb[..., None], 1 - (1 - col) * fade[..., None], col)
+    _FRUIT_RGB[res] = np.clip(col, 0, 1)
+    grp = np.zeros(t.shape, int)                                           # object-id map = what the Eye "knows" about the scene
+    lut = np.array([0] + [p["grp"] for p in P])
+    hitmask = np.isfinite(t)
+    grp = np.where(hitmask, np.where(idx >= 0, lut[np.maximum(idx, 0) + 1], np.where(idx == -2, groups["bowl_inside"] + 100, 1)), 0)
+    tex = np.zeros(t.shape, int)
+    for p in P:
+        tex[grp == p["grp"]] = {"dimple": 1, "speck": 2, "ridge": 3, "bands": 4}.get(p["tex"], 0)
+    CONCEPT_AUX[("fruit_bowl", res)] = dict(regions=grp, tex=tex)
+    return np.clip(gaussian_blur(dark, 0.7), 0, 1)
+
+
+CONCEPTS = {"fruit_bowl": concept_fruit_bowl, "still_life": concept_still_life, "landscape": concept_landscape, "mandala": concept_mandala}
 
 
 def load_seed_image(path: str, res: int) -> np.ndarray:
@@ -527,6 +684,10 @@ def concept_colors(concept: str, res: int) -> np.ndarray:
     mountains and a teal lake; warm-to-cool still life; a mandala whose rings run through the spectrum."""
     ax = (np.arange(res) + 0.5) / res
     X, Y = np.meshgrid(ax, ax)
+    if concept == "fruit_bowl":
+        if res not in _FRUIT_RGB:
+            concept_fruit_bowl(res, random.Random(0))
+        return _FRUIT_RGB[res]
     if concept == "landscape":
         sky = np.stack([0.30 + 0.65 * Y.clip(0, 0.72) / 0.72, 0.50 + 0.15 * Y.clip(0, 0.72) / 0.72, 0.85 - 0.40 * Y.clip(0, 0.72) / 0.72], -1)
         mount = np.stack([0.45 + 0 * Y, 0.35 + 0 * Y, 0.65 + 0 * Y], -1)
@@ -594,9 +755,14 @@ class PlannerAgent(Agent):
     name = "Planner"
     color = (120, 190, 255)
 
-    def __init__(self, studio: "Studio", concept: str, image: Optional[str], seed: int, color: bool = False, sketchiness: float = 0.5):
+    def __init__(self, studio: "Studio", concept: str, image: Optional[str], seed: int, color: bool = False, sketchiness: float = 0.5,
+                 detail: float = 0.5):
         super().__init__(studio)
         self.concept, self.image, self.rng = concept, image, random.Random(seed)
+        self.detail = detail                         # 0 = very economical, 1 = draw everything the Eye sees
+        self.regions: Optional[np.ndarray] = None   # object-id map (concepts that provide one)
+        self.texmap: Optional[np.ndarray] = None
+        self.hatch_classes: list = []
         self.colour_mode, self.sketchiness = color, sketchiness           # (self.color is the agent's HUD colour)
         self.rgb: Optional[np.ndarray] = None       # reference colours (colour mode only)
         self.paths: list[dict] = []                 # the whole master plan (JSON-serialisable)
@@ -694,17 +860,36 @@ class PlannerAgent(Agent):
         yield
         # ------------------------------------------------------------ analysis
         self.set_status("Eye: Gaussian + Sobel + Canny non-max suppression")
-        fine, self.mag = canny(gray, 1.0, 40, 80)
+        d2 = 2 * self.detail - 1                                          # -1 .. +1 around the default
+        fine, self.mag = canny(gray, 1.0, 40 - 30 * max(d2, 0) + 20 * max(-d2, 0), 80 - 25 * max(d2, 0) + 10 * max(-d2, 0))
         coarse, _ = canny(gray, 4.0, 70, 93)
+        aux = None if self.image else CONCEPT_AUX.get((self.concept, RES))
+        id_chains: list[np.ndarray] = []
+        if aux is not None:                                               # the Eye knows where one object ends and the next begins
+            self.regions, self.texmap = aux["regions"], aux["tex"]
+            r = self.regions
+            idm = np.zeros(r.shape, bool)
+            idm[:, :-1] |= (r[:, :-1] != r[:, 1:]) & ~(((r[:, :-1] == 0) & (r[:, 1:] == 1)) | ((r[:, :-1] == 1) & (r[:, 1:] == 0)))
+            idm[:-1, :] |= (r[:-1, :] != r[1:, :]) & ~(((r[:-1, :] == 0) & (r[1:, :] == 1)) | ((r[:-1, :] == 1) & (r[1:, :] == 0)))
+            fine = fine & ~(box_blur(idm.astype(float), 2) > 0.01) & (r > 1) & (self.texmap != 3)   # inside-object edges only (and none inside the banana: its shading creases are not outlines): silhouettes come from the ids
+            id_chains = trace_chains(idm, 8)
+            self._plan_hatch_classes()
+            self.log(f"object map: {int(r.max()) - 1} objects, {len(id_chains)} silhouette chains, {len(self.hatch_classes)} hatch directions")
         self.log(f"edge analysis: {int(fine.sum())} fine px, {int(coarse.sum())} coarse px")
         yield
         self.set_status("Eye: chaining edge pixels")
         fine_chains = trace_chains(fine, 8)
+        if self.regions is not None:                                      # a ring round a glossy highlight is not an outline
+            fine_chains = [c for c in fine_chains if not (len(c) < 90 and np.hypot(*(c[0] - c[-1])) < 5.0)]
         strength = lambda c: float(self.mag[c[:, 1].astype(int), c[:, 0].astype(int)].mean())  # noqa: E731
-        scored = sorted(((strength(c) * math.sqrt(len(c)), c) for c in fine_chains), key=lambda z: -z[0])
+        scored = [(strength(c) * math.sqrt(len(c)), c) for c in fine_chains]
+        if id_chains:                                                     # silhouettes always count as strong edges
+            top = float(np.percentile(self.mag[self.mag > 1e-6], 92)) if (self.mag > 1e-6).any() else 1.0
+            scored += [(max(strength(c), top) * math.sqrt(len(c)) * 1.5, c) for c in id_chains]
+        scored.sort(key=lambda z: -z[0])
         self.edge_pool = scored
         must = np.zeros_like(fine)
-        for sc, c in scored[: max(8, int(len(scored) * 0.55))]:
+        for sc, c in scored[: max(8, int(len(scored) * (0.55 + 0.85 * max(d2, 0) * 0.5 - 0.25 * max(-d2, 0))))]:
             must[c[:, 1].astype(int), c[:, 0].astype(int)] = True
         self.must_edges = must
         yield
@@ -734,19 +919,23 @@ class PlannerAgent(Agent):
         # ------------------------------------------------------------ layer 2: primary contours (economy pass)
         self._open_layer("contours")
         self.set_status("Planner: primary contours (Schneider cubic fit)")
-        main = [c for sc, c in scored if sc >= scored[min(len(scored) - 1, int(len(scored) * 0.6))][0] and len(c) >= 12] if scored else []
+        main_cut = 0.6 + 0.38 * max(d2, 0) - 0.30 * max(-d2, 0)             # fraction of the strongest chains drawn in the first pass
+        main = [c for sc, c in scored if sc >= scored[min(len(scored) - 1, int(len(scored) * main_cut))][0] and len(c) >= 12] if scored else []
         for c in self._order(main):
             segs = chain_to_beziers(c * SCALE, 2.0)
             if segs:
                 self._emit("contours", "contour", segs)
             yield
         self._close_layer("contours")
-        # ------------------------------------------------------------ layer 3: shading hatches (economy: sparse, one direction)
+        # ------------------------------------------------------------ layer 3: shading hatches (economy pass)
         self._open_layer("shading")
-        for lvl, spacing, ang, ph in [(0.34, 8.0, 48, 0.0), (0.52, 8.0, 48, 0.5)]:      # economy pass: sparse, one direction, highlights stay paper
-            self.set_status(f"Planner: optimizing hatch density (tone >= {lvl:.2f}, spacing {spacing:.1f}px, {ang} deg)")
-            for p in self._hatch(self.tone, None, lvl, spacing, ang, "shading", ph):
-                self._emit("shading", "hatch", p[0], p[1])
+        sp0 = 8.0 - 3.0 * max(d2, 0) + 2.0 * max(-d2, 0)
+        lv0 = 0.34 - 0.08 * max(d2, 0)
+        for lvl, spacing, ph in [(lv0, sp0, 0.0), (lv0 + 0.18, sp0, 0.5)]:      # economy pass: sparse, highlights stay paper
+            self.set_status(f"Planner: optimizing hatch density (tone >= {lvl:.2f}, spacing {spacing:.1f}px)")
+            for ang, mask in (self.hatch_classes or [(48, None)]):          # every object gets its own stroke direction
+                for p in self._hatch(self.tone, mask, lvl, spacing, ang, "shading", ph):
+                    self._emit("shading", "hatch", p[0], p[1])
             yield
         self._close_layer("shading")
         # ------------------------------------------------------------ layer 4: fine details
@@ -760,7 +949,7 @@ class PlannerAgent(Agent):
                 if segs:
                     self._emit("details", "sketch", segs)
                 yield
-        top = [c for sc, c in scored[: max(6, int(len(scored) * 0.2))] if len(c) >= 16]
+        top = [c for sc, c in scored[: max(6, int(len(scored) * (0.2 + 0.3 * max(d2, 0))))] if len(c) >= 16]
         for c in self._order(top):
             segs = chain_to_beziers(c * SCALE, 1.6)
             if segs:
@@ -775,6 +964,11 @@ class PlannerAgent(Agent):
                 ang = math.radians(48 + self.rng.uniform(-8, 8))
                 p1 = p0 + np.array([math.cos(ang), math.sin(ang)]) * self.rng.uniform(3, 7)
                 self._emit("details", "detail", [self._line_bez(p0 * SCALE, p1 * SCALE, 0.6)], float(self.tone[ys[i], xs[i]]))
+        if self.texmap is not None:
+            self.set_status("Planner: surface texture marks (peel dimples, lenticels)")
+            for segs, tn in self._texture_marks():
+                self._emit("details", "sketch", segs, tn)               # light, thin marks
+            yield
         self._close_layer("details")
         self.set_status("Planner: master plan complete - standing by for Critic")
         self.log(f"master plan: {len(self.paths)} Bezier paths")
@@ -808,6 +1002,50 @@ class PlannerAgent(Agent):
                 mid_tone = float(tone[yi[(i0 + i1) // 2], xi[(i0 + i1) // 2]])
                 out.append(([self._line_bez(p0 * SCALE, p1 * SCALE, self.rng.uniform(0.3, 1.2))], mid_tone))
             flip = not flip
+        return out
+
+    def _plan_hatch_classes(self) -> None:
+        """Give every object its own hatching direction: greedy graph colouring of the object-adjacency graph so that two
+        touching objects never share a direction, then one (angle, mask) pair per direction class."""
+        r = self.regions
+        a, b = np.concatenate([r[:, :-1].ravel(), r[:-1, :].ravel()]), np.concatenate([r[:, 1:].ravel(), r[1:, :].ravel()])
+        diff = a != b
+        nbr: dict[int, set] = {}
+        for x, y in set(zip(a[diff].tolist(), b[diff].tolist())):
+            nbr.setdefault(x, set()).add(y)
+            nbr.setdefault(y, set()).add(x)
+        ids, counts = np.unique(r, return_counts=True)
+        cls: dict[int, int] = {}
+        for g in [int(i) for i in ids[np.argsort(-counts)] if i >= 1]:
+            used = {cls[n] for n in nbr.get(g, ()) if n in cls}
+            cls[g] = next(k for k in range(12) if k not in used)
+        angles = [48, 108, 18, 78, 138, 160]
+        self.hatch_classes = []
+        for k in sorted(set(cls.values())):
+            m = np.isin(r, [g for g, c in cls.items() if c == k])
+            m = box_blur(m.astype(float), 1) > 0.99                        # keep the hatching off the outlines
+            self.hatch_classes.append((angles[k % len(angles)], m))
+
+    def _texture_marks(self) -> list:
+        """Little marks that say what a surface is made of: peel dimples on the orange and lemon (tiny crescents), lenticels on
+        the apples and pear (short dashes)."""
+        out = []
+        inside = box_blur((self.regions > 1).astype(float), 2) > 0.99
+        for code, n_max, size in ((1, 70, 1.3), (2, 40, 2.2)):
+            ys, xs = np.nonzero((self.texmap == code) & inside & (self.tone > 0.10))
+            if not len(xs):
+                continue
+            for i in self.rng.sample(range(len(xs)), min(n_max, len(xs))):
+                p0 = np.array([xs[i], ys[i]], float) * SCALE
+                if code == 1:                                              # crescent dent
+                    a = self.rng.uniform(0, 6.28)
+                    v = np.array([math.cos(a), math.sin(a)]) * size * SCALE
+                    segs = [self._line_bez(p0 - v / 2, p0 + v / 2, 0.9)]
+                else:                                                      # dash, mostly vertical
+                    a = math.radians(80 + self.rng.uniform(-18, 18))
+                    v = np.array([math.cos(a), math.sin(a)]) * size * SCALE
+                    segs = [self._line_bez(p0, p0 + v, 0.4)]
+                out.append((segs, float(self.tone[ys[i], xs[i]])))
         return out
 
     def _restroke(self, c: np.ndarray) -> list:
@@ -864,8 +1102,11 @@ class PlannerAgent(Agent):
             tight = max(0.62, 0.88 ** (n - 1))                                                           # each pass hatches closer than the last
             for lvl, sp, ph in [(0.20, 6.0, 0.0), (0.38, 5.0, 0.3), (0.56, 4.2, 0.6), (0.74, 3.6, 0.15)]:      # darker tone -> denser lines
                 sp *= tight
-                for p in self._hatch(self.tone, job["mask"], lvl, sp, ang, layer, ph):
-                    self._emit(layer, "hatch", p[0], p[1])
+                for cang, cmask in (self.hatch_classes or [(0, None)]):
+                    a_ = (cang + [62, -48, 84, -70][(n - 1) % 4]) if self.hatch_classes else ang
+                    m_ = job["mask"] if cmask is None else job["mask"] & cmask
+                    for p in self._hatch(self.tone, m_, lvl, sp, a_, layer, ph):
+                        self._emit(layer, "hatch", p[0], p[1])
                 yield
             self._close_layer(layer)
 
@@ -998,6 +1239,8 @@ class KinematicsAgent(Agent):
         scale = PALETTES[self.studio.palette]
         if path.get("color"):                                              # colour pencil: quantised so sprites can be cached
             col = tuple(int(np.clip(round(c / 12) * 12, 0, 255)) for c in path["color"])
+            alpha = np.clip(alpha * 1.7, 0, 1)                             # wax pencil lays down more pigment than graphite
+            width = width * 1.25
         else:
             col = tuple(int(np.clip(c * m, 0, 255)) for c, m in zip(p["color"], scale))
         return Trajectory(path["id"], path["layer"], path["kind"], xy, press, width, alpha, speed, L, T, col)
@@ -1366,7 +1609,7 @@ class Studio:
         self.paper_lum = pygame.surfarray.array3d(self.canvas).astype(float).mean() / 255.0
         self.paper_rgb = pygame.surfarray.array3d(self.canvas).astype(float).mean(axis=(0, 1))
         self.bus = MessageBus()
-        self.planner = PlannerAgent(self, a.concept, a.image, a.seed, a.color, a.sketchiness)
+        self.planner = PlannerAgent(self, a.concept, a.image, a.seed, a.color, a.sketchiness, a.detail)
         self.kin = KinematicsAgent(self, a.seed + 1)
         self.hand = HandAgent(self, self.canvas)
         self.critic = CriticAgent(self, a.quality)
@@ -1728,6 +1971,7 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--color", action="store_true", help="colour pencils: hatch with the reference's colours (seed image or concept palette)")
     ap.add_argument("--sketchiness", type=float, default=0.5, help="0..1: lighter re-strokes and overshoot over the outlines")
     ap.add_argument("--skill", type=float, default=0.7, help="0..1: novice (shaky) to master (steady) hand")
+    ap.add_argument("--detail", type=float, default=0.5, help="0..1: how much of what the Eye sees gets drawn (1 = fully detailed)")
     ap.add_argument("--no-hud", action="store_true")
     ap.add_argument("--verbose", action="store_true", help="print the agents' message log")
     ap.add_argument("--max-seconds", type=float, default=3600, help="wall-clock safety limit")
