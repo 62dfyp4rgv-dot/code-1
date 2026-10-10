@@ -63,3 +63,16 @@ def test_semi_figure_differs_from_legacy_and_keeps_sheet_colours():
     a = render_panel(spec, K, {"Seo": sheet}, RenderParams(), (400, 450), 1).image
     b = render_panel(spec, PRESETS["flat_vector"], {"Seo": sheet}, RenderParams(), (400, 450), 1).image
     assert np.abs(np.asarray(a, dtype=int) - np.asarray(b, dtype=int)).mean() > 4
+
+
+def test_sketch_painterly_renders_every_expression_and_differs_from_the_clean_look():
+    S = PRESETS["sketch_painterly"]
+    sheet = design_character("Seo", "a woman with long grey hair, green eyes", "s", S)
+    for expr in EXPRESSIONS:
+        spec = PanelSpec(index=0, shot="close", location="abstract", characters=[PanelCharacter(name="Seo", expression=expr, position="center")])
+        r = render_panel(spec, S, {"Seo": sheet}, RenderParams(), (400, 450), 2)
+        assert np.asarray(r.image).std() > 5
+    spec = PanelSpec(index=0, shot="close", location="abstract", characters=[PanelCharacter(name="Seo")])
+    clean = render_panel(spec, K, {"Seo": sheet}, RenderParams(), (400, 450), 2).image
+    loose = render_panel(spec, S, {"Seo": sheet}, RenderParams(), (400, 450), 2).image
+    assert np.abs(np.asarray(clean, dtype=int) - np.asarray(loose, dtype=int)).mean() > 4

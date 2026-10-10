@@ -17,7 +17,12 @@ PRESETS: dict[str, StyleProfile] = {
         key="korean_manhwa", name="Korean Manhwa (semi-realistic)",
         description="Thin clean ink contours, elongated realistic proportions, almond eyes with lashes, soft painterly skin shading, strand-lined hair.",
         line_weight=1.5, shading="soft", contrast=1.0, saturation=0.9, halftone=0.0, glow=0.10, rim_light=0.18, bg_depth=0.6,
-        figure="semi"),
+        figure="semi", looseness=0.3),
+    "sketch_painterly": StyleProfile(
+        key="sketch_painterly", name="Sketch-Painterly (loose ink + brush shading)",
+        description="Raw expressive pen lines with overshoot and doubled strokes, flyaway hair, visible brush-mark shading, muted warm-grey palette, tilted asymmetric heads.",
+        line_weight=2.2, shading="soft", contrast=1.15, saturation=0.55, halftone=0.0, glow=0.0, rim_light=0.1, bg_depth=0.8,
+        figure="semi", looseness=0.9),
     "webtoon_digital": StyleProfile(
         key="webtoon_digital", name="Modern Digital Webtoon",
         description="Clean digital line-art, soft gradient shading, bright readable colour.",
@@ -42,6 +47,7 @@ PRESETS: dict[str, StyleProfile] = {
 }
 
 _STYLE_KEYWORDS = {
+    "sketch_painterly": ("sketch", "sketchy", "painterly", "raw", "gritty", "rough", "loose", "scar", "brooding", "dark romance"),
     "korean_manhwa": ("romance", "drama", "office", "school", "love", "cafe", "café", "family", "slice of life", "korean", "webtoon", "manhwa", "realistic"),
     "cinematic_3d": ("cinematic", "realistic", "film", "3d", "depth", "moody", "noir", "atmospheric", "city", "neon", "rain"),
     "cel_shaded": ("cel", "ink", "retro", "90s", "gritty", "manga", "black and white", "screentone", "yakuza", "thriller"),
@@ -116,10 +122,13 @@ def choose_style(request: str, text: str, refs: list[ReferenceInfo]) -> StylePro
         sat = float(np.mean([r.saturation for r in refs]))
         edge = float(np.mean([r.edge_density for r in refs]))
         con = float(np.mean([r.contrast for r in refs]))
-        if sat < 0.30 and edge < 0.35:
-            # clean thin line-art / soft painted portraits on light paper: the Korean manhwa look
-            scores["korean_manhwa"] += 3.0
-            reasons["korean_manhwa"].append(f"references are clean line-art / soft-shaded portraits (sat {sat:.2f}, edges {edge:.2f})")
+        for r in refs:                       # score each reference on its own: a sketch must not be mistaken for clean line-art
+            if r.contrast > 0.9 and r.saturation < 0.12 and 0.06 < r.edge_density < 0.35:
+                scores["sketch_painterly"] += 3.0
+                reasons["sketch_painterly"].append(f"{r.name}: stark, muted, ink-heavy sketch-painting (contrast {r.contrast:.2f}, sat {r.saturation:.2f})")
+            elif r.saturation < 0.30 and r.edge_density < 0.35:
+                scores["korean_manhwa"] += 1.5
+                reasons["korean_manhwa"].append(f"{r.name}: clean line-art / soft-shaded portrait (sat {r.saturation:.2f}, edges {r.edge_density:.2f})")
         if sat < 0.08 and edge > 0.35:
             scores["cel_shaded"] += 2.5
             reasons["cel_shaded"].append(f"references are low-colour, very line-heavy (sat {sat:.2f}, edges {edge:.2f})")

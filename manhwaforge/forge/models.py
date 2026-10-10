@@ -120,6 +120,7 @@ class StyleProfile(BaseModel):
     bg_depth: float               # 0..1 depth haze / perspective emphasis
     palette_bias: Optional[RGB] = None
     figure: str = "stylized"      # stylized (chunky anime vector) | semi (semi-realistic Korean manhwa)
+    looseness: float = 0.3        # 0 clean pen-and-ink ... 1 raw sketch-paint (overshoot, doubled lines, brush marks, flyaway hair)
     reasons: list[str] = Field(default_factory=list)
 
 

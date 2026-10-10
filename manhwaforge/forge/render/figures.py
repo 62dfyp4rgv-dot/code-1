@@ -497,8 +497,11 @@ def _hair_front(pen: Pen, sheet: CharacterSheet, hx, hy, h, yaw, f, back_view, l
 
 
 def draw_eye_closeup(layer: Image.Image, mask: Image.Image, sheet: CharacterSheet, expression: str,
-                     cx: float, cy: float, w: float, lw: int) -> FigureResult:
+                     cx: float, cy: float, w: float, lw: int, style: "StyleProfile | None" = None) -> FigureResult:
     """Dramatic insert: one huge eye with brow, used for 'eyes widen' style beats."""
+    if style is not None and style.figure == "semi":
+        from .figures_semi import draw_eye_closeup_semi
+        return draw_eye_closeup_semi(layer, mask, sheet, expression, cx, cy, w, lw, style)
     pen = Pen(layer, mask, lw)
     ex = EXPRESSIONS[canonical_expression(expression)]
     skin = sheet.skin

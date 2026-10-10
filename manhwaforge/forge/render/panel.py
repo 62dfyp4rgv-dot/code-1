@@ -32,6 +32,7 @@ class RenderParams:
     halftone: float = 1.0
     shadow_lift: float = 0.0      # opens crushed shadows
     glow_pool: float = 0.0        # pool of key light behind the subject: creates highlights + subject separation
+    exposure: float = 0.0         # overall light level: lifts a dim panel's highlights
     bg_lines: float = 1.0         # ink strength on background shapes
     spread: float = 0.0           # pushes multiple characters apart to stop faces overlapping
     safe_framing: bool = False
@@ -55,6 +56,8 @@ class RenderParams:
                 p = replace(p, glow_pool=min(1.0, p.glow_pool + 0.28 * k), light_strength=min(1.9, p.light_strength + 0.15 * k))
             if flat:
                 p = replace(p, contrast=min(1.7, p.contrast + 0.08 * k))
+            if flat or d.get("keyfill", 1.0) < 0.2:   # highlights sit too low: raise the light level
+                p = replace(p, exposure=min(1.4, p.exposure + 0.22 * k))
             if no_sep:
                 p = replace(p, rim_light=min(1.0, p.rim_light + 0.22 * k))
             if p is self:                          # nothing specific measured: push the general levers
@@ -207,7 +210,7 @@ def render_panel(spec: PanelSpec, style: StyleProfile, sheets: dict[str, Charact
     if spec.shot == "insert":
         if present:
             sheet = sheets[present[0].name]
-            figs.append(draw_eye_closeup(layer, mask, sheet, present[0].expression, w * 0.5, h * 0.5, w * 0.62, lw))
+            figs.append(draw_eye_closeup(layer, mask, sheet, present[0].expression, w * 0.5, h * 0.5, w * 0.62, lw, style))
     elif spec.shot == "over_shoulder" and len(present) >= 2:
         fg, bgc = present[0], present[1]
         fx_side = -1 if _POS_X.get(fg.position, 0.27) < 0.5 else 1
@@ -301,6 +304,27 @@ def _ink_pass(bg: np.ndarray, style: StyleProfile, p: RenderParams, W: int) -> n
     return bg * (1 - (edge * strength)[..., None]) + np.array((14, 12, 24), dtype=np.float32) * (edge * strength)[..., None]
 
 
+def _paint_background(bg: np.ndarray, style: StyleProfile, rng: random.Random, W: int, H: int) -> np.ndarray:
+    """Make the backdrop read as painted rather than as vector shapes: soften the polygon edges, let colour drift like
+    a watercolour wash, add brush streaks and paper tooth. Looser styles get a heavier, softer wash."""
+    if style.figure != "semi":
+        return bg
+    L = style.looseness
+    img = to_img(bg)
+    soft = img.filter(ImageFilter.GaussianBlur(0.8 + 1.6 * L))
+    arr = 0.35 * bg + 0.65 * to_arr(soft)
+    nrng = np.random.default_rng(rng.randrange(1 << 30))
+    from .paint import _noise
+    wash = _noise(W, H, W * 0.28, H * 0.28, nrng)[..., None] * (0.05 + 0.05 * L)
+    streak = _noise(W, H, max(3.0, W * 0.012), max(30.0, H * 0.25), nrng)[..., None] * (0.025 + 0.03 * L)
+    tooth = nrng.standard_normal((H, W, 1)).astype(np.float32) * 0.012
+    arr = arr * (1 + wash + streak + tooth)
+    if L > 0.5:   # warm paper tone showing through a thin wash
+        lum = (arr @ np.array([0.2126, 0.7152, 0.0722], dtype=np.float32))[..., None]
+        arr = arr * 0.8 + (lum * 0.5 + np.array((120, 108, 98), dtype=np.float32) * 0.5) * 0.2
+    return arr
+
+
 def _focal(metas: list[FigureMeta], W: int, H: int) -> tuple[float, float]:
     if not metas:
         return (W * 0.5, H * 0.5)
@@ -332,6 +356,7 @@ def _light_and_grade(bg_img: Image.Image, fig_rgba: Image.Image, fig_mask: np.nd
 
     # ---- ink pass on the background shapes (what makes flat shapes read as line-art)
     bg = _ink_pass(bg, style, p, W)
+    bg = _paint_background(bg, style, rng, W, H)
 
     # ---- background wash and key light
     wash = 1.0 + (ambient - 1.0) * 0.35 * ls
@@ -375,9 +400,9 @@ def _light_and_grade(bg_img: Image.Image, fig_rgba: Image.Image, fig_mask: np.nd
         floor_ = {"spotlight": 0.30, "candle": 0.4, "dramatic": 0.55}[mode]
         out = out * (floor_ + (1 - floor_) * fall)
 
-    # ---- grade: contrast, saturation, tone
+    # ---- grade: exposure, contrast, saturation, tone
     c = max(0.5, style.contrast * p.contrast)
-    x = out / 255.0
+    x = out / 255.0 * (1.0 + 0.6 * p.exposure)
     x = 0.5 + (x - 0.5) * c
     if mode in ("dramatic", "moonlit", "candle", "spotlight") or spec.mood in ("dread", "horror", "tense", "ominous"):
         x = np.clip(x, 0, 1) ** 1.12
