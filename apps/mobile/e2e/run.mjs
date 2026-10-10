@@ -493,7 +493,7 @@ try {
   await shot('45-about');
 
   console.log('== 9. real-world names: starter pack, bad pack, user pack with crests');
-  await goMore('nav-settings'); await click('lang-en'); await click('theme-light'); await back();
+  await page.goto(base + '/settings'); await visible('lang-en'); await click('lang-en'); await click('theme-light'); await page.waitForTimeout(300);
   await page.goto(base + '/new-career');
   await visible('input-seed');
   await tid('input-seed').fill('e2e-pack');
