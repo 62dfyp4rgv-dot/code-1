@@ -491,6 +491,93 @@ try {
   await goMore('nav-about'); await visible('screen-about');
   check('about screen lists limitations', (await tid('about-limits').innerText()).includes('unverified'));
   await shot('45-about');
+
+  console.log('== 9. real-world names: starter pack, bad pack, user pack with crests');
+  await goMore('nav-settings'); await click('lang-en'); await click('theme-light'); await back();
+  await page.goto(base + '/new-career');
+  await visible('input-seed');
+  await tid('input-seed').fill('e2e-pack');
+  await click('btn-generate');
+  await visible('league-ENG1', 90000);
+  await visible('pack-section');
+  check('pack section says nothing is applied yet and everything is fictional', /generated and fictional/.test(await text('pack-none')), await text('pack-none'));
+  const clubLabels = async () => (await page.locator('[data-testid^="club-cl"]:visible:not([aria-hidden="true"] *)').evaluateAll((els) => els.map((e) => (e.getAttribute('aria-label') ?? e.innerText ?? '').split(',')[0].split('\n')[0].trim())));
+  await click('league-ENG1'); await visible('btn-start-career');
+  const fictionalNames = await clubLabels();
+  check('before the pack the English clubs are generated names', fictionalNames.length >= 6 && !fictionalNames.includes('Manchester City'), fictionalNames.join('|'));
+  await click('btn-career-back');
+  await shot('46a-real-names-off');
+  await click('switch-real-names');
+  await visible('pack-applied', 90000);
+  const counts = await text('pack-counts');
+  check('applied counts are shown (clubs > 0, 0 players/coaches/crests for names-only pack)', /\d+ clubs · 0 players · 0 coaches · 0 crests changed/.test(counts) && !/^0 clubs/.test(counts), counts);
+  const applied = await text('pack-applied');
+  check('applied panel says anything not covered stays generated and fictional', /stays generated and fictional/.test(applied) && /Unofficial/.test(applied) && /trademarks belong to their owners/.test(applied), applied);
+  check('switch is on', (await tid('switch-real-names').getAttribute('aria-checked')) === 'true');
+  await shot('46b-real-names-applied');
+  await click('league-ENG1'); await visible('btn-start-career');
+  const realNames = await clubLabels();
+  check('club picker shows real names (Manchester City, Liverpool, Arsenal)', ['Manchester City', 'Liverpool', 'Arsenal'].every((n) => realNames.includes(n)), realNames.join('|'));
+  check('club picker shows the unofficial/generated note', /generated and fictional/.test(await text('club-pack-note')));
+  await shot('46c-real-names-club-picker');
+  await page.setViewportSize({ width: 320, height: 568 }); await page.waitForTimeout(300);
+  await noHScroll('club picker with real names'); await shot('46d-real-names-club-picker-320');
+  await click('btn-career-back');
+  await noHScroll('real-names section'); await tapTargets('real-names section (320px)'); await shot('46e-real-names-section-320');
+  await page.setViewportSize({ width: 393, height: 852 }); await page.waitForTimeout(300);
+
+  // a bad pack: precise error, world untouched
+  const choose = async (name, content) => {
+    const [fc] = await Promise.all([page.waitForEvent('filechooser'), click('btn-import-pack')]);
+    await fc.setFiles({ name, mimeType: 'application/json', buffer: Buffer.from(typeof content === 'string' ? content : JSON.stringify(content)) });
+  };
+  await choose('bad.json', '{ nope');
+  await visible('pack-error');
+  check('bad file: precise error shown', /not valid JSON/.test(await text('pack-error')) && /Nothing was changed/.test(await text('pack-error')), await text('pack-error'));
+  check('bad file: the starter pack is still applied', (await tid('pack-applied').count()) === 1);
+  await choose('remote.json', { format: 'football-universe-data-pack', version: 1, id: 'x', name: 'X', source: 's', licence: 'l', leagues: { ENG1: [{ name: 'Remote FC', crest: 'https://example.com/c.png' }] } });
+  await page.waitForFunction(() => /remote URLs are not allowed/.test(document.body.innerText), null, { timeout: 15000 });
+  check('remote crest URL is rejected with a precise message', /ENG1\[0\]\.crest/.test(await text('pack-error')), await text('pack-error'));
+  const requests = [];
+  page.on('request', (r) => requests.push(r.url()));
+  await shot('46f-bad-pack-error');
+
+  // a user pack: embedded crest (renders), unreachable file:// crest (falls back), coach
+  const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAFklEQVR42mNk+M9Qz0AEYBxVSF+FAP5FDvcfRYWgAAAAAElFTkSuQmCC';
+  await choose('mine.json', { format: 'football-universe-data-pack', version: 1, id: 'e2e-user', name: 'E2E user pack', source: 'e2e', licence: 'test',
+    leagues: { ENG1: [{ name: 'Testville FC', shortName: 'TST', crest: png, manager: { name: 'Pat Coach' } }, { name: 'Brokencrest Rovers', crest: 'file:///nonexistent/crest.png' }] } });
+  await page.waitForFunction(() => /E2E user pack/.test(document.body.innerText), null, { timeout: 90000 });
+  check('user pack applied: 2 clubs, 1 coach, 2 crests', /2 clubs · 0 players · 1 coaches · 2 crests changed/.test(await text('pack-counts')), await text('pack-counts'));
+  check('switch is off for a custom pack', (await tid('switch-real-names').getAttribute('aria-checked')) === 'false');
+  await click('league-ENG1'); await visible('btn-start-career');
+  const userNames = await clubLabels();
+  check('club picker shows the pack clubs', userNames.includes('Testville FC') && userNames.includes('Brokencrest Rovers'), userNames.join('|'));
+  await page.waitForTimeout(800);
+  const crestImgs = await page.locator('[data-testid="crest-image"]:visible').count();
+  check('embedded crest renders as an image and the unreachable one fell back to the generated crest', crestImgs === 1, String(crestImgs));
+  check('the fallback crest keeps the club name as accessible label', (await page.locator('[role=image][aria-label="Brokencrest Rovers"]').count()) >= 1);
+  check('the image crest keeps the club name as accessible label', (await page.locator('[role=image][aria-label="Testville FC"]').count()) >= 1);
+  await shot('46g-user-pack-crests');
+  check('no request left the origin for a crest', requests.every((u) => u.startsWith(base) || u.startsWith('data:') || u.startsWith('blob:')), requests.filter((u) => !u.startsWith(base)).join(' '));
+
+  // start with the user pack: home hero crest + start screen / about honesty
+  await tid('club-' + (await page.locator('[data-testid^="club-cl"]:visible:not([aria-hidden="true"] *)').first().getAttribute('data-testid')).slice(5)).first().click();
+  await click('btn-start-career');
+  await visible('screen-home', 60000);
+  check('home shows the pack club name', (await text('home-club-name')) === 'Testville FC', await text('home-club-name'));
+  await shot('46h-home-with-pack');
+  await page.goto(base + '/start');
+  await visible('btn-new-career');
+  check('start screen (no career loaded) states data is generated and fictional unless a pack is chosen', /unless you choose an optional unofficial real-names pack/.test(await page.locator('[data-testid="screen-start"]').innerText()));
+  await click('btn-continue');
+  await visible('screen-home', 60000);
+  check('saved career reloads with the pack club', (await text('home-club-name')) === 'Testville FC', await text('home-club-name'));
+  await goMore('nav-about'); await visible('screen-about');
+  const lim = await tid('about-limits').innerText();
+  check('about explains unofficial overlay, no bundled logos/players/coaches, estimates, trademarks and docs/DATA_PACKS.md',
+    /unofficial overlay/.test(lim) && /No logos/.test(lim) && /estimates by the pack author/.test(lim) && /trademarks belong to their respective owners/.test(lim) && /docs\/DATA_PACKS\.md/.test(lim), lim.slice(0, 200));
+  check('about names the pack of the loaded career', /E2E user pack/.test(await text('about-pack')), await text('about-pack'));
+  await shot('46i-about-data-pack');
 } catch (e) {
   failures.push(`EXCEPTION ${e.stack ?? e}`);
   console.log('EXCEPTION', e.stack ?? e);
