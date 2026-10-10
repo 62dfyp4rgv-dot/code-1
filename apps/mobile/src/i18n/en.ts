@@ -224,7 +224,7 @@ export const en = {
   'pack.switchHint': 'Replaces generated club names, short codes and cities in the leagues it covers. It contains no logos, players or coaches.',
   'pack.choice.none': 'Fictional', 'pack.choice.names': 'Real club names', 'pack.choice.squads': 'Real names + squads',
   'pack.hint.none': 'Everything is generated and fictional (default).',
-  'pack.hint.squads': 'UNVERIFIED and possibly outdated: club names plus head coaches, usual formations, starter squads and rough FC 26-era ratings for about 30 well-known clubs, written from memory. The ratings are the authors' estimates, not EA data. Other clubs only get names.',
+  'pack.hint.squads': 'UNVERIFIED and possibly outdated: club names plus head coaches, usual formations, starter squads and rough FC 26-era ratings for about 30 well-known clubs, written from memory. The ratings are the authors’ estimates, not EA data. Other clubs only get names.',
   'pack.crests.import': 'Import crest images',
   'pack.crests.hint': 'Pick your own logo files (png, jpeg or webp, up to 300 KB each) named after the club, e.g. manchester-city.png (club name or short code). They are embedded in your save; nothing is downloaded. You are responsible for having the right to use them. Choosing another option above removes imported crests.',
   'pack.crests.result': 'Crest images: {matched} matched · {unmatched} not matched · {tooBig} too big (max 300 KB) · {unsupported} unsupported',
