@@ -21,6 +21,11 @@ export interface EngineContext {
   info(clubId: string): TeamInfo;
 }
 
+/** Deterministic coin flip for the host of a single-leg tie; independent of club strength. */
+function drawnHost(key: string, a: string, b: string): [string, string] {
+  return hashString(`host:${key}`) % 2 === 0 ? [a, b] : [b, a];
+}
+
 export function activeRules(def: CompetitionDef, season: number): RuleSet {
   let chosen: RuleSet | undefined;
   for (const r of def.rules) if (r.fromSeason <= season) chosen = r;
@@ -220,8 +225,8 @@ function buildFirstRoundTies(
       const slots = firstRound(strongestFirst(teams), stage.pairing === 'random', rng);
       return slots.map((s, i) => {
         if (s.away === null) return { ...mk(i, s.home, ''), winner: s.home, decidedBy: 'bye' as const };
-        // higher seed hosts the deciding leg
-        const [a, b] = ctx.info(s.home).coefficient >= ctx.info(s.away).coefficient ? [s.home, s.away] : [s.away, s.home];
+        // single-leg ties: the host is drawn, not the favourite (CR-008)
+        const [a, b] = drawnHost(`${comp.id}:${comp.season}:${stage.id}:r1:${i}`, s.home, s.away);
         return mk(i, a, b);
       });
     }
@@ -625,7 +630,7 @@ function advanceKnockout(comp: CompetitionState, def: CompetitionDef, rules: Rul
       nextTies.push({ id, round: nextRound, index: i / 2, home: a, away: '', fixtureIds: [], winner: a, decidedBy: 'bye' });
       continue;
     }
-    const [h, w] = ctx.info(a).coefficient >= ctx.info(b).coefficient ? [a, b] : [b, a];
+    const [h, w] = drawnHost(id, a, b);
     nextTies.push({ id, round: nextRound, index: i / 2, home: h, away: w, fixtureIds: [], winner: null, decidedBy: null });
   }
   st.ties.push(nextTies);

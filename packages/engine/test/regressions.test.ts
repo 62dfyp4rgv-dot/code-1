@@ -108,3 +108,29 @@ describe('QA-006 match event ordering', () => {
     }
   });
 });
+
+describe('CR-008: single-leg cup hosts are drawn, not the favourite', () => {
+  it('the higher-reputation club hosts roughly half of non-neutral cup ties', async () => {
+    const { createWorld, advanceToEndOfSeason } = await import('../src/world/sim');
+    const { defaultWorldConfig } = await import('../src/world/generate');
+    const { COMPETITIONS } = await import('../src/competition/registry');
+    const w = createWorld(defaultWorldConfig('cr008', 'compact'));
+    advanceToEndOfSeason(w);
+    let ties = 0;
+    let favouriteHosts = 0;
+    for (const comp of Object.values(w.competitions)) {
+      if (COMPETITIONS[comp.id]?.kind !== 'cup') continue;
+      for (const f of comp.fixtures) {
+        if (f.neutral) continue;
+        const h = w.clubs[f.home]!.reputation;
+        const a = w.clubs[f.away]!.reputation;
+        if (h === a) continue;
+        ties++;
+        if (h > a) favouriteHosts++;
+      }
+    }
+    expect(ties).toBeGreaterThan(50);
+    expect(favouriteHosts / ties).toBeGreaterThan(0.3);
+    expect(favouriteHosts / ties).toBeLessThan(0.7);
+  }, 300_000);
+});

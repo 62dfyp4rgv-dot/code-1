@@ -33,3 +33,12 @@ Each entry: defect found -> how found -> fix -> regression test -> evidence. Sco
 
 ## Found by process (open)
 * **OP-1** Relegated clubs keep more foreigners than the lower tier allows (T-021). * **OP-2** Degenerate fields can leave a competition active without a winner (T-022).
+
+## Review round 1 (critic + QA) — fixes landed
+- CR-001/002, QA-009: loads and imports validate (reserved/escaped property names, id patterns, attribute vectors, chunk caps, `validateWorld` hard violations); decode errors are `SaveCorruptedError`. Regression: `test/persistence.hardening.test.ts`.
+- CR-003, QA-010: replay inputs are deep-copied when archived; test replays stored matches weeks later.
+- CR-004: chunks bounded by bytes (~400 KB target; test asserts < 1 MB); retired players purged after 2 seasons (legends keep a summary).
+- CR-005: `ROLES`/`FORMATIONS` are prototype-less; `statLine` uses own-property checks; `for…in` removed.
+- CR-006: rollover no longer applies surplus investment, wage review or academy review to the human club.
+- CR-008: single-leg hosts drawn deterministically (test in `regressions.test.ts`).
+- Still open: CR-007, CR-009..CR-022 (except CR-008), QA-008/011/016. Mobile app unverified.

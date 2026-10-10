@@ -188,7 +188,8 @@ export function rolloverSeason(world: WorldState): SeasonSummary {
     const last = rec.seasons[rec.seasons.length - 1];
     if (last && last.season === world.season) (last as { profit?: number }).profit = Math.round(review.profit);
   }
-  for (const club of Object.values(world.clubs)) investSurplus(world, club);
+  // automatic economic actions apply to AI clubs only; the human club's cash and contracts change only by their decisions (CR-006)
+  for (const club of Object.values(world.clubs)) if (club.id !== world.config.humanClubId) investSurplus(world, club);
   updateReputations(world, summary);
   seasonEndManagerReview(world, summary, rng.derive('mgr'));
 
@@ -209,9 +210,9 @@ export function rolloverSeason(world: WorldState): SeasonSummary {
   purgeRetired(world);
   expireContracts(world);
   for (const club of Object.values(world.clubs)) enforceForeignLimit(world, club);
-  for (const club of Object.values(world.clubs)) annualWageReview(world, club);
+  for (const club of Object.values(world.clubs)) if (club.id !== world.config.humanClubId) annualWageReview(world, club);
   for (const club of Object.values(world.clubs)) {
-    academyReview(world, club, rng.derive(`academy:${club.id}`));
+    if (club.id !== world.config.humanClubId) academyReview(world, club, rng.derive(`academy:${club.id}`));
     youthIntake(world, club, rng.derive(`youth:${club.id}`));
   }
   for (const club of Object.values(world.clubs)) if (club.id !== world.config.humanClubId) aiFillSquad(world, club, 21);
