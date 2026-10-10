@@ -216,9 +216,27 @@ export function rolloverSeason(world: WorldState): SeasonSummary {
     youthIntake(world, club, rng.derive(`youth:${club.id}`));
   }
   for (const club of Object.values(world.clubs)) if (club.id !== world.config.humanClubId) aiFillSquad(world, club, 21);
-  // revenue deals for the coming season based on final positions
+  // revenue deals for the coming season based on final positions. A club that changed tier is priced as a member of its
+  // NEW league (promoted clubs start at the bottom of the upper league, relegated clubs at the top of the lower one),
+  // not by its position in the table it just left.
+  const moved = new Map<string, { position: number; size: number }>();
+  const byDestination = new Map<string, { ids: string[]; up: boolean }>();
+  for (const [list, up] of [[summary.promoted, true], [summary.relegated, false]] as const) {
+    for (const m of list) {
+      const e = byDestination.get(m.to) ?? { ids: [], up };
+      e.ids.push(m.clubId);
+      byDestination.set(m.to, e);
+    }
+  }
+  for (const [dest, { ids, up }] of byDestination) {
+    const size = (world.leagueMembers[dest] ?? []).length;
+    ids.forEach((cid, i) => moved.set(cid, { position: up ? size - ids.length + 1 + i : 1 + i, size }));
+  }
   for (const table of Object.values(summary.tables)) {
-    table.forEach((cid, i) => updateRevenueDeals(world, world.clubs[cid] as Club, i + 1, table.length));
+    table.forEach((cid, i) => {
+      const m = moved.get(cid);
+      updateRevenueDeals(world, world.clubs[cid] as Club, m?.position ?? i + 1, m?.size ?? table.length);
+    });
   }
   world.season += 1;
   world.day = seasonStartDay(world.season);

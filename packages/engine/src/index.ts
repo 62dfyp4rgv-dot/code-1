@@ -4,7 +4,7 @@ export { Rng, hashString } from './rng';
 export { overall, positionalOverall, ageOf, familiarity } from './players';
 export { FORMATIONS, ROLES, archetypeTactics, defaultTactics, formationOf, validateTactics, type TacticalArchetype } from './tactics';
 export { simulateMatch, type MatchInput, type MatchResult, type MatchEvent } from './match';
-export { COMPETITIONS, LEAGUE_PROFILES, LEAGUE_BY_ID, DEFAULT_MAJOR_LEAGUES, PYRAMIDS } from './competition/registry';
+export { COMPETITIONS, LEAGUE_PROFILES, LEAGUE_BY_ID, DEFAULT_MAJOR_LEAGUES, PYRAMIDS, CORE_LEAGUES, EXTENDED_LEAGUES } from './competition/registry';
 export type { CompetitionDef, CompetitionState, Fixture, TableRow } from './competition/types';
 export { createWorld, advanceDay, advanceDays, advanceToNextMatchday, advanceToEndOfSeason, humanClub, type DayReport } from './world/sim';
 export { defaultWorldConfig } from './world/generate';

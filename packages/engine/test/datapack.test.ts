@@ -170,3 +170,12 @@ describe('real competition names', () => {
     advanceDays(w, 20);
   }, 120_000);
 });
+
+describe('real competition names cover the whole registry', () => {
+  it('every registered competition has a real-world display name', async () => {
+    const { COMPETITIONS } = await import('../src');
+    const { REAL_COMPETITION_NAMES } = await import('../src/data/realCompetitionNames');
+    expect(Object.values(COMPETITIONS).filter((d) => !REAL_COMPETITION_NAMES[d.id]).map((d) => d.id)).toEqual([]);
+    expect(() => parseDataPack(JSON.stringify({ ...pack(), competitions: REAL_COMPETITION_NAMES }))).not.toThrow();
+  });
+});

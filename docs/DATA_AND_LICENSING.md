@@ -10,6 +10,8 @@ The registry (`competition/registry.ts`, `competition/qualification.ts`) encodes
 
 **These definitions are configured scenario defaults written from the authors' general knowledge. They were not verified against current official regulations in this repository, and every definition carries `verification.status = "unverified-default"` plus a note, which the app displays.** Specifically unverified: exact qualification slot counts per association, tie-breaker orders, the real structure of qualifying rounds (not simulated — vacant places are filled by club reputation), squad-registration limits (including the Saudi Pro League foreign-player cap of 10), financial-regulation ratios, prize money and broadcast pools (labelled scenario estimates, not facts).
 
+The extended universe (second tiers for ESP, ITA, GER, FRA, POR, NED, BRA, TUR, SCO, JPN; first divisions for SUI, AUT, GRE, UKR, DEN, SWE, NOR, POL, CZE, CRO, SRB, IRN, UZB, THA, IND, NGA, GHA, SEN, CAN, ECU, PAR, PER; the FIFA Intercontinental Cup, Recopa Sudamericana, CAF Super Cup, Campeones Cup, Concacaf Central American Cup and additional domestic super cups) follows the same rule: **every league size, promotion/relegation count, qualification slot, round structure, foreign-player cap, squad-cost ratio, prize figure and broadcast pool added there is an unverified scenario default**, labelled `unverified-default`. Club names, crests and players remain fictional; competition and country names are used descriptively only.
+
 The engine does not need to change to make them accurate: replace the data in `registry.ts` / `qualification.ts` with verified, licensed data and bump the rule-set `fromSeason`.
 
 ## Real-world data packs

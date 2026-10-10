@@ -511,7 +511,7 @@ try {
   await click('pack-choice-names');
   await visible('pack-applied', 90000);
   const counts = await text('pack-counts');
-  check('applied counts are shown (clubs > 0, 0 players/coaches/crests for names-only pack)', /\d+ clubs · 0 players · 0 coaches · 0 crests changed/.test(counts) && !/^0 clubs/.test(counts), counts);
+  check('applied counts are shown (clubs > 0, 0 players/coaches/crests for names-only pack)', /\d+ clubs · 0 players · 0 coaches · 0 crests · \d+ competition names changed/.test(counts) && !/^0 clubs/.test(counts), counts);
   const applied = await text('pack-applied');
   check('applied panel says anything not covered stays generated and fictional', /stays generated and fictional/.test(applied) && /Unofficial/.test(applied) && /trademarks belong to their owners/.test(applied), applied);
   check('Real club names is selected', (await tid('pack-choice-names').getAttribute('aria-checked')) === 'true' && (await tid('pack-choice-none').getAttribute('aria-checked')) === 'false');
@@ -533,7 +533,7 @@ try {
   await visible('crest-report');
   check('crest import reports matched / unmatched / too big / unsupported', /2 matched · 1 not matched · 1 too big \(max 300 KB\) · 1 unsupported/.test(await text('crest-report')), await text('crest-report'));
   check('crest import names the unmatched and too-big files', /unknown-club\.png/.test(await text('crest-report')) && /arsenal\.png/.test(await text('crest-report')));
-  check('crest count is included in the applied counts', /[1-9]\d* players · [1-9]\d* coaches · 2 crests changed/.test(await text('pack-counts')), await text('pack-counts'));
+  check('crest count is included in the applied counts', /[1-9]\d* players · [1-9]\d* coaches · 2 crests · \d+ competition names changed/.test(await text('pack-counts')), await text('pack-counts'));
   await shot('46b3-crest-import-report');
   await click('league-ENG1'); await visible('btn-start-career');
   await page.waitForTimeout(500);
@@ -545,7 +545,7 @@ try {
   await click('btn-career-back');
   await click('pack-choice-names');
   await visible('pack-applied', 90000);
-  check('switching the option drops imported crests', /0 crests changed/.test(await text('pack-counts')), await text('pack-counts'));
+  check('switching the option drops imported crests', /0 crests · \d+ competition names changed/.test(await text('pack-counts')), await text('pack-counts'));
   await click('league-ENG1'); await visible('btn-start-career');
   const realNames = await clubLabels();
   check('club picker shows real names (Manchester City, Liverpool, Arsenal)', ['Manchester City', 'Liverpool', 'Arsenal'].every((n) => realNames.includes(n)), realNames.join('|'));
@@ -579,7 +579,7 @@ try {
   await choose('mine.json', { format: 'football-universe-data-pack', version: 1, id: 'e2e-user', name: 'E2E user pack', source: 'e2e', licence: 'test',
     leagues: { ENG1: [{ name: 'Testville FC', shortName: 'TST', crest: png, manager: { name: 'Pat Coach' } }, { name: 'Brokencrest Rovers', crest: 'file:///nonexistent/crest.png' }] } });
   await page.waitForFunction(() => /E2E user pack/.test(document.body.innerText), null, { timeout: 90000 });
-  check('user pack applied: 2 clubs, 1 coach, 2 crests', /2 clubs · 0 players · 1 coaches · 2 crests changed/.test(await text('pack-counts')), await text('pack-counts'));
+  check('user pack applied: 2 clubs, 1 coach, 2 crests', /2 clubs · 0 players · 1 coaches · 2 crests · \d+ competition names changed/.test(await text('pack-counts')), await text('pack-counts'));
   check('no preset option is selected for a custom pack', (await Promise.all(['none', 'names', 'squads'].map((k) => tid('pack-choice-' + k).getAttribute('aria-checked')))).every((v) => v === 'false'));
   await click('league-ENG1'); await visible('btn-start-career');
   const userNames = await clubLabels();

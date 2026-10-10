@@ -139,3 +139,21 @@ describe('data pack in the new-career store flow', () => {
     expect(names(a)).toEqual(names(b));
   }, 120000);
 });
+
+describe('extended world scope', () => {
+  it('generates second divisions and extra first divisions only when asked, and real competition names cover them', async () => {
+    const { generateWorldForSelection } = await import('../src/state/gameStore');
+    const { getPendingWorld } = await import('../src/state/worldHost');
+    const { applyDataPackToPending } = await import('../src/state/gameStore');
+    const { REAL_CLUB_NAMES, competitionName } = await import('@fu/engine');
+    await generateWorldForSelection('scope-test', 'compact', 'core');
+    const core = Object.keys(getPendingWorld()!.leagueMembers);
+    expect(core).not.toContain('ESP2');
+    await generateWorldForSelection('scope-test', 'compact', 'extended');
+    const ext = Object.keys(getPendingWorld()!.leagueMembers);
+    expect(ext).toContain('ESP2');
+    expect(ext.length).toBeGreaterThan(core.length + 20);
+    await applyDataPackToPending(REAL_CLUB_NAMES);
+    expect(competitionName(getPendingWorld()!, 'ESP2')).toBe('La Liga 2');
+  }, 120_000);
+});

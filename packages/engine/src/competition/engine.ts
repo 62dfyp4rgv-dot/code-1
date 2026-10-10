@@ -12,7 +12,7 @@ import {
 import { computeTable } from './standings';
 import type {
   CompetitionDef, CompetitionState, Fixture, FixtureResult, GroupsStage, KnockoutStage, LeaguePhaseStage,
-  RoundRobinStage, RuleSet, StageDef, StageState, Tie,
+  RoundRobinStage, RuleSet, ScheduleSpec, StageDef, StageState, Tie,
 } from './types';
 
 export interface EngineContext {
@@ -131,9 +131,12 @@ function startGroups(comp: CompetitionState, stage: GroupsStage, st: StageState,
   st.totalRounds = maxRounds;
 }
 
-/** Choose the largest pot count ≤ requested that divides the team count. */
+/**
+ * Choose the largest pot count ≤ requested that divides the team count. A team plays `2 * pots` distinct opponents, so
+ * the field must have at least `2 * pots + 1` teams (an 8-club field cannot be split into 4 pots).
+ */
 function effectivePots(n: number, requested: number): number {
-  for (let p = Math.min(requested, Math.floor(n / 2)); p >= 1; p--) if (n % p === 0 && n / p >= 2) return p;
+  for (let p = Math.min(requested, Math.floor((n - 1) / 2)); p >= 1; p--) if (n % p === 0 && n / p >= 2) return p;
   return 1;
 }
 
@@ -325,10 +328,21 @@ function scheduleRound(comp: CompetitionState, stage: KnockoutStage, st: StageSt
   const roundIdx = round - 1;
   const isFinal = ties.length === 1 && !ties.some((t) => t.decidedBy === 'bye');
   const legs: 1 | 2 = isFinal && stage.finalSingle ? 1 : stage.legs;
-  const spec = isFinal && stage.schedule.finalWeek !== undefined
-    ? { ...stage.schedule, weeks: [stage.schedule.finalWeek], dow: stage.schedule.finalDow ?? stage.schedule.dow, altDow: undefined }
-    : stage.schedule;
-  const ri = isFinal && stage.schedule.finalWeek !== undefined ? 0 : roundIdx;
+  const back = stage.schedule.weeksFromFinal;
+  const fromFinal = back !== undefined && back.length > 0 && !isFinal;
+  let spec: ScheduleSpec;
+  if (isFinal && stage.schedule.finalWeek !== undefined) {
+    spec = { ...stage.schedule, weeks: [stage.schedule.finalWeek], dow: stage.schedule.finalDow ?? stage.schedule.dow, altDow: undefined };
+  } else if (fromFinal) {
+    // rounds counted from the final: the last round before it is index 0
+    const k = Math.max(0, st.totalRounds - round - 1);
+    const list = back as number[];
+    const week = k < list.length ? (list[k] as number) : Math.max(1, (list[list.length - 1] as number) - (k - list.length + 1));
+    spec = { ...stage.schedule, weeks: [week] };
+  } else {
+    spec = stage.schedule;
+  }
+  const ri = (isFinal && stage.schedule.finalWeek !== undefined) || fromFinal ? 0 : roundIdx;
   let n = 0;
   for (const tie of ties) {
     if (tie.decidedBy === 'bye') continue;

@@ -119,6 +119,41 @@ const C: Record<NameCulture, CultureNames> = {
     placeB: ['grad', 'sad', 'pazar', 'brod', 'polje', 'gora', 'most', 'selo', 'dol', 'kamen', 'potok', 'vrh'],
     suffix: ['FK', 'United', 'Partizan', 'Sloga', 'Rad', 'Sport', 'Zvezda', 'Dinamo'],
   },
+  nordic: {
+    first: ['Erik', 'Lars', 'Anders', 'Magnus', 'Henrik', 'Mikael', 'Johan', 'Nils', 'Oskar', 'Emil', 'Viktor', 'Jonas', 'Sander', 'Mathias', 'Kasper', 'Rasmus', 'Mads', 'Jesper', 'Tobias', 'Fredrik', 'Sebastian', 'Alexander', 'Christian', 'Morten', 'Joakim', 'Gustav', 'Axel', 'Ludvig', 'Isak', 'Marcus'],
+    last: ['Andersen', 'Nielsen', 'Hansen', 'Pedersen', 'Larsen', 'Jensen', 'Olsen', 'Johansson', 'Lindberg', 'Eriksson', 'Svensson', 'Karlsson', 'Nilsson', 'Berg', 'Haugen', 'Solberg', 'Dahl', 'Lund', 'Bakken', 'Holm', 'Sørensen', 'Madsen', 'Rasmussen', 'Strand', 'Lindqvist', 'Forsberg', 'Nyström', 'Aas', 'Kristiansen', 'Thorsen'],
+    placeA: ['Nord', 'Sønder', 'Øst', 'Vest', 'Fjell', 'Skog', 'Strand', 'Lund', 'Ber', 'Hel', 'Vik', 'Ros', 'Stav', 'Kal', 'Sand', 'Ål'],
+    placeB: ['borg', 'by', 'hamn', 'vik', 'stad', 'næs', 'sund', 'holm', 'fjord', 'dal', 'ø', 'lunda', 'strup', 'köping'],
+    suffix: ['FC', 'IF', 'BK', 'FK', 'IK', 'Boldklub', 'United', 'Idrettslag'],
+  },
+  greek: {
+    first: ['Giorgos', 'Dimitris', 'Nikos', 'Kostas', 'Yannis', 'Christos', 'Panagiotis', 'Thanasis', 'Vasilis', 'Stelios', 'Manolis', 'Alexandros', 'Lefteris', 'Sotiris', 'Michalis', 'Tasos', 'Antonis', 'Spyros', 'Petros', 'Fotis', 'Kyriakos', 'Andreas', 'Pavlos', 'Orestis', 'Marios', 'Dionysis', 'Stavros', 'Zisis', 'Haris', 'Theo'],
+    last: ['Papadopoulos', 'Georgiou', 'Nikolaidis', 'Dimitriou', 'Vlachos', 'Makris', 'Antoniou', 'Stavropoulos', 'Kostopoulos', 'Anagnostou', 'Alexiou', 'Panagiotou', 'Mavros', 'Lazaridis', 'Kyriakou', 'Zografos', 'Galanis', 'Pappas', 'Economou', 'Vasiliadis', 'Karras', 'Sideris', 'Raptis'],
+    placeA: ['Agios', 'Nea', 'Kallithea', 'Pyrgos', 'Aspro', 'Mavro', 'Petro', 'Thermo', 'Kastro', 'Lefko', 'Mega', 'Xylo', 'Platani', 'Elato', 'Olympi', 'Marathon'],
+    placeB: ['polis', 'chori', 'nisi', 'kampos', 'vouno', 'limni', 'pyrgos', 'dasos', 'ia', 'ikos', 'aki', 'ona'],
+    suffix: ['FC', 'Panathlitikos', 'Athlitiki', 'United', 'Union', 'Sporting', 'Athletic', 'Enosis'],
+  },
+  persian: {
+    first: ['Mehdi', 'Reza', 'Ali', 'Hossein', 'Saeed', 'Amir', 'Majid', 'Omid', 'Karim', 'Ehsan', 'Sardar', 'Alireza', 'Milad', 'Pouya', 'Farhad', 'Behnam', 'Navid', 'Shahin', 'Jasur', 'Bobur', 'Sherzod', 'Otabek', 'Eldor', 'Dilshod', 'Ulugbek', 'Farrukh', 'Jahongir', 'Aziz', 'Rustam', 'Timur'],
+    last: ['Ahmadi', 'Karimi', 'Hosseini', 'Rezaei', 'Mohammadi', 'Jafari', 'Azizi', 'Salehi', 'Farhadi', 'Ghorbani', 'Davoodi', 'Mousavi', 'Shirazi', 'Tabrizi', 'Rahimov', 'Karimov', 'Abdullaev', 'Ismoilov', 'Yusupov', 'Tursunov', 'Nazarov', 'Umarov', 'Saidov', 'Kholmatov', 'Rakhimov', 'Mirzaev', 'Sharipov', 'Qodirov', 'Hakimi', 'Norouzi'],
+    placeA: ['Tab', 'Shi', 'Is', 'Mash', 'Ker', 'Qom', 'Sam', 'Bukh', 'Nav', 'Tosh', 'Far', 'And', 'Khor', 'Gor', 'Zan', 'Yaz'],
+    placeB: ['riz', 'raz', 'fahan', 'had', 'man', 'kand', 'ara', 'oi', 'jan', 'abad', 'shahr', 'dasht', 'gan'],
+    suffix: ['FC', 'Club', 'SC', 'United', 'Union', 'Athletic', 'Sporting', 'Dynamo'],
+  },
+  indian: {
+    first: ['Arjun', 'Rohan', 'Aditya', 'Vikram', 'Rahul', 'Sandeep', 'Anirudh', 'Sunil', 'Karan', 'Dev', 'Mohan', 'Ishaan', 'Tarun', 'Vivek', 'Pranav', 'Yash', 'Aman', 'Neel', 'Ravi', 'Sanjay', 'Rakesh', 'Deepak', 'Kunal', 'Nikhil', 'Harish', 'Vishal', 'Girish', 'Abhishek', 'Ishan', 'Suresh'],
+    last: ['Singh', 'Kumar', 'Sharma', 'Patel', 'Das', 'Reddy', 'Nair', 'Menon', 'Gill', 'Thapa', 'Bose', 'Roy', 'Ghosh', 'Mondal', 'Yadav', 'Rai', 'Lama', 'Kundu', 'Pillai', 'Shetty', 'Verma', 'Bhatia', 'Mishra', 'Chauhan', 'Naik', 'Hegde', 'Kapoor', 'Joshi', 'Sandhu'],
+    placeA: ['Nava', 'Sri', 'Kal', 'Mum', 'Ban', 'Hyder', 'Chen', 'Pune', 'Jam', 'Kol', 'Goa', 'Odi', 'Mizo', 'Pun', 'Raj', 'Kera'],
+    placeB: ['pur', 'nagar', 'abad', 'garh', 'ganj', 'puri', 'gram', 'bad', 'palli', 'kot', 'wada', 'ghat'],
+    suffix: ['FC', 'United', 'City', 'Athletic', 'Strikers', 'Sporting', 'Kings', 'Royals'],
+  },
+  thai: {
+    first: ['Somchai', 'Anan', 'Prasit', 'Kritsada', 'Pichai', 'Nattapong', 'Wichai', 'Thanawat', 'Chakrit', 'Sompong', 'Adisak', 'Worachit', 'Ekkachai', 'Suphan', 'Nurat', 'Peerapat', 'Ratchan', 'Jakkrit', 'Arthit', 'Narong', 'Phitiwat', 'Thitiphan', 'Kanok', 'Surasak', 'Bordin', 'Chatchai', 'Piyapong', 'Warut', 'Korrakot', 'Siwakorn'],
+    last: ['Saetang', 'Wongsiri', 'Chaiyasit', 'Jaidee', 'Srisuk', 'Pholsawat', 'Boonmee', 'Kaewmanee', 'Thongchai', 'Rattanakul', 'Sukhum', 'Phromsiri', 'Chaiwong', 'Suksai', 'Panya', 'Intha', 'Boonyarit', 'Kongchan', 'Meesuk', 'Ruengrit', 'Nakorn', 'Sangsri', 'Taweesuk', 'Duangkaew', 'Phetmanee', 'Songsawat', 'Kamsing', 'Charoen', 'Wannaporn', 'Somboon'],
+    placeA: ['Ban', 'Chiang', 'Nakhon', 'Sri', 'Surat', 'Phra', 'Lam', 'Rayong', 'Buri', 'Kham', 'Pak', 'Tha', 'Nong', 'Hua', 'Mueang', 'Khao'],
+    placeB: ['buri', 'mai', 'thani', 'kok', 'pong', 'rat', 'nam', 'thong', 'saen', 'phet', 'lek', 'dao', 'yai'],
+    suffix: ['FC', 'United', 'City', 'Port', 'Elephants', 'Dragons', 'Athletic', 'Rovers'],
+  },
   pacific: {
     first: ['Tane', 'Rangi', 'Aroha', 'Manu', 'Koa', 'Mikaele', 'Sione', 'Tevita', 'Josefa', 'Epeli', 'Ratu', 'Semi', 'Waisale', 'Ilaisa', 'Viliame', 'Nemani', 'Jone', 'Kolinio', 'Peni', 'Aisake', 'Lote', 'Maika', 'Iosefa', 'Tomasi', 'Samisoni', 'Etuate', 'Alani', 'Kalo', 'Tui', 'Hemi'],
     last: ['Tuilagi', 'Vaka', 'Naqelevuki', 'Seruvakula', 'Tamani', 'Kaufana', 'Tuivasa', 'Ratuva', 'Moala', 'Taufa', 'Fifita', 'Havili', 'Latu', 'Piutau', 'Savea', 'Fonoti', 'Salesa', 'Mataele', 'Toloa', 'Tago', 'Bola', 'Waqa', 'Lolohea', 'Cakobau', 'Nawalu', 'Ravouvou', 'Bale', 'Kuruvoli', 'Tikoisuva', 'Delai'],
@@ -137,6 +172,8 @@ const NAT_CULTURE: Record<string, NameCulture> = {
   JPN: 'japanese', KOR: 'korean', CHN: 'chinese', TUR: 'turkish',
   RSA: 'african', NGA: 'african', GHA: 'african', SEN: 'african', CIV: 'african', ZIM: 'african', ZAM: 'african', CMR: 'african', MLI: 'african',
   SRB: 'slavic', CRO: 'slavic', POL: 'slavic', CZE: 'slavic', UKR: 'slavic', FIJ: 'pacific', PNG: 'pacific',
+  DEN: 'nordic', SWE: 'nordic', NOR: 'nordic', FIN: 'nordic', ISL: 'nordic', GRE: 'greek', CYP: 'greek', IRN: 'persian', UZB: 'persian', TJK: 'persian',
+  IND: 'indian', PAK: 'indian', THA: 'thai', VIE: 'thai', MAS: 'thai', SVK: 'slavic', SVN: 'slavic', BIH: 'slavic', ROU: 'slavic', BUL: 'slavic', HUN: 'slavic',
 };
 
 export function cultureOfNation(code: string): NameCulture {

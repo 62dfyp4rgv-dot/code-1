@@ -15,7 +15,7 @@ import type {
 
 export type NameCulture =
   | 'english' | 'spanish' | 'italian' | 'german' | 'french' | 'portuguese' | 'dutch' | 'arabic' | 'japanese' | 'korean'
-  | 'chinese' | 'turkish' | 'brazilian' | 'african' | 'slavic' | 'pacific';
+  | 'chinese' | 'turkish' | 'brazilian' | 'african' | 'slavic' | 'pacific' | 'nordic' | 'greek' | 'persian' | 'indian' | 'thai';
 
 export interface LeagueProfile {
   id: string;
@@ -59,6 +59,12 @@ export interface LeagueProfile {
   hasSuperCup: boolean;
   legs: 1 | 2;
   zone?: string; // AFC zone
+  /**
+   * Opt-in league: not part of the default league selection (`defaultWorldConfig` scope 'core'), so the default
+   * 'standard' and 'compact' worlds keep their size and speed. Enabled by listing the id in `WorldConfig.leagues`
+   * or by `defaultWorldConfig(..., 'extended')`.
+   */
+  extended?: boolean;
 }
 
 const EU_WINDOWS: [number, number][] = [[0, 5], [22, 25]];
@@ -101,40 +107,78 @@ export const LEAGUE_PROFILES: LeagueProfile[] = [
   mkProfile({ id: 'FRA1', country: 'FRA', countryName: 'France', name: 'French League One', shortName: 'FL1', tier: 1, confederation: 'UEFA', clubs: 18, quality: 66, clubSpread: 5.5, tvPool: 9e8, stadium: 30000, ticket: 32, culture: 'french', tiebreakers: TB_GD, hasSuperCup: true, homeShare: 0.5, foreignPool: ['MAR', 'SEN', 'BRA', 'CIV', 'ESP'] }),
   mkProfile({ id: 'POR1', country: 'POR', countryName: 'Portugal', name: 'Portuguese Premier League', shortName: 'PPL', tier: 1, confederation: 'UEFA', clubs: 18, quality: 61, clubSpread: 5.5, tvPool: 3.5e8, stadium: 24000, ticket: 24, culture: 'portuguese', tiebreakers: TB_H2H_FIRST, hasSuperCup: true, homeShare: 0.4, foreignPool: ['BRA', 'ARG', 'COL', 'ESP', 'NGA'], squadCostLimit: 0.8 }),
   mkProfile({ id: 'NED1', country: 'NED', countryName: 'Netherlands', name: 'Dutch Premier Division', shortName: 'DPD', tier: 1, confederation: 'UEFA', clubs: 18, quality: 61, clubSpread: 5, tvPool: 2.5e8, stadium: 26000, ticket: 28, culture: 'dutch', tiebreakers: TB_GD, hasSuperCup: true, homeShare: 0.55, squadCostLimit: 0.8 }),
-  mkProfile({ id: 'BEL1', country: 'BEL', countryName: 'Belgium', name: 'Belgian Pro League', shortName: 'BPL', tier: 1, confederation: 'UEFA', clubs: 16, quality: 57, clubSpread: 4, tvPool: 1.2e8, stadium: 18000, ticket: 24, culture: 'dutch', compactClubs: 8, squadCostLimit: 0.8 }),
-  mkProfile({ id: 'SCO1', country: 'SCO', countryName: 'Scotland', name: 'Scottish Premiership', shortName: 'SPR', tier: 1, confederation: 'UEFA', clubs: 12, quality: 52, clubSpread: 5, tvPool: 8e7, stadium: 16000, ticket: 28, culture: 'english', compactClubs: 8, squadCostLimit: 0.85 }),
-  mkProfile({ id: 'TUR1', country: 'TUR', countryName: 'Turkey', name: 'Turkish Super League', shortName: 'TSL', tier: 1, confederation: 'UEFA', clubs: 18, quality: 58, clubSpread: 5, tvPool: 4e8, stadium: 28000, ticket: 22, culture: 'turkish', compactClubs: 8, squadCostLimit: 0.85, transferAggression: 1.1 }),
+  mkProfile({ id: 'BEL1', country: 'BEL', countryName: 'Belgium', name: 'Belgian Pro League', shortName: 'BPL', tier: 1, hasSuperCup: true, confederation: 'UEFA', clubs: 16, quality: 57, clubSpread: 4, tvPool: 1.2e8, stadium: 18000, ticket: 24, culture: 'dutch', compactClubs: 8, squadCostLimit: 0.8 }),
+  mkProfile({ id: 'SCO1', country: 'SCO', countryName: 'Scotland', name: 'Scottish Premiership', shortName: 'SPR', tier: 1, hasSuperCup: true, confederation: 'UEFA', clubs: 12, quality: 52, clubSpread: 5, tvPool: 8e7, stadium: 16000, ticket: 28, culture: 'english', compactClubs: 8, squadCostLimit: 0.85 }),
+  mkProfile({ id: 'TUR1', country: 'TUR', countryName: 'Turkey', name: 'Turkish Super League', shortName: 'TSL', tier: 1, hasSuperCup: true, confederation: 'UEFA', clubs: 18, quality: 58, clubSpread: 5, tvPool: 4e8, stadium: 28000, ticket: 22, culture: 'turkish', compactClubs: 8, squadCostLimit: 0.85, transferAggression: 1.1 }),
   // ---- AFC
   mkProfile({ id: 'SAU1', country: 'SAU', countryName: 'Saudi Arabia', name: 'Saudi Pro League', shortName: 'SPL', tier: 1, confederation: 'AFC', clubs: 18, quality: 66, clubSpread: 6, tvPool: 7e8, stadium: 32000, ticket: 22, culture: 'arabic', tiebreakers: TB_H2H_FIRST, hasSuperCup: true,
     investorShare: 0.55, transferAggression: 1.5, homeShare: 0.45, maxForeign: 10, maxSquad: 25, squadCostLimit: null,
     foreignPool: ['POR', 'BRA', 'FRA', 'MAR', 'SRB', 'ESP', 'ENG', 'SEN'], matchdayWeeks: { start: 2, skip: [8, 12, 17, 31, 38] }, transferWindows: [[0, 7], [22, 26]], zone: 'west' }),
   mkProfile({ id: 'SAU2', country: 'SAU', countryName: 'Saudi Arabia', name: 'Saudi First Division', shortName: 'SFD', tier: 2, confederation: 'AFC', clubs: 18, quality: 50, clubSpread: 3.5, tvPool: 4e7, stadium: 12000, ticket: 10, culture: 'arabic', maxForeign: 8, squadCostLimit: null, homeShare: 0.7, investorShare: 0.2, transferAggression: 1.1, zone: 'west', tiebreakers: TB_H2H_FIRST, foreignPool: ['EGY', 'MAR', 'BRA', 'POR'] }),
-  mkProfile({ id: 'JPN1', country: 'JPN', countryName: 'Japan', name: 'Japanese Premier League', shortName: 'JPL', tier: 1, confederation: 'AFC', clubs: 18, quality: 56, clubSpread: 4, tvPool: 2.4e8, stadium: 22000, ticket: 28, culture: 'japanese', zone: 'east', homeShare: 0.8, squadCostLimit: null, maxForeign: 5, compactClubs: 8, foreignPool: ['BRA', 'KOR', 'AUS'] }),
+  mkProfile({ id: 'JPN1', country: 'JPN', countryName: 'Japan', name: 'Japanese Premier League', shortName: 'JPL', tier: 1, hasSuperCup: true, confederation: 'AFC', clubs: 18, quality: 56, clubSpread: 4, tvPool: 2.4e8, stadium: 22000, ticket: 28, culture: 'japanese', zone: 'east', homeShare: 0.8, squadCostLimit: null, maxForeign: 5, compactClubs: 8, foreignPool: ['BRA', 'KOR', 'AUS'] }),
   mkProfile({ id: 'KOR1', country: 'KOR', countryName: 'South Korea', name: 'Korean K-Premier', shortName: 'KPR', tier: 1, confederation: 'AFC', clubs: 12, quality: 54, clubSpread: 4, tvPool: 1.2e8, stadium: 18000, ticket: 14, culture: 'korean', zone: 'east', homeShare: 0.8, squadCostLimit: null, compactClubs: 8, foreignPool: ['BRA', 'JPN', 'AUS'] }),
-  mkProfile({ id: 'CHN1', country: 'CHN', countryName: 'China', name: 'Chinese Super League', shortName: 'CSL', tier: 1, confederation: 'AFC', clubs: 14, quality: 53, clubSpread: 4, tvPool: 1.5e8, stadium: 28000, ticket: 14, culture: 'chinese', zone: 'east', homeShare: 0.7, squadCostLimit: null, compactClubs: 6, foreignPool: ['BRA', 'SRB', 'ESP'] }),
+  mkProfile({ id: 'CHN1', country: 'CHN', countryName: 'China', name: 'Chinese Super League', shortName: 'CSL', tier: 1, hasSuperCup: true, confederation: 'AFC', clubs: 14, quality: 53, clubSpread: 4, tvPool: 1.5e8, stadium: 28000, ticket: 14, culture: 'chinese', zone: 'east', homeShare: 0.7, squadCostLimit: null, compactClubs: 6, foreignPool: ['BRA', 'SRB', 'ESP'] }),
   mkProfile({ id: 'AUS1', country: 'AUS', countryName: 'Australia', name: 'Australian A-League', shortName: 'AAL', tier: 1, confederation: 'AFC', clubs: 10, quality: 50, clubSpread: 3.5, tvPool: 4e7, stadium: 17000, ticket: 24, culture: 'english', zone: 'east', homeShare: 0.7, squadCostLimit: null, compactClubs: 6, foreignPool: ['ENG', 'NZL', 'JPN'] }),
-  mkProfile({ id: 'UAE1', country: 'UAE', countryName: 'UAE', name: 'UAE Pro League', shortName: 'UPL', tier: 1, confederation: 'AFC', clubs: 14, quality: 55, clubSpread: 4.5, tvPool: 1.1e8, stadium: 15000, ticket: 14, culture: 'arabic', zone: 'west', investorShare: 0.5, transferAggression: 1.3, homeShare: 0.5, squadCostLimit: null, maxForeign: 6, compactClubs: 6, foreignPool: ['BRA', 'POR', 'EGY'] }),
-  mkProfile({ id: 'QAT1', country: 'QAT', countryName: 'Qatar', name: 'Qatar Stars League', shortName: 'QSL', tier: 1, confederation: 'AFC', clubs: 12, quality: 53, clubSpread: 4, tvPool: 9e7, stadium: 13000, ticket: 12, culture: 'arabic', zone: 'west', investorShare: 0.6, transferAggression: 1.25, homeShare: 0.5, squadCostLimit: null, maxForeign: 6, compactClubs: 6, foreignPool: ['BRA', 'POR', 'MAR'] }),
+  mkProfile({ id: 'UAE1', country: 'UAE', countryName: 'UAE', name: 'UAE Pro League', shortName: 'UPL', tier: 1, hasSuperCup: true, confederation: 'AFC', clubs: 14, quality: 55, clubSpread: 4.5, tvPool: 1.1e8, stadium: 15000, ticket: 14, culture: 'arabic', zone: 'west', investorShare: 0.5, transferAggression: 1.3, homeShare: 0.5, squadCostLimit: null, maxForeign: 6, compactClubs: 6, foreignPool: ['BRA', 'POR', 'EGY'] }),
+  mkProfile({ id: 'QAT1', country: 'QAT', countryName: 'Qatar', name: 'Qatar Stars League', shortName: 'QSL', tier: 1, hasSuperCup: true, confederation: 'AFC', clubs: 12, quality: 53, clubSpread: 4, tvPool: 9e7, stadium: 13000, ticket: 12, culture: 'arabic', zone: 'west', investorShare: 0.6, transferAggression: 1.25, homeShare: 0.5, squadCostLimit: null, maxForeign: 6, compactClubs: 6, foreignPool: ['BRA', 'POR', 'MAR'] }),
   // ---- CAF
-  mkProfile({ id: 'EGY1', country: 'EGY', countryName: 'Egypt', name: 'Egyptian Premier League', shortName: 'EPL-E', tier: 1, confederation: 'CAF', clubs: 16, quality: 54, clubSpread: 5, tvPool: 7e7, stadium: 30000, ticket: 6, culture: 'arabic', homeShare: 0.8, squadCostLimit: null, compactClubs: 6, foreignPool: ['NGA', 'GHA', 'SEN'] }),
+  mkProfile({ id: 'EGY1', country: 'EGY', countryName: 'Egypt', name: 'Egyptian Premier League', shortName: 'EPL-E', tier: 1, hasSuperCup: true, confederation: 'CAF', clubs: 16, quality: 54, clubSpread: 5, tvPool: 7e7, stadium: 30000, ticket: 6, culture: 'arabic', homeShare: 0.8, squadCostLimit: null, compactClubs: 6, foreignPool: ['NGA', 'GHA', 'SEN'] }),
   mkProfile({ id: 'MAR1', country: 'MAR', countryName: 'Morocco', name: 'Moroccan Botola', shortName: 'MBO', tier: 1, confederation: 'CAF', clubs: 16, quality: 53, clubSpread: 4.5, tvPool: 5e7, stadium: 25000, ticket: 6, culture: 'arabic', homeShare: 0.8, squadCostLimit: null, compactClubs: 6, foreignPool: ['SEN', 'CIV', 'NGA'] }),
   mkProfile({ id: 'RSA1', country: 'RSA', countryName: 'South Africa', name: 'South African Premiership', shortName: 'SAP', tier: 1, confederation: 'CAF', clubs: 16, quality: 52, clubSpread: 4.5, tvPool: 6e7, stadium: 22000, ticket: 8, culture: 'african', homeShare: 0.75, squadCostLimit: null, compactClubs: 6, foreignPool: ['ZIM', 'ZAM', 'NGA'] }),
   mkProfile({ id: 'TUN1', country: 'TUN', countryName: 'Tunisia', name: 'Tunisian Ligue Pro', shortName: 'TLP', tier: 1, confederation: 'CAF', clubs: 12, quality: 50, clubSpread: 4, tvPool: 2e7, stadium: 18000, ticket: 4, culture: 'arabic', homeShare: 0.85, squadCostLimit: null, compactClubs: 6, foreignPool: ['ALG', 'CIV', 'NGA'] }),
   mkProfile({ id: 'ALG1', country: 'ALG', countryName: 'Algeria', name: 'Algerian Ligue 1', shortName: 'AL1', tier: 1, confederation: 'CAF', clubs: 12, quality: 50, clubSpread: 4, tvPool: 2e7, stadium: 20000, ticket: 4, culture: 'arabic', homeShare: 0.9, squadCostLimit: null, compactClubs: 4, foreignPool: ['TUN', 'MAR'] }),
   // ---- CONCACAF
   mkProfile({ id: 'USA1', country: 'USA', countryName: 'United States', name: 'Major League Soccer', shortName: 'MLS', tier: 1, confederation: 'CONCACAF', clubs: 30, compactClubs: 10, quality: 59, clubSpread: 3.5, tvPool: 6e8, stadium: 25000, ticket: 45, culture: 'english', legs: 1, hasSuperCup: false, homeShare: 0.5, maxForeign: 8, squadCostLimit: null, investorShare: 0.3, matchdayWeeks: { start: 8, skip: [12, 17, 22, 31, 38] }, transferWindows: [[0, 5], [22, 26]], foreignPool: ['ARG', 'BRA', 'COL', 'MEX', 'ENG'] }),
-  mkProfile({ id: 'MEX1', country: 'MEX', countryName: 'Mexico', name: 'Mexican Liga Primera', shortName: 'LMP', tier: 1, confederation: 'CONCACAF', clubs: 18, quality: 58, clubSpread: 4, tvPool: 3e8, stadium: 35000, ticket: 20, culture: 'spanish', homeShare: 0.7, squadCostLimit: null, compactClubs: 8, foreignPool: ['ARG', 'COL', 'URU', 'CHI'] }),
+  mkProfile({ id: 'MEX1', country: 'MEX', countryName: 'Mexico', name: 'Mexican Liga Primera', shortName: 'LMP', tier: 1, hasSuperCup: true, confederation: 'CONCACAF', clubs: 18, quality: 58, clubSpread: 4, tvPool: 3e8, stadium: 35000, ticket: 20, culture: 'spanish', homeShare: 0.7, squadCostLimit: null, compactClubs: 8, foreignPool: ['ARG', 'COL', 'URU', 'CHI'] }),
   mkProfile({ id: 'CRC1', country: 'CRC', countryName: 'Costa Rica', name: 'Costa Rican Primera', shortName: 'CRP', tier: 1, confederation: 'CONCACAF', clubs: 10, quality: 47, clubSpread: 3.5, tvPool: 1e7, stadium: 12000, ticket: 6, culture: 'spanish', homeShare: 0.85, squadCostLimit: null, compactClubs: 6, foreignPool: ['COL', 'PAN'] }),
   mkProfile({ id: 'CAM1', country: 'CAM', countryName: 'Central America & Caribbean', name: 'Central American Premier', shortName: 'CAP', tier: 1, confederation: 'CONCACAF', clubs: 10, quality: 45, clubSpread: 3.5, tvPool: 8e6, stadium: 10000, ticket: 5, culture: 'spanish', homeShare: 0.85, squadCostLimit: null, compactClubs: 6, foreignPool: ['COL', 'CRC'] }),
   // ---- CONMEBOL
-  mkProfile({ id: 'BRA1', country: 'BRA', countryName: 'Brazil', name: 'Brazilian Serie A', shortName: 'BSA', tier: 1, confederation: 'CONMEBOL', clubs: 20, quality: 62, clubSpread: 5, tvPool: 6e8, stadium: 40000, ticket: 14, culture: 'brazilian', hasSuperCup: false, homeShare: 0.85, squadCostLimit: null, matchdayWeeks: { start: 8, skip: [12, 17, 22, 31, 38] }, transferWindows: [[0, 5], [22, 26]], foreignPool: ['ARG', 'URU', 'COL', 'CHI'], compactClubs: 10 }),
-  mkProfile({ id: 'ARG1', country: 'ARG', countryName: 'Argentina', name: 'Argentine Primera', shortName: 'ARP', tier: 1, confederation: 'CONMEBOL', clubs: 16, quality: 58, clubSpread: 4.5, tvPool: 1.5e8, stadium: 35000, ticket: 10, culture: 'spanish', homeShare: 0.85, squadCostLimit: null, compactClubs: 8, foreignPool: ['URU', 'PAR', 'COL'] }),
+  mkProfile({ id: 'BRA1', country: 'BRA', countryName: 'Brazil', name: 'Brazilian Serie A', shortName: 'BSA', tier: 1, confederation: 'CONMEBOL', clubs: 20, quality: 62, clubSpread: 5, tvPool: 6e8, stadium: 40000, ticket: 14, culture: 'brazilian', hasSuperCup: true, homeShare: 0.85, squadCostLimit: null, matchdayWeeks: { start: 8, skip: [12, 17, 22, 31, 38] }, transferWindows: [[0, 5], [22, 26]], foreignPool: ['ARG', 'URU', 'COL', 'CHI'], compactClubs: 10 }),
+  mkProfile({ id: 'ARG1', country: 'ARG', countryName: 'Argentina', name: 'Argentine Primera', shortName: 'ARP', tier: 1, hasSuperCup: true, confederation: 'CONMEBOL', clubs: 16, quality: 58, clubSpread: 4.5, tvPool: 1.5e8, stadium: 35000, ticket: 10, culture: 'spanish', homeShare: 0.85, squadCostLimit: null, compactClubs: 8, foreignPool: ['URU', 'PAR', 'COL'] }),
   mkProfile({ id: 'COL1', country: 'COL', countryName: 'Colombia', name: 'Colombian Primera', shortName: 'COP', tier: 1, confederation: 'CONMEBOL', clubs: 12, quality: 52, clubSpread: 4, tvPool: 5e7, stadium: 25000, ticket: 8, culture: 'spanish', homeShare: 0.85, squadCostLimit: null, compactClubs: 6, foreignPool: ['ARG', 'URU', 'VEN'] }),
   mkProfile({ id: 'CHI1', country: 'CHI', countryName: 'Chile', name: 'Chilean Primera', shortName: 'CHP', tier: 1, confederation: 'CONMEBOL', clubs: 12, quality: 51, clubSpread: 4, tvPool: 4e7, stadium: 20000, ticket: 8, culture: 'spanish', homeShare: 0.8, squadCostLimit: null, compactClubs: 6, foreignPool: ['ARG', 'COL', 'URU'] }),
   mkProfile({ id: 'URU1', country: 'URU', countryName: 'Uruguay', name: 'Uruguayan Primera', shortName: 'URP', tier: 1, confederation: 'CONMEBOL', clubs: 12, quality: 50, clubSpread: 4, tvPool: 3e7, stadium: 18000, ticket: 6, culture: 'spanish', homeShare: 0.85, squadCostLimit: null, compactClubs: 6, foreignPool: ['ARG', 'BRA', 'COL'] }),
   // ---- OFC
   mkProfile({ id: 'NZL1', country: 'NZL', countryName: 'New Zealand', name: 'New Zealand Premiership', shortName: 'NZP', tier: 1, confederation: 'OFC', clubs: 10, quality: 45, clubSpread: 3, tvPool: 5e6, stadium: 8000, ticket: 8, culture: 'english', homeShare: 0.8, squadCostLimit: null, compactClubs: 6, foreignPool: ['AUS', 'FIJ'] }),
   mkProfile({ id: 'FIJ1', country: 'FIJ', countryName: 'Pacific Islands', name: 'Pacific Premier League', shortName: 'PPL-O', tier: 1, confederation: 'OFC', clubs: 8, quality: 42, clubSpread: 3, tvPool: 3e6, stadium: 6000, ticket: 4, culture: 'pacific', homeShare: 0.9, squadCostLimit: null, compactClubs: 6, foreignPool: ['NZL', 'PNG'] }),
+  // ================================================================ EXTENDED UNIVERSE (opt-in, appended so core worlds are unchanged)
+  // ---- second tiers (pyramid partners of PYRAMIDS below; no continental entry, enter the domestic cup of their country)
+  mkProfile({ id: 'ESP2', country: 'ESP', countryName: 'Spain', name: 'Spanish Segunda', shortName: 'ESG', tier: 2, confederation: 'UEFA', clubs: 22, quality: 56, clubSpread: 3.5, tvPool: 2.2e8, stadium: 14000, ticket: 22, culture: 'spanish', tiebreakers: TB_H2H_FIRST, homeShare: 0.65, squadCostLimit: 0.9, maxForeign: 7, extended: true }),
+  mkProfile({ id: 'ITA2', country: 'ITA', countryName: 'Italy', name: 'Italian Serie Beta', shortName: 'ITB', tier: 2, confederation: 'UEFA', clubs: 20, quality: 55, clubSpread: 3.5, tvPool: 1.4e8, stadium: 12000, ticket: 20, culture: 'italian', tiebreakers: TB_H2H_FIRST, homeShare: 0.65, squadCostLimit: 0.9, maxForeign: 8, extended: true }),
+  mkProfile({ id: 'GER2', country: 'GER', countryName: 'Germany', name: 'German Second League', shortName: 'GSL', tier: 2, confederation: 'UEFA', clubs: 18, quality: 55, clubSpread: 3.5, tvPool: 3e8, stadium: 22000, ticket: 24, culture: 'german', tiebreakers: TB_GD, homeShare: 0.65, squadCostLimit: 0.9, matchdayWeeks: { start: 2, skip: [8, 12, 17, 18, 19, 31, 38] }, extended: true }),
+  mkProfile({ id: 'FRA2', country: 'FRA', countryName: 'France', name: 'French League Two', shortName: 'FL2', tier: 2, confederation: 'UEFA', clubs: 18, quality: 52, clubSpread: 3.5, tvPool: 7e7, stadium: 10000, ticket: 18, culture: 'french', tiebreakers: TB_GD, homeShare: 0.65, squadCostLimit: 0.9, foreignPool: ['MAR', 'SEN', 'CIV', 'BRA'], extended: true }),
+  mkProfile({ id: 'POR2', country: 'POR', countryName: 'Portugal', name: 'Portuguese Second League', shortName: 'PSL', tier: 2, confederation: 'UEFA', clubs: 18, quality: 49, clubSpread: 3.5, tvPool: 3e7, stadium: 5000, ticket: 12, culture: 'portuguese', tiebreakers: TB_H2H_FIRST, homeShare: 0.6, squadCostLimit: 0.9, maxForeign: 9, foreignPool: ['BRA', 'ARG', 'COL', 'ESP'], extended: true }),
+  mkProfile({ id: 'NED2', country: 'NED', countryName: 'Netherlands', name: 'Dutch First Division', shortName: 'DFD', tier: 2, confederation: 'UEFA', clubs: 18, quality: 49, clubSpread: 3.5, tvPool: 3e7, stadium: 5500, ticket: 16, culture: 'dutch', tiebreakers: TB_GD, homeShare: 0.7, squadCostLimit: 0.9, extended: true }),
+  mkProfile({ id: 'BRA2', country: 'BRA', countryName: 'Brazil', name: 'Brazilian Serie B', shortName: 'BSB', tier: 2, confederation: 'CONMEBOL', clubs: 20, quality: 52, clubSpread: 3.5, tvPool: 6e7, stadium: 17000, ticket: 8, culture: 'brazilian', homeShare: 0.9, squadCostLimit: null, matchdayWeeks: { start: 8, skip: [12, 17, 22, 31, 38] }, transferWindows: [[0, 5], [22, 26]], foreignPool: ['ARG', 'URU', 'COL', 'CHI'], extended: true }),
+  mkProfile({ id: 'TUR2', country: 'TUR', countryName: 'Turkey', name: 'Turkish First League', shortName: 'TFL', tier: 2, confederation: 'UEFA', clubs: 18, quality: 49, clubSpread: 3.5, tvPool: 5e7, stadium: 9000, ticket: 10, culture: 'turkish', homeShare: 0.7, squadCostLimit: 0.9, maxForeign: 8, extended: true }),
+  mkProfile({ id: 'SCO2', country: 'SCO', countryName: 'Scotland', name: 'Scottish Championship', shortName: 'SCH', tier: 2, confederation: 'UEFA', clubs: 10, quality: 44, clubSpread: 3.5, tvPool: 1.5e7, stadium: 4500, ticket: 18, culture: 'english', homeShare: 0.75, squadCostLimit: 0.9, extended: true }),
+  mkProfile({ id: 'JPN2', country: 'JPN', countryName: 'Japan', name: 'Japanese Second League', shortName: 'JSL', tier: 2, confederation: 'AFC', clubs: 20, quality: 47, clubSpread: 3.5, tvPool: 5e7, stadium: 9000, ticket: 14, culture: 'japanese', zone: 'east', homeShare: 0.85, squadCostLimit: null, maxForeign: 5, foreignPool: ['BRA', 'KOR', 'AUS'], extended: true }),
+  // ---- UEFA first divisions
+  mkProfile({ id: 'SUI1', country: 'SUI', countryName: 'Switzerland', name: 'Swiss Super League', shortName: 'SSL', tier: 1, confederation: 'UEFA', clubs: 12, compactClubs: 6, quality: 53, clubSpread: 4.2, tvPool: 7e7, stadium: 14000, ticket: 30, culture: 'german', homeShare: 0.5, squadCostLimit: 0.85, foreignPool: ['FRA', 'GER', 'BRA', 'SRB', 'NGA'], extended: true }),
+  mkProfile({ id: 'AUT1', country: 'AUT', countryName: 'Austria', name: 'Austrian Bundesliga', shortName: 'ABL', tier: 1, confederation: 'UEFA', clubs: 12, compactClubs: 6, quality: 52, clubSpread: 4.2, tvPool: 6e7, stadium: 13000, ticket: 26, culture: 'german', homeShare: 0.55, squadCostLimit: 0.85, foreignPool: ['GER', 'SRB', 'CRO', 'BRA', 'NGA'], extended: true }),
+  mkProfile({ id: 'GRE1', country: 'GRE', countryName: 'Greece', name: 'Greek Super League', shortName: 'GSU', tier: 1, confederation: 'UEFA', clubs: 14, compactClubs: 6, quality: 51, clubSpread: 4.5, tvPool: 6e7, stadium: 17000, ticket: 18, culture: 'greek', homeShare: 0.5, squadCostLimit: 0.85, transferAggression: 1.05, foreignPool: ['BRA', 'ARG', 'SRB', 'FRA', 'NGA'], extended: true }),
+  mkProfile({ id: 'UKR1', country: 'UKR', countryName: 'Ukraine', name: 'Ukrainian Premier League', shortName: 'UPR', tier: 1, confederation: 'UEFA', clubs: 16, compactClubs: 6, quality: 51, clubSpread: 4.5, tvPool: 3.5e7, stadium: 14000, ticket: 9, culture: 'slavic', hasSuperCup: true, homeShare: 0.6, squadCostLimit: 0.85, foreignPool: ['BRA', 'POL', 'CRO', 'NGA'], extended: true }),
+  mkProfile({ id: 'DEN1', country: 'DEN', countryName: 'Denmark', name: 'Danish Superliga', shortName: 'DSL', tier: 1, confederation: 'UEFA', clubs: 12, compactClubs: 6, quality: 52, clubSpread: 4, tvPool: 6e7, stadium: 12000, ticket: 28, culture: 'nordic', homeShare: 0.6, squadCostLimit: 0.85, foreignPool: ['SWE', 'NOR', 'NGA', 'BRA', 'ENG'], extended: true }),
+  mkProfile({ id: 'SWE1', country: 'SWE', countryName: 'Sweden', name: 'Swedish Allsvenskan', shortName: 'SAL', tier: 1, confederation: 'UEFA', clubs: 16, compactClubs: 6, quality: 50, clubSpread: 4, tvPool: 4e7, stadium: 11000, ticket: 24, culture: 'nordic', homeShare: 0.65, squadCostLimit: 0.85, foreignPool: ['DEN', 'NOR', 'NGA', 'BRA'], extended: true }),
+  mkProfile({ id: 'NOR1', country: 'NOR', countryName: 'Norway', name: 'Norwegian Eliteserien', shortName: 'NEL', tier: 1, confederation: 'UEFA', clubs: 16, compactClubs: 6, quality: 49, clubSpread: 4, tvPool: 4e7, stadium: 9000, ticket: 30, culture: 'nordic', homeShare: 0.65, squadCostLimit: 0.85, foreignPool: ['SWE', 'DEN', 'NGA', 'ENG'], extended: true }),
+  mkProfile({ id: 'POL1', country: 'POL', countryName: 'Poland', name: 'Polish Ekstraliga', shortName: 'PEK', tier: 1, confederation: 'UEFA', clubs: 18, compactClubs: 6, quality: 50, clubSpread: 4.2, tvPool: 4.5e7, stadium: 15000, ticket: 14, culture: 'slavic', hasSuperCup: true, homeShare: 0.6, squadCostLimit: 0.85, foreignPool: ['CZE', 'SRB', 'BRA', 'ESP', 'NGA'], extended: true }),
+  mkProfile({ id: 'CZE1', country: 'CZE', countryName: 'Czechia', name: 'Czech First League', shortName: 'CFL', tier: 1, confederation: 'UEFA', clubs: 16, compactClubs: 6, quality: 50, clubSpread: 4.2, tvPool: 3.5e7, stadium: 10000, ticket: 14, culture: 'slavic', homeShare: 0.65, squadCostLimit: 0.85, foreignPool: ['POL', 'SRB', 'BRA', 'NGA'], extended: true }),
+  mkProfile({ id: 'CRO1', country: 'CRO', countryName: 'Croatia', name: 'Croatian First League', shortName: 'CRL', tier: 1, confederation: 'UEFA', clubs: 10, compactClubs: 6, quality: 49, clubSpread: 4, tvPool: 2.5e7, stadium: 9000, ticket: 12, culture: 'slavic', hasSuperCup: true, homeShare: 0.65, squadCostLimit: 0.85, foreignPool: ['SRB', 'BRA', 'POL', 'NGA'], extended: true }),
+  mkProfile({ id: 'SRB1', country: 'SRB', countryName: 'Serbia', name: 'Serbian SuperLiga', shortName: 'SRL', tier: 1, confederation: 'UEFA', clubs: 16, compactClubs: 6, quality: 49, clubSpread: 4.5, tvPool: 2.5e7, stadium: 12000, ticket: 8, culture: 'slavic', homeShare: 0.65, squadCostLimit: 0.85, foreignPool: ['BRA', 'NGA', 'CRO', 'POL'], extended: true }),
+  // ---- AFC first divisions
+  mkProfile({ id: 'IRN1', country: 'IRN', countryName: 'Iran', name: 'Iranian Pro League', shortName: 'IPL', tier: 1, confederation: 'AFC', clubs: 16, compactClubs: 6, quality: 51, clubSpread: 4.5, tvPool: 3e7, stadium: 26000, ticket: 4, culture: 'persian', hasSuperCup: true, zone: 'west', homeShare: 0.9, squadCostLimit: null, maxForeign: 4, foreignPool: ['BRA', 'IRQ', 'UZB'], extended: true }),
+  mkProfile({ id: 'UZB1', country: 'UZB', countryName: 'Uzbekistan', name: 'Uzbek Super League', shortName: 'USL', tier: 1, confederation: 'AFC', clubs: 14, compactClubs: 6, quality: 48, clubSpread: 4, tvPool: 1.5e7, stadium: 14000, ticket: 4, culture: 'persian', hasSuperCup: true, zone: 'west', homeShare: 0.85, squadCostLimit: null, maxForeign: 6, foreignPool: ['IRN', 'BRA', 'SRB', 'UKR'], extended: true }),
+  mkProfile({ id: 'THA1', country: 'THA', countryName: 'Thailand', name: 'Thai League One', shortName: 'TL1', tier: 1, confederation: 'AFC', clubs: 16, compactClubs: 6, quality: 47, clubSpread: 4, tvPool: 3e7, stadium: 10000, ticket: 8, culture: 'thai', hasSuperCup: true, zone: 'east', homeShare: 0.8, squadCostLimit: null, maxForeign: 5, foreignPool: ['BRA', 'JPN', 'KOR'], extended: true }),
+  mkProfile({ id: 'IND1', country: 'IND', countryName: 'India', name: 'Indian Super League', shortName: 'ISL', tier: 1, confederation: 'AFC', clubs: 12, compactClubs: 6, quality: 45, clubSpread: 4, tvPool: 4e7, stadium: 18000, ticket: 4, culture: 'indian', zone: 'east', homeShare: 0.8, squadCostLimit: null, maxForeign: 6, foreignPool: ['BRA', 'ESP', 'AUS'], extended: true }),
+  // ---- CAF first divisions
+  mkProfile({ id: 'NGA1', country: 'NGA', countryName: 'Nigeria', name: 'Nigerian Premier League', shortName: 'NPL', tier: 1, confederation: 'CAF', clubs: 16, compactClubs: 6, quality: 47, clubSpread: 4.5, tvPool: 1.5e7, stadium: 18000, ticket: 2, culture: 'african', hasSuperCup: true, homeShare: 0.92, squadCostLimit: null, foreignPool: ['GHA', 'CMR', 'SEN'], extended: true }),
+  mkProfile({ id: 'GHA1', country: 'GHA', countryName: 'Ghana', name: 'Ghanaian Premier League', shortName: 'GPL', tier: 1, confederation: 'CAF', clubs: 14, compactClubs: 6, quality: 46, clubSpread: 4, tvPool: 1e7, stadium: 12000, ticket: 2, culture: 'african', homeShare: 0.9, squadCostLimit: null, foreignPool: ['NGA', 'CIV', 'SEN'], extended: true }),
+  mkProfile({ id: 'SEN1', country: 'SEN', countryName: 'Senegal', name: 'Senegalese Ligue 1', shortName: 'SL1', tier: 1, confederation: 'CAF', clubs: 12, compactClubs: 6, quality: 46, clubSpread: 4, tvPool: 8e6, stadium: 10000, ticket: 2, culture: 'african', homeShare: 0.88, squadCostLimit: null, foreignPool: ['CIV', 'MLI', 'CMR'], extended: true }),
+  // ---- CONCACAF / CONMEBOL first divisions
+  mkProfile({ id: 'CAN1', country: 'CAN', countryName: 'Canada', name: 'Canadian Premier League', shortName: 'CPL', tier: 1, confederation: 'CONCACAF', clubs: 8, compactClubs: 6, quality: 46, clubSpread: 3.5, tvPool: 2e7, stadium: 8000, ticket: 22, culture: 'english', homeShare: 0.5, squadCostLimit: null, maxForeign: 7, foreignPool: ['USA', 'ENG', 'BRA', 'MEX'], extended: true }),
+  mkProfile({ id: 'ECU1', country: 'ECU', countryName: 'Ecuador', name: 'Ecuadorian Serie A', shortName: 'ESA', tier: 1, confederation: 'CONMEBOL', clubs: 16, compactClubs: 6, quality: 50, clubSpread: 4, tvPool: 3e7, stadium: 22000, ticket: 8, culture: 'spanish', homeShare: 0.8, squadCostLimit: null, foreignPool: ['COL', 'ARG', 'URU', 'BRA'], extended: true }),
+  mkProfile({ id: 'PAR1', country: 'PAR', countryName: 'Paraguay', name: 'Paraguayan Primera', shortName: 'PAP', tier: 1, confederation: 'CONMEBOL', clubs: 12, compactClubs: 6, quality: 49, clubSpread: 4, tvPool: 2e7, stadium: 14000, ticket: 6, culture: 'spanish', hasSuperCup: true, homeShare: 0.85, squadCostLimit: null, foreignPool: ['ARG', 'URU', 'COL', 'BRA'], extended: true }),
+  mkProfile({ id: 'PER1', country: 'PER', countryName: 'Peru', name: 'Peruvian Liga 1', shortName: 'PL1', tier: 1, confederation: 'CONMEBOL', clubs: 18, compactClubs: 6, quality: 48, clubSpread: 4, tvPool: 2e7, stadium: 20000, ticket: 7, culture: 'spanish', homeShare: 0.85, squadCostLimit: null, foreignPool: ['COL', 'ARG', 'URU', 'CHI'], extended: true }),
 ];
 
 export const LEAGUE_BY_ID: Record<string, LeagueProfile> = Object.fromEntries(LEAGUE_PROFILES.map((l) => [l.id, l]));
@@ -145,10 +189,24 @@ export interface PyramidLink {
   lower: string;
   /** Number of clubs swapped. */
   swap: number;
+  /** The 'standard' preset adds the lower tier automatically when the upper tier is enabled (default true). */
+  auto?: boolean;
 }
 export const PYRAMIDS: PyramidLink[] = [
   { upper: 'ENG1', lower: 'ENG2', swap: 3 },
   { upper: 'SAU1', lower: 'SAU2', swap: 3 },
+  // Extended pyramids: opt-in (`auto: false`), the lower tier is enabled by listing it in `WorldConfig.leagues`
+  // (or by `defaultWorldConfig(..., 'extended')`). MLS (USA1) has no promotion/relegation and deliberately has no link.
+  { upper: 'ESP1', lower: 'ESP2', swap: 3, auto: false },
+  { upper: 'ITA1', lower: 'ITA2', swap: 3, auto: false },
+  { upper: 'GER1', lower: 'GER2', swap: 2, auto: false },
+  { upper: 'FRA1', lower: 'FRA2', swap: 3, auto: false },
+  { upper: 'POR1', lower: 'POR2', swap: 2, auto: false },
+  { upper: 'NED1', lower: 'NED2', swap: 2, auto: false },
+  { upper: 'BRA1', lower: 'BRA2', swap: 3, auto: false },
+  { upper: 'TUR1', lower: 'TUR2', swap: 3, auto: false },
+  { upper: 'SCO1', lower: 'SCO2', swap: 2, auto: false },
+  { upper: 'JPN1', lower: 'JPN2', swap: 2, auto: false },
 ];
 
 // ---------------------------------------------------------------- competition builders
@@ -216,17 +274,25 @@ function leagueDef(p: LeagueProfile): CompetitionDef {
   };
 }
 
+/** Nominal cup field: every club of the national pyramid (top tier plus the linked lower tiers). */
+function cupField(p: LeagueProfile): number {
+  let n = p.clubs;
+  for (const link of PYRAMIDS) if (link.upper === p.id) n += LEAGUE_BY_ID[link.lower]?.clubs ?? 0;
+  return n;
+}
+
 function cupDef(p: LeagueProfile): CompetitionDef {
   return {
     id: `${p.country}-CUP`, name: `${p.countryName} Cup`, shortName: `${p.country} Cup`, kind: 'cup', confederation: p.confederation, country: p.country, tier: null,
     period: 1, firstSeason: 1, priority: 20,
-    verification: UNVERIFIED('Simplified single-elimination cup drawn at random each round; all clubs of the national pyramid enter, top seeds receive byes.'),
+    verification: UNVERIFIED('Simplified single-elimination cup drawn at random each round; all clubs of the national pyramid (every enabled tier) enter, top seeds receive byes. Rounds are placed in the calendar counted back from the final, so a pyramid of any size gets a realistic round structure.'),
     rules: [ruleBase({
-      entrants: p.clubs, minEntrants: 4,
+      entrants: cupField(p), minEntrants: 4,
       stages: [{
         id: 'cup', name: 'Cup', type: 'knockout', legs: 1, finalSingle: true, extraTime: true, penalties: true, awayGoalsRule: false,
         pairing: 'random', neutralFinal: true, byes: true,
-        schedule: { startWeek: 9, weekStep: 4, dow: 2, weeks: [9, 17, 23, 27, 31, 35, 39], finalWeek: 44, finalDow: 5 },
+        // semi-final wk 39, quarter-final wk 25, then R16 21, R32 17, R64 13, R128 9, R256 7 (odd weeks keep clear of UCL/Sudamericana midweeks)
+        schedule: { startWeek: 9, weekStep: 4, dow: 2, weeksFromFinal: [39, 25, 21, 17, 13, 9, 7], finalWeek: 44, finalDow: 5 },
       }],
       prize: { positions: [], perMatch: 150000, perWin: 400000 },
     })],
@@ -371,6 +437,32 @@ function uefaSuperCup(): CompetitionDef {
   };
 }
 
+/** Two holders meet: a single neutral-venue match or a two-legged tie (continental super cups). */
+function holdersCup(args: { id: string; name: string; short: string; conf: Confederation; legs: 1 | 2; week: number; dow: number; prize: number; note: string }): CompetitionDef {
+  const single = args.legs === 1;
+  return {
+    id: args.id, name: args.name, shortName: args.short, kind: 'superCup', confederation: args.conf, country: null, tier: null, period: 1, firstSeason: 2, priority: 1,
+    verification: UNVERIFIED(`${args.note} Entrants are last season's title holders; the place of a double winner passes to the runner-up of the senior competition. Round structure and dates are scenario defaults.`),
+    rules: [ruleBase({ entrants: 2, minEntrants: 2, stages: [{
+      id: 'final', name: args.name, type: 'knockout', legs: args.legs, finalSingle: single, extraTime: true, penalties: true, awayGoalsRule: false,
+      pairing: 'seeded', neutralFinal: single, byes: false, schedule: { startWeek: args.week, weekStep: 1, dow: args.dow, finalWeek: args.week, finalDow: args.dow, legGapWeeks: 1 },
+    }], prize: { positions: [], perMatch: args.prize, perWin: args.prize } })],
+  };
+}
+
+/** Continental champions of the previous season meet in a short seeded knockout (play-off style: top seeds enter late). */
+function intercontinentalCup(): CompetitionDef {
+  const ko: KnockoutStage = {
+    id: 'knockout', name: 'Intercontinental Cup', type: 'knockout', legs: 1, finalSingle: true, extraTime: true, penalties: true, awayGoalsRule: false,
+    pairing: 'seeded', neutralFinal: true, byes: true, schedule: { startWeek: 3, weekStep: 1, dow: 3, weeksFromFinal: [4, 3], finalWeek: 5, finalDow: 3 },
+  };
+  return {
+    id: 'FIC', name: 'FIFA Intercontinental Cup', shortName: 'FIC', kind: 'intercontinental', confederation: null, country: null, tier: null, period: 1, firstSeason: 2, priority: 1,
+    verification: UNVERIFIED('Annual single-leg knockout between the previous season\'s continental champions (UEFA, CONMEBOL, AFC, CAF, Concacaf, OFC; a missing confederation is filled by its best-reputed club). The two best seeds receive a bye. Dates and format are scenario defaults; the Club World Cup is a separate quadrennial competition.'),
+    rules: [ruleBase({ entrants: 6, minEntrants: 4, stages: [ko], prize: { positions: [], perMatch: 1.5e6, perWin: 1.5e6 } })],
+  };
+}
+
 function buildRegistry(): Record<string, CompetitionDef> {
   const defs: CompetitionDef[] = [];
   for (const p of LEAGUE_PROFILES) {
@@ -409,6 +501,16 @@ function buildRegistry(): Record<string, CompetitionDef> {
   }));
   defs.push(oflCup());
   defs.push(clubWorldCup());
+  // ---- additional trophies (extended universe; created only when enough entrants qualify)
+  defs.push(holdersCup({ id: 'CAFSC', name: 'CAF Super Cup', short: 'CAFSC', conf: 'CAF', legs: 1, week: 3, dow: 2, prize: 6e5, note: 'Single match between the previous CAF Champions League and Confederation Cup winners.' }));
+  defs.push(holdersCup({ id: 'RECOPA', name: 'Recopa Sudamericana', short: 'RECOPA', conf: 'CONMEBOL', legs: 2, week: 2, dow: 1, prize: 6e5, note: 'Two-legged tie between the previous Copa Libertadores and Copa Sudamericana winners.' }));
+  defs.push(holdersCup({ id: 'CAMP', name: 'Campeones Cup', short: 'CAMP', conf: 'CONCACAF', legs: 1, week: 4, dow: 2, prize: 3e5, note: 'Single match between the previous MLS and Liga MX champions.' }));
+  defs.push(groupsKo({
+    id: 'CCAC', name: 'Concacaf Central American Cup', short: 'CCAC', conf: 'CONCACAF', groups: 4, groupLegs: 2, advance: 2, entrants: 16, min: 8,
+    groupWeeks: [10, 12, 14, 16, 18, 20], groupDow: 3, koWeeks: [26, 30], finalWeek: 34, finalDow: 5, koDow: 3, priority: 2, prize: 1.5e5,
+    note: 'Secondary Concacaf club competition for Central American and Caribbean clubs; its winner earns a Champions Cup place.',
+  }));
+  defs.push(intercontinentalCup());
   return Object.fromEntries(defs.map((d) => [d.id, d]));
 }
 
@@ -422,3 +524,12 @@ export function competitionDef(id: string): CompetitionDef {
 
 /** Default selection: the ten major domestic leagues requested for the initial universe. */
 export const DEFAULT_MAJOR_LEAGUES = ['ENG1', 'ESP1', 'ITA1', 'GER1', 'FRA1', 'SAU1', 'POR1', 'NED1', 'BRA1', 'USA1'] as const;
+
+/** First divisions of the default ("core") universe, in registry order. Opt-in leagues (`extended`) are excluded. */
+export const CORE_LEAGUES: string[] = LEAGUE_PROFILES.filter((l) => l.tier === 1 && !l.extended).map((l) => l.id);
+
+/**
+ * Everything in the extended universe: all first divisions plus the lower tier of every pyramid link. Use with
+ * `defaultWorldConfig(seed, preset, human, 'extended')`.
+ */
+export const EXTENDED_LEAGUES: string[] = [...LEAGUE_PROFILES.filter((l) => l.tier === 1).map((l) => l.id), ...PYRAMIDS.map((l) => l.lower)];

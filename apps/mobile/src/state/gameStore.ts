@@ -90,15 +90,15 @@ const frame = async (): Promise<void> => {
 };
 
 /** How the pending world was generated, so it can be rebuilt (identically) when a data pack is applied or removed. */
-let pendingParams: { seed: string; preset: 'compact' | 'standard' } | null = null;
+let pendingParams: { seed: string; preset: 'compact' | 'standard'; scope: 'core' | 'extended' } | null = null;
 
 /** Generate a fresh, fully fictional pending world. Any data pack applied to the previous pending world is dropped. */
-export async function generateWorldForSelection(seed: string, preset: 'compact' | 'standard'): Promise<void> {
+export async function generateWorldForSelection(seed: string, preset: 'compact' | 'standard', scope: 'core' | 'extended' = 'core'): Promise<void> {
   set({ busy: 'generating' });
   try {
     await frame(); // let the spinner paint before the (synchronous) engine call blocks the JS thread
-    const w = createWorld(defaultWorldConfig(seed, preset));
-    pendingParams = { seed, preset };
+    const w = createWorld(defaultWorldConfig(seed, preset, null, scope));
+    pendingParams = { seed, preset, scope };
     setPendingWorld(w);
   } finally {
     set({ busy: null });
@@ -119,7 +119,7 @@ export async function applyDataPackToPending(input: DataPack | string | null): P
   set({ busy: 'generating' });
   try {
     await frame();
-    const fresh = createWorld(defaultWorldConfig(params.seed, params.preset));
+    const fresh = createWorld(defaultWorldConfig(params.seed, params.preset, null, params.scope));
     const info = pack ? applyDataPack(fresh, pack) : null;
     if (pack) {
       const bad = validateWorld(fresh);

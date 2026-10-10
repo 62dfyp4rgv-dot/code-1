@@ -29,6 +29,7 @@ export default function NewCareer(): ReactNode {
   const [step, setStep] = useState<Step>('setup');
   const [seed, setSeed] = useState(randomSeed);
   const [preset, setPreset] = useState<'compact' | 'standard'>('compact');
+  const [scope, setScope] = useState<'core' | 'extended'>('core');
   const [leagueId, setLeagueId] = useState<string | null>(null);
   const [clubId, setClubId] = useState<string | null>(null);
   const [filter, setFilter] = useState('');
@@ -60,7 +61,7 @@ export default function NewCareer(): ReactNode {
 
   const generate = async (): Promise<void> => {
     const s = seed.trim() || randomSeed();
-    await generateWorldForSelection(s, preset);
+    await generateWorldForSelection(s, preset, scope);
     setGenerated((n) => n + 1);
     setLeagueId(null);
     setClubId(null);
@@ -146,6 +147,11 @@ export default function NewCareer(): ReactNode {
             />
             <Txt variant="small" color="muted">{preset === 'compact' ? t('career.compactHint') : t('career.standardHint')}</Txt>
             {preset === 'standard' ? <Banner tone="warn" text={t('career.standardWarn')} testID="standard-warning" /> : null}
+            <Segmented
+              label={t('career.scope')} value={scope} onChange={setScope}
+              options={[{ value: 'core', label: t('career.scopeCore'), testID: 'scope-core' }, { value: 'extended', label: t('career.scopeExtended'), testID: 'scope-extended' }]}
+            />
+            <Txt variant="small" color="muted">{scope === 'core' ? t('career.scopeCoreHint') : t('career.scopeExtendedHint')}</Txt>
           </Section>
           {busy === 'generating' ? <Spinner label={t('career.generating')} /> : <Button label={t('career.generate')} icon="globe" onPress={generate} disabled={noSlot} testID="btn-generate" />}
         </>

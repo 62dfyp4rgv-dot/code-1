@@ -5,7 +5,7 @@
 import { clamp } from '../math';
 import { generatePlayer } from '../players';
 import { Rng } from '../rng';
-import { LEAGUE_PROFILES, PYRAMIDS, type LeagueProfile } from '../competition/registry';
+import { CORE_LEAGUES, EXTENDED_LEAGUES, LEAGUE_PROFILES, PYRAMIDS, type LeagueProfile } from '../competition/registry';
 import { archetypeTactics, STYLE_TO_ARCHETYPE } from '../tactics';
 import { bestFormation, pickLineup, suggestRoles } from '../lineup';
 import type { Club, Manager, ManagerStyle, Player, Position } from '../types';
@@ -19,8 +19,13 @@ export const STYLES: ManagerStyle[] = [
   'domesticDominance', 'continentalFocus', 'sustainable',
 ];
 
-export function defaultWorldConfig(seed: string, preset: 'compact' | 'standard' = 'standard', humanClubId: string | null = null): WorldConfig {
-  const leagues = LEAGUE_PROFILES.filter((l) => l.tier === 1).map((l) => l.id);
+/**
+ * Default world configuration. `scope` 'core' (default) enables the 35 original first divisions (the 'standard' preset
+ * adds the ENG/SAU second tiers on top); 'extended' enables every first division plus every pyramid's second tier, in
+ * both presets. The extended universe is larger and slower, so it is always an explicit choice.
+ */
+export function defaultWorldConfig(seed: string, preset: 'compact' | 'standard' = 'standard', humanClubId: string | null = null, scope: 'core' | 'extended' = 'core'): WorldConfig {
+  const leagues = scope === 'extended' ? [...EXTENDED_LEAGUES] : [...CORE_LEAGUES];
   return { seed, leagues, preset, humanClubId, archiveRecent: 400 };
 }
 
@@ -80,7 +85,7 @@ export function createEmptyWorld(config: WorldConfig): WorldState {
 export function resolveLeagues(config: WorldConfig): LeagueProfile[] {
   const ids = new Set(config.leagues);
   if (config.preset === 'standard') {
-    for (const link of PYRAMIDS) if (ids.has(link.upper)) ids.add(link.lower);
+    for (const link of PYRAMIDS) if (link.auto !== false && ids.has(link.upper)) ids.add(link.lower);
   }
   return LEAGUE_PROFILES.filter((p) => ids.has(p.id));
 }
@@ -260,8 +265,10 @@ export function generateWorld(config: WorldConfig): WorldState {
     }
   }
   reindex(world);
+  // unemployed managers: drawn from the core profiles unless the world uses the extended universe (keeps core worlds unchanged)
+  const managerSource = profiles.some((p) => p.extended) ? LEAGUE_PROFILES : LEAGUE_PROFILES.filter((p) => !p.extended);
   for (let i = 0; i < (config.preset === 'compact' ? 20 : 120); i++) {
-    const prof = LEAGUE_PROFILES[frng.int(LEAGUE_PROFILES.length)] as LeagueProfile;
+    const prof = managerSource[frng.int(managerSource.length)] as LeagueProfile;
     const mid = nextId(world, 'manager');
     world.managers[mid] = {
       id: mid, name: managerName(prof.culture, frng), nationality: prof.country, birthDay: Math.round(-frng.float(38, 64) * 365.25),

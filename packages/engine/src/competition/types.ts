@@ -32,6 +32,12 @@ export interface ScheduleSpec {
   /** Knockout only: the final is always played in this week/day-of-week regardless of round count. */
   finalWeek?: number;
   finalDow?: number;
+  /**
+   * Knockout only: weeks counted backwards from the final ([semi-final, quarter-final, round of 16, ...]). Lets one
+   * definition serve fields of any size (a round keeps its place in the calendar however many rounds precede it).
+   * Takes precedence over `weeks` for non-final rounds; rounds beyond the list move one further week earlier each.
+   */
+  weeksFromFinal?: number[];
 }
 
 interface StageBase {
