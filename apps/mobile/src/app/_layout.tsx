@@ -10,7 +10,6 @@ import { applyDirection } from '../platform/direction';
 import { useAutosaveOnBackground } from '../platform/useAppLifecycle';
 import { NoticeHost, SimOverlay } from '../ui/Overlays';
 import { Spinner } from '../ui/Layout';
-import { Txt } from '../ui/Txt';
 import { AppErrorBoundary } from '../ui/ErrorBoundary';
 
 export { AppErrorBoundary as ErrorBoundary };
@@ -76,4 +75,3 @@ function ThemedLocale(): ReactNode {
   );
 }
 
-void Txt;
