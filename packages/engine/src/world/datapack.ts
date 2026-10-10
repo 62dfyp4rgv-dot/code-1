@@ -15,6 +15,7 @@
  * Logos, likenesses and ratings are the pack author's responsibility; nothing licensed is bundled in this repository.
  */
 import { clamp } from '../math';
+import { defaultTactics, FORMATIONS } from '../tactics';
 import { ATTR_KEYS, POSITIONS, type Club, type Manager, type Player, type Position } from '../types';
 import { overall } from '../players';
 import { squadOf } from './runtime';
@@ -41,6 +42,8 @@ export interface PackClub {
   /** `file://…`, `asset:…` or `data:image/(png|jpeg|webp);base64,…` (<= 300 KB). */
   crest?: string;
   manager?: PackManager;
+  /** Preferred formation id (e.g. `4-3-3`); the club's automatic line-up then favours that shape. */
+  formation?: string;
   /** Best player first within a position (or give `overall`). */
   players?: PackPlayer[];
 }
@@ -137,6 +140,10 @@ export function parseDataPack(input: string | unknown): DataPack {
         club.stadium = { name: clean(st.name, `${at}.stadium.name`), ...(cap !== undefined ? { capacity: cap } : {}) };
       }
       if (c.crest !== undefined) club.crest = safeCrest(c.crest, `${at}.crest`);
+      if (c.formation !== undefined) {
+        if (typeof c.formation !== 'string' || !Object.hasOwn(FORMATIONS, c.formation)) throw new DataPackError(`${at}.formation must be one of ${Object.keys(FORMATIONS).join(', ')}`);
+        club.formation = c.formation;
+      }
       if (c.manager !== undefined) {
         const m = c.manager as Record<string, unknown>;
         if (typeof m !== 'object' || m === null) throw new DataPackError(`${at}.manager must be an object`);
@@ -203,6 +210,7 @@ export function applyDataPack(world: WorldState, pack: DataPack): DataPackInfo {
       if (pc.stadium) club.stadium = { name: pc.stadium.name, capacity: pc.stadium.capacity ?? club.stadium.capacity };
       if (pc.crest) { club.crest = pc.crest; applied.crests++; }
       club.fictional = false;
+      if (pc.formation) club.tactics = { ...club.tactics, formation: pc.formation, roles: defaultTactics(pc.formation).roles };
       applied.clubs++;
       if (pc.manager && club.managerId) {
         const m = world.managers[club.managerId] as Manager | undefined;

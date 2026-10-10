@@ -73,12 +73,12 @@ const S: Record<string, Squad> = {
     ['Felix Nmecha', 'CM', 'GER', 2000], ['Karim Adeyemi', 'LW', 'GER', 2002], ['Waldemar Anton', 'CB', 'GER', 1996], ['Maximilian Beier', 'ST', 'GER', 2002],
     ['Jobe Bellingham', 'CM', 'ENG', 2005], ['Ramy Bensebaini', 'LB', 'ALG', 1995], ['Daniel Svensson', 'LB', 'SWE', 2002], ['Carney Chukwuemeka', 'AM', 'ENG', 2003] ] },
   'Bayer Leverkusen': { players: [
-    ['Florian Wirtz', 'AM', 'GER', 2003], ['Granit Xhaka', 'CM', 'SUI', 1992], ['Jonathan Tah', 'CB', 'GER', 1996], ['Alejandro Grimaldo', 'LB', 'ESP', 1995],
+    ['Granit Xhaka', 'CM', 'SUI', 1992], ['Alejandro Grimaldo', 'LB', 'ESP', 1995],
     ['Piero Hincapié', 'CB', 'ECU', 2002], ['Lukáš Hrádecký', 'GK', 'FIN', 1989], ['Exequiel Palacios', 'CM', 'ARG', 1998], ['Patrik Schick', 'ST', 'CZE', 1996],
-    ['Jeremie Frimpong', 'RB', 'NED', 2000], ['Malik Tillman', 'AM', 'USA', 2002], ['Equi Fernández', 'DM', 'ARG', 2002], ['Loïc Badé', 'CB', 'FRA', 2000] ] },
+    ['Malik Tillman', 'AM', 'USA', 2002], ['Equi Fernández', 'DM', 'ARG', 2002], ['Loïc Badé', 'CB', 'FRA', 2000] ] },
   'Paris Saint-Germain': { coach: ['Luis Enrique', 'ESP', 1970], players: [
     ['Ousmane Dembélé', 'RW', 'FRA', 1997], ['Vitinha', 'CM', 'POR', 2000], ['Achraf Hakimi', 'RB', 'MAR', 1998], ['Marquinhos', 'CB', 'BRA', 1994],
-    ['Gianluigi Donnarumma', 'GK', 'ITA', 1999], ['Khvicha Kvaratskhelia', 'LW', 'GEO', 2001], ['Bradley Barcola', 'LW', 'FRA', 2002], ['João Neves', 'CM', 'POR', 2004],
+    ['Khvicha Kvaratskhelia', 'LW', 'GEO', 2001], ['Bradley Barcola', 'LW', 'FRA', 2002], ['João Neves', 'CM', 'POR', 2004],
     ['Fabián Ruiz', 'CM', 'ESP', 1996], ['Nuno Mendes', 'LB', 'POR', 2002], ['Willian Pacho', 'CB', 'ECU', 2001], ['Désiré Doué', 'AM', 'FRA', 2005], ['Lucas Chevalier', 'GK', 'FRA', 2001] ] },
   'Olympique de Marseille': { coach: ['Roberto De Zerbi', 'ITA', 1979], players: [
     ['Mason Greenwood', 'ST', 'ENG', 2001], ['Pierre-Emerick Aubameyang', 'ST', 'GAB', 1989], ['Amine Harit', 'AM', 'MAR', 1997], ['Geoffrey Kondogbia', 'DM', 'CAF', 1993],
@@ -132,17 +132,72 @@ const S: Record<string, Squad> = {
     ['Novak Micovic', 'GK', 'MNE', 1993], ['Marco Reus', 'AM', 'GER', 1989], ['Gastón Brugman', 'DM', 'URU', 1992], ['Julian Hall', 'ST', 'USA', 2008] ] },
 };
 
-/** `REAL_CLUB_NAMES` with a coach and starter squad attached to the clubs listed above (matched by club name). */
+
+/** Players removed from a club's list because they moved (or are duplicated at another club listed here). */
+const EXCLUDE = new Set([
+  'Paris Saint-Germain|Gianluigi Donnarumma', 'Al Hilal|João Cancelo', 'Al Hilal|Kalidou Koulibaly', 'Benfica|Álvaro Carreras', 'Sporting CP|Viktor Gyökeres',
+  'PSV Eindhoven|Matteo Dams', 'Al Ahli|Matteo Dams', 'Palmeiras|Estêvão Willian', 'Bayer Leverkusen|Florian Wirtz', 'Bayer Leverkusen|Jonathan Tah', 'Bayer Leverkusen|Jeremie Frimpong',
+]);
+
+/** Approximate ability estimates (1-99), keyed club -> player. Unlisted players keep generated strength. */
+const R: Record<string, Record<string, number>> = {
+  'Manchester City': { 'Erling Haaland': 91, Rodri: 89, 'Phil Foden': 85, 'Rúben Dias': 88, 'Josko Gvardiol': 86, 'Bernardo Silva': 87, 'Tijjani Reijnders': 82, 'Rayan Cherki': 80, 'Jérémy Doku': 82, 'Gianluigi Donnarumma': 89, 'Nico González': 82, 'John Stones': 84, 'Rayan Aït-Nouri': 80, 'Matheus Nunes': 80 },
+  Liverpool: { 'Mohamed Salah': 91, 'Virgil van Dijk': 89, 'Alexis Mac Allister': 87, 'Florian Wirtz': 87, Alisson: 89, 'Dominik Szoboszlai': 86, 'Alexander Isak': 87, 'Cody Gakpo': 84, 'Ryan Gravenberch': 86, 'Ibrahima Konaté': 84, 'Jeremie Frimpong': 82, 'Milos Kerkez': 77, 'Hugo Ekitiké': 82 },
+  Arsenal: { 'Bukayo Saka': 87, 'Martin Ødegaard': 87, 'Declan Rice': 88, 'William Saliba': 88, 'Gabriel Magalhães': 87, 'David Raya': 86, 'Viktor Gyökeres': 85, 'Martin Zubimendi': 85, 'Gabriel Martinelli': 82, 'Eberechi Eze': 82, 'Ben White': 83, 'Riccardo Calafiori': 82, 'Kai Havertz': 82 },
+  Chelsea: { 'Cole Palmer': 86, 'Enzo Fernández': 84, 'Moisés Caicedo': 85, 'Levi Colwill': 81, 'Reece James': 84, 'Robert Sánchez': 77, 'João Pedro': 81, 'Pedro Neto': 80, 'Marc Cucurella': 82, Estêvão: 78, 'Trevoh Chalobah': 77, 'Liam Delap': 75 },
+  'Manchester United': { 'Bruno Fernandes': 87, 'Matheus Cunha': 82, 'Bryan Mbeumo': 82, 'Benjamin Šeško': 78, Casemiro: 82, 'Lisandro Martínez': 83, 'Leny Yoro': 77, 'Kobbie Mainoo': 78, 'Diogo Dalot': 80, 'Luke Shaw': 79, 'Altay Bayındır': 76, 'Amad Diallo': 79 },
+  'Tottenham Hotspur': { 'Son Heung-min': 85, 'James Maddison': 82, 'Cristian Romero': 85, 'Micky van de Ven': 83, 'Guglielmo Vicario': 82, 'Dejan Kulusevski': 82, 'Xavi Simons': 82, 'João Palhinha': 82, 'Pedro Porro': 82, Richarlison: 79, 'Mohammed Kudus': 82, 'Destiny Udogie': 79 },
+  'Real Madrid': { 'Kylian Mbappé': 91, 'Vinícius Júnior': 89, 'Jude Bellingham': 89, 'Federico Valverde': 88, 'Thibaut Courtois': 89, 'Aurélien Tchouaméni': 85, Rodrygo: 85, 'Eduardo Camavinga': 84, 'Antonio Rüdiger': 85, 'Dean Huijsen': 80, 'Trent Alexander-Arnold': 86, 'Álvaro Carreras': 78, 'Arda Güler': 82 },
+  'FC Barcelona': { 'Lamine Yamal': 88, Raphinha: 89, 'Robert Lewandowski': 88, Pedri: 87, Gavi: 82, 'Frenkie de Jong': 86, 'Marc-André ter Stegen': 87, 'Joan García': 80, 'Ronald Araújo': 84, 'Pau Cubarsí': 83, 'Jules Koundé': 86, 'Alejandro Balde': 82, 'Dani Olmo': 84, 'Ferran Torres': 80 },
+  'Atlético de Madrid': { 'Julián Álvarez': 86, 'Antoine Griezmann': 86, 'Jan Oblak': 87, Koke: 83, 'Alexander Sørloth': 80, 'Marcos Llorente': 83, 'Robin Le Normand': 82, 'Pablo Barrios': 80, 'Conor Gallagher': 82, 'José María Giménez': 83, 'Álex Baena': 82, 'Nahuel Molina': 80 },
+  Inter: { 'Lautaro Martínez': 89, 'Nicolò Barella': 87, 'Hakan Çalhanoğlu': 86, 'Alessandro Bastoni': 87, 'Yann Sommer': 84, 'Marcus Thuram': 85, 'Federico Dimarco': 84, 'Denzel Dumfries': 82, 'Piotr Zieliński': 83, 'Francesco Acerbi': 80, 'Henrikh Mkhitaryan': 82, 'Ange-Yoan Bonny': 77 },
+  Juventus: { 'Kenan Yıldız': 82, 'Dušan Vlahović': 82, 'Gleison Bremer': 85, 'Manuel Locatelli': 82, 'Michele Di Gregorio': 82, 'Teun Koopmeiners': 82, 'Khéphren Thuram': 81, 'Andrea Cambiaso': 82, 'Jonathan David': 82, 'Lloyd Kelly': 77, 'Francisco Conceição': 79, 'Pierre Kalulu': 80 },
+  'AC Milan': { 'Rafael Leão': 86, 'Christian Pulisic': 82, 'Luka Modrić': 85, 'Mike Maignan': 87, 'Strahinja Pavlović': 80, 'Youssouf Fofana': 80, 'Adrien Rabiot': 83, 'Santiago Giménez': 80, 'Fikayo Tomori': 82, 'Alexis Saelemaekers': 78, 'Davide Bartesaghi': 70, 'Matteo Gabbia': 78 },
+  Napoli: { 'Kevin De Bruyne': 87, 'Scott McTominay': 83, 'Romelu Lukaku': 82, 'Alessandro Buongiorno': 82, 'Stanislav Lobotka': 83, 'Amir Rrahmani': 81, 'Giovanni Di Lorenzo': 83, 'Alex Meret': 80, 'David Neres': 80, 'Matteo Politano': 79, 'Miguel Gutiérrez': 77, 'Rasmus Højlund': 77 },
+  'Bayern München': { 'Harry Kane': 89, 'Jamal Musiala': 88, 'Michael Olise': 86, 'Joshua Kimmich': 88, 'Manuel Neuer': 85, 'Luis Díaz': 85, 'Dayot Upamecano': 83, 'Jonathan Tah': 85, 'Alphonso Davies': 82, 'Konrad Laimer': 82, 'Aleksandar Pavlović': 80, 'Serge Gnabry': 83 },
+  'Borussia Dortmund': { 'Serhou Guirassy': 84, 'Julian Brandt': 82, 'Nico Schlotterbeck': 84, 'Gregor Kobel': 86, 'Felix Nmecha': 80, 'Karim Adeyemi': 79, 'Waldemar Anton': 80, 'Maximilian Beier': 78, 'Jobe Bellingham': 76, 'Ramy Bensebaini': 80, 'Daniel Svensson': 74, 'Carney Chukwuemeka': 74 },
+  'Bayer Leverkusen': { 'Granit Xhaka': 83, 'Alejandro Grimaldo': 84, 'Piero Hincapié': 82, 'Lukáš Hrádecký': 80, 'Exequiel Palacios': 80, 'Patrik Schick': 81, 'Malik Tillman': 78, 'Equi Fernández': 76, 'Loïc Badé': 78 },
+  'Paris Saint-Germain': { 'Ousmane Dembélé': 90, Vitinha: 89, 'Achraf Hakimi': 87, Marquinhos: 86, 'Khvicha Kvaratskhelia': 87, 'Bradley Barcola': 82, 'João Neves': 86, 'Fabián Ruiz': 84, 'Nuno Mendes': 87, 'Willian Pacho': 84, 'Désiré Doué': 83, 'Lucas Chevalier': 78 },
+  'Olympique de Marseille': { 'Mason Greenwood': 80, 'Pierre-Emerick Aubameyang': 77, 'Amine Harit': 77, 'Geoffrey Kondogbia': 79, 'Leonardo Balerdi': 80, 'Gerónimo Rulli': 79, 'Pierre-Emile Højbjerg': 80, 'Quentin Merlin': 76, 'Timothy Weah': 75, 'Facundo Medina': 76, "Matt O'Riley": 77, 'Angel Gomes': 74 },
+  'Al Hilal': { 'Rúben Neves': 84, 'Sergej Milinković-Savić': 85, 'Aleksandar Mitrović': 80, Malcom: 80, 'Yassine Bounou': 85, 'Salem Al-Dawsari': 82, 'Theo Hernández': 84, 'Marcos Leonardo': 80, 'Mohamed Kanno': 76, 'Ali Al-Bulayhi': 75 },
+  'Al Nassr': { 'Cristiano Ronaldo': 86, 'Sadio Mané': 82, 'João Félix': 82, 'Kingsley Coman': 82, 'Aymeric Laporte': 82, 'Marcelo Brozović': 80, 'Inigo Martínez': 81, Bento: 80, Ângelo: 74, 'Mohamed Simakan': 78, 'Ayman Yahya': 72, 'Abdulrahman Ghareeb': 70 },
+  'Al Ittihad': { 'Karim Benzema': 84, "N'Golo Kanté": 82, Fabinho: 80, 'Houssem Aouar': 78, 'Steven Bergwijn': 78, 'Danilo Pereira': 79, 'Marcelo Grohe': 77, 'Moussa Diaby': 78, 'Ahmed Hegazi': 72, 'Abdulaziz Al-Bishi': 68 },
+  'Al Ahli': { 'Riyad Mahrez': 83, 'Roberto Firmino': 79, 'Franck Kessié': 81, 'Édouard Mendy': 82, 'Ivan Toney': 81, 'Allan Saint-Maximin': 80, 'Merih Demiral': 80, Galeno: 80, 'Ali Majrashi': 70 },
+  Benfica: { 'Ángel Di María': 80, 'Nicolás Otamendi': 80, 'Orkun Kökçü': 81, 'Vangelis Pavlidis': 81, 'Anatoliy Trubin': 82, 'Florentino Luís': 79, 'Fredrik Aursnes': 79, 'António Silva': 82, 'Richard Ríos': 76 },
+  'FC Porto': { 'Samu Aghehowa': 80, 'Diogo Costa': 85, 'Alan Varela': 78, 'Francisco Moura': 76, Pepê: 79, 'Gabri Veiga': 78, 'Nehuén Pérez': 77, 'Jan Bednarek': 77, 'William Gomes': 72, 'Rodrigo Mora': 75 },
+  'Sporting CP': { 'Morten Hjulmand': 81, 'Pedro Gonçalves': 80, 'Ousmane Diomande': 80, 'Franco Israel': 78, 'Geny Catamo': 76, 'Maxi Araújo': 77, 'Gonçalo Inácio': 79, 'Conrad Harder': 75, 'Francisco Trincão': 80 },
+  Ajax: { 'Jorrel Hato': 78, 'Kenneth Taylor': 76, 'Brian Brobbey': 78, 'Jordan Henderson': 75, 'Remko Pasveer': 74, 'Mika Godts': 75, 'Oscar Gloukh': 76, 'Anton Gaaei': 72 },
+  'PSV Eindhoven': { 'Luuk de Jong': 75, 'Ismael Saibari': 76, 'Jerdy Schouten': 77, 'Walter Benítez': 76, 'Johan Bakayoko': 77, 'Couhaib Driouech': 74, 'Joey Veerman': 76 },
+  Flamengo: { 'Giorgian de Arrascaeta': 83, Pedro: 79, Gerson: 80, Jorginho: 80, 'Agustín Rossi': 77, 'Léo Pereira': 78, Danilo: 76, 'Luiz Araújo': 75, 'Bruno Henrique': 75 },
+  Palmeiras: { 'Raphael Veiga': 80, Weverton: 78, 'Gustavo Gómez': 78, Rony: 75, Mauricio: 76, Murilo: 77, 'Aníbal Moreno': 75 },
+  'Inter Miami CF': { 'Lionel Messi': 88, 'Luis Suárez': 78, 'Sergio Busquets': 76, 'Jordi Alba': 76, 'Rodrigo De Paul': 80, 'Tadeo Allende': 72, 'Oscar Ustari': 66, 'Telasco Segovia': 72 },
+  'LA Galaxy': { 'Riqui Puig': 77, 'Joseph Paintsil': 74, 'Gabriel Pec': 72, 'Maya Yoshida': 70, 'Novak Micovic': 70, 'Marco Reus': 78, 'Gastón Brugman': 70, 'Julian Hall': 62 },
+};
+
+/** Usual shape of each club (a formation id from `tactics.ts`). */
+const SHAPE: Record<string, string> = {
+  'Manchester City': '4-3-3', Liverpool: '4-2-3-1', Arsenal: '4-3-3', Chelsea: '4-2-3-1', 'Manchester United': '3-4-3', 'Tottenham Hotspur': '4-3-3',
+  'Real Madrid': '4-3-3', 'FC Barcelona': '4-3-3', 'Atlético de Madrid': '4-4-2', Inter: '3-5-2', Juventus: '3-5-2', 'AC Milan': '3-5-2', Napoli: '4-3-3',
+  'Bayern München': '4-2-3-1', 'Borussia Dortmund': '4-2-3-1', 'Bayer Leverkusen': '3-4-3', 'Paris Saint-Germain': '4-3-3', 'Olympique de Marseille': '4-3-3',
+  'Al Hilal': '4-2-3-1', 'Al Nassr': '4-2-3-1', 'Al Ittihad': '4-3-3', 'Al Ahli': '4-2-3-1', Benfica: '4-3-3', 'FC Porto': '4-3-3', 'Sporting CP': '3-4-3',
+  Ajax: '4-3-3', 'PSV Eindhoven': '4-3-3', Flamengo: '4-2-3-1', Palmeiras: '4-3-3', 'Inter Miami CF': '4-3-3', 'LA Galaxy': '4-3-3',
+};
+
+/** `REAL_CLUB_NAMES` with a coach, usual formation, starter squad and approximate ratings attached to the clubs above (matched by name). */
 export const REAL_CLUBS_WITH_SQUADS: DataPack = {
   ...REAL_CLUB_NAMES,
   id: 'real-clubs-starter-squads-2025',
-  name: 'Real clubs with starter squads (unverified)',
-  source: 'Club names and squads written from the authors\' memory of 2025/26; unverified, may be outdated or incorrect',
-  licence: 'Names only; trademarks and likenesses belong to their owners; no ratings, images or official data included',
+  name: 'Real clubs with starter squads and ratings (unverified)',
+  source: "Names, squads, formations and rough ratings written from the authors' recollection of 2025/26 (FC 26-era levels); unverified, may be outdated or incorrect; not EA data",
+  licence: 'Names only; trademarks and likenesses belong to their owners; ratings are the authors\' own estimates; no images or official data included',
   leagues: Object.fromEntries(Object.entries(REAL_CLUB_NAMES.leagues).map(([lid, list]) => [lid, list.map((c): PackClub => {
     const s = S[c.name];
     if (!s) return c;
-    const players: PackPlayer[] = s.players.map(([name, position, nationality, birthYear]) => ({ name, position, nationality, birthYear }));
-    return { ...c, players, ...(s.coach ? { manager: { name: s.coach[0], nationality: s.coach[1], birthYear: s.coach[2] } } : {}) };
+    const ratings = R[c.name] ?? {};
+    const players: PackPlayer[] = s.players.filter(([name]) => !EXCLUDE.has(`${c.name}|${name}`)).map(([name, position, nationality, birthYear]) => ({
+      name, position, nationality, birthYear, ...(ratings[name] !== undefined ? { overall: ratings[name] } : {}),
+    }));
+    const formation = SHAPE[c.name];
+    return { ...c, players, ...(formation ? { formation } : {}), ...(s.coach ? { manager: { name: s.coach[0], nationality: s.coach[1], birthYear: s.coach[2] } } : {}) };
   })])),
 };

@@ -124,3 +124,27 @@ describe('starter squads pack', () => {
     assertValid(w, { checkLedger: true });
   }, 180_000);
 });
+
+describe('starter squads: ratings, formations and consistency', () => {
+  it('has no player at two clubs, plausible ratings, valid formations, and the rated stars lead their squad', async () => {
+    const { REAL_CLUBS_WITH_SQUADS } = await import('../src');
+    const clubs = Object.values(REAL_CLUBS_WITH_SQUADS.leagues).flat().filter((c) => c.players?.length);
+    const seen = new Map<string, string>();
+    for (const c of clubs) for (const p of c.players!) {
+      expect(seen.has(p.name), `${p.name} at ${seen.get(p.name)} and ${c.name}`).toBe(false);
+      seen.set(p.name, c.name);
+      if (p.overall !== undefined) expect(p.overall).toBeGreaterThanOrEqual(55);
+      if (p.overall !== undefined) expect(p.overall).toBeLessThanOrEqual(92);
+    }
+    expect(clubs.every((c) => c.formation)).toBe(true);
+    const rated = clubs.flatMap((c) => c.players!).filter((p) => p.overall !== undefined).length;
+    expect(rated / seen.size).toBeGreaterThan(0.95);
+    const w = createWorld(defaultWorldConfig('dp-rated', 'compact'));
+    applyDataPack(w, parseDataPack(JSON.stringify(REAL_CLUBS_WITH_SQUADS)));
+    const city = Object.values(w.clubs).find((c) => c.name === 'Manchester City')!;
+    expect(city.tactics.formation).toBe('4-3-3');
+    const haaland = squadOf(w, city.id).find((p) => p.name === 'Erling Haaland')!;
+    expect(Math.abs(overall(haaland) - 91)).toBeLessThan(2);
+    assertValid(w);
+  }, 120_000);
+});
