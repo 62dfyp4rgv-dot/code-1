@@ -21,7 +21,10 @@ tracing contours and the Kinematics agent is shaping strokes in between.
     KinematicsAgent            --trajectory-->   HandAgent       (the Hand)
     HandAgent                  --layer_done-->   CriticAgent     (the Mind)
     CriticAgent                --refine------>   PlannerAgent        (self-correction loop)
+    CriticAgent                --erase_guides->  HandAgent           (rub out the construction lines)
+    HandAgent                  --guides_erased-> CriticAgent         (only then is the job signed off)
     CriticAgent sets studio.job_complete = True  -> the main loop ends -> files are saved.
+    (The skeleton is drawn on a separate guide layer, so a real eraser pass can remove it at the end.)
 
   Eye      reads a concept / seed image, analyses it (Gaussian blur, Sobel, Canny non-max
            suppression + hysteresis), chains edge pixels, fits cubic Beziers with Schneider's
@@ -927,6 +930,15 @@ class HandAgent(Agent):
         self.strokes_done = 0
         self.stroke_total = 0
         self.last_stamp: Optional[tuple] = None
+        self.guide = pygame.Surface((CANVAS, CANVAS), pygame.SRCALPHA)     # construction lines live on their own layer
+        self.guide.fill((0, 0, 0, 0))                                      # ... so they can be rubbed out at the end
+        self.guide_trajs: list[np.ndarray] = []
+        self.erasing = False
+        self.erase_paths: list[tuple[np.ndarray, np.ndarray]] = []         # (xy, cumulative arc length) per guide stroke
+        self.erase_k, self.erase_s = 0, 0.0
+        self.erase_travel: Optional[dict] = None
+        self.erase_t = 0.0
+        self.guides_erased = False
         self.wear = 0.0                             # drawn length since the last sharpening
         self.sharpenings = 0
         self.pause_t = 0.0                          # remaining time of a deliberate pause (sharpening / stepping back)
@@ -942,12 +954,19 @@ class HandAgent(Agent):
             if m.topic == "trajectory":
                 self.queue.append(("traj", m.payload))
                 self.stroke_total += 1
+                if m.payload.kind == "skeleton":
+                    self.guide_trajs.append(m.payload.xy)
+            elif m.topic == "erase_guides":
+                self._start_erasing()
             elif m.topic == "layer_end":
                 self.queue.append(("end", m.payload))
         budget = dt
         guard = 0
         while budget > 1e-9 and guard < 400:
             guard += 1
+            if self.erasing:
+                budget = self._erase_step(budget)
+                continue
             if self.pause_t > 1e-9:                      # pencil held off the paper: sharpening or stepping back to look
                 use = min(budget, self.pause_t)
                 self.pause_t -= use
@@ -997,6 +1016,61 @@ class HandAgent(Agent):
                         self._pause(1.3, f"sharpening pencil (#{self.sharpenings}) - nib was blunt", 26.0)
                         self.log(f"nib worn after {WEAR_LEN:.0f}px of line - pausing to sharpen the pencil (#{self.sharpenings})")
 
+    # ---- the eraser: rub out the construction lines, following the original gesture strokes
+    def _start_erasing(self) -> None:
+        self.erase_paths = []
+        for xy in self.guide_trajs:
+            s = np.concatenate([[0], np.cumsum(np.hypot(*np.diff(xy, axis=0).T))])
+            if s[-1] > 1:
+                self.erase_paths.append((xy, s))
+        if not self.erase_paths:
+            self._finish_erasing()
+            return
+        self.erasing, self.erase_k, self.erase_s, self.erase_t = True, 0, 0.0, 0.0
+        self.erase_travel = self._plan_travel(self.pen, self.erase_paths[0][0][0])
+        self.log(f"rubbing out {len(self.erase_paths)} construction strokes")
+
+    def _finish_erasing(self) -> None:
+        self.guide.fill((0, 0, 0, 0))                              # whatever crumbs are left
+        self.erasing, self.guides_erased = False, True
+        self.z = 12.0
+        self.send("Critic", "guides_erased", len(self.erase_paths))
+
+    def _erase_step(self, budget: float) -> float:
+        """Advance the eraser by `budget` seconds. Returns the unused time."""
+        if self.erase_travel is not None:                          # eraser lifted, travelling to the next stroke
+            tv = self.erase_travel
+            use = min(budget, tv["dur"] - self.erase_t)
+            self.erase_t += use
+            k = min(len(tv["xy"]) - 1, int(self.erase_t * FS))
+            self.pen, self.z = tv["xy"][k], tv["z"][k]
+            self.set_status(f"eraser: moving to guide stroke {self.erase_k + 1}/{len(self.erase_paths)}")
+            if self.erase_t >= tv["dur"] - 1e-9:
+                self.erase_travel, self.erase_t = None, 0.0
+            return budget - use
+        xy, s = self.erase_paths[self.erase_k]
+        speed = 950.0                                               # px/s: erasing is a quick scrubbing motion
+        use = min(budget, (s[-1] - self.erase_s) / speed)
+        s0, s1 = self.erase_s, self.erase_s + use * speed
+        for q in np.arange(s0, s1 + 1e-9, 5.0):                      # one rub every 5 px along the stroke
+            j = min(len(xy) - 1, int(np.searchsorted(s, q)))
+            wob = 4.0 * math.sin(q * 0.55)                           # scrubbing back and forth across the line
+            tang = xy[min(j + 1, len(xy) - 1)] - xy[max(j - 1, 0)]
+            nrm = np.array([-tang[1], tang[0]]) / (np.hypot(*tang) + 1e-9)
+            p = xy[j] + nrm * wob
+            self.pg.draw.circle(self.guide, (0, 0, 0, 0), (int(p[0]), int(p[1])), 9)
+            self.pen, self.z = p, 0.0
+        self.erase_s = s1
+        self.set_status(f"eraser: rubbing out construction line {self.erase_k + 1}/{len(self.erase_paths)}")
+        if self.erase_s >= s[-1] - 1e-9:
+            self.erase_k += 1
+            self.erase_s = 0.0
+            if self.erase_k >= len(self.erase_paths):
+                self._finish_erasing()
+            else:
+                self.erase_travel = self._plan_travel(self.pen, self.erase_paths[self.erase_k][0][0])
+        return budget - use
+
     @staticmethod
     def _plan_travel(a: np.ndarray, b: np.ndarray) -> dict:
         """Pen-up reach to the next stroke: Fitts-style duration, minimum-jerk path, parabolic lift."""
@@ -1030,6 +1104,7 @@ class HandAgent(Agent):
         if i1 < i0 or len(tr.xy) < 2:
             return
         lo = max(0, i0 - 1)
+        target = self.guide if tr.kind == "skeleton" else self.canvas           # construction lines go on the erasable layer
         for i in range(lo, i1):
             a, b = tr.xy[i], tr.xy[i + 1]
             dist = float(np.hypot(*(b - a)))
@@ -1040,7 +1115,7 @@ class HandAgent(Agent):
             for k in range(1, steps + 1):
                 q = a + (b - a) * (k / steps)
                 spr = self._sprite(w / 2, tr.color, al)
-                self.canvas.blit(spr, (int(q[0] - spr.get_width() / 2 + 0.5), int(q[1] - spr.get_height() / 2 + 0.5)))
+                target.blit(spr, (int(q[0] - spr.get_width() / 2 + 0.5), int(q[1] - spr.get_height() / 2 + 0.5)))
 
 
 # =====================================================================================
@@ -1059,6 +1134,7 @@ class CriticAgent(Agent):
         self.score = 0.0
         self.metrics = dict(tone=0.0, edge=0.0)
         self.history: list[dict] = []
+        self.finalizing = False               # waiting for the Hand to rub out the construction lines
         self.prev_hatch_score = 0.0           # score at the previous shading review: a pass must keep paying off
         self.outstanding = 0                  # refine requests sent whose layer the Planner has not announced yet
 
@@ -1072,8 +1148,12 @@ class CriticAgent(Agent):
             elif m.topic == "layer_done":
                 self.finished.add(m.payload)
                 self._review(m.payload)
+            elif m.topic == "guides_erased":
+                self.log("construction lines are gone - signing the drawing off")
+                self.set_status(f"final score {self.score:.2f} - drawing signed off")
+                self.studio.job_complete = True
         pl = self.studio.planner
-        if not self.studio.job_complete and pl.done and self.announced and self.announced <= self.finished and not pl.refine_jobs and self.outstanding == 0:
+        if not self.studio.job_complete and not self.finalizing and pl.done and self.announced and self.announced <= self.finished and not pl.refine_jobs and self.outstanding == 0:
             self._finalize()
 
     # ---- measure the real canvas against the master plan
@@ -1131,9 +1211,14 @@ class CriticAgent(Agent):
         self.metrics = dict(tone=corr, edge=recall)
         verdict = "quality target reached" if self.score >= self.target else "best effort within the correction budget (target not reached)"
         self.history.append(dict(after="final", tone=round(corr, 3), edge=round(recall, 3), score=round(self.score, 3)))
-        self.log(f"FINAL review: score {self.score:.2f} (target {self.target:.2f}) - {verdict}. Job complete.")
-        self.set_status(f"final score {self.score:.2f} - {verdict}")
-        self.studio.job_complete = True
+        self.log(f"FINAL review: score {self.score:.2f} (target {self.target:.2f}) - {verdict}.")
+        self.finalizing = True
+        if self.studio.hand.guide_trajs:
+            self.set_status(f"final score {self.score:.2f} - {verdict}; asking the Hand to erase the guides")
+            self.log("asking the Hand to rub out the construction lines. Job complete once they are gone.")
+            self.send("Hand", "erase_guides", None)
+        else:
+            self.studio.job_complete = True
 
 
 # =====================================================================================
@@ -1158,6 +1243,8 @@ class Studio:
         self.t_start = time.perf_counter()
         self.sim_time = 0.0
         self._prog = 0.0
+        self.tl_frames: list = []                           # time-lapse recording
+        self.tl_stride = 4
         self.W, self.H = CANVAS + 40 + HUD_W, CANVAS + 40
         self.screen = pygame.display.set_mode((self.W, self.H), pygame.RESIZABLE | pygame.SCALED) if not a.headless else pygame.display.set_mode((self.W, self.H))
         pygame.display.set_caption("AI Hands - autonomous multi-agent drawing")
@@ -1244,12 +1331,16 @@ class Studio:
                     pg.image.save(self.screen, os.path.join(self.args.out, f"frame_{frame:06d}.png"))
             if not self.headless:
                 pg.display.flip()
+            if self.args.timelapse and frame % self.tl_stride == 0:
+                self._capture()
             frame += 1
             if time.perf_counter() - self.t_start > self.args.max_seconds:
                 self.log("Studio", "wall-clock limit reached - finishing")
                 self.job_complete = True
         # ---- job complete: hold the finished drawing, write files
         self.save_outputs()
+        if self.args.timelapse:
+            self._write_timelapse()
         if not self.headless:
             t0 = time.perf_counter()
             while time.perf_counter() - t0 < self.args.hold:
@@ -1261,11 +1352,38 @@ class Studio:
                 self.clock.tick(30)
         pg.quit()
 
+    # ---- time-lapse: keep at most tl_frames evenly spread frames; when full, drop every other one and halve the rate
+    def _capture(self) -> None:
+        from PIL import Image
+        if self.headless:
+            self.render()
+        raw = self.pg.image.tostring(self.screen, "RGB")
+        img = Image.frombytes("RGB", self.screen.get_size(), raw)
+        self.tl_frames.append(img.resize((img.width // 2, img.height // 2), Image.LANCZOS))
+        if len(self.tl_frames) >= 2 * self.args.tl_frames:
+            self.tl_frames = self.tl_frames[::2]
+            self.tl_stride *= 2
+
+    def _write_timelapse(self) -> None:
+        self.render()
+        self._capture()
+        fr = self.tl_frames
+        step = max(1, math.ceil(len(fr) / self.args.tl_frames))
+        fr = fr[::step] + [fr[-1]] * 14                                    # linger on the finished drawing
+        from PIL import Image
+        fr = [f.quantize(colors=32, method=Image.Quantize.FASTOCTREE, dither=Image.Dither.NONE) for f in fr]   # small, flat palette: tiny file
+        fr[0].save(self.args.timelapse, save_all=True, append_images=fr[1:], duration=70, loop=0, optimize=False)
+        print(f"saved time-lapse {self.args.timelapse} ({len(fr)} frames)")
+
     def save_outputs(self) -> None:
         os.makedirs(self.args.out, exist_ok=True)
         name = self.args.concept if not self.args.image else os.path.splitext(os.path.basename(self.args.image))[0]
         png = os.path.join(self.args.out, f"drawing_{name}.png")
-        self.pg.image.save(self.canvas, png)
+        final = self.canvas
+        if not self.hand.guides_erased and self.hand.guide_trajs:                # aborted early: keep the guides in the file
+            final = self.canvas.copy()
+            final.blit(self.hand.guide, (0, 0))
+        self.pg.image.save(final, png)
         with open(os.path.join(self.args.out, f"plan_{name}.json"), "w") as f:
             json.dump(dict(concept=name, canvas=[CANVAS, CANVAS], layers=LAYER_ORDER, paths=self.planner.paths), f)
         with open(os.path.join(self.args.out, f"run_log_{name}.json"), "w") as f:
@@ -1309,6 +1427,7 @@ class Studio:
         pg, scr = self.pg, self.screen
         scr.fill((26, 27, 33))
         scr.blit(self.canvas, (20, 20))
+        scr.blit(self.hand.guide, (20, 20))
         pg.draw.rect(scr, (70, 72, 84), (19, 19, CANVAS + 2, CANVAS + 2), 1)
         self._draw_nib()
         if self.show_hud:
@@ -1322,6 +1441,16 @@ class Studio:
             return
         x, y = 20 + h.pen[0], 20 + h.pen[1]
         z = h.z
+        if h.erasing:                                       # a pink block eraser instead of the pencil
+            ang = math.radians(-58)
+            d = np.array([math.cos(ang), math.sin(ang)])
+            n = np.array([-d[1], d[0]])
+            tip = np.array([x - z * 0.55, y - z])
+            body = [tip + n * 12, tip - n * 12, tip + d * 46 - n * 12, tip + d * 46 + n * 12]
+            pg.draw.polygon(scr, (238, 150, 162), body)
+            pg.draw.polygon(scr, (60, 110, 190), [tip + d * 46 + n * 12, tip + d * 46 - n * 12, tip + d * 110 - n * 12, tip + d * 110 + n * 12])
+            pg.draw.polygon(scr, (250, 250, 250), [tip + d * 52 + n * 12, tip + d * 52 - n * 12, tip + d * 58 - n * 12, tip + d * 58 + n * 12])
+            return
         pg.draw.ellipse(scr, (60, 55, 50), (x - 4 + z * 0.5, y - 1 + z * 0.4, 8 + z * 0.2, 4 + z * 0.1), 0) if z > 0.5 else None
         tx, ty = x - z * 0.55, y - z * 1.0                 # tip position (lifted)
         ang = math.radians(-62)
@@ -1448,6 +1577,8 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--hold", type=float, default=8.0, help="seconds to show the finished drawing")
     ap.add_argument("--headless", action="store_true", help="no window; run flat out and write files")
     ap.add_argument("--shots", type=int, default=0, help="headless: save a full-window frame every N frames")
+    ap.add_argument("--timelapse", help="write an animated GIF of the whole drawing process to this path (needs Pillow)")
+    ap.add_argument("--tl-frames", type=int, default=140, help="maximum number of GIF frames (the recording thins itself out)")
     ap.add_argument("--no-hud", action="store_true")
     ap.add_argument("--verbose", action="store_true", help="print the agents' message log")
     ap.add_argument("--max-seconds", type=float, default=3600, help="wall-clock safety limit")

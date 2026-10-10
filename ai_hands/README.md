@@ -6,8 +6,9 @@ Autonomous multi-agent simulation of an AI drawing vector art stroke by stroke (
     python ai_hands.py                          # still life, 4x speed, live window
     python ai_hands.py --concept landscape      # still_life | landscape | mandala
     python ai_hands.py --image photo.jpg        # trace and draw your own image
+    python ai_hands.py --timelapse lapse.gif    # also record an animated GIF of the whole process (needs Pillow)
     python ai_hands.py --headless --speed 100   # no window; writes PNG + SVG + plan.json + run_log.json
-    pytest -q test_ai_hands.py                  # 25 tests
+    pytest -q test_ai_hands.py                  # 29 tests
 
 Keys: `+`/`-` speed, `space` pause, `h` HUD, `esc` quit (saves what is drawn so far).
 
@@ -18,10 +19,12 @@ Planner (Eye) -> Kinematics (Muscle) -> Hand -> Critic (Mind) -> refine requests
 - Slows into tight curves (two-thirds power law), eases in/out, trembles (8-12 Hz) and drifts; presses harder on darker areas.
 - The pencil **wears**: lines get fatter and softer until the hand pauses to **sharpen** it (HUD: nib wear gauge).
 - It **steps back** to look after each finished layer.
+- At the end it **erases the construction lines**: the skeleton lives on a separate guide layer, the Critic asks the Hand to
+  rub it out (`erase_guides`), the Hand replies `guides_erased`, and only then is the job signed off.
 
 ## Outputs
 `drawing_<name>.png` (what the pencil drew), `drawing_<name>.svg` (the plan as layered cubic-Bezier vector art, one `<g>` per layer),
-`plan_<name>.json` (the Planner's path queue), `run_log_<name>.json` (agent messages and the Critic's score history).
+`lapse.gif` (with `--timelapse`), `plan_<name>.json` (the Planner's path queue), `run_log_<name>.json` (agent messages and the Critic's score history).
 
 ## Honest limits
 - The Critic's score is a tone-correlation + edge-recall heuristic, not an aesthetic judgement. On the mandala (smooth gradients drawn

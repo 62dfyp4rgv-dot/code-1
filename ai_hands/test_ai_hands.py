@@ -363,3 +363,77 @@ def test_critic_budget_is_adaptive_and_stops_when_hatching_stops_paying_off(tmp_
     log = json.loads((tmp_path / "run_log_mandala.json").read_text())
     assert 1 <= log["passes"]["hatch"] <= 8
     assert any("diminishing returns" in e["msg"] for e in log["log"]) or log["passes"]["hatch"] == 8
+
+
+# ------------------------------------------------------------------ v3 additions: eraser, guide layer, time-lapse
+def _alpha_sum(surf):
+    import pygame
+    return int(pygame.surfarray.pixels_alpha(surf).astype(int).sum())
+
+
+def test_construction_lines_go_on_their_own_layer_and_the_eraser_removes_them():
+    studio, hand = _hand_rig()
+    kin = ah.KinematicsAgent(studio, 3)
+    tr = kin.shape(path("skeleton", STRAIGHT))
+    hand.pen = np.array([50.0, 400.0])
+    hand.queue.append(("traj", tr))
+    hand.guide_trajs.append(tr.xy)
+    for _ in range(100):
+        hand.step(0.02)
+    assert _alpha_sum(hand.guide) > 0                                        # the guide stroke is on the guide layer...
+    assert _ink(hand) == 0                                                   # ...and none of it is on the drawing itself
+    studio.bus.send("Critic", "Hand", "erase_guides", None)
+    seen_erasing = False
+    for _ in range(400):
+        hand.step(0.02)
+        seen_erasing |= hand.erasing
+        if hand.guides_erased:
+            break
+    assert seen_erasing and hand.guides_erased and not hand.erasing
+    assert _alpha_sum(hand.guide) == 0                                       # rubbed out completely
+    assert any(m.topic == "guides_erased" for m in studio.bus.boxes["Critic"])   # and the Critic was told
+
+
+def test_graphite_strokes_are_never_touched_by_the_eraser():
+    studio, hand = _hand_rig()
+    kin = ah.KinematicsAgent(studio, 3)
+    hand.pen = np.array([50.0, 400.0])
+    for kind, y in (("skeleton", 400), ("contour", 400)):
+        seg = [[[50, y], [150, y], [250, y], [350, y]]]
+        hand.queue.append(("traj", kin.shape(path(kind, seg))))
+        if kind == "skeleton":
+            hand.guide_trajs.append(hand.queue[-1][1].xy)
+    for _ in range(200):
+        hand.step(0.02)
+    before = _ink(hand)
+    assert before > 0
+    studio.bus.send("Critic", "Hand", "erase_guides", None)
+    for _ in range(400):
+        hand.step(0.02)
+        if hand.guides_erased:
+            break
+    assert _ink(hand) == before                                              # real pencil lines stay
+
+
+def test_the_job_is_only_signed_off_after_the_construction_lines_are_erased(tmp_path):
+    out = run_cli("--concept", "landscape", "--speed", "400", "--quality", "0.4", "--out", str(tmp_path))
+    assert out.returncode == 0, out.stderr[-800:]
+    msgs = [e["msg"] for e in json.loads((tmp_path / "run_log_landscape.json").read_text())["log"]]
+    i_ask = next(i for i, m in enumerate(msgs) if "rub out the construction lines" in m)
+    i_rub = next(i for i, m in enumerate(msgs) if m.startswith("rubbing out"))
+    i_gone = next(i for i, m in enumerate(msgs) if "construction lines are gone" in m)
+    assert i_ask < i_rub < i_gone                                            # ask -> rub out -> only then signed off
+    import pygame
+    a = pygame.surfarray.array3d(pygame.image.load(str(tmp_path / "drawing_landscape.png"))).astype(int)
+    assert ((a[..., 2] - a[..., 0]) > 12).sum() == 0                         # no blue guide ink left in the saved drawing
+
+
+def test_timelapse_gif_is_written_and_thins_itself_to_the_frame_budget(tmp_path):
+    from PIL import Image
+    gif = tmp_path / "lapse.gif"
+    out = run_cli("--concept", "landscape", "--speed", "400", "--quality", "0.4", "--timelapse", str(gif), "--tl-frames", "12", "--out", str(tmp_path))
+    assert out.returncode == 0, out.stderr[-800:]
+    im = Image.open(gif)
+    assert 3 <= im.n_frames <= 30                                            # honoured the budget (+ the lingering last frames merge)
+    assert im.size == ((ah.CANVAS + 40 + ah.HUD_W) // 2, (ah.CANVAS + 40) // 2)
+    assert gif.stat().st_size < 4_000_000
