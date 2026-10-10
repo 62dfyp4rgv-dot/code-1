@@ -18,3 +18,4 @@ export type { SqlDriver, SqlValue } from './persistence/driver';
 export { encodeWorld, decodeWorld, checksumOf, canonicalOrder, assertChunkList, CHUNK_ORDER, type Chunk } from './persistence/codec';
 export { parseDataPack, applyDataPack, DataPackError, type DataPack, type PackClub, type PackPlayer, type PackManager } from './world/datapack';
 export { REAL_CLUB_NAMES } from './data/realClubNames';
+export { REAL_CLUBS_WITH_SQUADS } from './data/realSquads';

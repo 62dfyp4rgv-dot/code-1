@@ -90,7 +90,7 @@ function safeCrest(v: unknown, what: string): string {
 
 function optYear(v: unknown, what: string): number | undefined {
   if (v === undefined) return undefined;
-  if (typeof v !== 'number' || !Number.isInteger(v) || v < 1960 || v > 2015) throw new DataPackError(`${what} must be a birth year between 1960 and 2015`);
+  if (typeof v !== 'number' || !Number.isInteger(v) || v < 1930 || v > 2015) throw new DataPackError(`${what} must be a birth year between 1930 and 2015`);
   return v;
 }
 

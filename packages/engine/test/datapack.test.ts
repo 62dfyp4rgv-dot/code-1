@@ -107,3 +107,20 @@ describe('pack-from-csv tool', () => {
     expect(() => buildPack(clubs, 'league,club,player,position\nENG1,"Example, United",X,QQ\n', { id: 'csv', name: 'CSV', source: 's', licence: 'l' })).toThrow(/position/);
   });
 });
+
+describe('starter squads pack', () => {
+  it('validates, attaches to the right clubs and applies without breaking the world', async () => {
+    const { REAL_CLUBS_WITH_SQUADS } = await import('../src');
+    const parsed = parseDataPack(JSON.stringify(REAL_CLUBS_WITH_SQUADS));
+    const withPlayers = Object.values(parsed.leagues).flat().filter((c) => c.players?.length);
+    expect(withPlayers.length).toBeGreaterThanOrEqual(30);
+    const names = Object.values(parsed.leagues).flat().map((c) => c.name);
+    expect(new Set(names).size).toBe(names.length);
+    const w = createWorld(defaultWorldConfig('dp-squads', 'compact'));
+    const info = applyDataPack(w, parsed);
+    expect(info.applied.players).toBeGreaterThan(30);
+    assertValid(w);
+    advanceDays(w, 40);
+    assertValid(w, { checkLedger: true });
+  }, 180_000);
+});

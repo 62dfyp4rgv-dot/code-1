@@ -4,7 +4,8 @@ The simulation generates a fictional universe. A **data pack** overlays real-wor
 
 ## What is bundled, and what is not
 * **Bundled:** `REAL_CLUB_NAMES` (`packages/engine/src/data/realClubNames.ts`): club names, short codes and cities for ENG, ESP, ITA, GER, FRA, SAU, POR, NED, BRA and USA (MLS) top flights, listed strongest-first. Compiled from general public knowledge for the 2025/26 season; **not verified** against an official source.
-* **Not bundled:** logos/crests, player names or photographs, coach names, ratings, wages, fixtures, finances. Logos and likenesses are trademarked/licensed (clubs, leagues, FIFPRO, game-data companies) and ratings for real players would be invented by this project. Player and coach names are therefore **not** pre-filled: an unverified roster would present guesses as facts.
+* **Bundled, optional, unverified:** `REAL_CLUBS_WITH_SQUADS` (`src/data/realSquads.ts`): the same clubs plus a head coach and a first-team core (12-14 players, best first, with nationality and approximate birth year) for about 30 well-known clubs, written from the authors' memory of the 2025/26 season. Transfers, coaching changes and birth years may be wrong or outdated. No ratings are included: attributes stay generated and are matched by list order.
+* **Not bundled:** logos/crests, photographs, ratings, wages, fixtures, finances, and squads for the other clubs. Logos and likenesses are trademarked/licensed (clubs, leagues, FIFPRO, game-data companies), so the app instead lets you import your own image files as crests (matched to clubs by filename); you are responsible for having the right to use them.
 * Reasons: the project's rule is not to fabricate current player attributes or club data, and not to ship third-party marks it has no licence for. You can still get a fully real-named game by supplying a pack you have the right to use.
 
 ## How a pack is applied
