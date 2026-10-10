@@ -5,7 +5,7 @@
  *  - the newest `keepRevisions` (>= 2) revisions are retained.
  * The IndexedDB factory is injectable so the logic is unit-tested with `fake-indexeddb`.
  */
-import { SaveCorruptedError, decodeWorld, encodeWorld, type SlotInfo, type WorldState } from '@fu/engine';
+import { SaveCorruptedError, assertChunkList, decodeWorld, encodeWorld, type SlotInfo, type WorldState } from '@fu/engine';
 import { checksumOf, sortCanonical, type ChunkLike } from './checksum';
 import type { LoadResult, SaveStore, VerifyResult } from './types';
 import { MAX_SLOT, MIN_SLOT } from './types';
@@ -211,9 +211,12 @@ export class IdbSaveStore implements SaveStore {
   }
 
   async importSlot(slot: number, name: string, doc: string): Promise<SlotInfo> {
-    const parsed = JSON.parse(doc) as { format?: string; checksum?: string; chunks?: ChunkLike[] };
-    if (parsed.format !== 'football-universe-save' || !parsed.chunks) throw new Error('Not a Football Universe save file');
-    if (checksumOf(parsed.chunks) !== parsed.checksum) throw new SaveCorruptedError('Imported file failed its checksum');
-    return this.save(slot, name, decodeWorld(parsed.chunks));
+    let parsed: { format?: string; checksum?: string; chunks?: unknown };
+    try { parsed = JSON.parse(doc) as typeof parsed; } catch { throw new Error('Not a Football Universe save file'); }
+    if (typeof parsed !== 'object' || parsed === null || parsed.format !== 'football-universe-save' || !parsed.chunks) throw new Error('Not a Football Universe save file');
+    assertChunkList(parsed.chunks);
+    const chunks = sortCanonical(parsed.chunks);
+    if (checksumOf(chunks) !== parsed.checksum) throw new SaveCorruptedError('Imported file failed its checksum');
+    return this.save(slot, name, decodeWorld(chunks));
   }
 }

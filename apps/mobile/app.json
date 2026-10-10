@@ -8,8 +8,25 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "splash": { "image": "./assets/splash-icon.png", "resizeMode": "contain", "backgroundColor": "#0B3D2E" },
-    "ios": { "supportsTablet": true, "bundleIdentifier": "app.footballuniverse.mobile" },
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0B3D2E"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "app.footballuniverse.mobile",
+      "buildNumber": "1",
+      "requireFullScreen": false,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIViewControllerBasedStatusBarAppearance": true,
+        "CFBundleAllowMixedLocalizations": true
+      },
+      "config": {
+        "usesNonExemptEncryption": false
+      }
+    },
     "android": {
       "package": "app.footballuniverse.mobile",
       "adaptiveIcon": {
@@ -20,7 +37,17 @@
       },
       "predictiveBackGestureEnabled": false
     },
-    "web": { "bundler": "metro", "output": "single", "favicon": "./assets/favicon.png" },
-    "plugins": ["expo-router", "expo-sqlite"]
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sqlite"
+    ],
+    "runtimeVersion": {
+      "policy": "appVersion"
+    }
   }
 }

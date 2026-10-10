@@ -15,4 +15,4 @@ export * from './world/actions';
 export { isWindowOpen, windowDaysLeft } from './world/transfers';
 export { SaveRepository, SaveCorruptedError, type SlotInfo } from './persistence/repository';
 export type { SqlDriver, SqlValue } from './persistence/driver';
-export { encodeWorld, decodeWorld } from './persistence/codec';
+export { encodeWorld, decodeWorld, checksumOf, canonicalOrder, assertChunkList, CHUNK_ORDER, type Chunk } from './persistence/codec';
