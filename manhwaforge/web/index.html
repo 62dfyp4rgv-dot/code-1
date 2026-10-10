@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ManhwaForge Studio</title>
+<meta name="description" content="Autonomous multi-agent manhwa chapter generator">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23161422'/%3E%3Cpath d='M9 23V9l7 9 7-9v14' fill='none' stroke='%23ffbe46' stroke-width='3' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="logo" aria-hidden="true">M</span><div><h1>ManhwaForge Studio</h1><p>Story &rarr; storyboard &rarr; art &rarr; lettering &rarr; chapter, fully autonomous</p></div></div>
+  <div class="chips" id="chips" aria-label="System settings"></div>
+</header>
+
+<div id="offline" class="banner warn" hidden>Can&rsquo;t reach the ManhwaForge API. Retrying&hellip;</div>
+
+<main class="layout">
+  <section class="col-input" aria-labelledby="new-h">
+    <form id="form" class="card" autocomplete="off">
+      <h2 id="new-h">New chapter</h2>
+
+      <label class="field"><span>Title <i>(optional)</i></span>
+        <input id="title" name="title" maxlength="120" placeholder="Let the Director name it">
+      </label>
+
+      <label class="field"><span>Story, script or description</span>
+        <textarea id="story" name="story" rows="11" placeholder="Describe the chapter, or paste a script.&#10;&#10;Characters:&#10;- Jin: tall, messy black hair, crimson eyes, long black coat&#10;&#10;Rain hammered the empty streets at midnight. &quot;You can&#8217;t go alone!&quot; Mira shouted&hellip;"></textarea>
+      </label>
+      <div class="row-between"><button type="button" class="link" id="example">Load an example story</button><span class="hint" id="count">0 chars</span></div>
+
+      <div class="field">
+        <span>Sketches &amp; files <i>(optional)</i></span>
+        <div id="drop" class="drop" tabindex="0" role="button" aria-label="Add sketches or script files">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+          <b>Drop files here</b> or click to browse
+          <small>Sketches (png, jpg, webp) steer composition, palette and style. Scripts (txt, md, json) are read as story.</small>
+        </div>
+        <input id="file" type="file" multiple hidden accept=".png,.jpg,.jpeg,.webp,.gif,.bmp,.txt,.md,.markdown,.json">
+        <ul id="files" class="files"></ul>
+      </div>
+
+      <div class="grid2">
+        <label class="field"><span>Format</span>
+          <select id="format"><option value="webtoon">Vertical-scroll webtoon</option><option value="slides">Visual slides (16:9)</option></select>
+        </label>
+        <label class="field"><span>Art style</span><select id="style"><option value="auto">Auto-detect from input</option></select></label>
+      </div>
+      <div class="grid2">
+        <label class="field"><span>Panels <b id="panelsVal">12</b></span><input id="panels" type="range" min="4" max="40" value="12"></label>
+        <label class="field"><span>Series <i>(keeps characters consistent)</i></span><input id="series" maxlength="60" placeholder="e.g. last-hunter"></label>
+      </div>
+
+      <button id="go" class="primary" type="submit">Generate chapter</button>
+      <p class="fine">Runs start to finish with no approval prompts. At <b>95%</b> it hard-saves the package and halts until you tell it what to do.</p>
+      <p id="formError" class="error" role="alert" hidden></p>
+    </form>
+
+    <section class="card" aria-labelledby="hist-h">
+      <h2 id="hist-h">Recent chapters</h2>
+      <ul id="history" class="history"><li class="empty">Nothing yet.</li></ul>
+    </section>
+  </section>
+
+  <section class="col-monitor" aria-labelledby="mon-h">
+    <div id="empty" class="card empty-state">
+      <h2 id="mon-h">Production monitor</h2>
+      <p>Start a chapter to watch the four agents work in real time: the Director&rsquo;s storyboard, the Artist&rsquo;s renders, the Critic&rsquo;s scores, and the final layout.</p>
+    </div>
+
+    <div id="monitor" hidden>
+      <div class="card">
+        <div class="row-between"><h2 id="jobTitle">&mdash;</h2><span id="pill" class="pill">queued</span></div>
+        <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="barWrap" aria-label="Overall progress">
+          <div class="fill" id="fill"></div><div class="mark" title="95% hard-save threshold"><span>95%</span></div>
+        </div>
+        <dl class="stats">
+          <div><dt>Progress</dt><dd id="sProg">0%</dd></div>
+          <div><dt>Confidence</dt><dd id="sConf">0%</dd></div>
+          <div><dt>Mean amazement</dt><dd id="sAmaz">&ndash;</dd></div>
+          <div><dt>Panels done</dt><dd id="sDone">0/0</dd></div>
+        </dl>
+        <div class="agents" id="agents"></div>
+        <div class="stages" id="stages"></div>
+
+        <div id="halt" class="banner halt" hidden>
+          <b>Halted at 95%. Hard save complete.</b>
+          <p id="haltText"></p>
+          <div class="actions">
+            <a class="btn" id="dlHalt" href="#">Download package (.zip)</a>
+            <button class="btn" type="button" data-read>Read chapter</button>
+          </div>
+          <div class="resume">
+            <label class="field"><span>Manual instruction <i>(nothing runs until you send one)</i></span>
+              <input id="instr" maxlength="200" placeholder="e.g. looks good, finish up"></label>
+            <div class="actions"><button class="btn accent" type="button" id="finalize">Finalize last 5%</button><button class="btn danger" type="button" id="cancel">Stop here</button></div>
+          </div>
+        </div>
+
+        <div id="done" class="banner ok" hidden>
+          <b id="doneText">Chapter complete.</b>
+          <div class="actions"><a class="btn accent" id="dlDone" href="#">Download package (.zip)</a><button class="btn" type="button" data-read>Read chapter</button></div>
+        </div>
+        <div id="failed" class="banner warn" hidden><b>Job did not finish.</b> <span id="failText"></span></div>
+      </div>
+
+      <div class="card">
+        <div class="row-between"><h2>Panels</h2><span class="hint">Gate: Amazement &ge; <b id="gate">7.5</b></span></div>
+        <ul id="panels-grid" class="tiles"></ul>
+      </div>
+
+      <div class="card">
+        <div class="row-between"><h2>Agent log</h2><label class="hint"><input type="checkbox" id="verbose"> show planning detail</label></div>
+        <div id="log" class="log" role="log" aria-live="off" tabindex="0"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="reader" class="reader" hidden role="dialog" aria-modal="true" aria-label="Chapter reader">
+  <div class="reader-bar"><b id="readerTitle"></b><span><a id="readerOpen" target="_blank" rel="noopener">Open in new tab</a><button id="readerClose" type="button">Close</button></span></div>
+  <iframe id="readerFrame" title="Chapter"></iframe>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
