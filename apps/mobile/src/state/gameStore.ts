@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import {
-  SaveCorruptedError, advanceDay, clubFixtures, createWorld, dateInfo, defaultWorldConfig, setHumanClub, validateWorld,
-  type SlotInfo, type Violation, type WorldState,
+  DataPackError, SaveCorruptedError, advanceDay, applyDataPack, clubFixtures, createWorld, dateInfo, defaultWorldConfig, parseDataPack, setHumanClub, validateWorld,
+  type DataPack, type DataPackInfo, type SlotInfo, type Violation, type WorldState,
 } from '@fu/engine';
 import { runSimulation, yieldToUi, type SimPlan, type SimProgress } from '../core/simRunner';
 import { storeKind } from '../core/saves/createStore';
@@ -87,12 +87,45 @@ const frame = async (): Promise<void> => {
   await yieldToUi();
 };
 
+/** How the pending world was generated, so it can be rebuilt (identically) when a data pack is applied or removed. */
+let pendingParams: { seed: string; preset: 'compact' | 'standard' } | null = null;
+
+/** Generate a fresh, fully fictional pending world. Any data pack applied to the previous pending world is dropped. */
 export async function generateWorldForSelection(seed: string, preset: 'compact' | 'standard'): Promise<void> {
   set({ busy: 'generating' });
   try {
     await frame(); // let the spinner paint before the (synchronous) engine call blocks the JS thread
     const w = createWorld(defaultWorldConfig(seed, preset));
+    pendingParams = { seed, preset };
     setPendingWorld(w);
+  } finally {
+    set({ busy: null });
+  }
+}
+
+/**
+ * Apply a data pack (a parsed pack, raw JSON text, or `null` to go back to the fully generated names) to the pending world.
+ *
+ * Idempotent and atomic: the pending world is rebuilt from the same seed/preset (generation is deterministic), the pack is
+ * applied exactly once to that fresh copy, and only then does it replace the pending world. If parsing or applying fails the
+ * existing pending world is left exactly as it was and the error is rethrown. Applying the same pack twice gives the same world.
+ */
+export async function applyDataPackToPending(input: DataPack | string | null): Promise<DataPackInfo | null> {
+  if (!getPendingWorld() || !pendingParams) throw new Error('no generated world');
+  const pack = input === null ? null : parseDataPack(input); // always validated (also parsed packs/objects), before any state is touched
+  const params = pendingParams;
+  set({ busy: 'generating' });
+  try {
+    await frame();
+    const fresh = createWorld(defaultWorldConfig(params.seed, params.preset));
+    const info = pack ? applyDataPack(fresh, pack) : null;
+    if (pack) {
+      const bad = validateWorld(fresh);
+      if (bad.length > 0) throw new DataPackError(`the pack produced an inconsistent world (${bad[0]?.message ?? 'unknown'})`);
+    }
+    if (pendingParams !== params) throw new Error('the world was regenerated meanwhile'); // a newer generate wins
+    setPendingWorld(fresh);
+    return info;
   } finally {
     set({ busy: null });
   }

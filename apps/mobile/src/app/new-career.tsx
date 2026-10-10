@@ -1,13 +1,14 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { leagueIdsByCountry, squadSummary, LEAGUE_PROFILES } from '@fu/engine';
-import { firstFreeSlot, generateWorldForSelection, startCareer, useGame, notify } from '../state/gameStore';
-import { getPendingWorld } from '../state/worldHost';
+import { DataPackError, REAL_CLUB_NAMES, leagueIdsByCountry, squadSummary, LEAGUE_PROFILES } from '@fu/engine';
+import { applyDataPackToPending, firstFreeSlot, generateWorldForSelection, startCareer, useGame, notify } from '../state/gameStore';
+import { pickTextFile } from '../core/files';
+import { getPendingWorld, setPendingWorld } from '../state/worldHost';
 import { useI18n } from '../i18n/useI18n';
 import { useTheme } from '../theme/ThemeProvider';
 import { Screen, Banner, Card, Row, RowGroup, Section, Spinner, ProgressBar, Empty } from '../ui/Layout';
-import { Button, Field, Segmented } from '../ui/Controls';
+import { Button, Field, Segmented, Switch } from '../ui/Controls';
 import { Txt } from '../ui/Txt';
 import { Crest } from '../ui/ClubVisuals';
 import { spacing } from '../theme/tokens';
@@ -31,7 +32,10 @@ export default function NewCareer(): ReactNode {
   const [clubId, setClubId] = useState<string | null>(null);
   const [filter, setFilter] = useState('');
   const [generated, setGenerated] = useState(0); // bump to re-read the pending world
+  const [packError, setPackError] = useState<{ text: string; detail?: string } | null>(null);
 
+  // The pending world is only meaningful while this screen is open (and is cleared by startCareer); free it when leaving.
+  useEffect(() => () => setPendingWorld(null), []);
   const world = getPendingWorld();
   const noSlot = firstFreeSlot(slots) === null;
 
@@ -58,7 +62,31 @@ export default function NewCareer(): ReactNode {
     setGenerated((n) => n + 1);
     setLeagueId(null);
     setClubId(null);
+    setPackError(null);
     setStep('league');
+  };
+
+  /** Apply (or, with null, remove) a data pack on the pending world. On any failure the pending world is untouched and the reason is shown. */
+  const applyPack = async (input: Parameters<typeof applyDataPackToPending>[0]): Promise<void> => {
+    setPackError(null);
+    try {
+      await applyDataPackToPending(input);
+      setGenerated((n) => n + 1);
+    } catch (e) {
+      setPackError(e instanceof DataPackError ? { text: t('pack.invalid'), detail: e.message } : { text: t('pack.failed'), detail: (e as Error).message });
+    }
+  };
+
+  const importPack = async (): Promise<void> => {
+    let text: string | null;
+    try {
+      text = await pickTextFile();
+    } catch (e) {
+      setPackError({ text: t('pack.readFailed'), detail: (e as Error).message });
+      return;
+    }
+    if (text === null) return; // cancelled
+    await applyPack(text);
   };
 
   const begin = async (): Promise<void> => {
@@ -100,6 +128,19 @@ export default function NewCareer(): ReactNode {
 
       {step === 'league' && world ? (
         <>
+          <Section title={t('pack.title')}>
+            <Card testID="pack-section">
+              <Switch
+                label={t('pack.switch')} hint={t('pack.switchHint')} value={world.dataPack?.id === REAL_CLUB_NAMES.id} testID="switch-real-names"
+                onChange={(v) => { if (busy !== 'generating') void applyPack(v ? REAL_CLUB_NAMES : null); }}
+              />
+              <Button label={t('pack.import')} variant="secondary" icon="save" onPress={importPack} disabled={busy === 'generating'} testID="btn-import-pack" />
+              <Txt variant="caption" color="muted">{t('pack.importHint')}</Txt>
+              {busy === 'generating' ? <Spinner label={t('pack.applying')} /> : null}
+              {packError ? <Banner tone="error" text={packError.text} detail={packError.detail} testID="pack-error" /> : null}
+              <PackSummary />
+            </Card>
+          </Section>
           <Field search label={t('career.searchLeague')} value={filter} onChangeText={setFilter} testID="input-league-filter" />
           <Txt variant="caption" color="muted" testID="league-count">{t('career.leagueCount', { n: dig(leagues.length), clubs: dig(Object.keys(world.clubs).length) })}</Txt>
           <RowGroup>
@@ -120,12 +161,13 @@ export default function NewCareer(): ReactNode {
 
       {step === 'club' && world && leagueId ? (
         <>
+          {world.dataPack ? <Txt variant="caption" color="muted" testID="club-pack-note">{t('pack.applied', { name: world.dataPack.name })} · {t('pack.remainder')}</Txt> : null}
           <Txt variant="small" color="muted">{t('career.clubHint')}</Txt>
           <RowGroup>
             {clubs.map(({ club, rank, sum }) => (
               <Row
                 key={club.id} testID={`club-${club.id}`} selected={clubId === club.id}
-                left={<Crest clubId={club.id} name={club.name} size={40} />}
+                left={<Crest clubId={club.id} name={club.name} size={40} colors={club.colors} crest={club.crest ?? null} />}
                 title={club.name}
                 subtitle={`${tierLabel(rank, clubs.length)} · ${t('club.reputation')} ${dig(club.reputation)} · ${t('career.cash')} ${money(club.finance.cash)} · ${t('career.squadAvg')} ${num(sum.avgOverall, 1)}`}
                 onPress={() => setClubId(club.id)}
@@ -147,6 +189,22 @@ export default function NewCareer(): ReactNode {
       {step !== 'setup' && !world ? <Empty text={t('common.noResults')} /> : null}
     </Screen>
   );
+
+  function PackSummary(): ReactNode {
+    const dp = getPendingWorld()?.dataPack;
+    if (!dp) return <Txt variant="small" color="muted" testID="pack-none">{t('pack.noneApplied')}</Txt>;
+    const a = dp.applied;
+    return (
+      <View style={{ gap: spacing.xs }} testID="pack-applied">
+        <Txt variant="small" style={{ fontWeight: '700' }}>{t('pack.applied', { name: dp.name })}</Txt>
+        <Txt variant="small" testID="pack-counts">{t('pack.counts', { clubs: dig(a.clubs), players: dig(a.players), managers: dig(a.managers), crests: dig(a.crests) })}</Txt>
+        <Txt variant="small">{t('pack.remainder')}</Txt>
+        <Txt variant="caption" color="muted">{t('pack.source', { source: dp.source })}</Txt>
+        <Txt variant="caption" color="muted">{t('pack.licence', { licence: dp.licence })}</Txt>
+        <Txt variant="caption" color="muted">{t('pack.unofficial')}</Txt>
+      </View>
+    );
+  }
 
   function ClubBrief({ clubId: id }: { clubId: string }): ReactNode {
     const w = getPendingWorld();

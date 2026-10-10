@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSettings } from '../state/settings';
 import { loadSlot, useGame } from '../state/gameStore';
+import { getWorld } from '../state/worldHost';
 import { useI18n } from '../i18n/useI18n';
 import { useTheme } from '../theme/ThemeProvider';
 import { Screen, Banner, Card, Spinner } from '../ui/Layout';
@@ -19,6 +20,8 @@ export default function Start(): ReactNode {
   const bootError = useGame((s) => s.bootError);
   const busy = useGame((s) => s.busy);
   const storeKind = useGame((s) => s.storeKind);
+  useGame((s) => s.version);
+  const packed = !!getWorld()?.dataPack;
   const lastSlot = useSettings((s) => s.lastSlot);
   const last = slots.find((s) => s.slot === lastSlot) ?? [...slots].sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1))[0];
 
@@ -55,7 +58,7 @@ export default function Start(): ReactNode {
         <Button label={t('nav.about')} variant="ghost" icon="info" onPress={() => router.push('/about')} testID="btn-about" />
       </View>
       <View style={{ padding: spacing.md, borderRadius: radii.md, backgroundColor: th.colors.surfaceAlt, gap: 4 }}>
-        <Txt variant="caption" color="muted">{t('start.fictional')}</Txt>
+        <Txt variant="caption" color="muted">{t(packed ? 'start.dataPack' : 'start.fictional')}</Txt>
         <Txt variant="caption" color="muted">{t('start.storage', { kind: storeKind === 'sqlite' ? 'SQLite' : 'IndexedDB' })}</Txt>
       </View>
     </Screen>

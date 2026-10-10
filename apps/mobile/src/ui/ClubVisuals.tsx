@@ -1,18 +1,39 @@
-import type { ReactNode } from 'react';
-import { Pressable, View } from 'react-native';
+import { useState, type ReactNode } from 'react';
+import { Image, Pressable, View } from 'react-native';
 import Svg, { ClipPath, Defs, G, Path, Rect } from 'react-native-svg';
 import { useTheme } from '../theme/ThemeProvider';
 import { readableOn, radii, spacing } from '../theme/tokens';
 import { Txt } from './Txt';
-import { clubColors } from '../state/lookups';
+import { clubColors, clubCrestUri, isRenderableCrest } from '../state/lookups';
 import { hashStr, initialsOf } from '../core/identity';
 
 export { hashStr, initialsOf };
 
 const SHIELD = 'M12 1.5 L21.5 4.5 V12 C21.5 17.5 17.5 21 12 22.8 C6.5 21 2.5 17.5 2.5 12 V4.5 Z';
 
-/** Original generated club crest: a shield in the club's two colours with a deterministic pattern and initials. */
-export function Crest({ clubId, name, size = 36, colors }: { clubId?: string | null; name: string; size?: number; colors?: [string, string] }): ReactNode {
+/**
+ * Club crest. Shows the data pack's local/embedded crest image when the club has one and it loads; otherwise (no image, an
+ * `asset:` URI, a load error) the original generated crest: a shield in the club's two colours with a deterministic pattern and
+ * initials. Remote URLs are never fetched (`clubCrestUri` only returns file:// and data:image URIs).
+ */
+export function Crest({ clubId, name, size = 36, colors, crest }: { clubId?: string | null; name: string; size?: number; colors?: [string, string]; crest?: string | null }): ReactNode {
+  // `crest`/`colors` let a screen that holds the club record itself (the new-career picker, whose pending world is not the loaded one) bypass the lookup
+  const uri = crest !== undefined ? (crest && isRenderableCrest(crest) ? crest : null) : clubCrestUri(clubId);
+  const [failed, setFailed] = useState<string | null>(null);
+  if (uri && failed !== uri) {
+    return (
+      <View style={{ width: size, height: size }} accessible accessibilityRole="image" accessibilityLabel={name}>
+        <Image
+          source={{ uri }} style={{ width: size, height: size }} resizeMode="contain" accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
+          onError={() => setFailed(uri)} testID="crest-image"
+        />
+      </View>
+    );
+  }
+  return <GeneratedCrest clubId={clubId} name={name} size={size} colors={colors} />;
+}
+
+function GeneratedCrest({ clubId, name, size, colors }: { clubId?: string | null; name: string; size: number; colors?: [string, string] }): ReactNode {
   const [c0, c1] = colors ?? clubColors(clubId);
   const variant = hashStr(clubId ?? name) % 4;
   const ink = readableOn(c0);
