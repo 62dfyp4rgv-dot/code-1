@@ -179,8 +179,11 @@ export function buildMatchInput(world: WorldState, comp: CompetitionState, def: 
 // ---------------------------------------------------------------- applying results
 
 function statLine(world: WorldState, compId: string, p: Player): StatLine {
-  const m = (world.seasonStats[compId] ??= {});
-  return (m[p.id] ??= { clubId: p.clubId ?? '', apps: 0, minutes: 0, goals: 0, assists: 0, yellow: 0, red: 0, ratingSum: 0, cleanSheets: 0 });
+  // own-property checks: ids are validated on load, but id-keyed plain objects must never resolve inherited members
+  if (!Object.hasOwn(world.seasonStats, compId)) world.seasonStats[compId] = {};
+  const m = world.seasonStats[compId] as Record<string, StatLine>;
+  if (!Object.hasOwn(m, p.id)) m[p.id] = { clubId: p.clubId ?? '', apps: 0, minutes: 0, goals: 0, assists: 0, yellow: 0, red: 0, ratingSum: 0, cleanSheets: 0 };
+  return m[p.id] as StatLine;
 }
 
 function seasonLine(p: Player, season: number, clubId: string): Player['history'][number] {
@@ -323,7 +326,9 @@ export function applyMatchResult(world: WorldState, comp: CompetitionState, def:
   const stored: StoredMatch = {
     id: f.id, fixtureId: f.id, competitionId: f.competitionId, season: comp.season, day: f.day, homeClubId: f.home, awayClubId: f.away,
     score: res.score, penalties: res.penalties, extraTime: res.extraTimePlayed, stats: res.stats, goals, motm: res.motm,
-    events: keepFull ? res.events : null, players: keepFull ? res.players : null, replay: keepFull ? input : null,
+    events: keepFull ? res.events : null, players: keepFull ? res.players : null,
+    // deep copy: MatchInput references live player/tactics objects that keep changing after the match
+    replay: keepFull ? (JSON.parse(JSON.stringify(input)) as MatchInput) : null,
   };
   world.matches[f.id] = stored;
   world.matchOrder.push(f.id);

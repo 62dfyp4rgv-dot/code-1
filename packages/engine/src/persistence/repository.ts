@@ -5,7 +5,8 @@
  *  - every revision stores a checksum over its chunks; `load` verifies it and falls back to the previous revision.
  */
 import type { WorldState } from '../world/types';
-import { checksumOf, decodeWorld, encodeWorld, type Chunk } from './codec';
+import { assertChunkList, canonicalOrder, checksumOf, decodeWorld, encodeWorld, type Chunk } from './codec';
+import { SaveCorruptedError } from './errors';
 import type { SqlDriver } from './driver';
 
 export const DB_MIGRATIONS: { version: number; sql: string }[] = [
@@ -62,12 +63,7 @@ export interface SlotInfo {
   bytes: number;
 }
 
-export class SaveCorruptedError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'SaveCorruptedError';
-  }
-}
+export { SaveCorruptedError };
 
 export interface RepositoryOptions {
   now?: () => string;
@@ -146,8 +142,8 @@ export class SaveRepository {
     const rows = await this.db.all<{ kind: string; idx: number; data: string }>('SELECT kind, idx, data FROM save_chunks WHERE slot = ? AND revision = ? ORDER BY kind, idx', [slot, revision]);
     if (rows.length !== (rev[0] as { chunk_count: number }).chunk_count) throw new SaveCorruptedError(`revision ${revision} has ${rows.length} chunks, expected ${(rev[0] as { chunk_count: number }).chunk_count}`);
     // checksum was computed over chunks in encode order; recompute in the same canonical order
-    const order = ['meta', 'clubs', 'managers', 'players', 'competition', 'seasonStats', 'matches', 'transfers', 'news'];
-    const sorted = [...rows].sort((a, b) => order.indexOf(a.kind) - order.indexOf(b.kind) || a.idx - b.idx);
+    assertChunkList(rows);
+    const sorted = canonicalOrder(rows);
     if (checksumOf(sorted) !== (rev[0] as { checksum: string }).checksum) throw new SaveCorruptedError(`revision ${revision} failed its checksum`);
     return decodeWorld(sorted);
   }
@@ -204,9 +200,13 @@ export class SaveRepository {
   }
 
   async importSlot(slot: number, name: string, doc: string): Promise<SlotInfo> {
-    const parsed = JSON.parse(doc) as { format?: string; checksum?: string; chunks?: Chunk[] };
-    if (parsed.format !== 'football-universe-save' || !parsed.chunks) throw new Error('Not a Football Universe save file');
-    if (checksumOf(parsed.chunks) !== parsed.checksum) throw new SaveCorruptedError('Imported file failed its checksum');
-    return this.save(slot, name, decodeWorld(parsed.chunks));
+    let parsed: { format?: string; checksum?: string; chunks?: unknown };
+    try { parsed = JSON.parse(doc) as typeof parsed; } catch { throw new Error('Not a Football Universe save file'); }
+    if (typeof parsed !== 'object' || parsed === null || parsed.format !== 'football-universe-save' || !parsed.chunks) throw new Error('Not a Football Universe save file');
+    assertChunkList(parsed.chunks);
+    const chunks = canonicalOrder(parsed.chunks);
+    if (checksumOf(chunks) !== parsed.checksum) throw new SaveCorruptedError('Imported file failed its checksum');
+    // the checksum only detects accidental damage; decodeWorld validates structure and integrity of the content
+    return this.save(slot, name, decodeWorld(chunks));
   }
 }

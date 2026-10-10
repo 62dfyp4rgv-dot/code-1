@@ -1,0 +1,6 @@
+control (identical)                                      GD vs default -0.039 (total goals 2.63)
+tempo 10                                                 GD vs default 0.082 (total goals 2.44)
+tempo 10 + line 10                                       GD vs default 0.079 (total goals 2.37)
+tempo 10 + line 10 + mentality -2                        GD vs default 0.059 (total goals 1.85)
+tempo 10 + line 10 + directness 90                       GD vs default 0.089 (total goals 2.59)
+tempo 10 + line 10 + pressing 90 + mentality -2 + man    GD vs default 0.098 (total goals 1.99)

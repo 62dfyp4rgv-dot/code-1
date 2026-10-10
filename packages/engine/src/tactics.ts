@@ -38,7 +38,7 @@ const role = (
   mod: RoleDef['mod'], shotShare = 1, createShare = 1, tackleShare = 1,
 ): RoleDef => ({ id, name, positions, duty, mod, shotShare, createShare, tackleShare });
 
-export const ROLES: Record<string, RoleDef> = Object.fromEntries(
+const ROLE_TABLE: Record<string, RoleDef> = Object.fromEntries(
   [
     role('goalkeeper', 'Goalkeeper', ['GK'], 'defend', {}),
     role('sweeperKeeper', 'Sweeper Keeper', ['GK'], 'support', { buildUp: 2.2, progress: 1.5, defend: 1.1, aerial: 0.8 }),
@@ -87,7 +87,9 @@ export interface Formation {
 
 const f = (id: string, slots: Position[]): Formation => ({ id, slots });
 
-export const FORMATIONS: Record<string, Formation> = Object.fromEntries(
+export const ROLES: Record<string, RoleDef> = Object.assign(Object.create(null) as Record<string, RoleDef>, ROLE_TABLE);
+
+const FORMATION_TABLE: Record<string, Formation> = Object.fromEntries(
   [
     f('4-4-2', ['GK', 'LB', 'CB', 'CB', 'RB', 'LW', 'CM', 'CM', 'RW', 'ST', 'ST']),
     f('4-3-3', ['GK', 'LB', 'CB', 'CB', 'RB', 'DM', 'CM', 'CM', 'LW', 'RW', 'ST']),
@@ -98,6 +100,9 @@ export const FORMATIONS: Record<string, Formation> = Object.fromEntries(
     f('3-4-3', ['GK', 'CB', 'CB', 'CB', 'LB', 'RB', 'CM', 'CM', 'LW', 'RW', 'ST']),
   ].map((fm) => [fm.id, fm]),
 );
+
+/** Lookup tables have no prototype, so ids such as `__proto__` or `toString` simply miss instead of resolving to inherited members. */
+export const FORMATIONS: Record<string, Formation> = Object.assign(Object.create(null) as Record<string, Formation>, FORMATION_TABLE);
 
 export function formationOf(id: string): Formation {
   const fm = FORMATIONS[id];

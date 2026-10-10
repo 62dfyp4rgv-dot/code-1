@@ -105,15 +105,15 @@ describe(`continuity over ${SEASONS} seasons (compact, 32 leagues)`, () => {
     }
     expect(bad).toEqual([]);
   });
-  it('player season histories: no duplicate (season, club) lines, non-decreasing seasons, plausible totals', () => {
+  it('player season histories: no adjacent duplicate (season, club) stints, non-decreasing seasons, plausible totals', () => {
     const bad: string[] = [];
     for (const p of Object.values(w.players)) {
-      const seen = new Set<string>();
       let last = 0;
+      let prevKey = '';
       for (const l of p.history) {
         const k = `${l.season}:${l.clubId}`;
-        if (seen.has(k)) bad.push(`${p.id} duplicate line ${k}`);
-        seen.add(k);
+        if (k === prevKey) bad.push(`${p.id} adjacent duplicate line ${k}`); // stints A,B,A in one season are legitimate; A,A is not
+        prevKey = k;
         if (l.season < last) bad.push(`${p.id} history goes backwards`);
         last = l.season;
         if (l.apps > 80 || l.minutes > l.apps * 125 || l.starts > l.apps || l.goals > l.apps * 6 || l.yellow > 2 * l.apps || l.red > l.apps) bad.push(`${p.id} implausible line ${JSON.stringify(l)}`);

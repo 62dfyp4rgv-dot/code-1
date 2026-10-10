@@ -49,7 +49,7 @@ export type Skills = Record<SkillKey, number>;
 function weightedAvg(attrs: Attributes, weights: Partial<Record<AttrKey, number>>): number {
   let s = 0;
   let w = 0;
-  for (const k in weights) {
+  for (const k of Object.keys(weights)) {
     const wk = weights[k as AttrKey] ?? 0;
     s += attrs[k as AttrKey] * wk;
     w += wk;

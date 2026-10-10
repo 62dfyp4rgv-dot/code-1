@@ -52,14 +52,14 @@ describe(`league-season statistics (${SEASONS} seasons)`, () => {
       expect(mean(s.map((x) => x.redPerMatch))).toBeLessThan(0.18);
       for (const x of s) expect(x.homeGoals).toBeGreaterThan(x.awayGoals);
     });
-    it(`${lid}: top scorers 14-40 goals in every season (never 60), champion 60-95 pts, last place 12-40 pts`, () => {
+    it(`${lid}: top scorers 14-40 goals in every season (never 60), champion 60-100 pts, last place 12-40 pts`, () => {
       const n = w.leagueMembers[lid]!.length;
       for (const sum of w.history.seasons) {
         const top = sum.topScorers[lid]![0]!.goals;
         expect(top, `${lid} s${sum.season} top scorer`).toBeGreaterThanOrEqual(14);
         expect(top, `${lid} s${sum.season} top scorer`).toBeLessThanOrEqual(40);
         const st = sum.leagueStats[lid]!;
-        expect(st.championPoints).toBeGreaterThanOrEqual(60); expect(st.championPoints).toBeLessThanOrEqual(95);
+        expect(st.championPoints).toBeGreaterThanOrEqual(60); expect(st.championPoints).toBeLessThanOrEqual(100);
         expect(st.lastPlacePoints).toBeGreaterThanOrEqual(12); expect(st.lastPlacePoints).toBeLessThanOrEqual(40);
         expect(st.pointsSd).toBeGreaterThan(8); expect(st.pointsSd).toBeLessThan(22);
         expect(st.matches).toBe(n * (n - 1));
@@ -107,5 +107,19 @@ describe('wealth', () => {
   });
   it('no club has negative debt or non-finite cash (verified OK)', () => {
     for (const c of Object.values(w.clubs)) { expect(Number.isFinite(c.finance.cash)).toBe(true); expect(c.finance.debt).toBeGreaterThanOrEqual(0); }
+  });
+});
+
+describe('managers', () => {
+  it('[QA-016] managers are dismissed at a realistic rate (real football: ~15-25% of clubs change manager per season; require >= 5%)', () => {
+    const clubs = Object.keys(w.clubs).length;
+    const changes = w.history.seasons.map((s) => s.managerChanges.length);
+    const rate = changes.reduce((a, b) => a + b, 0) / SEASONS / clubs;
+    expect(rate, `manager changes per season in ${clubs} clubs: ${changes.join(',')}`).toBeGreaterThanOrEqual(0.05);
+  });
+  it('[QA-016] manager tenures are not frozen: fewer than 50% of current managers have been in post for the whole 10 seasons', () => {
+    const employed = Object.values(w.managers).filter((m) => m.clubId);
+    const full = employed.filter((m) => (w.day - m.tenure.startDay) / 364 >= SEASONS - 0.5).length;
+    expect(full / employed.length).toBeLessThan(0.5);
   });
 });

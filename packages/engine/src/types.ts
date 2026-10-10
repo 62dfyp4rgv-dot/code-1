@@ -118,6 +118,8 @@ export interface Player {
   yellows: Record<string, number>;
   history: SeasonLine[];
   retired: boolean;
+  /** Season of retirement; retired players are purged from the world a few seasons later (legends keep a summary). */
+  retiredSeason?: number;
   /** Free agent: day they became available. */
   freeSince: number | null;
   /** Day of the last club change (blocks immediate re-transfers). */

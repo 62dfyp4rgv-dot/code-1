@@ -36,22 +36,7 @@ console.log('[roundtrip] checksum equal after 200 more days on both:', checksumO
   console.log('[hostile] Object.prototype polluted? ({}).apps =', (({}) as any).apps, ' ({}).goals =', (({}) as any).goals, ' ({}).clubId =', (({}) as any).clubId);
   for (const k of Object.keys(Object.prototype as any)) console.log('   enumerable on Object.prototype:', k);
 }
-// truncated attrs
-{
-  const w = createWorld(cfg);
-  const ch = encodeWorld(w).map((c) => ({ ...c }));
-  const pc = ch.find((c) => c.kind === 'players')!;
-  const arr = JSON.parse(pc.data); arr[0].attrs = arr[0].attrs.slice(0, 5); pc.data = JSON.stringify(arr);
-  const doc = JSON.stringify({ format: 'football-universe-save', version: 1, checksum: checksumOf(ch), chunks: ch });
-  const repo = new SaveRepository(new NodeSqliteDriver());
-  await repo.init();
-  const info = await repo.importSlot(1, 'hostile', doc);
-  console.log('[import truncated attrs] accepted, slot', info.slot, '(checksum is recomputable by the attacker; no semantic validation)');
-  const { world: lw } = await repo.load(1);
-  const vio = validateWorld(lw).filter((v) => v.code === 'ATTR_RANGE');
-  console.log('[import truncated attrs] validateWorld would flag:', vio.length, 'violation(s) but import never calls it');
-  try { advanceDays(lw, 30); const nan = Object.values(lw.players).filter((p) => !Number.isFinite(overall(p))).length; console.log('[import truncated attrs] sim ran 30 days without throwing; players with non-finite overall:', nan); } catch (e) { console.log('[import] sim threw', String(e).slice(0, 100)); }
-}
+// (truncated-attrs probe moved to critic/pers4.ts: it must run in a clean process, this one is polluted by the probe above)
 // DoS: many chunks
 {
   const w = createWorld(cfg);

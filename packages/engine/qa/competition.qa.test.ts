@@ -95,23 +95,44 @@ describe('round-robin scheduling properties (Berger rewrite)', () => {
           const k = `${p.home}>${p.away}`;
           expect(seen.has(k)).toBe(false);
           seen.add(k);
-          if (r >= half) expect(rounds[r - half]!.some((q) => q.home === p.away && q.away === p.home) || true).toBe(true);
+          if (r >= half) expect(rounds[r - half]!.some((q) => q.home === p.away && q.away === p.home), `round ${r} not the mirror of ${r - half}`).toBe(true);
         }
       }
       expect(seen.size).toBe(n * (n - 1));
-      // consecutive home/away over the first leg then full season
-      for (const id of ids) {
-        let run = 0, last = '', maxRun = 0, homes = 0;
-        for (let r = 0; r < rounds.length; r++) {
+      // consecutive home/away runs: first leg only, then the full two-legged season
+      const maxRun = (id: string, from: number, to: number): number => {
+        let run = 0, last = '', best = 0;
+        for (let r = from; r < to; r++) {
           const m = rounds[r]!.find((p) => p.home === id || p.away === id);
           if (!m) { run = 0; last = ''; continue; }
           const side = m.home === id ? 'H' : 'A';
-          if (r < half && side === 'H') homes++;
-          run = side === last ? run + 1 : 1; last = side; maxRun = Math.max(maxRun, run);
+          run = side === last ? run + 1 : 1; last = side; best = Math.max(best, run);
         }
-        expect(maxRun, `${id} max consecutive`).toBeLessThanOrEqual(3); // two-legged season boundary may join runs
+        return best;
+      };
+      for (const id of ids) {
+        expect(maxRun(id, 0, half), `${id} max consecutive home/away in leg 1`).toBeLessThanOrEqual(2);
+        const homes = rounds.slice(0, half).filter((rd) => rd.some((p) => p.home === id)).length;
         expect(Math.abs(homes - (n - 1) / 2)).toBeLessThanOrEqual(1);
       }
+    });
+  }
+  for (const n of [4, 8, 10, 18, 20]) {
+    it(`[QA-015] n=${n}: over the full two-legged season no team has more than two consecutive home or away matches`, () => {
+      const ids = Array.from({ length: n }, (_, i) => `T${i}`);
+      const rounds = roundRobin(ids, 2, Rng.fromSeed('qa-rr-' + n));
+      const offenders: string[] = [];
+      for (const id of ids) {
+        let run = 0, last = '';
+        for (const rd of rounds) {
+          const m = rd.find((p) => p.home === id || p.away === id);
+          if (!m) continue;
+          const side = m.home === id ? 'H' : 'A';
+          run = side === last ? run + 1 : 1; last = side;
+          if (run > 2) { offenders.push(id); break; }
+        }
+      }
+      expect(offenders, 'teams with a run of 3+ (documented guarantee in fixtures.ts: never more than two)').toEqual([]);
     });
   }
 });

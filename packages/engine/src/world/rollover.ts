@@ -6,7 +6,7 @@ import { COMPETITIONS, LEAGUE_BY_ID } from '../competition/registry';
 import type { Club, Player } from '../types';
 import { endSeason, seasonStartDay, startSeason } from './calendar';
 import { clubRecord } from './records';
-import { annualRetirements, revisePotentials, youthIntake } from './development';
+import { annualRetirements, purgeRetired, revisePotentials, youthIntake } from './development';
 import { applyRegulation, reviewClubFinance, updateRevenueDeals } from './finance';
 import { assignPlayer, endLoan, loanedOutOf, squadOf } from './runtime';
 import { activeRules } from '../competition/engine';
@@ -206,6 +206,7 @@ export function rolloverSeason(world: WorldState): SeasonSummary {
 
   revisePotentials(world, rng.derive('pot'));
   annualRetirements(world, rng.derive('ret'));
+  purgeRetired(world);
   expireContracts(world);
   for (const club of Object.values(world.clubs)) enforceForeignLimit(world, club);
   for (const club of Object.values(world.clubs)) annualWageReview(world, club);

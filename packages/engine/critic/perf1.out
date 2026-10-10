@@ -1,0 +1,5 @@
+standard createWorld ms 3499 clubs 548 players 14030
+standard 1 season ms 63401 rss MB 405 heap MB 286 players 15236
+slowest days d363:1624ms d19:1075ms d0:1005ms d20:844ms d28:837ms d168:819ms  median 81 ms
+encodeWorld ms 357 MB 24.6 max chunk MB 1.94 chunks 170
+{"meta":0.4,"clubs":0.7,"managers":0.2,"players":15.5,"competition":2.2,"seasonStats":0,"matches":4.5,"transfers":0.6,"news":0.5}

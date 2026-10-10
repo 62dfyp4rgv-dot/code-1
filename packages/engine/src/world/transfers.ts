@@ -580,6 +580,7 @@ export function weeklyFreeAgentCull(world: WorldState): number {
 
 function retireFree(world: WorldState, p: Player): void {
   p.retired = true;
+  p.retiredSeason = world.season;
   p.contract = null;
   assignPlayer(world, p, null);
   // assignPlayer re-adds retired free agents to the free set only if not retired; keep the index clean

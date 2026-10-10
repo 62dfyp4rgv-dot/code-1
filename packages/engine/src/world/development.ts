@@ -15,7 +15,7 @@ import { Rng } from '../rng';
 import { attrGroup, ATTR_KEYS, type AttrGroup, type AttrKey, type Club, type Player, type Position } from '../types';
 import { LEAGUE_BY_ID } from '../competition/registry';
 import { createYouthPlayer } from './squad';
-import { allPlayers, assignPlayer, endLoan } from './runtime';
+import { allPlayers, assignPlayer, endLoan, reindex } from './runtime';
 import type { WorldState } from './types';
 
 const PEAK_AGE: Record<AttrGroup, number> = { physical: 26, technical: 28, mental: 30, goalkeeping: 30 };
@@ -108,6 +108,19 @@ export function retirementProbability(age: number, ability: number, isGk: boolea
   return clamp(base - (ability - 60) * 0.004, 0.02, 0.99);
 }
 
+/** Drop players who retired more than `keepSeasons` ago. Legends keep their summary in `history.legends`. */
+export const RETIRED_KEEP_SEASONS = 2;
+export function purgeRetired(world: WorldState): number {
+  let n = 0;
+  for (const p of allPlayers(world)) {
+    if (!p.retired || p.retiredSeason === undefined || world.season - p.retiredSeason < RETIRED_KEEP_SEASONS) continue;
+    delete world.players[p.id];
+    n++;
+  }
+  if (n > 0) reindex(world);
+  return n;
+}
+
 export function annualRetirements(world: WorldState, rng: Rng): number {
   let n = 0;
   for (const p of allPlayers(world)) {
@@ -131,6 +144,7 @@ export function retirePlayer(world: WorldState, p: Player): void {
   world.transfers.push({ id: `r${world.transfers.length}-${p.id}`, day: world.day, playerId: p.id, fromClubId: p.clubId, toClubId: null, kind: 'retire', fee: 0, wageWeekly: p.contract?.wageWeekly ?? 0 });
   assignPlayer(world, p, null);
   p.retired = true;
+  p.retiredSeason = world.season;
   p.contract = null;
   endLoan(world, p);
   delete world.transferList[p.id];
