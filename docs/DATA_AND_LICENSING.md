@@ -12,7 +12,11 @@ The registry (`competition/registry.ts`, `competition/qualification.ts`) encodes
 
 The engine does not need to change to make them accurate: replace the data in `registry.ts` / `qualification.ts` with verified, licensed data and bump the rule-set `fromSeason`.
 
-## Integrating real-world data (not done)
+## Real-world data packs
+
+An optional overlay of real club names (bundled, names only) and user-supplied packs (names, coaches, players, local crests) is described in `docs/DATA_PACKS.md`. No logos, player or coach data are bundled; packs are validated as untrusted input and remote crest URLs are refused.
+
+## Integrating a real-world data *provider* (not done)
 
 Before integrating any provider the checklist is: verify fields; verify rate limits and update frequency; verify **commercial and redistribution rights**; cost and operational dependencies; caching and graceful failure. No scraping of restricted sites. No provider is integrated; there is no network dependency at all — the app is fully offline. If a provider is added later it must be consumed through a data-ingestion module that produces the same `WorldState` seed data and is clearly labelled as licensed data, never mixed silently with generated data.
 

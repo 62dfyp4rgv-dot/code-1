@@ -153,4 +153,15 @@ export interface WorldState {
   managerPool: string[];
   /** User-customised overrides applied on top of generated reference data. */
   overrides: { clubNames: Record<string, string>; playerNames: Record<string, string> };
+  /** Provenance of any real-world data pack applied on top of the generated universe (null = fully fictional). */
+  dataPack?: DataPackInfo | null;
+}
+
+export interface DataPackInfo {
+  id: string;
+  name: string;
+  source: string;
+  licence: string;
+  /** Counts of what the pack actually changed, shown in the app so partial coverage is never hidden. */
+  applied: { clubs: number; players: number; managers: number; crests: number };
 }

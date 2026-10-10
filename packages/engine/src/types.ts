@@ -218,6 +218,8 @@ export interface Club {
   leagueId: string;
   rivals: string[];
   fictional: boolean;
+  /** Optional crest image from a user-supplied data pack: `file://`, `asset:` or a small `data:image/...` URI. */
+  crest?: string;
   /** 0..1 squad chemistry; rises with continuity and tenure, falls with turnover. */
   cohesion: number;
   /** Human-chosen starting XI (player ids in formation-slot order). Null = automatic selection. */

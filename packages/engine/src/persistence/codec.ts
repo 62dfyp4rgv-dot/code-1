@@ -54,7 +54,7 @@ export function encodeWorld(world: WorldState): Chunk[] {
   push('meta', 0, JSON.stringify({
     schemaVersion: world.schemaVersion, referenceVersion: REFERENCE_DATA_VERSION, config: world.config, day: world.day, season: world.season,
     leagueMembers: world.leagueMembers, history: { ...world.history, seasons: [], clubs: {} }, ai: world.ai, counters: world.counters, transferList: world.transferList,
-    managerPool: world.managerPool, overrides: world.overrides, matchOrder: world.matchOrder,
+    managerPool: world.managerPool, overrides: world.overrides, matchOrder: world.matchOrder, ...(world.dataPack ? { dataPack: world.dataPack } : {}),
   }));
   pushList('hseasons', world.history.seasons);
   pushList('hclubs', Object.entries(world.history.clubs));

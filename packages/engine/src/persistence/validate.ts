@@ -7,6 +7,7 @@
  *  3. Semantics: `validateWorld` hard violations (duplicate registrations, dangling references, ...) reject the file.
  */
 import { ATTR_KEYS } from '../types';
+import { isSafeCrest } from '../world/datapack';
 import { validateWorld } from '../world/invariants';
 import type { WorldState } from '../world/types';
 import { SaveCorruptedError } from './errors';
@@ -93,6 +94,7 @@ export function validateSnapshotShape(s: Obj): void {
     for (const k of ['cash', 'debt', 'transferBudget', 'wageBudgetWeekly', 'seasonStartCash', 'opexAnnual', 'ticketPrice', 'embargoUntilDay']) if (!fin(f[k])) fail(`club ${id}: finance.${k} is not finite`);
     checkKeys(`club ${id}.seasonLedger`, f.seasonLedger);
     for (const v of Object.values(f.seasonLedger as Obj)) if (!fin(v)) fail(`club ${id}: ledger entry is not finite`);
+    if (c.crest !== undefined && (typeof c.crest !== 'string' || !isSafeCrest(c.crest))) fail(`club ${id}: crest must be a local or embedded image`);
     if (!Array.isArray(f.installments) || !isObj(c.tactics) || typeof c.name !== 'string' || typeof c.leagueId !== 'string') fail(`club ${id}: malformed`);
   }
   for (const [id, m] of Object.entries(s.managers as Record<string, Obj>)) if (!isObj(m) || m.id !== id) fail(`manager ${id}: id does not match its key`);

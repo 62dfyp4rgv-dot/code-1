@@ -8,7 +8,7 @@ export { COMPETITIONS, LEAGUE_PROFILES, LEAGUE_BY_ID, DEFAULT_MAJOR_LEAGUES, PYR
 export type { CompetitionDef, CompetitionState, Fixture, TableRow } from './competition/types';
 export { createWorld, advanceDay, advanceDays, advanceToNextMatchday, advanceToEndOfSeason, humanClub, type DayReport } from './world/sim';
 export { defaultWorldConfig } from './world/generate';
-export type { WorldConfig, WorldState } from './world/types';
+export type { WorldConfig, WorldState, DataPackInfo } from './world/types';
 export { validateWorld, assertValid, type Violation } from './world/invariants';
 export * from './world/views';
 export * from './world/actions';
@@ -16,3 +16,5 @@ export { isWindowOpen, windowDaysLeft } from './world/transfers';
 export { SaveRepository, SaveCorruptedError, type SlotInfo } from './persistence/repository';
 export type { SqlDriver, SqlValue } from './persistence/driver';
 export { encodeWorld, decodeWorld, checksumOf, canonicalOrder, assertChunkList, CHUNK_ORDER, type Chunk } from './persistence/codec';
+export { parseDataPack, applyDataPack, DataPackError, type DataPack, type PackClub, type PackPlayer, type PackManager } from './world/datapack';
+export { REAL_CLUB_NAMES } from './data/realClubNames';
