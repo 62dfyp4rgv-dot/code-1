@@ -33,10 +33,16 @@ tracing contours and the Kinematics agent is shaping strokes in between.
            for ease-in / ease-out, physiological tremor (8-12 Hz) + slow drift, and
            pressure-dependent line weight. Pen-up travel between strokes is planned too.
   Hand     replays the trajectories in real time, stamping a grainy pencil nib onto the canvas,
-           drawing the visible pencil (hovering while travelling, touching down to draw).
+           drawing the visible pencil (hovering while travelling, touching down to draw). The nib
+           wears: lines get fatter and softer until the Hand stops to sharpen the pencil, and it
+           pauses to step back after every finished layer.
   Mind     after each layer it measures the real canvas against the master plan (tone
            correlation + edge recall). If a layer is under-done it requests a refinement
-           pass; when quality is reached (or the correction budget is spent) it ends the job.
+           pass; it keeps correcting only while each pass still pays off (adaptive budget) and
+           ends the job when quality is reached or returns diminish.
+
+OUTPUT: drawing_<name>.png (the pencil drawing), drawing_<name>.svg (the plan as layered vector art),
+        plan_<name>.json (the Bezier path queue), run_log_<name>.json (agent messages + Critic history).
 """
 from __future__ import annotations
 
@@ -58,6 +64,7 @@ RES = 320               # analysis resolution of the reference image
 SCALE = CANVAS / RES    # reference px -> canvas px
 FS = 240.0              # trajectory sampling rate (Hz)
 HUD_W = 420
+WEAR_LEN = 9000.0       # px of line a pencil draws before it is blunt enough to need sharpening
 
 # per-stroke-kind physical parameters:  vmax px/s, amax px/s^2, line width range, opacity range,
 # tremor amplitude px, drift amplitude px, pencil colour
@@ -545,6 +552,7 @@ class PlannerAgent(Agent):
         self.gen = self._plan()
         self.done = False
         self.refine_jobs: deque = deque()
+        self.refine_gen = None
 
     # ---- cooperative scheduling: run the planning generator for at most `budget` seconds
     def step(self, budget: float) -> None:
@@ -558,8 +566,15 @@ class PlannerAgent(Agent):
                 next(self.gen)
             except StopIteration:
                 self.done = True
-        if self.done and self.refine_jobs and time.perf_counter() - t0 < budget:
-            self._handle_refine(self.refine_jobs.popleft())
+        while self.done and time.perf_counter() - t0 < budget:          # self-correction passes are time-sliced too
+            if self.refine_gen is None:
+                if not self.refine_jobs:
+                    break
+                self.refine_gen = self._refine(self.refine_jobs.popleft())
+            try:
+                next(self.refine_gen)
+            except StopIteration:
+                self.refine_gen = None
 
     # ---- emit helpers
     def _emit(self, layer: str, kind: str, segments: list, tone: float = 0.0) -> None:
@@ -577,16 +592,21 @@ class PlannerAgent(Agent):
         self.send("Kinematics", "path_batch", dict(layer=layer, paths=self._batch))
         self.log(f"layer '{layer}': {len(self._batch)} paths queued")
 
-    def _order(self, chains: list[np.ndarray]) -> list[np.ndarray]:
-        """Greedy nearest-neighbour ordering (reversing chains when their far end is closer): less pen travel."""
-        rest, out, pos = list(chains), [], np.zeros(2)
-        while rest:
-            d0 = [np.hypot(*(c[0] - pos)) for c in rest]
-            d1 = [np.hypot(*(c[-1] - pos)) for c in rest]
+    @staticmethod
+    def _order(chains: list[np.ndarray]) -> list[np.ndarray]:
+        """Greedy nearest-neighbour ordering (vectorised), reversing a chain when its far end is closer: less pen travel."""
+        n = len(chains)
+        if n == 0:
+            return []
+        a = np.array([c[0] for c in chains])
+        b = np.array([c[-1] for c in chains])
+        alive, out, pos = np.ones(n, bool), [], np.zeros(2)
+        for _ in range(n):
+            d0 = np.where(alive, np.hypot(*(a - pos).T), np.inf)
+            d1 = np.where(alive, np.hypot(*(b - pos).T), np.inf)
             i = int(np.argmin(np.minimum(d0, d1)))
-            c = rest.pop(i)
-            if d1[i] < d0[i]:
-                c = c[::-1]
+            c = chains[i][::-1] if d1[i] < d0[i] else chains[i]
+            alive[i] = False
             out.append(c)
             pos = c[-1]
         return out
@@ -726,8 +746,8 @@ class PlannerAgent(Agent):
             out.append([[(cx + x * ra * ca - y * rb * sa) * SCALE, (cy + x * ra * sa + y * rb * ca) * SCALE] for x, y in seg])
         return out
 
-    # ---- self-correction requests from the Critic
-    def _handle_refine(self, job: dict) -> None:
+    # ---- self-correction requests from the Critic (a generator, run in slices like the main plan)
+    def _refine(self, job: dict):
         n = job["pass"]
         if job["kind"] == "edges":
             layer = f"refine-edges-{n}"
@@ -738,17 +758,19 @@ class PlannerAgent(Agent):
                 segs = chain_to_beziers(c * SCALE, 1.8)
                 if segs:
                     self._emit(layer, "contour", segs)
+            yield
             self._close_layer(layer)
         else:
             layer = f"refine-hatch-{n}"
             self._open_layer(layer)
-            ang = [105, 20, 75][(n - 1) % 3]
+            ang = [105, 20, 75, 160][(n - 1) % 4]
             self.set_status(f"Planner: optimizing hatch density - cross-hatching {int(job['mask'].sum())} under-toned px at {ang} deg (pass {n})")
-            tight = 0.88 ** (n - 1)                                                           # each pass hatches closer than the last
+            tight = max(0.62, 0.88 ** (n - 1))                                                           # each pass hatches closer than the last
             for lvl, sp, ph in [(0.20, 6.0, 0.0), (0.38, 5.0, 0.3), (0.56, 4.2, 0.6), (0.74, 3.6, 0.15)]:      # darker tone -> denser lines
                 sp *= tight
                 for p in self._hatch(self.tone, job["mask"], lvl, sp, ang, layer, ph):
                     self._emit(layer, "hatch", p[0], p[1])
+                yield
             self._close_layer(layer)
 
 
@@ -868,6 +890,8 @@ class KinematicsAgent(Agent):
         rise = np.clip(u / 0.10, 0, 1) ** 0.7 if L > 6 else np.ones(n)
         fall = np.clip((1 - u) / 0.18, 0, 1) ** 0.8 if L > 6 else np.ones(n)
         base = float(self.rng.uniform(0.62, 0.95))                         # this stroke's overall hand pressure
+        if path["kind"] == "hatch":                                        # press harder where the reference is darker
+            base = min(1.0, base * (0.72 + 0.55 * float(np.clip(path.get("tone", 0.5), 0, 1))))
         press = np.clip(base * (1.06 - 0.55 * sp) * rise * fall * (1 + 0.08 * _band_noise(n, n / T, 1, 4, self.rng)), 0.04, 1.0)
         width = p["wmin"] + (p["wmax"] - p["wmin"]) * press
         alpha = p["op"][0] + (p["op"][1] - p["op"][0]) * press
@@ -903,6 +927,14 @@ class HandAgent(Agent):
         self.strokes_done = 0
         self.stroke_total = 0
         self.last_stamp: Optional[tuple] = None
+        self.wear = 0.0                             # drawn length since the last sharpening
+        self.sharpenings = 0
+        self.pause_t = 0.0                          # remaining time of a deliberate pause (sharpening / stepping back)
+        self.pause_msg = ""
+        self.pause_z = 0.0
+
+    def _pause(self, secs: float, msg: str, z: float) -> None:
+        self.pause_t, self.pause_msg, self.pause_z = secs, msg, z
 
     def step(self, dt: float) -> None:
         while self.inbox:
@@ -916,6 +948,13 @@ class HandAgent(Agent):
         guard = 0
         while budget > 1e-9 and guard < 400:
             guard += 1
+            if self.pause_t > 1e-9:                      # pencil held off the paper: sharpening or stepping back to look
+                use = min(budget, self.pause_t)
+                self.pause_t -= use
+                budget -= use
+                self.z = self.pause_z + 2.5 * math.sin(self.pause_t * 40.0) * (1.0 if "sharpen" in self.pause_msg else 0.0)
+                self.set_status(self.pause_msg)
+                continue
             if self.travel is None and self.cur is None:
                 if not self.queue:
                     self.set_status("idle - waiting for strokes")
@@ -923,6 +962,7 @@ class HandAgent(Agent):
                 kind, item = self.queue.popleft()
                 if kind == "end":
                     self.send("Critic", "layer_done", item)
+                    self._pause(0.45, f"stepping back to look at the '{item}' layer", 15.0)
                     continue
                 self.send("Kinematics", "consumed", 1)
                 self.cur_next = item
@@ -951,6 +991,11 @@ class HandAgent(Agent):
                     self.strokes_done += 1
                     self.layer_done[tr.layer] = self.layer_done.get(tr.layer, 0) + 1
                     self.cur, self.t = None, 0.0
+                    if self.wear >= WEAR_LEN:
+                        self.sharpenings += 1
+                        self.wear = 0.0
+                        self._pause(1.3, f"sharpening pencil (#{self.sharpenings}) - nib was blunt", 26.0)
+                        self.log(f"nib worn after {WEAR_LEN:.0f}px of line - pausing to sharpen the pencil (#{self.sharpenings})")
 
     @staticmethod
     def _plan_travel(a: np.ndarray, b: np.ndarray) -> dict:
@@ -988,7 +1033,9 @@ class HandAgent(Agent):
         for i in range(lo, i1):
             a, b = tr.xy[i], tr.xy[i + 1]
             dist = float(np.hypot(*(b - a)))
-            w, al = float(tr.width[i + 1]), float(tr.alpha[i + 1])
+            self.wear += dist
+            blunt = 1.0 + 0.5 * min(1.0, self.wear / WEAR_LEN)             # a worn nib draws a fatter, softer line
+            w, al = float(tr.width[i + 1]) * blunt, float(tr.alpha[i + 1]) / (0.9 + 0.1 * blunt)
             steps = max(1, int(dist / max(0.6, 0.22 * w)))
             for k in range(1, steps + 1):
                 q = a + (b - a) * (k / steps)
@@ -1003,7 +1050,7 @@ class CriticAgent(Agent):
     name = "Critic"
     color = (255, 130, 160)
 
-    def __init__(self, studio: "Studio", target: float, max_passes: int = 4):
+    def __init__(self, studio: "Studio", target: float, max_passes: int = 8):
         super().__init__(studio)
         self.target, self.max_passes = target, max_passes
         self.announced: set[str] = set()
@@ -1012,6 +1059,7 @@ class CriticAgent(Agent):
         self.score = 0.0
         self.metrics = dict(tone=0.0, edge=0.0)
         self.history: list[dict] = []
+        self.prev_hatch_score = 0.0           # score at the previous shading review: a pass must keep paying off
         self.outstanding = 0                  # refine requests sent whose layer the Planner has not announced yet
 
     def step(self) -> None:
@@ -1066,7 +1114,12 @@ class CriticAgent(Agent):
                 self.send("Planner", "refine", dict(kind="edges", mask=missing, **{"pass": self.passes["edges"]}))
                 self.log(f"edge recall {recall:.2f} < 0.90: requesting contour refinement pass {self.passes['edges']}")
         elif layer in ("shading",) or layer.startswith("refine-hatch"):
-            if self.score < self.target and self.passes["hatch"] < self.max_passes and deficit.sum() > 80:
+            gain = self.score - self.prev_hatch_score
+            self.prev_hatch_score = self.score
+            worthwhile = layer == "shading" or gain >= 0.012                               # adaptive budget: stop when a pass no longer helps
+            if not worthwhile:
+                self.log(f"last hatch pass only gained {gain:+.3f}: diminishing returns, no further hatching")
+            if worthwhile and self.score < self.target and self.passes["hatch"] < self.max_passes and deficit.sum() > 80:
                 self.passes["hatch"] += 1
                 self.outstanding += 1
                 self.send("Planner", "refine", dict(kind="hatch", mask=deficit, **{"pass": self.passes["hatch"]}))
@@ -1092,7 +1145,8 @@ class Studio:
             os.environ["SDL_VIDEODRIVER"] = "dummy"
         import pygame
         self.pg = pygame
-        pygame.init()
+        pygame.display.init()                              # no audio subsystem needed
+        pygame.font.init()
         self.args, self.palette = a, a.palette
         self.headless = a.headless
         self.speed = float(a.speed)
@@ -1103,6 +1157,7 @@ class Studio:
         self.run_log: list = []
         self.t_start = time.perf_counter()
         self.sim_time = 0.0
+        self._prog = 0.0
         self.W, self.H = CANVAS + 40 + HUD_W, CANVAS + 40
         self.screen = pygame.display.set_mode((self.W, self.H), pygame.RESIZABLE | pygame.SCALED) if not a.headless else pygame.display.set_mode((self.W, self.H))
         pygame.display.set_caption("AI Hands - autonomous multi-agent drawing")
@@ -1111,6 +1166,7 @@ class Studio:
         self.f_s, self.f_m, self.f_b = (pygame.font.SysFont(fonts, 13), pygame.font.SysFont(fonts, 15), pygame.font.SysFont(fonts, 22, bold=True))
         self.canvas = self._make_paper()
         self.paper_lum = pygame.surfarray.array3d(self.canvas).astype(float).mean() / 255.0
+        self.paper_rgb = pygame.surfarray.array3d(self.canvas).astype(float).mean(axis=(0, 1))
         self.bus = MessageBus()
         self.planner = PlannerAgent(self, a.concept, a.image, a.seed)
         self.kin = KinematicsAgent(self, a.seed + 1)
@@ -1145,11 +1201,12 @@ class Studio:
             planned[p["layer"]] = planned.get(p["layer"], 0) + 1
         for layer in LAYER_ORDER:
             if layer in planned:
-                total += 0.96 * LAYER_WEIGHT[layer] * min(1.0, self.hand.layer_done.get(layer, 0) / planned[layer])
+                total += 0.92 * LAYER_WEIGHT[layer] * min(1.0, self.hand.layer_done.get(layer, 0) / planned[layer])
         extra = [k for k in planned if k.startswith("refine")]
-        if extra:                                           # refinement passes can only fill the last 4 %
-            total += 0.04 * (sum(min(self.hand.layer_done.get(k, 0), planned[k]) for k in extra) / max(1, sum(planned[k] for k in extra)))
-        return 1.0 if self.job_complete else min(total, 0.995)
+        if extra:                                           # correction passes can only fill the last 8 %
+            total += 0.08 * (sum(min(self.hand.layer_done.get(k, 0), planned[k]) for k in extra) / max(1, sum(planned[k] for k in extra)))
+        self._prog = max(self._prog, min(total, 0.99))      # monotonic: a new correction pass never makes the bar go backwards
+        return 1.0 if self.job_complete else self._prog
 
     # ---- the autonomous loop ------------------------------------------------------------
     def run(self) -> None:
@@ -1213,8 +1270,39 @@ class Studio:
             json.dump(dict(concept=name, canvas=[CANVAS, CANVAS], layers=LAYER_ORDER, paths=self.planner.paths), f)
         with open(os.path.join(self.args.out, f"run_log_{name}.json"), "w") as f:
             json.dump(dict(score=self.critic.score, passes=self.critic.passes, history=self.critic.history, log=self.run_log), f, indent=1)
+        svg = os.path.join(self.args.out, f"drawing_{name}.svg")
+        with open(svg, "w") as f:
+            f.write(self.to_svg())
         print(f"saved {png}  (paths: {len(self.planner.paths)}, strokes drawn: {self.hand.strokes_done}, "
               f"final score {self.critic.score:.2f}, correction passes {self.critic.passes})")
+
+    def to_svg(self) -> str:
+        """The master plan as a layered SVG: every planned cubic Bezier path becomes one <path>, grouped by layer, with
+        the stroke colour, mean line weight and opacity of its kind (hatches are weighted by their tone)."""
+        r, g, b = (int(round(v)) for v in self.paper_rgb)
+        out = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {CANVAS} {CANVAS}" width="{CANVAS}" height="{CANVAS}">',
+               f'<rect width="{CANVAS}" height="{CANVAS}" fill="#{r:02x}{g:02x}{b:02x}"/>',
+               '<g fill="none" stroke-linecap="round" stroke-linejoin="round">']
+        scale = PALETTES[self.palette]
+        layers: dict[str, list[dict]] = {}
+        for p in self.planner.paths:
+            layers.setdefault(p["layer"], []).append(p)
+        for layer in LAYER_ORDER + sorted(k for k in layers if k.startswith("refine")):
+            if layer not in layers:
+                continue
+            out.append(f'<g id="{layer}">')
+            for p in layers[layer]:
+                k = KIN[p["kind"]]
+                col = tuple(int(np.clip(c * m, 0, 255)) for c, m in zip(k["color"], scale))
+                w = 0.5 * (k["wmin"] + k["wmax"])
+                op = 0.5 * (k["op"][0] + k["op"][1]) * (0.6 + 0.8 * min(1.0, p["tone"]) if p["kind"] == "hatch" else 1.0)
+                seg = p["segments"]
+                d = f"M{seg[0][0][0]:.1f} {seg[0][0][1]:.1f}" + "".join(
+                    f"C{c[1][0]:.1f} {c[1][1]:.1f} {c[2][0]:.1f} {c[2][1]:.1f} {c[3][0]:.1f} {c[3][1]:.1f}" for c in seg)
+                out.append(f'<path d="{d}" stroke="#{col[0]:02x}{col[1]:02x}{col[2]:02x}" stroke-width="{w:.2f}" stroke-opacity="{min(op, 1.0):.2f}"/>')
+            out.append("</g>")
+        out.append("</g></svg>")
+        return "\n".join(out)
 
     # ---- drawing the window ----------------------------------------------------------------
     def render(self) -> None:
@@ -1312,14 +1400,24 @@ class Studio:
         y += gh + 4
         info = (f"#{tr.path_id} {tr.length:.0f}px  T={tr.duration*1000:.0f}ms  vpeak={tr.speed.max():.0f}px/s" if tr is not None else "pen lifted")
         scr.blit(self.f_s.render(info, True, (170, 172, 185)), (x0, y))
+        y += 17
+        wear = min(1.0, self.hand.wear / WEAR_LEN)
+        scr.blit(self.f_s.render("nib wear", True, (170, 172, 185)), (x0, y))
+        pg.draw.rect(scr, (45, 47, 58), (x0 + 72, y + 3, 150, 8))
+        pg.draw.rect(scr, (255, 150, 90) if wear > 0.8 else (170, 200, 140), (x0 + 72, y + 3, int(150 * wear), 8))
+        scr.blit(self.f_s.render(f"sharpened x{self.hand.sharpenings}", True, (170, 172, 185)), (x0 + 232, y))
         y += 22
         scr.blit(self.f_m.render("Message log", True, (220, 220, 230)), (x0, y))
         y += 19
         col = {"Planner": self.planner.color, "Kinematics": self.kin.color, "Hand": self.hand.color, "Critic": self.critic.color}
-        for who, msg in list(self.logs)[-8:]:
-            for i, ln in enumerate(self._wrap(f"{who}: {msg}", 47)[:2]):
-                scr.blit(self.f_s.render(ln, True, col.get(who, (200, 200, 200)) if i == 0 else (170, 172, 185)), (x0, y))
-                y += 14
+        lines = []
+        for who, msg in list(self.logs):
+            wrapped = self._wrap(f"{who}: {msg}", 47)[:2]
+            lines += [(who, ln, i == 0) for i, ln in enumerate(wrapped)]
+        room = max(0, (self.H - 62 - y) // 14)                            # only what fits above the footer
+        for who, ln, first in lines[-room:] if room else []:
+            scr.blit(self.f_s.render(ln, True, col.get(who, (200, 200, 200)) if first else (170, 172, 185)), (x0, y))
+            y += 14
         y = self.H - 52
         scr.blit(self.f_s.render(f"sim speed x{self.speed:.1f}", True, (150, 154, 170)), (x0, y))
         scr.blit(self.f_s.render("[+/-] speed  [space] pause  [h] HUD  [esc] quit", True, (110, 114, 130)), (x0, y + 15))

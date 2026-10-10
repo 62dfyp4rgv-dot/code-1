@@ -251,3 +251,115 @@ def test_seed_image_mode_traces_a_user_image(tmp_path):
     out = run_cli("--image", str(tmp_path / "seed.png"), "--speed", "400", "--quality", "0.5", "--out", str(tmp_path / "o"))
     assert out.returncode == 0, out.stderr[-800:]
     assert (tmp_path / "o" / "drawing_seed.png").exists()
+
+
+# ------------------------------------------------------------------ v2 additions: SVG, nib wear, progress, time-sliced corrections
+def test_svg_export_is_a_valid_layered_vector_copy_of_the_plan(tmp_path):
+    import xml.etree.ElementTree as ET
+    assert run_cli("--concept", "mandala", "--speed", "400", "--quality", "0.4", "--out", str(tmp_path)).returncode == 0
+    root = ET.parse(tmp_path / "drawing_mandala.svg").getroot()
+    ns = "{http://www.w3.org/2000/svg}"
+    plan = json.loads((tmp_path / "plan_mandala.json").read_text())["paths"]
+    groups = [g.get("id") for g in root.iter(f"{ns}g") if g.get("id")]
+    assert groups[:4] == ah.LAYER_ORDER                                      # skeleton -> contours -> shading -> details
+    paths = list(root.iter(f"{ns}path"))
+    assert len(paths) == len(plan)
+    assert all(p.get("d").startswith("M") and "C" in p.get("d") for p in paths)
+    assert all(0.0 < float(p.get("stroke-opacity")) <= 1.0 and float(p.get("stroke-width")) > 0 for p in paths)
+
+
+def _hand_rig():
+    import pygame
+    pygame.display.init()
+    studio = SimpleNamespace(bus=ah.MessageBus(), palette="graphite", log=lambda *a: None)
+    studio.bus.register("Kinematics")
+    studio.bus.register("Critic")
+    hand = ah.HandAgent(studio, pygame.Surface((ah.CANVAS, ah.CANVAS)))
+    hand.canvas.fill((255, 255, 255))
+    return studio, hand
+
+
+def _ink(hand):
+    import pygame
+    return float((255 - pygame.surfarray.array3d(hand.canvas).astype(float).mean(axis=2)).sum())
+
+
+def _draw_one(hand, kin, wear):
+    hand.wear = wear
+    hand.pen = np.array([50.0, 400.0])
+    tr = kin.shape(path("contour", STRAIGHT))
+    hand.queue.append(("traj", tr))
+    hand.stroke_total += 1
+    for _ in range(400):
+        hand.step(0.02)
+        if hand.cur is None and not hand.queue and hand.travel is None:
+            break
+
+
+def test_a_worn_nib_lays_a_fatter_line_and_then_the_hand_sharpens_the_pencil():
+    studio, fresh = _hand_rig()
+    kin = ah.KinematicsAgent(studio, 3)
+    _draw_one(fresh, kin, 0.0)
+    studio2, worn = _hand_rig()
+    kin2 = ah.KinematicsAgent(studio2, 3)
+    _draw_one(worn, kin2, ah.WEAR_LEN * 0.99)
+    assert _ink(worn) > 1.1 * _ink(fresh)                                    # blunt nib = wider mark
+    assert worn.sharpenings == 1 and worn.wear < ah.WEAR_LEN * 0.5           # it noticed, paused and reset the wear
+    assert fresh.sharpenings == 0
+
+
+def test_the_hand_lifts_the_pencil_off_the_paper_while_sharpening():
+    studio, hand = _hand_rig()
+    hand._pause(1.0, "sharpening pencil (#1) - nib was blunt", 26.0)
+    zs, statuses = [], set()
+    for _ in range(60):                                                      # 1.2 s of simulated time > the 1.0 s pause
+        hand.step(0.02)
+        zs.append(hand.z)
+        statuses.add(hand.status)
+    assert min(zs[:40]) > 20                                                 # pencil held well above the paper throughout
+    assert any("sharpening" in st for st in statuses)
+    assert hand.pause_t == 0.0                                               # and the pause really ends
+
+
+def test_progress_never_goes_backwards_when_a_new_correction_pass_is_planned(tmp_path, monkeypatch):
+    monkeypatch.setattr(sys, "argv", ["ai_hands.py", "--headless", "--out", str(tmp_path)])
+    st = ah.Studio(ah.parse_args())
+    mk = lambda layer, n: [dict(layer=layer, kind="hatch", segments=[], tone=0.5) for _ in range(n)]  # noqa: E731
+    st.planner.paths = mk("skeleton", 4) + mk("contours", 4) + mk("shading", 4) + mk("details", 4) + mk("refine-hatch-1", 10)
+    st.hand.layer_done = dict(skeleton=4, contours=4, shading=4, details=4, **{"refine-hatch-1": 9})
+    p1 = st.progress()
+    assert 0.9 < p1 < 1.0                                                    # almost done but the Critic has not signed off
+    st.planner.paths += mk("refine-hatch-2", 40)                             # the Critic asks for another pass
+    assert st.progress() >= p1
+    st.job_complete = True
+    assert st.progress() == 1.0
+    import pygame
+    pygame.quit()
+
+
+def test_corrections_are_time_sliced_instead_of_blocking_a_frame():
+    studio = SimpleNamespace(bus=ah.MessageBus(), palette="graphite", log=lambda *a: None)
+    for box in ("Kinematics", "Critic"):
+        studio.bus.register(box)
+    pl = ah.PlannerAgent(studio, "mandala", None, 1)
+    while not pl.done:
+        pl.step(1.0)
+    mask = np.zeros((ah.RES, ah.RES), bool)
+    mask[60:260, 60:260] = True
+    studio.bus.send("Critic", "Planner", "refine", dict(kind="hatch", mask=mask, **{"pass": 1}))
+    steps = 0
+    while steps < 5000:
+        pl.step(1e-4)                                                        # a tiny slice per call
+        steps += 1
+        if pl.refine_gen is None and not pl.refine_jobs and not pl.inbox:
+            break
+    assert pl.refine_gen is None and steps > 1                               # it needed several slices...
+    assert any(p["layer"] == "refine-hatch-1" for p in pl.paths)             # ...and still delivered the whole pass
+
+
+def test_critic_budget_is_adaptive_and_stops_when_hatching_stops_paying_off(tmp_path):
+    out = run_cli("--concept", "mandala", "--speed", "400", "--quality", "0.99", "--out", str(tmp_path))
+    assert out.returncode == 0, out.stderr[-800:]
+    log = json.loads((tmp_path / "run_log_mandala.json").read_text())
+    assert 1 <= log["passes"]["hatch"] <= 8
+    assert any("diminishing returns" in e["msg"] for e in log["log"]) or log["passes"]["hatch"] == 8
