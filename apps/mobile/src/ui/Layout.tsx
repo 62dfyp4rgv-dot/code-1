@@ -1,5 +1,5 @@
 import { useCallback, type ReactNode } from 'react';
-import { ActivityIndicator, Pressable, RefreshControl, ScrollView, View, useWindowDimensions, type StyleProp, type ViewStyle } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, RefreshControl, ScrollView, View, useWindowDimensions, type StyleProp, type ViewStyle } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/ThemeProvider';
@@ -30,7 +30,17 @@ export function Screen({ title, subtitle, back, right, noScroll, children, testI
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const goBack = useCallback(() => { if (router.canGoBack()) router.back(); else router.replace('/'); }, [router]);
-  const header = title || back ? (
+  const large = !!title && !back;
+  const largeHeader = large ? (
+    <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: spacing.sm, minHeight: 48 }}>
+      <View style={{ flex: 1 }}>
+        <Txt variant="display" numberOfLines={2} accessibilityRole="header" adjustsFontSizeToFit minimumFontScale={0.75}>{title}</Txt>
+        {subtitle ? <Txt variant="small" color="muted" numberOfLines={1}>{subtitle}</Txt> : null}
+      </View>
+      {right}
+    </View>
+  ) : null;
+  const header = back ? (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, minHeight: 56, borderBottomWidth: 1, borderBottomColor: th.colors.border, backgroundColor: th.colors.surface }}>
       {back ? (
         <Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} testID="back-button" onPress={goBack} hitSlop={8} style={{ width: MIN_TOUCH, height: MIN_TOUCH, alignItems: 'center', justifyContent: 'center' }}>
@@ -49,14 +59,16 @@ export function Screen({ title, subtitle, back, right, noScroll, children, testI
     <View testID={testID} style={{ flex: 1, backgroundColor: th.colors.bg, paddingTop: insets.top, paddingStart: insets.left, paddingEnd: insets.right }}>
       {header}
       {noScroll ? (
-        <View style={{ flex: 1, width: '100%', maxWidth: MAX_CONTENT_WIDTH, alignSelf: 'center' }}>{children}</View>
+        <View style={{ flex: 1, width: '100%', maxWidth: MAX_CONTENT_WIDTH, alignSelf: 'center' }}>{largeHeader ? <View style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.lg }}>{largeHeader}</View> : null}{children}</View>
       ) : (
         <ScrollView
           style={{ flex: 1 }}
           contentContainerStyle={[pad, { width: '100%', maxWidth: MAX_CONTENT_WIDTH, alignSelf: 'center' }]}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
           refreshControl={onRefresh ? <RefreshControl refreshing={!!refreshing} onRefresh={onRefresh} /> : undefined}
         >
+          {largeHeader}
           {children}
         </ScrollView>
       )}

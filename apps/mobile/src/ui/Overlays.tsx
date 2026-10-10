@@ -1,5 +1,6 @@
 import { useEffect, type ReactNode } from 'react';
 import { Modal, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useGame, dismissNotice, cancelSim } from '../state/gameStore';
 import { useI18n } from '../i18n/useI18n';
 import { useTheme } from '../theme/ThemeProvider';
@@ -12,6 +13,7 @@ import { Txt } from './Txt';
 export function NoticeHost(): ReactNode {
   const notice = useGame((s) => s.notice);
   const { t } = useI18n();
+  const insets = useSafeAreaInsets();
   useEffect(() => {
     if (!notice || notice.tone === 'error') return;
     const id = setTimeout(dismissNotice, 9000);
@@ -19,7 +21,7 @@ export function NoticeHost(): ReactNode {
   }, [notice]);
   if (!notice) return null;
   return (
-    <View pointerEvents="box-none" style={{ position: 'absolute', top: 8, start: 8, end: 8, zIndex: 100, alignItems: 'center' }}>
+    <View pointerEvents="box-none" style={{ position: 'absolute', top: insets.top + 8, start: 8 + insets.left, end: 8 + insets.right, zIndex: 100, alignItems: 'center' }}>
       <View style={{ width: '100%', maxWidth: 720 }}>
         <Banner testID="notice" tone={notice.tone} text={t(notice.key, notice.params)} detail={notice.detail} onDismiss={dismissNotice} />
       </View>

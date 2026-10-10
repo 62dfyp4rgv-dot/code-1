@@ -1,3 +1,4 @@
+import { haptic } from '../platform/haptics';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { View } from 'react-native';
 import {
@@ -85,9 +86,11 @@ export function TransferSheets({ kind, profile, onClose }: Props): ReactNode {
   const wageEur = (): number => Math.round((parseNumber(wk) * 1000) / rate);
   const apply = (fn: (x: WorldState) => ActionResult<BidOutcome> | ActionResult): void => {
     const res = mutate(fn);
-    if (!res.ok) { setError(res.error); setOutcome(null); return; }
+    if (!res.ok) { haptic('error'); setError(res.error); setOutcome(null); return; }
     setError(null);
-    setOutcome((res.value as BidOutcome | undefined) ?? { status: 'completed' });
+    const o = (res.value as BidOutcome | undefined) ?? { status: 'completed' as const };
+    haptic(o.status === 'completed' ? 'success' : o.status === 'counter' ? 'light' : 'warning');
+    setOutcome(o);
   };
   const validNumbers = (needFee: boolean): boolean => {
     if (needFee && !(parseNumber(fee) >= 0)) { setError(t('sheet.invalidNumber')); return false; }

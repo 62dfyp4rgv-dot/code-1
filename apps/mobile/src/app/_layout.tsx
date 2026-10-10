@@ -49,7 +49,7 @@ function Shell(): ReactNode {
   return (
     <View style={{ flex: 1, backgroundColor: th.colors.bg, direction: th.rtl ? 'rtl' : 'ltr' }}>
       <StatusBar style={th.isDark ? 'light' : 'dark'} />
-      <Stack screenOptions={{ headerShown: false, animation: 'none', contentStyle: { backgroundColor: th.colors.bg } }} />
+      <Stack screenOptions={{ headerShown: false, animation: Platform.OS === 'web' ? 'none' : 'default', contentStyle: { backgroundColor: th.colors.bg } }} />
       <NoticeHost />
       <SimOverlay />
     </View>

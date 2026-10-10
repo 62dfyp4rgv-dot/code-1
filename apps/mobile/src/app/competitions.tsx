@@ -33,7 +33,7 @@ export default function Competitions(): ReactNode {
   return (
     <Screen back title={t('nav.competitions')} subtitle={t('comp.count', { n: dig(list.length) })} testID="screen-competitions">
       <Banner tone="warn" text={t('verify.banner')} testID="verify-banner" />
-      <Field label={t('comp.search')} value={q} onChangeText={setQ} testID="comp-search" />
+      <Field search label={t('comp.search')} value={q} onChangeText={setQ} testID="comp-search" />
       <ChipRow>
         {(['all', 'league', 'cup', 'continental'] as Kind[]).map((k) => <Chip key={k} label={t(`comp.k.${k}` as 'comp.k.all')} selected={kind === k} onPress={() => setKind(k)} testID={`ck-${k}`} />)}
       </ChipRow>

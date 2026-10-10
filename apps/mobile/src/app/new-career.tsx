@@ -100,7 +100,7 @@ export default function NewCareer(): ReactNode {
 
       {step === 'league' && world ? (
         <>
-          <Field label={t('career.searchLeague')} value={filter} onChangeText={setFilter} testID="input-league-filter" />
+          <Field search label={t('career.searchLeague')} value={filter} onChangeText={setFilter} testID="input-league-filter" />
           <Txt variant="caption" color="muted" testID="league-count">{t('career.leagueCount', { n: dig(leagues.length), clubs: dig(Object.keys(world.clubs).length) })}</Txt>
           <RowGroup>
             {leagues.length === 0 ? <Empty text={t('common.noResults')} /> : null}

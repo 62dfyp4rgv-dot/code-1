@@ -61,7 +61,7 @@ export default function LineupScreen(): ReactNode {
   return (
     <Screen back title={t('nav.lineup')} subtitle={`${data.formation} · ${data.override ? t('lineup.manual') : t('lineup.automatic')}`} testID="screen-lineup">
       <Txt variant="small" color="muted">{t('lineup.hint')}</Txt>
-      <FormationPitch testID="lineup-pitch" slots={slots} selected={slot} onSelect={setSlot} items={slots.map((p, i) => ({ pos: p, label: td('pos.' + p, p), sub: nameOf(xi[i] ?? null) }))} height={340} />
+      <FormationPitch testID="lineup-pitch" slots={slots} selected={slot} onSelect={setSlot} items={slots.map((p, i) => ({ pos: p, label: td('pos.' + p, p), sub: nameOf(xi[i] ?? null) }))} height={400} />
       <Section title={t('lineup.xi')}>
         <RowGroup testID="lineup-list">
           {slots.map((p, i) => {

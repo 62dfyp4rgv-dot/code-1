@@ -1,33 +1,45 @@
-import type { ReactNode } from 'react';
+import { useCallback, useState, type ReactNode } from 'react';
 import { View, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import type { FixtureView, TableRowView } from '@fu/engine';
 import { useI18n } from '../i18n/useI18n';
 import { useTheme } from '../theme/ThemeProvider';
-import { spacing } from '../theme/tokens';
+import { readableOn, spacing } from '../theme/tokens';
 import { Txt } from '../ui/Txt';
 import { Row, Card, Banner, Empty } from '../ui/Layout';
 import { Button } from '../ui/Controls';
+import { Sheet } from '../ui/Sheet';
 import { Crest, FormDots } from '../ui/ClubVisuals';
+import { haptic } from '../platform/haptics';
+import type { SimPlan } from '../core/simRunner';
+import { formEntries } from './homeStats';
 import { DataTable, type Column } from '../ui/Table';
 import { runSim, useGame } from '../state/gameStore';
 
 export const hrefs = {
   club: (id: string) => `/club/${id}`,
   player: (id: string) => `/player/${id}`,
-  match: (id: string) => `/match/${encodeURIComponent(id)}`,
+  match: (id: string, reveal = false) => `/match/${encodeURIComponent(id)}${reveal ? '?reveal=1' : ''}`,
   competition: (id: string) => `/competition/${id}`,
 } as const;
 
 /** Display name for a competition: engine short names stay as generated, kind labels are localised elsewhere. */
 export function FixtureRow({ f, humanId, testID }: { f: FixtureView; humanId?: string | null; testID?: string }): ReactNode {
   const { t, engineDate } = useI18n();
+  const th = useTheme();
   const router = useRouter();
   const played = f.status === 'played';
   const home = humanId && f.home.id === humanId;
   const label = played ? `${f.home.name} ${f.score ?? ''} ${f.away.name}` : `${f.home.name} – ${f.away.name}`;
+  const res = played && humanId ? formEntries([f], humanId)[0] : undefined;
+  const resColor = res ? (res.result === 'W' ? th.colors.win : res.result === 'D' ? th.colors.draw : th.colors.loss) : undefined;
   return (
     <Row
+      right={res && resColor ? (
+        <View accessible accessibilityLabel={t(`form.${res.result}` as 'form.W')} style={{ width: 26, height: 26, borderRadius: 8, backgroundColor: resColor, alignItems: 'center', justifyContent: 'center' }}>
+          <Txt variant="label" color={readableOn(resColor)} allowFontScaling={false} style={{ fontSize: 12, lineHeight: 15, fontWeight: '800' }}>{t(`form.letter.${res.result}` as 'form.letter.W')}</Txt>
+        </View>
+      ) : undefined}
       testID={testID}
       accessibilityLabel={`${label}, ${engineDate(f.date)}, ${f.competition}`}
       title={`${f.home.name}  ${played ? (f.score ?? '') : t('fixtures.vs')}  ${f.away.name}`}
@@ -84,27 +96,71 @@ export function NewsList({ items }: { items: { day: string; kind: string; text: 
   );
 }
 
-/** Advance-time buttons shared by Home and the Calendar screen. */
-export function SimControls({ showSeason = true }: { showSeason?: boolean }): ReactNode {
+/**
+ * Runs a simulation plan. When it stops because the human club played (next match / single day), opens the animated match
+ * report for that fixture, so "Play" always ends on the result instead of silently on Home.
+ */
+export function usePlay(): (plan: SimPlan) => Promise<void> {
+  const router = useRouter();
+  return useCallback(async (plan: SimPlan) => {
+    const s = await runSim(plan);
+    if (!s) return;
+    if (s.error) { haptic('error'); return; }
+    haptic(s.cancelled ? 'warning' : 'success');
+    const single = plan.kind === 'nextMatchday' || (plan.kind === 'days' && plan.days === 1);
+    if (single && !s.cancelled && s.humanFixtureId) {
+      await new Promise((r) => setTimeout(r, 120)); // let the progress dialog finish dismissing before pushing a screen
+      router.push(hrefs.match(s.humanFixtureId, true) as never);
+    }
+  }, [router]);
+}
+
+export function SimSummaryBanner(): ReactNode {
   const { t, dig } = useI18n();
-  const sim = useGame((s) => s.sim);
   const last = useGame((s) => s.lastSim);
+  if (!last) return null;
+  return (
+    <Banner
+      testID="sim-summary" tone={last.error ? 'error' : last.cancelled ? 'warn' : 'success'}
+      text={last.error ? t('sim.failed') : last.cancelled ? t('sim.cancelled', { days: dig(last.daysDone) }) : t('sim.done', { days: dig(last.daysDone), matches: dig(last.matchesPlayed) })}
+      detail={last.seasonEnded ? t('sim.seasonEnded') : last.humanMatches > 0 ? t('sim.humanPlayed', { n: dig(last.humanMatches) }) : undefined}
+    />
+  );
+}
+
+/** Advance-time buttons shared by Home (`compact`: the primary "Play" button lives in the hero card) and the Calendar screen. */
+export function SimControls({ showSeason = true, compact = false }: { showSeason?: boolean; compact?: boolean }): ReactNode {
+  const { t } = useI18n();
+  const sim = useGame((s) => s.sim);
+  const play = usePlay();
+  const [confirm, setConfirm] = useState(false);
   const busy = !!sim;
+  const confirmSheet = (
+    <Sheet visible={confirm} title={t('sim.confirmEnd.title')} onClose={() => setConfirm(false)} testID="sheet-confirm-end"
+      footer={<><Button label={t('sim.confirmEnd.go')} onPress={() => { setConfirm(false); void play({ kind: 'endOfSeason' }); }} testID="btn-confirm-endseason" /><Button label={t('common.cancel')} variant="secondary" onPress={() => setConfirm(false)} /></>}>
+      <Txt variant="body">{t('sim.confirmEnd.body')}</Txt>
+    </Sheet>
+  );
+  if (compact) {
+    return (
+      <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+        <Button fit label={t('sim.oneDay')} variant="secondary" onPress={() => void play({ kind: 'days', days: 1 })} disabled={busy} style={{ flex: 1 }} testID="sim-one-day" />
+        <Button fit label={t('sim.oneWeek')} variant="secondary" onPress={() => void play({ kind: 'days', days: 7 })} disabled={busy} style={{ flex: 1 }} testID="sim-one-week" />
+        {showSeason ? <Button fit label={t('sim.endSeasonShort')} variant="secondary" onPress={() => setConfirm(true)} disabled={busy} style={{ flex: 1.3 }} testID="sim-end-season" /> : null}
+        {confirmSheet}
+      </View>
+    );
+  }
   return (
     <View style={{ gap: spacing.sm }}>
-      <Button label={t('sim.nextMatchday')} icon="play" onPress={() => void runSim({ kind: 'nextMatchday' })} disabled={busy} testID="sim-next-matchday" />
+      <Button label={t('sim.nextMatchday')} icon="play" onPress={() => void play({ kind: 'nextMatchday' })} disabled={busy} testID="sim-next-matchday" />
       <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-        <Button label={t('sim.oneDay')} variant="secondary" onPress={() => void runSim({ kind: 'days', days: 1 })} disabled={busy} style={{ flex: 1 }} testID="sim-one-day" />
-        <Button label={t('sim.oneWeek')} variant="secondary" onPress={() => void runSim({ kind: 'days', days: 7 })} disabled={busy} style={{ flex: 1 }} testID="sim-one-week" />
+        <Button label={t('sim.oneDay')} variant="secondary" onPress={() => void play({ kind: 'days', days: 1 })} disabled={busy} style={{ flex: 1 }} testID="sim-one-day" />
+        <Button label={t('sim.oneWeek')} variant="secondary" onPress={() => void play({ kind: 'days', days: 7 })} disabled={busy} style={{ flex: 1 }} testID="sim-one-week" />
       </View>
-      {showSeason ? <Button label={t('sim.endSeason')} variant="secondary" onPress={() => void runSim({ kind: 'endOfSeason' })} disabled={busy} testID="sim-end-season" /> : null}
-      {last ? (
-        <Banner
-          testID="sim-summary" tone={last.error ? 'error' : last.cancelled ? 'warn' : 'success'}
-          text={last.error ? t('sim.failed') : last.cancelled ? t('sim.cancelled', { days: dig(last.daysDone) }) : t('sim.done', { days: dig(last.daysDone), matches: dig(last.matchesPlayed) })}
-          detail={last.seasonEnded ? t('sim.seasonEnded') : last.humanMatches > 0 ? t('sim.humanPlayed', { n: dig(last.humanMatches) }) : undefined}
-        />
-      ) : null}
+      {showSeason ? <Button label={t('sim.endSeason')} variant="secondary" onPress={() => setConfirm(true)} disabled={busy} testID="sim-end-season" /> : null}
+      {confirmSheet}
+      <SimSummaryBanner />
     </View>
   );
 }

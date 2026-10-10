@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { Rng } from '../src/rng';
 import { simulateMatch } from '../src/match';
 import { syntheticMatch, syntheticSheet } from '../src/synth';
 import { archetypeTactics, defaultTactics, FORMATIONS, ROLES, validateTactics, formationOf, type TacticalArchetype } from '../src/tactics';
@@ -47,7 +48,10 @@ describe('tactical consequences: no unexplained universal bonus', () => {
     for (const a of kinds) for (const b of kinds) {
       if (a >= b) continue;
       const ab = matrix.get(`${a}|${b}`) as number; const ba = matrix.get(`${b}|${a}`) as number;
-      expect(Math.abs(ab + ba), `${a} vs ${b}`).toBeLessThan(0.45); // each cell has sampling error of ~0.08
+      if (Math.abs(ab + ba) < 0.45) continue; // each cell has sampling error of ~0.08, so a pair can look worse by chance...
+      // ...in which case it is re-measured with a much larger sample before it is allowed to fail
+      const sum = gd(archetypeTactics(a), archetypeTactics(b), 2500, `re1${a}${b}`).gd + gd(archetypeTactics(b), archetypeTactics(a), 2500, `re2${a}${b}`).gd;
+      expect(Math.abs(sum), `${a} vs ${b} re-measured`).toBeLessThan(0.25);
     }
   });
 });
@@ -121,4 +125,27 @@ describe('marking and weather have measurable, non-free effects', () => {
     };
     expect(gdOf(clear) - gdOf(rain)).toBeGreaterThan(0);
   });
+});
+
+describe('stacked tactical levers are not free upgrades (CR-009)', () => {
+  it('no random slider combination beats the balanced default by 0.14 goals/match once re-tested on fresh seeds', () => {
+    const rng = Rng.fromSeed('combo-sweep');
+    const base = defaultTactics('4-3-3');
+    const pick3 = (): number => rng.pick([10, 50, 90]);
+    const configs: Tactics[] = [];
+    // 100 random configurations (same formation as the opponent so only the tactical levers are measured)
+    for (let k = 0; k < 100; k++) {
+      configs.push({
+        ...base, tempo: pick3(), width: pick3(), directness: pick3(), pressing: pick3(), defensiveLine: pick3(),
+        mentality: rng.pick([-2, -1, 0, 1, 2]) as Tactics['mentality'], counterAttack: rng.chance(0.4),
+        marking: rng.pick(['zonal', 'man', 'mixed'] as const),
+      });
+    }
+    const screen = configs.map((t, k) => ({ t, gd: gd(t, base, 250, `sw${k}`).gd })).sort((a, b) => b.gd - a.gd);
+    const control = gd(base, base, 3000, 'confirm').gd; // identical tactics: measures harness bias, not tactics
+    for (const { t, gd: screened } of screen.slice(0, 3)) {
+      const confirmed = gd(t, base, 3000, 'confirm').gd - control;
+      expect(confirmed, `screened ${screened.toFixed(2)} -> confirmed ${confirmed.toFixed(3)} ${JSON.stringify([t.tempo, t.width, t.directness, t.pressing, t.defensiveLine, t.mentality, t.counterAttack, t.marking])}`).toBeLessThan(0.14); // measured worst 0.11 (se 0.04); was 0.14-0.20 before the tempo/line/mentality/press retune
+    }
+  }, 900_000);
 });

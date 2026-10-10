@@ -22,7 +22,7 @@ function check(name, cond, detail = '') {
 const { server, port } = await serve(DIST);
 const base = `http://127.0.0.1:${port}`;
 const browser = await chromium.launch({ executablePath: CHROME, args: ['--no-sandbox'] });
-const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
+const ctx = await browser.newContext({ viewport: { width: 393, height: 852 }, deviceScaleFactor: 2 });
 const page = await ctx.newPage();
 const pageErrors = [];
 page.on('pageerror', (e) => pageErrors.push(e.message));
@@ -44,6 +44,24 @@ async function noHScroll(label) {
   check(`no horizontal overflow: ${label} (${o.iw}px)`, o.sw <= o.iw + 1 && o.bw <= o.iw + 1, JSON.stringify(o));
 }
 async function back() { await click('back-button'); }
+// Tap-target audit: every visible interactive element must be >= 44x44 CSS px, except those that extend their hit area with hitSlop
+// (RN-web does not render hitSlop into the bounding box), which must still be >= 28 px.
+async function tapTargets(label, slopOk = 28) {
+  const bad = await page.evaluate((slopOk) => {
+    const out = [];
+    for (const el of document.querySelectorAll('[role=button],[role=tab],[role=switch],[role=radio],[role=link],input,[role=adjustable]')) {
+      if (el.closest('[aria-hidden="true"]')) continue;
+      const r = el.getBoundingClientRect();
+      if (r.width === 0 || r.height === 0 || r.bottom < 0 || r.top > innerHeight) continue;
+      if (r.height < 43.5 || (r.width < 43.5 && el.getAttribute('role') !== 'link')) out.push(`${el.getAttribute('data-testid') ?? el.getAttribute('aria-label') ?? (el.tagName + ':' + (el.innerText || '').slice(0, 20).replace(/\n/g, ' '))} ${Math.round(r.width)}x${Math.round(r.height)}`);
+    }
+    return out;
+  }, slopOk);
+  const hard = bad.filter((b) => { const m = /(\d+)x(\d+)$/.exec(b); return Number(m[1]) < slopOk || Number(m[2]) < slopOk; });
+  if (bad.length) console.log(`   tap targets < 44px on ${label}: ${bad.join('; ')}`);
+  check(`tap targets >= ${slopOk}px (hitSlop) on ${label}`, hard.length === 0, hard.join('; '));
+  return bad;
+}
 
 try {
   console.log('== 1. start screen & new career');
@@ -81,8 +99,15 @@ try {
   check('home shows the chosen club', (await text('home-club-name')) === clubName, `${await text('home-club-name')} vs ${clubName}`);
   const date0 = await text('home-date');
   check('career starts on 1 Aug 2026', /1 Aug 2026/.test(date0), date0);
+  check('home shows a next-match hero with opponent and countdown', /Next match/i.test(await text('home-next-match')) && /in \d+ days|Today|Tomorrow/.test(await text('home-next-match')), await text('home-next-match'));
+  check('first run: welcome checklist offers squad + tactics steps', (await tid('welcome-squad').count()) === 1 && (await tid('welcome-tactics').count()) === 1);
+  check('primary Play button is within the first screen (y < 852)', (await tid('sim-next-matchday').first().boundingBox()).y + 48 < 852);
   await shot('05-home');
   await noHScroll('home');
+  await tapTargets('home');
+  await page.setViewportSize({ width: 320, height: 568 }); await page.waitForTimeout(300);
+  await noHScroll('home first run'); await tapTargets('home first run (320px)'); await shot('05b-home-first-run-320');
+  await page.setViewportSize({ width: 393, height: 852 }); await page.waitForTimeout(300);
 
   console.log('== 2. main screens');
   await click('tab-squad'); await visible('screen-squad');
@@ -93,15 +118,18 @@ try {
   await click('squad-filter-all');
   await click('squad-sort-age');
   await shot('06-squad');
+  await tapTargets('squad');
   await click('tab-fixtures'); await visible('screen-fixtures');
   await visible('fixtures-list');
   check('fixtures list has matches', (await page.locator('[data-testid^="fx-"]:visible:not([aria-hidden="true"] *)').count()) >= 5);
   await shot('07-fixtures');
+  await tapTargets('fixtures');
   await click('fx-day'); await visible('day-label');
   check('by-day view shows count', /\d/.test(await text('day-count')));
   await click('tab-market'); await visible('screen-market');
   check('transfer window open at start', /open/i.test(await text('market-window')));
   await shot('08-market');
+  await tapTargets('market');
   await goMore('nav-competitions'); await visible('screen-competitions');
   check('competitions screen shows unverified banner', /UNVERIFIED/i.test(await text('verify-banner')));
   check('has more than 60 competitions', (await page.locator('[data-testid^="comp-"]:visible:not([aria-hidden="true"] *)').count()) > 60, String(await page.locator('[data-testid^="comp-"]:visible:not([aria-hidden="true"] *)').count()));
@@ -143,18 +171,63 @@ try {
   await shot('17-club');
   await back();
 
-  console.log('== 3. simulate to next matchday');
+  console.log('== 3. play next match: animated reveal');
   await click('tab-home'); await visible('screen-home');
   await click('sim-next-matchday');
-  await visible('sim-summary', 120000);
+  await visible('screen-match', 120000);
+  await visible('match-clock', 15000);
+  check('playing the next match opens the match centre in live-reveal mode', true);
+  await shot('19a-match-reveal-start');
+  const clk = async () => Number(((await text('match-clock')).match(/\d+/) ?? ['-1'])[0]);
+  const c0 = await clk(); await page.waitForTimeout(3500); const c1 = await clk().catch(() => 999);
+  check('match clock advances while playing (' + c0 + "' -> " + c1 + "')", c1 > c0 || c1 === 999);
+  await shot('19b-match-reveal-live');
+  if (await tid('match-pause').count()) {
+    await click('match-pause');
+    const p0 = await clk().catch(() => -1); await page.waitForTimeout(800); const p1 = await clk().catch(() => -1);
+    check('pause freezes the clock', p0 === p1, `${p0} vs ${p1}`);
+    check('pause button turns into Resume', /Resume/.test(await text('match-pause')));
+    await click('match-pause');
+  }
+  await page.waitForTimeout(2500);
+  await shot('19c-match-reveal-feed');
+  if (await tid('match-skip').count()) await click('match-skip');
+  await visible('match-ft');
+  const finalScore = (await text('match-score')).replace(/\s+/g, '');
+  check('after the reveal the score is the engine result', /^\d-\d+$|^\d+-\d+$/.test(finalScore), finalScore);
+  check('key-moments feed lists the goals (one entry per goal)', await (async () => {
+    const [h, a] = finalScore.split('-').map(Number);
+    const goals = await page.locator('[data-testid="match-feed"] [aria-label*=" Goal,"]').count();
+    return goals === h + a;
+  })());
+  await shot('19d-match-reveal-done');
+  await click('match-watch'); await visible('match-clock', 10000);
+  check('Replay restarts the live reveal', true);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await click('match-skip'); await visible('match-ft');
+  await click('match-watch'); await page.waitForTimeout(600);
+  check('Reduce Motion: replay jumps straight to full-time (no live clock)', (await tid('match-clock').count()) === 0 && (await tid('match-ft').count()) === 1);
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await tapTargets('match centre');
+  await click('mt-timeline'); await visible('match-timeline');
+  await click('mt-lineups'); await visible('lineup-home');
+  await click('mt-summary');
+  await back();
+  await visible('sim-summary', 60000);
   const date1 = await text('home-date');
   check('date advanced', date1 !== date0, `${date0} -> ${date1}`);
   check('simulation summary mentions simulated days', /Simulated \d+ days/.test(await text('sim-summary')), await text('sim-summary'));
+  check('first-run checklist is replaced by the season glance after the first match', (await tid('welcome-card').count()) === 0 && (await tid('home-glance').count()) === 1);
+  check('form guide shows one W/D/L chip after one match', (await page.locator('[data-testid="form-chips"]:visible [role=button]').count()) === 1);
+  check('league position shown on home', /^\d+$/.test(await text('home-position')), await text('home-position'));
   await shot('18-after-sim');
   const results = page.locator('[data-testid^="result-"]:visible:not([aria-hidden="true"] *)');
   if (await results.count() > 0) {
-    await results.last().click();
+    check('result row on home carries a W/D/L badge', (await results.first().getAttribute('aria-label') ?? '').length > 0 && (await results.first().locator('[aria-label="Win"],[aria-label="Draw"],[aria-label="Loss"]').count()) === 1);
+    check('home result shows the same score as the match centre', (await results.first().innerText()).replace(/\s+/g, '').includes(finalScore), `${finalScore} vs ${(await results.first().innerText()).replace(/\n/g, ' ')}`);
+    await results.first().click();
     await visible('screen-match');
+    check('opening a finished match from a list does not auto-play (Watch button, no live clock)', (await tid('match-watch').count()) === 1 && (await tid('match-clock').count()) === 0);
     check('match centre shows a score', /\d\s*-\s*\d/.test(await text('match-score')));
     check('match stats shown', (await page.getByText('Possession').count()) > 0);
     await shot('19-match-summary');
@@ -332,6 +405,9 @@ try {
   await click('tab-home'); await visible('screen-home');
   const dateBeforeCancel = await text('home-date');
   await click('sim-end-season');
+  await visible('sheet-confirm-end');
+  await shot('18a-confirm-end-season');
+  await click('btn-confirm-endseason');
   await visible('sim-overlay');
   check('progress dialog shows date and counters', /\d+ days/.test(await text('sim-stats')), await text('sim-stats'));
   await shot('18b-sim-progress');
@@ -374,6 +450,13 @@ try {
   check('home is Arabic', (await page.getByText('المباريات القادمة').count()) > 0);
   check('dates localised in Arabic', /[؀-ۿ]/.test(await text('home-date')), await text('home-date'));
   await shot('37-home-arabic-rtl');
+  const resAr = page.locator('[data-testid^="result-"]:visible:not([aria-hidden="true"] *)');
+  if (await resAr.count()) {
+    await resAr.first().click(); await visible('screen-match'); await click('match-watch'); await visible('match-clock');
+    await page.waitForTimeout(4500); await shot('37b-match-reveal-arabic-rtl');
+    check('Arabic: live reveal shows Arabic labels', (await page.getByText('مباشر').count()) > 0);
+    await click('match-skip'); await visible('match-ft'); await back();
+  }
   await click('tab-squad'); await visible('screen-squad'); await shot('38-squad-arabic');
   await click('tab-market'); await visible('screen-market'); await shot('39-market-arabic');
   await goMore('nav-tactics'); await visible('screen-tactics'); await shot('40-tactics-arabic');
@@ -390,13 +473,19 @@ try {
     ['fixtures', async () => { await click('tab-fixtures'); await visible('screen-fixtures'); }],
     ['market', async () => { await click('tab-market'); await visible('screen-market'); }],
     ['more', async () => { await click('tab-more'); await visible('screen-more'); }],
-  ]) { await act(); await noHScroll(label); }
+  ]) { await act(); await noHScroll(label); await tapTargets(label + ' (320px)'); }
   await click('tab-home'); await shot('41-home-320');
+  const res320 = page.locator('[data-testid^="result-"]:visible:not([aria-hidden="true"] *)');
+  if (await res320.count()) {
+    await res320.first().click(); await visible('screen-match'); await click('match-watch'); await visible('match-clock');
+    await page.waitForTimeout(4000); await noHScroll('match reveal'); await tapTargets('match reveal (320px)'); await shot('41b-match-reveal-320');
+    await click('match-skip'); await visible('match-ft'); await back();
+  }
   await goMore('nav-competitions'); await click('comp-SAU1'); await visible('comp-table'); await noHScroll('competition table'); await shot('42-table-320');
   await back(); await back();
   await goMore('nav-tactics'); await visible('screen-tactics'); await noHScroll('tactics'); await shot('43-tactics-320'); await back();
   await goMore('nav-finances'); await noHScroll('finances'); await back();
-  await page.setViewportSize({ width: 390, height: 844 });
+  await page.setViewportSize({ width: 393, height: 852 });
   await goMore('nav-settings'); await click('theme-dark'); await back();
   await click('tab-home'); await shot('44-home-dark');
   await goMore('nav-about'); await visible('screen-about');

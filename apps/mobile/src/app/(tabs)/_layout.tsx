@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Pressable, View } from 'react-native';
+import { Platform, Pressable, View } from 'react-native';
 import { Redirect } from 'expo-router';
 import { Tabs, type BottomTabBarProps } from 'expo-router/js-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -10,6 +10,7 @@ import { Icon, type IconName } from '../../ui/Icon';
 import { Txt } from '../../ui/Txt';
 import type { TKey } from '../../i18n/translate';
 import { MIN_TOUCH } from '../../theme/tokens';
+import { haptic } from '../../platform/haptics';
 
 const TABS: { name: string; label: TKey; icon: IconName; testID: string }[] = [
   { name: 'index', label: 'tab.home', icon: 'home', testID: 'tab-home' },
@@ -43,7 +44,7 @@ function TabBar({ state, navigation }: BottomTabBarProps): ReactNode {
             aria-selected={focused}
             onPress={() => {
               const e = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
-              if (!focused && !e.defaultPrevented) navigation.navigate(route.name, route.params);
+              if (!focused && !e.defaultPrevented) { haptic('selection'); navigation.navigate(route.name, route.params); }
             }}
             style={{ flex: 1, minHeight: MIN_TOUCH + 12, alignItems: 'center', justifyContent: 'center', gap: 2, paddingVertical: 6 }}
           >
@@ -60,7 +61,7 @@ export default function TabsLayout(): ReactNode {
   const hasWorld = useGame((s) => s.hasWorld);
   if (!hasWorld) return <Redirect href="/start" />;
   return (
-    <Tabs tabBar={(p) => <TabBar {...p} />} screenOptions={{ headerShown: false, lazy: true }}>
+    <Tabs tabBar={(p) => <TabBar {...p} />} screenOptions={{ headerShown: false, lazy: true, animation: Platform.OS === 'web' ? 'none' : 'fade' }}>
       {TABS.map((tab) => <Tabs.Screen key={tab.name} name={tab.name} />)}
     </Tabs>
   );

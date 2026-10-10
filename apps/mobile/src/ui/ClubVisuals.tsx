@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import Svg, { ClipPath, Defs, G, Path, Rect } from 'react-native-svg';
 import { useTheme } from '../theme/ThemeProvider';
 import { readableOn, radii, spacing } from '../theme/tokens';
@@ -101,4 +101,27 @@ export function RatingPill({ value, max = 100, label }: { value: number | string
 
 export function Dot({ color, size = 8 }: { color: string; size?: number }): ReactNode {
   return <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: color, marginEnd: spacing.xs }} />;
+}
+
+export interface FormChipData { id: string; result: 'W' | 'D' | 'L'; label: string; letter: string }
+
+/** Large W/D/L chips (letter + colour, so it never relies on colour alone). Tapping a chip opens that match. */
+export function FormChips({ items, onPress, size = 32 }: { items: FormChipData[]; onPress?: (id: string) => void; size?: number }): ReactNode {
+  const { colors: c } = useTheme();
+  const col = { W: c.win, D: c.draw, L: c.loss };
+  return (
+    <View style={{ flexDirection: 'row', gap: spacing.md }} testID="form-chips">
+      {items.map((it) => {
+        const bg = col[it.result];
+        return (
+          <Pressable
+            key={it.id} accessibilityRole={onPress ? 'button' : 'text'} accessibilityLabel={it.label} onPress={onPress ? () => onPress(it.id) : undefined} hitSlop={6}
+            style={({ pressed }) => ({ width: size, height: size, borderRadius: size / 3, backgroundColor: bg, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.8 : 1 })}
+          >
+            <Txt variant="label" color={readableOn(bg)} align="center" allowFontScaling={false} style={{ fontSize: 13, lineHeight: 16, fontWeight: '800' }}>{it.letter}</Txt>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
 }

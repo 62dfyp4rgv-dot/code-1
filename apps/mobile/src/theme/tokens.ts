@@ -32,7 +32,7 @@ export const lightPalette: Palette = {
   bg: '#F2F5F3', surface: '#FFFFFF', surfaceAlt: '#E8EEEA', border: '#CBD5CF', text: '#10201A', textMuted: '#4A5B53',
   primary: '#0B6B3A', onPrimary: '#FFFFFF', primaryText: '#0B6B3A', accent: '#855C00', onAccent: '#FFFFFF',
   success: '#166A31', warning: '#9A5B00', danger: '#B3261E', info: '#1F5FA8',
-  win: '#166A31', draw: '#6B7A72', loss: '#B3261E',
+  win: '#166A31', draw: '#5C6B63', loss: '#B3261E',
   zoneChampion: '#C9A227', zoneEurope: '#2E7D32', zonePlayoff: '#1F5FA8', zoneRelegation: '#C62828',
   highlight: '#DDF1E4', overlay: 'rgba(8,18,13,0.55)', pitch: '#1E7A46',
 };

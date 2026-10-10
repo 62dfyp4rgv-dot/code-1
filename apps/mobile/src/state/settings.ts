@@ -14,11 +14,12 @@ export interface Settings {
   arabicDigits: boolean;
   autosave: boolean;
   highContrast: boolean;
+  haptics: boolean;
   lastSlot: number | null;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
-  theme: 'system', language: 'en', textScale: 1, currency: 'EUR', arabicDigits: false, autosave: true, highContrast: false, lastSlot: null,
+  theme: 'system', language: 'en', textScale: 1, currency: 'EUR', arabicDigits: false, autosave: true, highContrast: false, haptics: true, lastSlot: null,
 };
 
 const KEY = 'ui.settings.v1';
@@ -35,6 +36,7 @@ export function parseSettings(raw: string | null): Settings {
     if (typeof o.arabicDigits === 'boolean') s.arabicDigits = o.arabicDigits;
     if (typeof o.autosave === 'boolean') s.autosave = o.autosave;
     if (typeof o.highContrast === 'boolean') s.highContrast = o.highContrast;
+    if (typeof o.haptics === 'boolean') s.haptics = o.haptics;
     if (typeof o.lastSlot === 'number' || o.lastSlot === null) s.lastSlot = o.lastSlot ?? null;
     return s;
   } catch {
@@ -68,7 +70,7 @@ export const useSettings = create<SettingsState>((set, get) => ({
     const s = get();
     const snapshot: Settings = {
       theme: s.theme, language: s.language, textScale: s.textScale, currency: s.currency, arabicDigits: s.arabicDigits,
-      autosave: s.autosave, highContrast: s.highContrast, lastSlot: s.lastSlot,
+      autosave: s.autosave, highContrast: s.highContrast, haptics: s.haptics, lastSlot: s.lastSlot,
     };
     void storeRef?.setSetting(KEY, JSON.stringify(snapshot)).catch(() => undefined);
   },

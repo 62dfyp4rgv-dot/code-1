@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import {
-  SaveCorruptedError, advanceDay, createWorld, dateInfo, defaultWorldConfig, setHumanClub, validateWorld,
+  SaveCorruptedError, advanceDay, clubFixtures, createWorld, dateInfo, defaultWorldConfig, setHumanClub, validateWorld,
   type SlotInfo, type Violation, type WorldState,
 } from '@fu/engine';
 import { runSimulation, yieldToUi, type SimPlan, type SimProgress } from '../core/simRunner';
@@ -12,7 +12,9 @@ import { getSaveStore } from './storeHost';
 import { useSettings } from './settings';
 
 export interface Notice { id: number; tone: 'info' | 'warn' | 'error'; key: TKey; params?: TParams; detail?: string }
-export interface SimSummary { plan: SimPlan; daysDone: number; matchesPlayed: number; humanMatches: number; seasonEnded: boolean; cancelled: boolean; fromDay: number; toDay: number; error?: string }
+export interface SimSummary { plan: SimPlan; daysDone: number; matchesPlayed: number; humanMatches: number; seasonEnded: boolean; cancelled: boolean; fromDay: number; toDay: number; error?: string;
+  /** Newest match of the human club played during this run (for "open the match report"), if any. */
+  humanFixtureId?: string | null }
 export type SaveStatus = { status: 'idle' } | { status: 'saving' } | { status: 'saved'; at: string; slot: number } | { status: 'error'; message: string };
 
 interface GameState {
@@ -225,6 +227,11 @@ export async function runSim(plan: SimPlan): Promise<SimSummary | null> {
     plan, daysDone: final?.daysDone ?? 0, matchesPlayed: final?.matchesPlayed ?? 0, humanMatches: final?.humanMatches ?? 0, seasonEnded: final?.seasonEnded ?? false,
     cancelled: final?.cancelled ?? false, fromDay, toDay: w.day, error,
   };
+  const hid = w.config.humanClubId;
+  if (!error && hid && summary.humanMatches > 0) {
+    const newest = clubFixtures(w, hid, { upcoming: false, limit: 1 })[0];
+    summary.humanFixtureId = newest && newest.day >= fromDay ? newest.id : null;
+  }
   set({ sim: null, lastSim: summary });
   set((s) => ({ version: s.version + 1, dirty: true }));
   if (error) notify('error', 'notice.simError', undefined, error);

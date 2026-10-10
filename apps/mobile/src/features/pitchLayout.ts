@@ -1,6 +1,6 @@
 import type { Position } from '@fu/engine';
 
-const LINE_Y: Record<Position, number> = { GK: 0.9, CB: 0.7, LB: 0.7, RB: 0.7, DM: 0.54, CM: 0.42, AM: 0.28, LW: 0.22, RW: 0.22, ST: 0.08 };
+const LINE_Y: Record<Position, number> = { GK: 0.91, CB: 0.73, LB: 0.73, RB: 0.73, DM: 0.58, CM: 0.46, AM: 0.33, LW: 0.27, RW: 0.27, ST: 0.1 };
 const SIDE: Partial<Record<Position, number>> = { LB: 0, LW: 0, RB: 2, RW: 2 };
 
 export function layoutSlots(slots: readonly Position[]): { x: number; y: number }[] {

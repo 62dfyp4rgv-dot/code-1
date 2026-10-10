@@ -1,17 +1,18 @@
 import { useState, type ReactNode } from 'react';
 import { clubFixtures, dateInfo, isWindowOpen, windowDaysLeft } from '@fu/engine';
 import { useHumanClubId, useWorldQuery } from '../state/queries';
-import { runSim } from '../state/gameStore';
+
 import { useI18n } from '../i18n/useI18n';
 import { Screen, Card, Section, KeyValue, ProgressBar, RowGroup, Empty, Spinner } from '../ui/Layout';
 import { Button, Stepper } from '../ui/Controls';
 import { Txt } from '../ui/Txt';
-import { FixtureRow, SimControls } from '../features/common';
+import { FixtureRow, SimControls, usePlay } from '../features/common';
 
 export default function Calendar(): ReactNode {
   const { t, date, dig } = useI18n();
   const id = useHumanClubId();
   const [days, setDays] = useState(14);
+  const play = usePlay();
   const data = useWorldQuery('calendar', [id], (w) => {
     if (!id) return null;
     const c = w.clubs[id]!;
@@ -33,7 +34,7 @@ export default function Calendar(): ReactNode {
         <SimControls />
         <Card>
           <Stepper label={t('calendar.customDays')} value={days} min={1} max={90} step={1} onChange={setDays} format={dig} testID="stepper-days" />
-          <Button label={t('calendar.advanceN', { n: dig(days) })} variant="secondary" onPress={() => void runSim({ kind: 'days', days })} testID="sim-custom" />
+          <Button label={t('calendar.advanceN', { n: dig(days) })} variant="secondary" onPress={() => void play({ kind: 'days', days })} testID="sim-custom" />
         </Card>
         <Txt variant="caption" color="muted">{t('sim.hint')}</Txt>
       </Section>

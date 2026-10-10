@@ -182,8 +182,8 @@ export interface MatchResult {
 export const MATCH_PARAMS = {
   beta: 0.0155, // generic logit shift per rating point
   homeAdvantageLogit: 0.17, // total home-vs-away swing for a full stadium, applied half each way
-  build: { loseBase: 0.205, pressWeightMin: 0.35, pressWeightRange: 0.9, directnessLoss: 0.5 },
-  progress: { successBase: 0.44, compression: 0.85, behindLine: 1.1, mentality: 0.11, directBypass: 0.95, directAerial: 0.013 },
+  build: { loseBase: 0.205, pressWeightMin: 0.35, pressWeightRange: 0.75, directnessLoss: 0.62, tempoLoss: 0.5 },
+  progress: { successBase: 0.44, compression: 0.85, behindLine: 1.1, mentality: 0.11, directBypass: 0.95, directAerial: 0.013, tempo: 0.5 },
   create: { chanceBase: 0.222, mentality: 0.12, directPenalty: 0.3 },
   /**
    * Counter-attacking: transitions only pay off when the opponent is *exposed* (high line, attacking mentality,
@@ -540,7 +540,7 @@ function runSequence(
   if (!transition) {
     const pressW = P.build.pressWeightMin + P.build.pressWeightRange * dp.pressing * (1 - 0.5 * ap.directness);
     const rain = c.rainPassPenalty ? P.weather.rainBuildLoss * (1.4 - ap.directness) : 0;
-    const extra = P.build.directnessLoss * (ap.directness - 0.5) + rain - ha;
+    const extra = P.build.directnessLoss * (ap.directness - 0.5) + P.build.tempoLoss * (ap.tempo - 0.5) + rain - ha;
     const pLose = prob(P.build.loseBase, (dr.press - r.buildUp) * pressW, extra);
     const n1 = poisson(c, 3.4 * (1 - 0.72 * ap.directness) * (0.8 + 0.4 * (1 - ap.tempo)));
     seconds += rangeSeconds(c, P.seqSeconds.build, durMult * (0.7 + 0.5 * (1 - ap.directness)));
@@ -565,7 +565,8 @@ function runSequence(
       behind +
       direct +
       P.progress.mentality * ap.mentality +
-      0.15 * dp.mentality + // an attacking opponent leaves gaps behind its own line
+      P.progress.tempo * (ap.tempo - 0.5) + // slow play lets the defence set; fast play pays in fatigue (tactics.ts fatigueRate)
+      (dp.mentality > 0 ? 0.2 : 0.1) * dp.mentality + // an attacking opponent leaves gaps behind its own line
       transBonus - settledPenalty +
       ha;
     const defLevel = dr.defend * (0.85 + 0.15 * (1 - dp.line));
@@ -595,7 +596,7 @@ function runSequence(
 
   // ---- Phase 3: chance creation
   const highTrans = mode === 'transitionHigh';
-  const defEff = dr.defend * (1 + 0.1 * (0.5 - dp.line));
+  const defEff = dr.defend * (1 + 0.05 * (0.5 - dp.line));
   const C3 = P.counter;
   const exposure3 = exposureOf(D);
   const transCreate = highTrans
@@ -603,7 +604,7 @@ function runSequence(
     : transition ? C3.createBase + C3.createExposure * exposure3 * (ap.counter ? C3.specialistMult : 1) : 0;
   const extra3 =
     P.create.mentality * ap.mentality +
-    0.09 * dp.mentality +
+    (dp.mentality > 0 ? 0.09 : 0.05) * dp.mentality +
     transCreate -
     P.create.directPenalty * (ap.directness - 0.5) -
     (!transition && ap.counter ? C3.settledCreatePenalty : 0) +
@@ -636,7 +637,7 @@ function runSequence(
   const creator = pickCreator(c, A, kind);
   const shooter = pickShooter(c, A, kind, creator);
   if (!shooter) return turnover(c, A, D, 'final', seconds, mode);
-  const quality = Math.exp(P.qualityBeta * (createEff - defMarked)) * (highTrans ? 1.22 : 1) * (1 + 0.18 * (dp.line - 0.5)) *
+  const quality = Math.exp(P.qualityBeta * (createEff - defMarked)) * (highTrans ? 1.22 : 1) * (1 + 0.11 * (dp.line - 0.5)) *
     (kind === 'longShot' ? 1 + 0.9 * (0.5 - dp.line) : 1);
   const mean = XG_MEAN[kind] ?? 0.1;
   const xg = shotXg(c, mean, quality);

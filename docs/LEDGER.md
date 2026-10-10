@@ -41,4 +41,5 @@ Each entry: defect found -> how found -> fix -> regression test -> evidence. Sco
 - CR-005: `ROLES`/`FORMATIONS` are prototype-less; `statLine` uses own-property checks; `for…in` removed.
 - CR-006: rollover no longer applies surplus investment, wage review or academy review to the human club.
 - CR-008: single-leg hosts drawn deterministically (test in `regressions.test.ts`).
-- Still open: CR-007, CR-009..CR-022 (except CR-008), QA-008/011/016. Mobile app unverified.
+- CR-007: profile attributes and position ratings of other clubs pass through the scouting lens. CR-009: tempo/line/mentality/press retune + random stack sweep test.
+- Still open: CR-010..CR-022, QA-008/011/016. Mobile app not run on a device.

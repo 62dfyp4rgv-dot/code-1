@@ -38,6 +38,7 @@ export default function SettingsScreen(): ReactNode {
           <Slider label={t('settings.textSize')} value={Math.round(s.textScale * 100)} min={80} max={160} step={10} onChange={(v) => s.update({ textScale: v / 100 })} testID="slider-textsize" lowLabel="80%" highLabel="160%" />
           <Txt variant="body">{t('settings.textSample')}</Txt>
           <Switch label={t('settings.highContrast')} value={s.highContrast} onChange={(v) => s.update({ highContrast: v })} testID="switch-contrast" />
+          <Switch label={t('settings.haptics')} hint={t('settings.hapticsHint')} value={s.haptics} onChange={(v) => s.update({ haptics: v })} testID="switch-haptics" />
         </Card>
       </Section>
       <Section title={t('settings.currency')}>

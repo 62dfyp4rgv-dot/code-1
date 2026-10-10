@@ -8,7 +8,7 @@ import { layoutSlots } from './pitchLayout';
 export interface PitchSlot { pos: Position; label: string; sub?: string }
 
 /** Schematic pitch with one tappable marker per formation slot. */
-export function FormationPitch({ slots, items, selected, onSelect, height = 300, testID }: { slots: readonly Position[]; items: PitchSlot[]; selected?: number | null; onSelect?: (i: number) => void; height?: number; testID?: string }): ReactNode {
+export function FormationPitch({ slots, items, selected, onSelect, height = 380, testID }: { slots: readonly Position[]; items: PitchSlot[]; selected?: number | null; onSelect?: (i: number) => void; height?: number; testID?: string }): ReactNode {
   const th = useTheme();
   const pts = layoutSlots(slots);
   return (
@@ -27,7 +27,7 @@ export function FormationPitch({ slots, items, selected, onSelect, height = 300,
             <View style={{ minWidth: 34, height: 34, borderRadius: 17, paddingHorizontal: 4, backgroundColor: sel ? th.colors.accent : '#FFFFFF', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: sel ? '#FFFFFF' : '#0B3D2E' }}>
               <Txt variant="caption" color="#10201A" align="center" allowFontScaling={false} style={{ fontWeight: '800', fontSize: 11, lineHeight: 14 }}>{it.label}</Txt>
             </View>
-            {it.sub ? <Txt variant="caption" color="#FFFFFF" align="center" numberOfLines={1} allowFontScaling={false} style={{ fontSize: 10, lineHeight: 12, maxWidth: 64 }}>{it.sub}</Txt> : null}
+            {it.sub ? <View style={{ marginTop: 2, paddingHorizontal: 4, borderRadius: 4, backgroundColor: '#0B3D2ECC', maxWidth: 64 }}><Txt variant="caption" color="#FFFFFF" align="center" numberOfLines={1} allowFontScaling={false} style={{ fontSize: 10, lineHeight: 13 }}>{it.sub}</Txt></View> : null}
           </Pressable>
         );
       })}

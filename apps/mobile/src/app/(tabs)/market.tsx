@@ -2,8 +2,8 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { transferMarketView, financeView, isWindowOpen, windowDaysLeft, POSITIONS, type MarketFilter, type Position } from '@fu/engine';
 import { useHumanClubId, useWorldQuery } from '../../state/queries';
 import { useI18n } from '../../i18n/useI18n';
-import { Screen, Card, RowGroup, Section, Empty, Spinner, KeyValue, Banner } from '../../ui/Layout';
-import { Chip, ChipRow, Field, Segmented, Stepper } from '../../ui/Controls';
+import { Screen, Card, RowGroup, Empty, Spinner, KeyValue, Banner } from '../../ui/Layout';
+import { Chip, Field, ScrollChips, Segmented, Stepper } from '../../ui/Controls';
 import { Txt } from '../../ui/Txt';
 import { PlayerListRow } from '../../features/PlayerListRow';
 import { useRouter } from 'expo-router';
@@ -54,13 +54,11 @@ export default function Market(): ReactNode {
       <Segmented<Mode> label={t('tab.market')} value={mode} onChange={setMode} options={[
         { value: 'all', label: t('market.all'), testID: 'mk-all' }, { value: 'listed', label: t('market.listed'), testID: 'mk-listed' }, { value: 'free', label: t('market.free'), testID: 'mk-free' },
       ]} />
-      <Field label={t('market.searchName')} value={query} onChangeText={setQuery} testID="market-search" />
-      <Section title={t('market.position')}>
-        <ChipRow>
-          <Chip label={t('squad.f.all')} selected={pos === null} onPress={() => setPos(null)} testID="mk-pos-all" />
-          {POSITIONS.map((p) => <Chip key={p} label={td('pos.' + p, p)} selected={pos === p} onPress={() => setPos(p)} testID={`mk-pos-${p}`} />)}
-        </ChipRow>
-      </Section>
+      <Field search label={t('market.searchName')} value={query} onChangeText={setQuery} testID="market-search" />
+      <ScrollChips label={t('market.position')}>
+        <Chip label={t('squad.f.all')} selected={pos === null} onPress={() => setPos(null)} testID="mk-pos-all" />
+        {POSITIONS.map((p) => <Chip key={p} label={td('pos.' + p, p)} selected={pos === p} onPress={() => setPos(p)} testID={`mk-pos-${p}`} />)}
+      </ScrollChips>
       <Card>
         <Stepper label={t('market.minAge')} value={minAge} min={16} max={maxAge} onChange={setMinAge} format={dig} testID="mk-minage" />
         <Stepper label={t('market.maxAge')} value={maxAge} min={minAge} max={42} onChange={setMaxAge} format={dig} testID="mk-maxage" />

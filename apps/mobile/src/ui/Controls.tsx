@@ -1,11 +1,12 @@
 import { useCallback, useRef, useState, type ReactNode } from 'react';
 import {
-  ActivityIndicator, PanResponder, Pressable, TextInput, View, type AccessibilityActionEvent, type GestureResponderEvent, type LayoutChangeEvent, type StyleProp, type TextInputProps, type ViewStyle,
+  ActivityIndicator, PanResponder, Pressable, ScrollView, TextInput, View, useWindowDimensions, type AccessibilityActionEvent, type GestureResponderEvent, type LayoutChangeEvent, type StyleProp, type TextInputProps, type ViewStyle,
 } from 'react-native';
 import { useTheme } from '../theme/ThemeProvider';
 import { MIN_TOUCH, radii, spacing } from '../theme/tokens';
 import { Txt } from './Txt';
 import { Icon, type IconName } from './Icon';
+import { haptic } from '../platform/haptics';
 
 type Variant = 'primary' | 'secondary' | 'danger' | 'ghost';
 
@@ -17,6 +18,8 @@ interface ButtonProps {
   disabled?: boolean;
   loading?: boolean;
   small?: boolean;
+  /** Single-line label that shrinks to fit (tight button rows on 320 px phones). */
+  fit?: boolean;
   /** Stretch to the container width. */
   block?: boolean;
   testID?: string;
@@ -24,11 +27,13 @@ interface ButtonProps {
   style?: StyleProp<ViewStyle>;
 }
 
-export function Button({ label, onPress, variant = 'primary', icon, disabled, loading, small, block, testID, accessibilityHint, style }: ButtonProps): ReactNode {
+export function Button({ label, onPress, variant = 'primary', icon, disabled, loading, small, fit, block, testID, accessibilityHint, style }: ButtonProps): ReactNode {
   const { colors: c, isDark } = useTheme();
   const bg = variant === 'primary' ? c.primary : variant === 'danger' ? c.danger : variant === 'secondary' ? c.surfaceAlt : 'transparent';
   const fg = variant === 'primary' ? c.onPrimary : variant === 'danger' ? (isDark ? '#2A0A07' : '#FFFFFF') : variant === 'secondary' ? c.text : c.primaryText;
   const off = disabled || loading;
+  const winW = useWindowDimensions().width;
+  const narrowFit = !!fit && winW < 360;
   return (
     <Pressable
       testID={testID}
@@ -39,11 +44,11 @@ export function Button({ label, onPress, variant = 'primary', icon, disabled, lo
       aria-disabled={!!off}
       aria-busy={!!loading}
       disabled={off}
-      onPress={onPress}
+      onPress={onPress ? () => { haptic(variant === 'primary' || variant === 'danger' ? 'light' : 'selection'); onPress(); } : undefined}
       style={({ pressed }) => [
         {
-          minHeight: small ? 36 : MIN_TOUCH, minWidth: MIN_TOUCH, paddingHorizontal: small ? spacing.md : spacing.lg, paddingVertical: spacing.sm, borderRadius: radii.md, backgroundColor: bg,
-          flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, opacity: off ? 0.5 : pressed ? 0.8 : 1,
+          minHeight: small ? 36 : MIN_TOUCH, minWidth: MIN_TOUCH, paddingHorizontal: fit ? spacing.sm : small ? spacing.md : spacing.lg, paddingVertical: spacing.sm, borderRadius: radii.md, backgroundColor: bg,
+          flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, opacity: off ? 0.5 : pressed ? 0.85 : 1, transform: [{ scale: pressed && !off ? 0.97 : 1 }],
           borderWidth: variant === 'ghost' ? 1 : 0, borderColor: c.border,
         },
         block ? { alignSelf: 'stretch' } : null,
@@ -52,7 +57,7 @@ export function Button({ label, onPress, variant = 'primary', icon, disabled, lo
       hitSlop={small ? { top: 4, bottom: 4, left: 4, right: 4 } : undefined}
     >
       {loading ? <ActivityIndicator color={fg} /> : icon ? <Icon name={icon} size={18} color={fg} /> : null}
-      <Txt variant="bodyStrong" color={fg} align="center" style={{ flexShrink: 1 }}>{label}</Txt>
+      <Txt variant={narrowFit ? 'small' : 'bodyStrong'} color={fg} align="center" style={[{ flexShrink: 1 }, narrowFit ? { fontWeight: '700' } : null]} numberOfLines={fit ? 1 : undefined} adjustsFontSizeToFit={fit} minimumFontScale={fit ? 0.75 : undefined}>{label}</Txt>
     </Pressable>
   );
 }
@@ -68,10 +73,10 @@ export function Chip({ label, selected, onPress, testID, tone = 'default' }: Chi
       accessibilityLabel={label}
       accessibilityState={{ selected: !!selected }}
       aria-selected={!!selected}
-      onPress={onPress}
+      onPress={onPress ? () => { haptic('selection'); onPress(); } : undefined}
       style={({ pressed }) => ({
         minHeight: MIN_TOUCH, minWidth: MIN_TOUCH, paddingHorizontal: spacing.md, borderRadius: radii.pill, justifyContent: 'center', alignItems: 'center',
-        backgroundColor: selected ? c.primary : c.surfaceAlt, borderWidth: 1, borderColor: selected ? c.primary : tone === 'danger' ? c.danger : c.border, opacity: pressed ? 0.8 : 1,
+        backgroundColor: selected ? c.primary : c.surfaceAlt, borderWidth: 1, borderColor: selected ? c.primary : tone === 'danger' ? c.danger : c.border, opacity: pressed ? 0.85 : 1, transform: [{ scale: pressed ? 0.96 : 1 }],
       })}
     >
       <Txt variant="small" color={selected ? c.onPrimary : c.text} style={{ fontWeight: '600' }} align="center">{label}</Txt>
@@ -81,6 +86,18 @@ export function Chip({ label, selected, onPress, testID, tone = 'default' }: Chi
 
 export function ChipRow({ children }: { children: ReactNode }): ReactNode {
   return <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>{children}</View>;
+}
+
+/** Single-line, horizontally scrolling chip row that bleeds to the screen edges (saves vertical space on phones). */
+export function ScrollChips({ children, label }: { children: ReactNode; label?: string }): ReactNode {
+  return (
+    <ScrollView
+      horizontal showsHorizontalScrollIndicator={false} accessibilityLabel={label} keyboardShouldPersistTaps="handled"
+      style={{ marginHorizontal: -spacing.lg, flexGrow: 0 }} contentContainerStyle={{ paddingHorizontal: spacing.lg, gap: spacing.sm }}
+    >
+      {children}
+    </ScrollView>
+  );
 }
 
 interface SegmentedProps<T extends string | number> { options: { value: T; label: string; testID?: string }[]; value: T; onChange: (v: T) => void; label?: string }
@@ -99,8 +116,8 @@ export function Segmented<T extends string | number>({ options, value, onChange,
             accessibilityLabel={o.label}
             accessibilityState={{ selected: sel, checked: sel }}
             aria-checked={sel}
-            onPress={() => onChange(o.value)}
-            style={{ flex: 1, minHeight: MIN_TOUCH - 6, paddingHorizontal: 6, borderRadius: radii.sm, alignItems: 'center', justifyContent: 'center', backgroundColor: sel ? c.surface : 'transparent', borderWidth: sel ? 1 : 0, borderColor: c.border }}
+            onPress={() => { if (!sel) haptic('selection'); onChange(o.value); }}
+            style={{ flex: 1, minHeight: MIN_TOUCH, paddingHorizontal: 6, borderRadius: radii.sm, alignItems: 'center', justifyContent: 'center', backgroundColor: sel ? c.surface : 'transparent', borderWidth: sel ? 1 : 0, borderColor: c.border }}
           >
             <Txt variant="small" color={sel ? 'primary' : 'muted'} align="center" style={{ fontWeight: sel ? '700' : '500' }} numberOfLines={2}>{o.label}</Txt>
           </Pressable>
@@ -110,27 +127,30 @@ export function Segmented<T extends string | number>({ options, value, onChange,
   );
 }
 
-interface FieldProps extends Omit<TextInputProps, 'style'> { label: string; error?: string | null; testID?: string }
+interface FieldProps extends Omit<TextInputProps, 'style'> { label: string; error?: string | null; testID?: string; /** Search-box look: magnifier icon, label shown as placeholder instead of a caption. */ search?: boolean }
 
-export function Field({ label, error, testID, ...rest }: FieldProps): ReactNode {
+export function Field({ label, error, testID, search, ...rest }: FieldProps): ReactNode {
   const th = useTheme();
   const c = th.colors;
   const [focus, setFocus] = useState(false);
   return (
     <View style={{ gap: 4 }}>
-      <Txt variant="caption" color="muted">{label}</Txt>
-      <TextInput
-        testID={testID}
-        accessibilityLabel={label}
-        placeholderTextColor={c.textMuted}
-        {...rest}
-        onFocus={(e) => { setFocus(true); rest.onFocus?.(e); }}
-        onBlur={(e) => { setFocus(false); rest.onBlur?.(e); }}
-        style={{
-          minHeight: MIN_TOUCH, borderRadius: radii.md, borderWidth: 1.5, borderColor: error ? c.danger : focus ? c.primary : c.border, backgroundColor: c.surface, color: c.text,
-          paddingHorizontal: spacing.md, fontSize: th.fs(15), textAlign: th.rtl ? 'right' : 'left',
-        }}
-      />
+      {search ? null : <Txt variant="caption" color="muted">{label}</Txt>}
+      <View style={{ flexDirection: 'row', alignItems: 'center', borderRadius: search ? radii.pill : radii.md, borderWidth: 1.5, borderColor: error ? c.danger : focus ? c.primary : c.border, backgroundColor: search ? c.surfaceAlt : c.surface, paddingStart: search ? spacing.md : 0 }}>
+        {search ? <Icon name="search" size={18} color={c.textMuted} /> : null}
+        <TextInput
+          testID={testID}
+          accessibilityLabel={label}
+          placeholder={search ? label : undefined}
+          placeholderTextColor={c.textMuted}
+          returnKeyType={search ? 'search' : undefined}
+          autoCorrect={search ? false : undefined}
+          {...rest}
+          onFocus={(e) => { setFocus(true); rest.onFocus?.(e); }}
+          onBlur={(e) => { setFocus(false); rest.onBlur?.(e); }}
+          style={[{ flex: 1, minHeight: MIN_TOUCH, color: c.text, paddingHorizontal: spacing.md, fontSize: th.fs(15), textAlign: th.rtl ? 'right' : 'left' }, search ? { borderWidth: 0 } : null]}
+        />
+      </View>
       {error ? <Txt variant="caption" color="danger">{error}</Txt> : null}
     </View>
   );
@@ -145,7 +165,7 @@ export function Stepper({ label, value, min, max, step = 1, onChange, format, te
     <Pressable
       accessibilityRole="button" accessibilityLabel={`${label} ${name}`} testID={testID ? `${testID}-${sign > 0 ? 'inc' : 'dec'}` : undefined}
       disabled={sign > 0 ? value >= max : value <= min}
-      onPress={() => onChange(Math.min(max, Math.max(min, value + sign * step)))}
+      onPress={() => { haptic('selection'); onChange(Math.min(max, Math.max(min, value + sign * step))); }}
       style={{ width: MIN_TOUCH, height: MIN_TOUCH, borderRadius: radii.md, backgroundColor: c.surfaceAlt, alignItems: 'center', justifyContent: 'center', opacity: (sign > 0 ? value >= max : value <= min) ? 0.4 : 1 }}
     >
       <Icon name={icon} size={20} />
@@ -182,7 +202,7 @@ export function Slider({ label, value, min = 0, max = 100, step = 5, onChange, l
       onPanResponderMove: (_e, g) => { onChangeRef.current(fromXRef.current(startX.current + g.dx)); },
     }),
   ).current;
-  const onChangeRef = useRef(onChange); onChangeRef.current = onChange;
+  const onChangeRef = useRef(onChange); onChangeRef.current = (v: number) => { if (v !== value) haptic('selection'); onChange(v); };
   const fromXRef = useRef(fromX); fromXRef.current = fromX;
   const pct = ((value - min) / (max - min)) * 100;
   const adjust = (e: AccessibilityActionEvent): void => {
@@ -230,7 +250,7 @@ export function Switch({ label, value, onChange, hint, testID }: { label: string
   const { colors: c } = useTheme();
   return (
     <Pressable
-      testID={testID} accessibilityRole="switch" accessibilityLabel={label} accessibilityState={{ checked: value }} aria-checked={value} onPress={() => onChange(!value)}
+      testID={testID} accessibilityRole="switch" accessibilityLabel={label} accessibilityState={{ checked: value }} aria-checked={value} onPress={() => { haptic('selection'); onChange(!value); }}
       style={{ minHeight: MIN_TOUCH, flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.xs }}
     >
       <View style={{ flex: 1 }}>

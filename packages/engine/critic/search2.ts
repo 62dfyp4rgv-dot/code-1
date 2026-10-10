@@ -15,6 +15,7 @@ const base = defaultTactics('4-3-3'); const N = 3000;
 const cfgs: [string, Partial<Tactics>][] = [
   ['control (identical)', {}],
   ['tempo 10', { tempo: 10 }],
+  ['tempo 90', { tempo: 90 }],
   ['tempo 10 + line 10', { tempo: 10, defensiveLine: 10 }],
   ['tempo 10 + line 10 + mentality -2', { tempo: 10, defensiveLine: 10, mentality: -2 }],
   ['tempo 10 + line 10 + directness 90', { tempo: 10, defensiveLine: 10, directness: 90 }],

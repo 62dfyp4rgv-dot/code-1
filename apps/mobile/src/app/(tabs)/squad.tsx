@@ -4,8 +4,8 @@ import { useRouter } from 'expo-router';
 import { squadView } from '@fu/engine';
 import { useHumanClubId, useWorldQuery } from '../../state/queries';
 import { useI18n } from '../../i18n/useI18n';
-import { Screen, RowGroup, Section, Empty, Spinner } from '../../ui/Layout';
-import { Button, Chip, ChipRow, Field } from '../../ui/Controls';
+import { Screen, RowGroup, Empty, Spinner } from '../../ui/Layout';
+import { Button, Chip, Field, ScrollChips } from '../../ui/Controls';
 import { Txt } from '../../ui/Txt';
 import { filterSquad, sortSquad, type PosFilter, type SortKey } from '../../features/squadUtils';
 import { hrefs } from '../../features/common';
@@ -25,17 +25,18 @@ export default function Squad(): ReactNode {
   const sorts: SortKey[] = ['position', 'ability', 'age', 'value', 'form', 'condition', 'goals'];
   return (
     <Screen testID="screen-squad" title={t('tab.squad')} subtitle={t('squad.count', { n: dig(rows.length) })} tabs
-      right={<View style={{ flexDirection: 'row', gap: 6 }}>
-        <Button label={t('nav.tactics')} variant="secondary" small onPress={() => router.push('/tactics')} testID="btn-tactics" />
-        <Button label={t('nav.lineup')} variant="secondary" small onPress={() => router.push('/lineup')} testID="btn-lineup" />
+      right={<View style={{ flexDirection: 'row', gap: 8 }}>
+        <Button label={t('nav.tactics')} variant="secondary" onPress={() => router.push('/tactics')} testID="btn-tactics" />
+        <Button label={t('nav.lineup')} variant="secondary" onPress={() => router.push('/lineup')} testID="btn-lineup" />
       </View>}>
-      <Field label={t('squad.search')} value={query} onChangeText={setQuery} testID="squad-search" />
-      <Section title={t('squad.filter')}>
-        <ChipRow>{filters.map((f) => <Chip key={f} label={t(`squad.f.${f}` as 'squad.f.all')} selected={filter === f} onPress={() => setFilter(f)} testID={`squad-filter-${f}`} />)}</ChipRow>
-      </Section>
-      <Section title={t('squad.sort')}>
-        <ChipRow>{sorts.map((s) => <Chip key={s} label={t(`squad.s.${s}` as 'squad.s.age')} selected={sort === s} onPress={() => setSort(s)} testID={`squad-sort-${s}`} />)}</ChipRow>
-      </Section>
+      <Field search label={t('squad.search')} value={query} onChangeText={setQuery} testID="squad-search" />
+      <ScrollChips label={t('squad.filter')}>
+        {filters.map((f) => <Chip key={f} label={t(`squad.f.${f}` as 'squad.f.all')} selected={filter === f} onPress={() => setFilter(f)} testID={`squad-filter-${f}`} />)}
+      </ScrollChips>
+      <ScrollChips label={t('squad.sort')}>
+        <View style={{ justifyContent: 'center' }}><Txt variant="caption" color="muted" style={{ fontWeight: '700' }}>{t('squad.sort')}</Txt></View>
+        {sorts.map((s) => <Chip key={s} label={t(`squad.s.${s}` as 'squad.s.age')} selected={sort === s} onPress={() => setSort(s)} testID={`squad-sort-${s}`} />)}
+      </ScrollChips>
       <RowGroup testID="squad-list">
         {shown.length === 0 ? <Empty text={t('common.noResults')} /> : shown.map((r) => <PlayerListRow key={r.id} r={r} onPress={() => router.push(hrefs.player(r.id))} />)}
       </RowGroup>

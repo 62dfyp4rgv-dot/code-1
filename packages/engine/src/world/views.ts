@@ -7,7 +7,8 @@ import { ageOf, overall, positionalOverall } from '../players';
 import { COMPETITIONS, LEAGUE_BY_ID } from '../competition/registry';
 import { activeRules, currentTable } from '../competition/engine';
 import type { CompetitionDef, Fixture, TableRow } from '../competition/types';
-import { GK_ATTRS, MENTAL_ATTRS, PHYSICAL_ATTRS, TECHNICAL_ATTRS, type Club, type Player, type Position } from '../types';
+import { ATTR_KEYS, GK_ATTRS, MENTAL_ATTRS, PHYSICAL_ATTRS, TECHNICAL_ATTRS, type Club, type Player, type Position } from '../types';
+import { keyedNoise } from '../rng';
 import { engineContext } from './matchday';
 import { squadOf, freeAgents, allPlayers } from './runtime';
 import { seasonStartDay } from './calendar';
@@ -241,10 +242,18 @@ export function playerProfile(world: WorldState, playerId: string): PlayerProfil
   if (!p) return null;
   const row = playerRow(world, p);
   const exact = row.exact;
-  const noise = (v: number): number => (exact ? Math.round(v) : Math.round(v / 3) * 3); // coarser view for unscouted players
-  const group = (keys: readonly string[]): { name: string; value: number }[] => keys.map((k) => ({ name: k, value: noise(p.attrs[k as keyof typeof p.attrs]) }));
+  // Other clubs' players are shown through the same scouting lens the AI uses: one shared shift (the scouted ability
+  // error) plus per-attribute noise, so the displayed attributes and position ratings never reveal the true values.
+  const viewer = world.config.humanClubId ? world.clubs[world.config.humanClubId] : undefined;
+  const shift = exact || !viewer ? 0 : row.ability - overall(p);
+  const shown = { ...p.attrs };
+  if (!exact && viewer) {
+    for (const k of ATTR_KEYS) shown[k] = Math.max(1, Math.min(100, Math.round(p.attrs[k] + shift + keyedNoise(viewer.id, p.id, `attr:${k}`) * 4)));
+  }
+  const group = (keys: readonly string[]): { name: string; value: number }[] => keys.map((k) => ({ name: k, value: Math.round(shown[k as keyof typeof shown]) }));
+  const lens: Player = exact ? p : { ...p, attrs: shown };
   const positions = (Object.keys({ GK: 0, CB: 0, LB: 0, RB: 0, DM: 0, CM: 0, AM: 0, LW: 0, RW: 0, ST: 0 }) as Position[])
-    .map((pos) => ({ position: pos, familiarity: pos === p.primary ? 1 : (p.positions[pos] ?? 0), rating: Math.round(positionalOverall(p, pos)) }))
+    .map((pos) => ({ position: pos, familiarity: pos === p.primary ? 1 : (p.positions[pos] ?? 0), rating: Math.round(positionalOverall(lens, pos)) }))
     .filter((x) => x.familiarity >= 0.6);
   return {
     row, traits: p.traits, foot: p.foot, weakFoot: p.weakFoot, positions,

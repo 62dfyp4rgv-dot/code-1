@@ -2,14 +2,16 @@ import { useState, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { dateInfo, matchView, type MatchView } from '@fu/engine';
-import { useWorldQuery } from '../../state/queries';
+import { useHumanClubId, useWorldQuery } from '../../state/queries';
 import { useI18n } from '../../i18n/useI18n';
 import { useTheme } from '../../theme/ThemeProvider';
 import { Screen, Card, Section, Empty, RowGroup, Row } from '../../ui/Layout';
 import { Segmented, Switch } from '../../ui/Controls';
 import { Txt } from '../../ui/Txt';
-import { Crest, PosBadge, RatingPill } from '../../ui/ClubVisuals';
+import { PosBadge, RatingPill } from '../../ui/ClubVisuals';
 import { hrefs } from '../../features/common';
+import { MatchReveal, type Phase } from '../../features/MatchReveal';
+import { Icon } from '../../ui/Icon';
 import { spacing } from '../../theme/tokens';
 
 type Tab = 'summary' | 'timeline' | 'lineups';
@@ -36,12 +38,14 @@ function StatRow({ label, home, away, fmt }: { label: string; home: number; away
 }
 
 export default function MatchScreen(): ReactNode {
-  const { id: raw } = useLocalSearchParams<{ id: string }>();
+  const { id: raw, reveal } = useLocalSearchParams<{ id: string; reveal?: string }>();
+  const humanId = useHumanClubId();
   const id = decodeURIComponent(raw ?? '');
   const { t, td, dig, engineDate, num } = useI18n();
   const router = useRouter();
   const [tab, setTab] = useState<Tab>('summary');
   const [keyOnly, setKeyOnly] = useState(true);
+  const [phase, setPhase] = useState<Phase>(reveal === '1' ? 'playing' : 'idle');
   const data = useWorldQuery('match', [id], (w) => {
     const mv = matchView(w, id);
     if (mv) return { mv, fallback: null as null };
@@ -61,25 +65,13 @@ export default function MatchScreen(): ReactNode {
   const score = mv?.fixture.score ?? fb?.score ?? '–';
   return (
     <Screen back title={t('match.title')} subtitle={mv ? `${mv.fixture.competition} · ${engineDate(mv.fixture.date)}` : undefined} testID="screen-match">
-      <Card accent={undefined}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm }}>
-          <View style={{ flex: 1, alignItems: 'center', gap: 4 }}>
-            <Crest clubId={homeId} name={homeName} size={52} />
-            <Txt variant="small" align="center" numberOfLines={2} onPress={() => router.push(hrefs.club(homeId))} accessibilityRole="link">{homeName}</Txt>
-          </View>
-          <View style={{ alignItems: 'center', minWidth: 90 }}>
-            <Txt variant="display" num align="center" testID="match-score" style={{ direction: 'ltr' }}>{score.replace('-', ' - ')}</Txt>
-            {mv?.fixture.pens ? <Txt variant="small" color="muted">{mv.fixture.pens}</Txt> : null}
-            <Txt variant="caption" color="muted">{mv ? `${mv.fixture.stage}` : ''}</Txt>
-          </View>
-          <View style={{ flex: 1, alignItems: 'center', gap: 4 }}>
-            <Crest clubId={awayId} name={awayName} size={52} />
-            <Txt variant="small" align="center" numberOfLines={2} onPress={() => router.push(hrefs.club(awayId))} accessibilityRole="link">{awayName}</Txt>
-          </View>
-        </View>
-      </Card>
+      <MatchReveal
+        mv={mv} homeId={homeId} awayId={awayId} homeName={homeName} awayName={awayName} finalScore={score}
+        humanSide={humanId && homeId === humanId ? 'home' : humanId && awayId === humanId ? 'away' : null}
+        autoPlay={reveal === '1'} onPhase={setPhase} onOpenClub={(cid) => router.push(hrefs.club(cid))}
+      />
 
-      {!mv ? <Empty text={t('match.notArchived')} icon="info" /> : (
+      {!mv ? <Empty text={t('match.notArchived')} icon="info" /> : phase === 'playing' ? null : (
         <>
           <Segmented<Tab> label={t('match.title')} value={tab} onChange={setTab} options={[
             { value: 'summary', label: t('match.summary'), testID: 'mt-summary' }, { value: 'timeline', label: t('match.timeline'), testID: 'mt-timeline' }, { value: 'lineups', label: t('match.lineups'), testID: 'mt-lineups' },
@@ -87,14 +79,19 @@ export default function MatchScreen(): ReactNode {
 
           {tab === 'summary' ? (
             <>
-              <Section title={t('match.goals')}>
-                <RowGroup testID="match-goals">
-                  {mv.goals.length === 0 ? <Empty text={t('match.noGoals')} icon="ball" /> : mv.goals.map((g, i) => (
-                    <Row key={i} title={`${dig(g.minute)}'  ${g.scorer}`} subtitle={`${g.side === 'home' ? homeName : awayName} · ${td('goal.kind.' + g.kind, g.kind)}`} />
-                  ))}
-                </RowGroup>
-                {mv.motm ? <Txt variant="small" color="muted">{t('match.motm')}: {mv.motm}</Txt> : null}
-              </Section>
+              {phase === 'done' && mv.goals.length > 0 ? (
+                /* the animated key-moments feed above already lists the goals */
+                mv.motm ? <Txt variant="small" color="muted">{t('match.motm')}: {mv.motm}</Txt> : null
+              ) : (
+                <Section title={t('match.goals')}>
+                  <RowGroup testID="match-goals">
+                    {mv.goals.length === 0 ? <Empty text={t('match.noGoals')} icon="ball" /> : mv.goals.map((g, i) => (
+                      <Row key={i} title={`${dig(g.minute)}'  ${g.scorer}`} subtitle={`${g.side === 'home' ? homeName : awayName} · ${td('goal.kind.' + g.kind, g.kind)}`} />
+                    ))}
+                  </RowGroup>
+                  {mv.motm ? <Txt variant="small" color="muted">{t('match.motm')}: {mv.motm}</Txt> : null}
+                </Section>
+              )}
               <Section title={t('match.stats')}>
                 <Card testID="match-stats">
                   <StatRow label={t('stat.possession')} home={mv.stats.home.possession} away={mv.stats.away.possession} fmt={(n) => `${num(n, 0)}%`} />
@@ -120,7 +117,7 @@ export default function MatchScreen(): ReactNode {
                 <Switch label={t('match.keyOnly')} value={keyOnly} onChange={setKeyOnly} testID="switch-key-events" />
                 <RowGroup testID="match-timeline">
                   {mv.events.filter((e) => !keyOnly || ['goal', 'card', 'sub', 'injury', 'kickoff', 'halftime', 'fulltime', 'shootout', 'extraTimeStart'].includes(e.type)).map((e, i) => (
-                    <Row key={i} title={e.text} subtitle={`${dig(e.minute)}' · ${e.side === 'home' ? homeName : awayName}`} />
+                    <Row key={i} title={e.text} left={e.type === 'goal' ? <Icon name="ball" size={22} /> : e.type === 'card' ? <View style={{ width: 14, height: 20, borderRadius: 3, backgroundColor: e.text.startsWith('Yellow') ? '#F2C318' : '#D32F2F' }} /> : undefined} subtitle={`${dig(e.minute)}${e.added ? '+' + dig(e.added) : ''}' · ${e.side === 'home' ? homeName : awayName}`} />
                   ))}
                 </RowGroup>
                 <Txt variant="caption" color="muted">{t('match.engineText')}</Txt>

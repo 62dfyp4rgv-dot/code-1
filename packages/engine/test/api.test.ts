@@ -1,3 +1,4 @@
+import { overall } from '../src/players';
 import { beforeAll, describe, expect, it } from 'vitest';
 import {
   advanceDays, advanceToNextMatchday, bidForPlayer, clubFixtures, clubView, competitionList, competitionOverview, createWorld, dateInfo, defaultWorldConfig, financeView,
@@ -41,8 +42,18 @@ describe('views', () => {
     const other = squadView(w, w.leagueMembers.ENG1![0]!); expect(other.every((r) => !r.exact)).toBe(true);
     expect(other.every((r) => r.wageWeekly === null)).toBe(true);
     const p = w.players[other[0]!.id]!; const prof = playerProfile(w, p.id)!;
-    for (const a of prof.attributes.technical) expect(a.value % 3).toBe(0); // coarse unscouted view
-    expect(playerProfile(w, own[0]!.id)!.attributes.technical.some((a) => a.value % 3 !== 0)).toBe(true);
+    // CR-007: the unscouted view must not let the user rebuild the true ability from the displayed attributes
+    let err = 0; let n = 0;
+    for (const r of squadView(w, w.leagueMembers.ENG1![1]!).concat(other)) {
+      const pl = w.players[r.id]!; const pr = playerProfile(w, r.id)!;
+      const shown = { ...pl.attrs };
+      for (const g of Object.values(pr.attributes)) for (const a of g) (shown as Record<string, number>)[a.name] = a.value;
+      err += Math.abs(overall({ ...pl, attrs: shown }) - overall(pl)); n++;
+    }
+    expect(err / n, 'mean error of the overall rebuilt from displayed attributes').toBeGreaterThan(1);
+    expect(prof.positions.every((x) => Number.isInteger(x.rating))).toBe(true);
+    const mine = w.players[own[0]!.id]!;
+    for (const g of Object.values(playerProfile(w, mine.id)!.attributes)) for (const a of g) expect(a.value).toBe(Math.round(mine.attrs[a.name as keyof typeof mine.attrs]));
   });
   it('fixtures, match centre, finance, club, records and news views are populated and consistent', () => {
     advanceToNextMatchday(w);
@@ -68,12 +79,14 @@ describe('actions', () => {
     expect(setTactics(w, archetypeTactics('highPress')).ok).toBe(true);
     const squad = squadView(w, me);
     const gk = squad.find((p) => p.position === 'GK')!;
-    const field = squad.filter((p) => p.position !== 'GK').slice(0, 10);
+    const field = squad.filter((p) => p.position !== 'GK' && !p.suspended && !p.injury).slice(0, 10);
     expect(setLineup(w, [gk.id, ...field.map((p) => p.id)]).ok).toBe(true);
     expect(setLineup(w, [field[0]!.id, gk.id, ...field.slice(1, 10).map((p) => p.id)]).ok).toBe(false); // slot 0 must be the GK
     expect(setLineup(w, [gk.id, gk.id, ...field.slice(0, 9).map((p) => p.id)]).ok).toBe(false);
     expect(setLineup(w, ['nope']).ok).toBe(false);
     expect(setLineup(w, [gk.id, ...field.map((p) => p.id)]).ok).toBe(true);
+    // any unavailable starter makes the engine drop the whole override (documented), so keep the chosen XI healthy
+    for (const p of [gk, ...field]) w.players[p.id]!.injuryProneness = 0;
     advanceToNextMatchday(w);
     const mv = clubFixtures(w, me, { upcoming: false, limit: 1 })[0]!;
     const full = matchView(w, mv.id)!;
