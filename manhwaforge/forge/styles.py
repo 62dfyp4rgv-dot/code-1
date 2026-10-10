@@ -13,31 +13,41 @@ from PIL import Image, ImageFilter
 from .models import CharacterSheet, StyleProfile
 
 PRESETS: dict[str, StyleProfile] = {
+    "korean_manhwa": StyleProfile(
+        key="korean_manhwa", name="Korean Manhwa (semi-realistic)",
+        description="Thin clean ink contours, elongated realistic proportions, almond eyes with lashes, soft painterly skin shading, strand-lined hair.",
+        line_weight=1.5, shading="soft", contrast=1.0, saturation=0.9, halftone=0.0, glow=0.10, rim_light=0.18, bg_depth=0.6,
+        figure="semi"),
     "webtoon_digital": StyleProfile(
         key="webtoon_digital", name="Modern Digital Webtoon",
         description="Clean digital line-art, soft gradient shading, bright readable colour.",
-        line_weight=2.6, shading="soft", contrast=1.05, saturation=1.05, halftone=0.0, glow=0.10, rim_light=0.15, bg_depth=0.2),
+        line_weight=1.8, shading="soft", contrast=1.05, saturation=1.05, halftone=0.0, glow=0.10, rim_light=0.15, bg_depth=0.2, figure="semi"),
     "cinematic_3d": StyleProfile(
         key="cinematic_3d", name="Cinematic 3D-Blended",
         description="Depth-of-field backgrounds, volumetric light, fine line-work blended into painterly depth.",
-        line_weight=1.7, shading="depth", contrast=1.2, saturation=0.95, halftone=0.0, glow=0.25, rim_light=0.30, bg_depth=1.0),
+        line_weight=1.3, shading="depth", contrast=1.2, saturation=0.95, halftone=0.0, glow=0.25, rim_light=0.30, bg_depth=1.0, figure="semi"),
     "cel_shaded": StyleProfile(
         key="cel_shaded", name="Stylized Cel-Shading",
         description="Heavy ink outlines, hard two-tone shadows and screentone.",
-        line_weight=3.6, shading="cel", contrast=1.12, saturation=1.12, halftone=0.8, glow=0.0, rim_light=0.10, bg_depth=0.0),
+        line_weight=2.6, shading="cel", contrast=1.12, saturation=1.12, halftone=0.8, glow=0.0, rim_light=0.10, bg_depth=0.0, figure="semi"),
     "fantasy_action": StyleProfile(
         key="fantasy_action", name="Fantasy / Action Rendering",
         description="Saturated colour, bloom, embers and speed lines, aggressive rim lighting.",
-        line_weight=3.0, shading="cel", contrast=1.2, saturation=1.3, halftone=0.2, glow=0.6, rim_light=0.40, bg_depth=0.3,
-        palette_bias=(120, 70, 190)),
+        line_weight=2.0, shading="cel", contrast=1.2, saturation=1.3, halftone=0.2, glow=0.6, rim_light=0.40, bg_depth=0.3,
+        palette_bias=(120, 70, 190), figure="semi"),
+    "flat_vector": StyleProfile(
+        key="flat_vector", name="Flat Vector Anime (legacy look)",
+        description="Chunky flat-colour anime figures with heavy outlines. Only used when requested explicitly.",
+        line_weight=2.6, shading="soft", contrast=1.05, saturation=1.05, halftone=0.0, glow=0.10, rim_light=0.15, bg_depth=0.2, figure="stylized"),
 }
 
 _STYLE_KEYWORDS = {
+    "korean_manhwa": ("romance", "drama", "office", "school", "love", "cafe", "café", "family", "slice of life", "korean", "webtoon", "manhwa", "realistic"),
     "cinematic_3d": ("cinematic", "realistic", "film", "3d", "depth", "moody", "noir", "atmospheric", "city", "neon", "rain"),
     "cel_shaded": ("cel", "ink", "retro", "90s", "gritty", "manga", "black and white", "screentone", "yakuza", "thriller"),
     "fantasy_action": ("fantasy", "magic", "sword", "dragon", "battle", "fight", "hunter", "dungeon", "spell", "demon",
                        "monster", "kingdom", "mage", "knight", "power", "awaken", "war", "blade", "slash"),
-    "webtoon_digital": ("romance", "school", "slice of life", "cafe", "café", "love", "comedy", "friend", "campus", "daily"),
+    "webtoon_digital": ("comedy", "friend", "campus", "daily", "chibi", "cute"),
 }
 
 
@@ -93,39 +103,41 @@ def choose_style(request: str, text: str, refs: list[ReferenceInfo]) -> StylePro
         s = PRESETS[request].model_copy(deep=True)
         s.reasons = [f"style requested explicitly: {s.name}"]
         return _bias_from_refs(s, refs)
-    scores = {k: 0.0 for k in PRESETS}
+    scores = {k: 0.0 for k in PRESETS if k != "flat_vector"}
+    scores["korean_manhwa"] = 1.0           # the house look: wins unless the story or references clearly ask for something else
     reasons: dict[str, list[str]] = {k: [] for k in PRESETS}
     low = text.lower()
     for key, words in _STYLE_KEYWORDS.items():
         hits = [w for w in words if re.search(r"\b" + re.escape(w), low)]
         if hits:
-            scores[key] += len(hits)
+            scores[key] += len(hits) * (0.6 if key == "korean_manhwa" else 1.0)
             reasons[key].append("story keywords: " + ", ".join(hits[:5]))
     if refs:
         sat = float(np.mean([r.saturation for r in refs]))
         edge = float(np.mean([r.edge_density for r in refs]))
         con = float(np.mean([r.contrast for r in refs]))
-        if sat < 0.12 and edge > 0.10:
+        if sat < 0.30 and edge < 0.35:
+            # clean thin line-art / soft painted portraits on light paper: the Korean manhwa look
+            scores["korean_manhwa"] += 3.0
+            reasons["korean_manhwa"].append(f"references are clean line-art / soft-shaded portraits (sat {sat:.2f}, edges {edge:.2f})")
+        if sat < 0.08 and edge > 0.35:
             scores["cel_shaded"] += 2.5
-            reasons["cel_shaded"].append(f"references are low-colour, line-heavy (sat {sat:.2f}, edges {edge:.2f})")
+            reasons["cel_shaded"].append(f"references are low-colour, very line-heavy (sat {sat:.2f}, edges {edge:.2f})")
         if sat > 0.45:
             scores["fantasy_action"] += 2.0
             reasons["fantasy_action"].append(f"references are highly saturated ({sat:.2f})")
         if con > 0.7 and edge < 0.08:
             scores["cinematic_3d"] += 2.0
             reasons["cinematic_3d"].append(f"references have wide tonal range and soft edges (contrast {con:.2f})")
-        if 0.12 <= sat <= 0.45 and edge <= 0.10:
-            scores["webtoon_digital"] += 1.5
-            reasons["webtoon_digital"].append(f"references have moderate colour and light line-work (sat {sat:.2f})")
-    best = max(scores, key=lambda k: (scores[k], k == "webtoon_digital"))
+    best = max(scores, key=lambda k: (scores[k], k == "korean_manhwa"))
     s = PRESETS[best].model_copy(deep=True)
-    s.reasons = reasons[best] or ["no strong signal in the input: defaulting to the clean webtoon look"]
+    s.reasons = reasons[best] or ["no strong signal in the input: using the house Korean-manhwa look"]
     return _bias_from_refs(s, refs)
 
 
 def _bias_from_refs(s: StyleProfile, refs: list[ReferenceInfo]) -> StyleProfile:
     if refs:
-        cols = [c for r in refs for c in r.palette[:2]]
+        cols = [c for r in refs for c in r.palette[:5] if max(c) - min(c) > 28 and max(c) < 245]
         if cols:
             avg = tuple(int(np.mean([c[i] for c in cols])) for i in range(3))
             s.palette_bias = avg  # type: ignore[assignment]
@@ -134,7 +146,7 @@ def _bias_from_refs(s: StyleProfile, refs: list[ReferenceInfo]) -> StyleProfile:
 
 
 # --------------------------------------------------------------------------- characters
-_HAIR = {"black": (24, 22, 30), "brown": (92, 60, 40), "blonde": (232, 196, 100), "golden": (232, 196, 100), "yellow": (232, 196, 100),
+_HAIR = {"black": (24, 22, 30), "charcoal": (58, 60, 68), "dark grey": (70, 72, 80), "dark gray": (70, 72, 80), "brown": (92, 60, 40), "blonde": (232, 196, 100), "golden": (232, 196, 100), "yellow": (232, 196, 100),
          "silver": (200, 204, 216), "white": (236, 236, 244), "grey": (150, 152, 164), "gray": (150, 152, 164),
          "red": (176, 44, 52), "crimson": (160, 30, 50), "orange": (230, 120, 50), "blue": (60, 100, 200), "navy": (30, 44, 100),
          "purple": (110, 64, 170), "violet": (130, 80, 190), "pink": (236, 130, 170), "green": (60, 150, 90), "teal": (40, 150, 150)}
@@ -150,7 +162,7 @@ _OUTFIT_COLORS = {"black": (34, 34, 48), "white": (232, 232, 240), "red": (176, 
                   "pink": (220, 120, 160), "teal": (40, 130, 130), "yellow": (220, 190, 70), "cream": (230, 218, 190)}
 _OUTFIT_WORDS = {"uniform": "uniform", "school": "uniform", "blazer": "uniform", "coat": "coat", "trench": "coat", "cloak": "coat", "cape": "coat",
                  "armor": "armor", "armour": "armor", "knight": "armor", "plate": "armor", "robe": "robe", "kimono": "robe", "hanbok": "robe",
-                 "mage": "robe", "wizard": "robe", "hoodie": "casual", "jacket": "casual", "tee": "casual", "sweater": "casual"}
+                 "mage": "robe", "wizard": "robe", "shirt": "shirt", "collared": "shirt", "blouse": "shirt", "suit": "shirt", "hoodie": "casual", "jacket": "casual", "tee": "casual", "sweater": "casual"}
 _HAIR_STYLE = {"spiky": "spiky", "messy": "spiky", "long": "long", "ponytail": "ponytail", "tail": "ponytail", "bob": "bob", "bun": "bun",
                "short": "short", "cropped": "short", "braid": "long", "flowing": "long"}
 _ACCENTS = [(214, 60, 70), (240, 190, 60), (70, 170, 220), (160, 90, 220), (60, 190, 130), (235, 120, 60)]
@@ -212,8 +224,21 @@ def design_character(name: str, description: str, series_key: str, style: StyleP
         head_units = 7.3
     eye_shape = "sharp" if re.search(r"sharp|cold|piercing|stern|fierce|cunning", d) else "round" if re.search(r"round|bright|cheerful|innocent|big-eyed|energetic", d) else rng.choice(["round", "soft", "sharp"])
     accent = rng.choice(_ACCENTS)
-    from .render.util import shade as _shade
+    from .render.util import mix as _mix, shade as _shade
+    female = len(re.findall(r"\b(girl|woman|female|lady|she|her|princess|queen|witch|actress|heroine|mother|sister|schoolgirl)\b", d))
+    male = len(re.findall(r"\b(boy|man|male|guy|he|his|him|prince|king|knight|hero|father|brother|schoolboy|gentleman)\b", d))
+    gender = "female" if female > male else "male" if male > female else "neutral"
+    accessory = "glasses" if re.search(r"\b(glasses|spectacles|bespectacled)\b", d) else ""
+    if accessory:
+        traits.append("glasses")
+    if style.figure == "semi":
+        # the semi-realistic look: paler, softer skin and slightly muted hair/eye colour; taller, narrower figures
+        if not skin_k:
+            skin = _mix(skin, (250, 236, 228), 0.55)
+        hair = _mix(hair, (92, 94, 102), 0.18) if not hair_k else hair
+        head_units = max(head_units, 7.5) if head_units >= 7.0 and head_units != 6.0 else head_units
+        eye_shape = "soft" if gender == "female" and eye_shape == "round" else eye_shape
     return CharacterSheet(
         name=name, description=description, seed=seed, skin=skin, hair=hair, hair_shade=_shade(hair, 0.62), eye=eye,
         outfit=outfit_color, outfit_shade=_shade(outfit_color, 0.7), accent=accent, hair_style=hair_style,
-        outfit_style=outfit_style, head_units=head_units, build=build, eye_shape=eye_shape, traits=traits)
+        outfit_style=outfit_style, head_units=head_units, build=build, eye_shape=eye_shape, gender=gender, accessory=accessory, traits=traits)

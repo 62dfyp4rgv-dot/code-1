@@ -119,6 +119,7 @@ class StyleProfile(BaseModel):
     rim_light: float              # 0..1 default rim light strength
     bg_depth: float               # 0..1 depth haze / perspective emphasis
     palette_bias: Optional[RGB] = None
+    figure: str = "stylized"      # stylized (chunky anime vector) | semi (semi-realistic Korean manhwa)
     reasons: list[str] = Field(default_factory=list)
 
 
@@ -139,6 +140,8 @@ class CharacterSheet(BaseModel):
     head_units: float             # figure height measured in heads
     build: str                    # slim | average | broad
     eye_shape: str               # round | sharp | soft
+    gender: str = "neutral"      # female | male | neutral  (from the description only; drives jaw, hair, body)
+    accessory: str = ""          # glasses | ""
     traits: list[str] = Field(default_factory=list)
 
 

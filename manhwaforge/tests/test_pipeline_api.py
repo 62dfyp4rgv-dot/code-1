@@ -71,7 +71,7 @@ def test_halts_at_exactly_95_percent_with_hard_save(env, job_a):
     assert all(p["state"] == "done" for p in s["panels"])
     for p in s["panels"]:                                       # every panel cleared the gate, or was honestly flagged
         assert p["score"] >= config.AMAZEMENT_THRESHOLD or p["below_threshold"]
-    assert s["director_source"] == "heuristic" and s["style"]["key"] in ("fantasy_action", "cel_shaded", "cinematic_3d", "webtoon_digital")
+    assert s["director_source"] == "heuristic" and s["style"]["key"] in ("korean_manhwa", "fantasy_action", "cel_shaded", "cinematic_3d", "webtoon_digital")
 
     z = client.get(f"/api/jobs/{jid}/download")
     assert z.status_code == 200 and z.headers["content-type"] == "application/zip"

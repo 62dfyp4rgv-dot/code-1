@@ -86,10 +86,10 @@ class Pen:
         if line:
             ow = w + 2 * self.lw
             self.d.line(pts, fill=self.ink + (255,), width=ow, joint="curve")
-            for p in (pts[0], pts[-1]):
+            for p in ((pts[-1],) if getattr(self, "no_start_cap", False) else (pts[0], pts[-1])):
                 self.d.ellipse([p[0] - ow / 2, p[1] - ow / 2, p[0] + ow / 2, p[1] + ow / 2], fill=self.ink + (255,))
         self.d.line(pts, fill=fill + (255,), width=w, joint="curve")
-        for p in (pts[0], pts[-1]):
+        for p in ((pts[-1],) if getattr(self, "no_start_cap", False) else (pts[0], pts[-1])):
             self.d.ellipse([p[0] - w / 2, p[1] - w / 2, p[0] + w / 2, p[1] + w / 2], fill=fill + (255,))
         self.m.line(pts, fill=255, width=w, joint="curve")
 
@@ -135,6 +135,9 @@ class FigureResult:
 def draw_figure(layer: Image.Image, mask: Image.Image, sheet: CharacterSheet, expression: str, pose: str,
                 hx: float, hy: float, h: float, facing: int, style: StyleProfile, lw: int,
                 light_side: int, back_view: bool = False, look_up: bool = False, ss: int = 2) -> FigureResult:
+    if style.figure == "semi":
+        from .figures_semi import draw_figure_semi
+        return draw_figure_semi(layer, mask, sheet, expression, pose, hx, hy, h, facing, style, lw, light_side, back_view, look_up, ss)
     pen = Pen(layer, mask, lw)
     f = 1 if facing >= 0 else -1
     yaw = 0.0 if back_view else 0.38 * f
@@ -259,8 +262,8 @@ def _outfit_details(pen: Pen, sheet: CharacterSheet, hx, sy, wy, hip, h, sw, lig
         pen.line([(hx - 0.65 * sw * h, sy + 0.78 * h), (hx + 0.65 * sw * h, sy + 0.78 * h)], acc, pen.lw * 2)
 
 
-def _arms(pen: Pen, sheet: CharacterSheet, pose: str, hx, sy, wy, h, sw, f, skin):
-    aw = 0.36 * h
+def _arms(pen: Pen, sheet: CharacterSheet, pose: str, hx, sy, wy, h, sw, f, skin, aw_scale: float = 1.0):
+    aw = 0.36 * h * aw_scale
     sleeve = sheet.outfit
     lsh = (hx - sw * h * 0.92, sy + 0.18 * h)
     rsh = (hx + sw * h * 0.92, sy + 0.18 * h)

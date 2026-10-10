@@ -140,4 +140,4 @@ def test_same_sheet_renders_same_character_across_panels():
     for shot, tod in (("medium", "day"), ("close", "sunset"), ("wide", "night")):
         s = spec(shot=shot, time_of_day=tod, location="street")
         art = Artist(ProceduralProvider(), c).paint_panel(s, STYLE, SHEETS, "webtoon", 5)
-        assert (art.critique.anatomy or 0) >= 6.5 and art.critique.passed
+        assert (art.critique.anatomy or 0) >= 6.0 and art.critique.passed

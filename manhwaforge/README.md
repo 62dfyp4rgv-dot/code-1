@@ -7,15 +7,17 @@ it runs to **95%**, hard-saves a downloadable package and **halts until you tell
 ```
 pip install -r requirements.txt
 uvicorn forge.app:app --port 8000      # then open http://localhost:8000
-pytest                                  # 43 tests, ~1 min
+pytest                                  # ~50 tests, ~1.5 min
 ```
 
 ## What it is, honestly
 
 The pipeline, quality gate, consistency system, lettering, layout, reader, API and dashboard are real and tested.
-The **art** is produced by a bundled *procedural illustrator* (Pillow + numpy): stylised vector-look characters,
-generated backgrounds, lighting, screentone and effects. It is deterministic and runs fully offline, but it is **not
-photoreal and not AI-model art**. It exists so the whole system works end to end with no API keys.
+The **art** is produced by a bundled *procedural illustrator* (Pillow + numpy). Its house look targets **semi-realistic
+Korean manhwa** (thin warm-ink contours, elongated realistic proportions, almond eyes with lash line and lid shadow,
+soft painterly skin shading, strand-lined long hair or side-swept short hair, collared shirts, glasses). It is
+deterministic and runs fully offline, but it is **procedural vector art, not painted or AI-model art**: faces and hair
+are the strong part, full-body poses are stiff, and it will not match a hand-painted reference's finish. It exists so the whole system works end to end with no API keys.
 For model-quality art, plug a hosted image model in behind the `ImageProvider` interface (see below). Everything
 else (Director, Critic, Typesetter, Assembler, 95% rule, UI) works unchanged.
 
@@ -24,7 +26,7 @@ else (Director, Critic, Typesetter, Assembler, 95% rule, UI) works unchanged.
 | Agent | Code | What it does |
 |---|---|---|
 | **1 Director** | `forge/agents/director.py` | Ingests description / script / sketches. Writes the panel-by-panel JSON script: shot, angle, location, time, weather, lighting, mood, characters + expressions + poses, dialogue (speech / thought / shout / whisper / caption), SFX, pacing. **LLM mode** (set `ANTHROPIC_API_KEY`; JSON-validated, falls back on any failure) or the built-in **heuristic parser** (character extraction, quote-aware dialogue attribution, setting/mood/action from prose, panel-budget fitting, reaction cut-ins). |
-| **2 Artist** | `forge/agents/artist.py`, `forge/styles.py`, `forge/render/` | Analyses sketches (palette, saturation, edge density, composition centroid) and maps input to one of four styles: *modern digital webtoon*, *cinematic 3D-blended*, *stylised cel-shading*, *fantasy/action*. Keeps a **persistent character bank** (sheet + reference image per character, reused across panels *and* across chapters of a `series`). Generates each panel, sends it to the Critic and **re-prompts/refines until it clears the gate**. |
+| **2 Artist** | `forge/agents/artist.py`, `forge/styles.py`, `forge/render/` | Analyses sketches (palette, saturation, edge density, composition centroid) and maps input to a style: **Korean manhwa (default)**, *modern digital webtoon*, *cinematic 3D-blended*, *stylised cel-shading*, *fantasy/action* (all share the semi-realistic figure and differ in line weight, lighting, screentone and FX); `flat_vector` is the old chunky anime look, only on request. Line-art / soft portrait references steer auto-detection to Korean manhwa. Keeps a **persistent character bank** (sheet + reference image per character, reused across panels *and* across chapters of a `series`). Generates each panel, sends it to the Critic and **re-prompts/refines until it clears the gate**. |
 | **3 Typesetter + Assembler** | `typesetter.py`, `assembler.py`, `packaging.py` | Collision-aware speech/thought/shout/whisper bubbles with tails, caption boxes, SFX typography (never drops text: grows a caption band if a panel is full). Stitches an 800px vertical strip with pacing-driven gutters and inset panels (or a slide deck + PDF), and builds a standalone reader. |
 | **4 Critic** | `forge/agents/critic.py` | Scores every panel 0-10 (**Amazement Score**, gate **7.5**) from the actual pixels: *anatomy/identity consistency* (framing, occlusion, colours vs the character sheet), *lighting drama* (range, direction, key/fill, subject separation), *line quality* (crispness, closed contours, noise). Also owns the confidence metric. |
 
@@ -57,7 +59,7 @@ The dashboard has *Finalize last 5%* / *Stop here* buttons.
 
 | | |
 |---|---|
-| `POST /api/jobs` | multipart: `story`, `title`, `format` (webtoon\|slides), `style` (auto\|webtoon_digital\|cinematic_3d\|cel_shaded\|fantasy_action), `panels` (4-40), `series`, `files[]` (txt/md/json scripts, png/jpg/webp/gif/bmp sketches) |
+| `POST /api/jobs` | multipart: `story`, `title`, `format` (webtoon\|slides), `style` (auto\|korean_manhwa\|webtoon_digital\|cinematic_3d\|cel_shaded\|fantasy_action\|flat_vector), `panels` (4-40), `series`, `files[]` (txt/md/json scripts, png/jpg/webp/gif/bmp sketches) |
 | `GET /api/jobs`, `GET /api/jobs/{id}`, `GET /api/jobs/{id}/events?since=n` | state, live progress, agent log |
 | `POST /api/jobs/{id}/resume` | manual instruction after a halt (409 unless halted) |
 | `GET /api/jobs/{id}/download` | the zip |
@@ -90,7 +92,7 @@ tests/  progress, director (+LLM mock), critic/artist loop, typesetter, full pip
 ```
 
 ## Known limits
-* Art is procedural (see above). Characters keep identity via the sheet, but skin tone can look darker under strong night tint.
+* Art is procedural (see above). Gender and glasses are read from the character description only (never guessed from names). Characters keep identity via the sheet, but skin tone can look darker under strong night tint.
 * The heuristic Director is rule-based English prose parsing; unusual narration styles may mis-attribute speakers. Use the LLM Director or `NAME: line` scripts for precision.
 * The LLM Director path is covered by mocked-transport tests only (no live API call was made in development).
 * Jobs run in-process threads; a server restart marks in-flight jobs `interrupted` (halted/completed jobs survive).
