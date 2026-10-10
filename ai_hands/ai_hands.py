@@ -7,7 +7,12 @@ AI HANDS - an autonomous multi-agent studio that draws vector art stroke by stro
     python ai_hands.py                         # draws the default still life
     python ai_hands.py --concept mandala       # still_life | landscape | mandala
     python ai_hands.py --image photo.jpg       # trace and draw any seed image
-    python ai_hands.py --headless --speed 60   # no window, runs flat out, writes PNG + JSON
+    python ai_hands.py --color                 # colour pencils (seed image colours, or the concept's palette)
+    python ai_hands.py --sketchiness 0.9 --skill 0.2   # loose overshooting outlines, a shaky novice hand
+    python ai_hands.py --timelapse lapse.gif   # also record an animated GIF of the whole process
+    python ai_hands.py --headless --speed 60   # no window, runs flat out, writes PNG + SVG + JSON
+
+Mouse: drag the pace slider or use the wheel to speed up / slow down, click the paper to pause. Keys: +/-, space, h, esc.
 
 HOW THE PIPELINE WORKS
 ======================
@@ -19,7 +24,7 @@ tracing contours and the Kinematics agent is shaping strokes in between.
 
     PlannerAgent  (the Eye)    --path_batch-->   KinematicsAgent (the Muscle)
     KinematicsAgent            --trajectory-->   HandAgent       (the Hand)
-    HandAgent                  --layer_done-->   CriticAgent     (the Mind)
+    HandAgent                  --layer_done-->   CriticAgent     (the Mind)   [Hand then waits for review_done]
     CriticAgent                --refine------>   PlannerAgent        (self-correction loop)
     CriticAgent                --erase_guides->  HandAgent           (rub out the construction lines)
     HandAgent                  --guides_erased-> CriticAgent         (only then is the job signed off)
@@ -67,6 +72,7 @@ RES = 320               # analysis resolution of the reference image
 SCALE = CANVAS / RES    # reference px -> canvas px
 FS = 240.0              # trajectory sampling rate (Hz)
 HUD_W = 420
+SPEED_MIN, SPEED_MAX = 0.25, 200.0
 WEAR_LEN = 9000.0       # px of line a pencil draws before it is blunt enough to need sharpening
 
 # per-stroke-kind physical parameters:  vmax px/s, amax px/s^2, line width range, opacity range,
@@ -75,6 +81,7 @@ KIN = {
     "skeleton": dict(vmax=1500, amax=7000, wmin=1.0, wmax=1.9, op=(0.25, 0.50), tremor=0.50, drift=1.7, color=(104, 140, 188)),
     "contour": dict(vmax=820, amax=4300, wmin=1.0, wmax=2.7, op=(0.55, 0.95), tremor=0.35, drift=0.9, color=(34, 31, 40)),
     "hatch": dict(vmax=1900, amax=11000, wmin=0.8, wmax=1.8, op=(0.20, 0.50), tremor=0.30, drift=0.55, color=(60, 57, 68)),
+    "sketch": dict(vmax=1250, amax=6000, wmin=0.8, wmax=1.5, op=(0.22, 0.45), tremor=0.45, drift=1.2, color=(40, 38, 48)),
     "detail": dict(vmax=430, amax=2700, wmin=1.2, wmax=3.3, op=(0.70, 1.00), tremor=0.25, drift=0.5, color=(18, 14, 21)),
 }
 LAYER_ORDER = ["skeleton", "contours", "shading", "details"]
@@ -489,6 +496,50 @@ def load_seed_image(path: str, res: int) -> np.ndarray:
     return out
 
 
+def load_seed_rgb(path: str, res: int) -> np.ndarray:
+    """The seed image's colours on the same res x res grid as load_seed_image (white outside the picture)."""
+    import pygame
+    img = pygame.image.load(path)
+    w, h = img.get_size()
+    k = res / max(w, h)
+    img = pygame.transform.smoothscale(img, (max(1, int(w * k)), max(1, int(h * k))))
+    a = pygame.surfarray.array3d(img).astype(float).transpose(1, 0, 2) / 255.0
+    out = np.ones((res, res, 3))
+    oy, ox = (res - a.shape[0]) // 2, (res - a.shape[1]) // 2
+    out[oy:oy + a.shape[0], ox:ox + a.shape[1]] = a
+    return out
+
+
+def _hsv(h: np.ndarray, s: float, v: float) -> np.ndarray:
+    """Vectorised HSV -> RGB (h in turns)."""
+    h = np.asarray(h, float) % 1.0
+    i = (h * 6).astype(int) % 6
+    f = h * 6 - np.floor(h * 6)
+    p, q, t = v * (1 - s), v * (1 - s * f), v * (1 - s * (1 - f))
+    r = np.select([i == 0, i == 1, i == 2, i == 3, i == 4], [v, q, p, p, t], v)
+    g = np.select([i == 0, i == 1, i == 2, i == 3, i == 4], [t, v, v, q, p], p)
+    b = np.select([i == 0, i == 1, i == 2, i == 3, i == 4], [p, p, t, v, v], q)
+    return np.stack([r + 0 * h, g + 0 * h, b + 0 * h], -1)
+
+
+def concept_colors(concept: str, res: int) -> np.ndarray:
+    """Colour field for the built-in concepts (the procedural references are monochrome): a sunset sky over violet
+    mountains and a teal lake; warm-to-cool still life; a mandala whose rings run through the spectrum."""
+    ax = (np.arange(res) + 0.5) / res
+    X, Y = np.meshgrid(ax, ax)
+    if concept == "landscape":
+        sky = np.stack([0.30 + 0.65 * Y.clip(0, 0.72) / 0.72, 0.50 + 0.15 * Y.clip(0, 0.72) / 0.72, 0.85 - 0.40 * Y.clip(0, 0.72) / 0.72], -1)
+        mount = np.stack([0.45 + 0 * Y, 0.35 + 0 * Y, 0.65 + 0 * Y], -1)
+        lake = np.stack([0.15 + 0 * Y, 0.55 + 0.2 * (Y - 0.72), 0.65 + 0 * Y], -1)
+        mix = np.clip((Y - 0.30) / 0.25, 0, 1)[..., None]
+        out = sky * (1 - mix) + mount * mix
+        return np.where((Y >= 0.72)[..., None], lake, out)
+    if concept == "mandala":
+        r = np.hypot(X - 0.5, Y - 0.5) * 2
+        return _hsv(0.02 + 0.85 * r, 0.8, 0.9)
+    return _hsv(0.02 + 0.62 * X, 0.7, 0.9)               # still life: red -> blue left to right
+
+
 # =====================================================================================
 #  4. INFRASTRUCTURE: message bus + agent base class
 # =====================================================================================
@@ -543,9 +594,11 @@ class PlannerAgent(Agent):
     name = "Planner"
     color = (120, 190, 255)
 
-    def __init__(self, studio: "Studio", concept: str, image: Optional[str], seed: int):
+    def __init__(self, studio: "Studio", concept: str, image: Optional[str], seed: int, color: bool = False, sketchiness: float = 0.5):
         super().__init__(studio)
         self.concept, self.image, self.rng = concept, image, random.Random(seed)
+        self.colour_mode, self.sketchiness = color, sketchiness           # (self.color is the agent's HUD colour)
+        self.rgb: Optional[np.ndarray] = None       # reference colours (colour mode only)
         self.paths: list[dict] = []                 # the whole master plan (JSON-serialisable)
         self.next_id = 0
         self.tone = np.zeros((RES, RES))            # reference darkness (what the Critic compares against)
@@ -580,8 +633,22 @@ class PlannerAgent(Agent):
                 self.refine_gen = None
 
     # ---- emit helpers
+    def _tint(self, segments: list) -> Optional[list]:
+        """Colour-pencil colour for a hatch stroke: the reference colour under its middle, made a little darker and more
+        saturated (pencil layers on white paper always look lighter than the target)."""
+        if self.rgb is None:
+            return None
+        pts = np.array(segments[len(segments) // 2])
+        x, y = np.clip((pts[[0, 3]].mean(axis=0) / SCALE).astype(int), 0, RES - 1)
+        c = self.rgb[y, x]
+        lum = float(c @ [0.299, 0.587, 0.114])
+        c = np.clip((lum + (c - lum) * 1.45) * 0.82, 0, 1)
+        return [int(v * 255) for v in c]
+
     def _emit(self, layer: str, kind: str, segments: list, tone: float = 0.0) -> None:
         p = dict(id=self.next_id, layer=layer, kind=kind, segments=[[[round(float(x), 2) for x in pt] for pt in s] for s in segments], tone=round(tone, 3))
+        if kind == "hatch" and (col := self._tint(p["segments"])) is not None:
+            p["color"] = col
         self.next_id += 1
         self.paths.append(p)
         self._batch.append(p)
@@ -621,6 +688,9 @@ class PlannerAgent(Agent):
         dark = load_seed_image(self.image, RES) if self.image else CONCEPTS[self.concept](RES, self.rng)
         self.tone = gaussian_blur(dark, 1.0)
         gray = 1 - dark
+        if self.colour_mode:
+            self.rgb = load_seed_rgb(self.image, RES) if self.image else concept_colors(self.concept, RES)
+            self.log("colour pencils: sampling the reference colours for hatching")
         yield
         # ------------------------------------------------------------ analysis
         self.set_status("Eye: Gaussian + Sobel + Canny non-max suppression")
@@ -682,6 +752,14 @@ class PlannerAgent(Agent):
         # ------------------------------------------------------------ layer 4: fine details
         self._open_layer("details")
         self.set_status("Planner: fine details (weighted line accents on the strongest edges)")
+        if self.sketchiness > 0 and main:                                  # a second, lighter, slightly-off pass over the outlines
+            self.set_status("Planner: sketchy re-strokes with overshoot over the main outlines")
+            picks = self.rng.sample(main, max(1, int(len(main) * min(0.9, 1.1 * self.sketchiness))))
+            for c in self._order([c for c in picks if len(c) >= 14]):
+                segs = self._restroke(c)
+                if segs:
+                    self._emit("details", "sketch", segs)
+                yield
         top = [c for sc, c in scored[: max(6, int(len(scored) * 0.2))] if len(c) >= 16]
         for c in self._order(top):
             segs = chain_to_beziers(c * SCALE, 1.6)
@@ -731,6 +809,21 @@ class PlannerAgent(Agent):
                 out.append(([self._line_bez(p0 * SCALE, p1 * SCALE, self.rng.uniform(0.3, 1.2))], mid_tone))
             flip = not flip
         return out
+
+    def _restroke(self, c: np.ndarray) -> list:
+        """A hand never retraces a line exactly: shift the chain sideways by a slow wave (about half a pixel) and run the
+        stroke a little past both ends (overshoot), the way a quick re-stroke does."""
+        p = np.asarray(c, float)
+        n = len(p)
+        tan = np.gradient(p, axis=0)
+        tan /= np.hypot(tan[:, 0], tan[:, 1])[:, None] + 1e-9
+        nrm = np.stack([-tan[:, 1], tan[:, 0]], 1)
+        t = np.linspace(0, 1, n)
+        off = self.sketchiness * self.rng.uniform(0.5, 1.0) * np.sin(2 * np.pi * t * self.rng.uniform(0.6, 1.6) + self.rng.uniform(0, 6.28))
+        p = p + nrm * off[:, None]
+        t0, t1 = tan[: min(4, n)].mean(axis=0), tan[-min(4, n):].mean(axis=0)
+        p = np.vstack([p[0] - t0 * self.rng.uniform(0.8, 2.6) * self.sketchiness * 2, p, p[-1] + t1 * self.rng.uniform(0.8, 2.6) * self.sketchiness * 2])
+        return chain_to_beziers(p * SCALE, 2.4)
 
     def _line_bez(self, a: np.ndarray, b: np.ndarray, bow: float) -> list:
         """A straight stroke as a cubic with a little hand-made bow (control points pushed sideways)."""
@@ -812,6 +905,7 @@ class KinematicsAgent(Agent):
         self.todo: deque = deque()          # paths (and layer-end markers) waiting to be shaped
         self.in_flight = 0                  # trajectories handed to the Hand and not yet started
         self.rng = np.random.default_rng(seed)
+        self.skill = float(getattr(getattr(studio, "args", None), "skill", 0.7))     # 0 = novice hand, 1 = master
         self.last_info = ""
         self.count = 0
 
@@ -883,11 +977,12 @@ class KinematicsAgent(Agent):
         u = sk / L
         env = np.sin(np.pi * np.clip(u, 0, 1)) ** 0.6                  # drift fades at both ends: the nib lands where aimed
         sp = np.clip(speed / p["vmax"], 0, 1)
-        tremor = p["tremor"] * (0.55 + 0.45 * sp)
+        shake = 1.7 - self.skill                                           # a skilled hand is steadier (1.0 at the default 0.7)
+        tremor = p["tremor"] * shake * (0.55 + 0.45 * sp)
         n_per = _band_noise(n, n / T, 8, 12, self.rng) * tremor
         n_tan = _band_noise(n, n / T, 8, 12, self.rng) * tremor * 0.6
-        drift = _band_noise(n, n / T, 0.5, 1.7, self.rng) * p["drift"] * min(1.0, L / 220) * env
-        land = self.rng.normal(0, 0.45, 2) * (u**3)[:, None]           # small landing error
+        drift = _band_noise(n, n / T, 0.5, 1.7, self.rng) * p["drift"] * shake * min(1.0, L / 220) * env
+        land = self.rng.normal(0, 0.45 * shake, 2) * (u**3)[:, None]           # small landing error
         xy = xy + nrm * (n_per + drift)[:, None] + tan * n_tan[:, None] + land
         # pressure: ramps up, releases at the end, lighter when moving fast, plus slow variation
         rise = np.clip(u / 0.10, 0, 1) ** 0.7 if L > 6 else np.ones(n)
@@ -901,7 +996,10 @@ class KinematicsAgent(Agent):
         self.set_status(f"Applying min-jerk ease-in/out + 2/3-power law to path #{path['id']} [{path['kind']}]")
         self.last_info = f"{L:.0f}px  T={T*1000:.0f}ms  vpeak={speed.max():.0f}px/s"
         scale = PALETTES[self.studio.palette]
-        col = tuple(int(np.clip(c * m, 0, 255)) for c, m in zip(p["color"], scale))
+        if path.get("color"):                                              # colour pencil: quantised so sprites can be cached
+            col = tuple(int(np.clip(round(c / 12) * 12, 0, 255)) for c in path["color"])
+        else:
+            col = tuple(int(np.clip(c * m, 0, 255)) for c, m in zip(p["color"], scale))
         return Trajectory(path["id"], path["layer"], path["kind"], xy, press, width, alpha, speed, L, T, col)
 
 
@@ -941,6 +1039,7 @@ class HandAgent(Agent):
         self.guides_erased = False
         self.wear = 0.0                             # drawn length since the last sharpening
         self.sharpenings = 0
+        self.review_wait = False                    # layer finished: hold the pencil until the Critic has judged it
         self.pause_t = 0.0                          # remaining time of a deliberate pause (sharpening / stepping back)
         self.pause_msg = ""
         self.pause_z = 0.0
@@ -958,6 +1057,9 @@ class HandAgent(Agent):
                     self.guide_trajs.append(m.payload.xy)
             elif m.topic == "erase_guides":
                 self._start_erasing()
+            elif m.topic == "review_done":                   # the Critic has measured the finished layer: carry on
+                self.review_wait = False
+                self._pause(0.45, f"stepping back to look at the '{m.payload}' layer", 15.0)
             elif m.topic == "layer_end":
                 self.queue.append(("end", m.payload))
         budget = dt
@@ -967,6 +1069,9 @@ class HandAgent(Agent):
             if self.erasing:
                 budget = self._erase_step(budget)
                 continue
+            if self.review_wait:                         # never draw on while the Critic is measuring the finished layer
+                self.set_status("layer finished - waiting for the Critic's verdict")
+                break
             if self.pause_t > 1e-9:                      # pencil held off the paper: sharpening or stepping back to look
                 use = min(budget, self.pause_t)
                 self.pause_t -= use
@@ -981,7 +1086,7 @@ class HandAgent(Agent):
                 kind, item = self.queue.popleft()
                 if kind == "end":
                     self.send("Critic", "layer_done", item)
-                    self._pause(0.45, f"stepping back to look at the '{item}' layer", 15.0)
+                    self.review_wait = True
                     continue
                 self.send("Kinematics", "consumed", 1)
                 self.cur_next = item
@@ -1103,7 +1208,7 @@ class HandAgent(Agent):
     def _stamp(self, tr: Trajectory, i0: int, i1: int) -> None:
         if i1 < i0 or len(tr.xy) < 2:
             return
-        lo = max(0, i0 - 1)
+        lo = i0                                                                 # each segment is stamped exactly once, whatever the chunking
         target = self.guide if tr.kind == "skeleton" else self.canvas           # construction lines go on the erasable layer
         for i in range(lo, i1):
             a, b = tr.xy[i], tr.xy[i + 1]
@@ -1148,6 +1253,7 @@ class CriticAgent(Agent):
             elif m.topic == "layer_done":
                 self.finished.add(m.payload)
                 self._review(m.payload)
+                self.send("Hand", "review_done", m.payload)         # verdict delivered (and any refine request already sent)
             elif m.topic == "guides_erased":
                 self.log("construction lines are gone - signing the drawing off")
                 self.set_status(f"final score {self.score:.2f} - drawing signed off")
@@ -1160,9 +1266,13 @@ class CriticAgent(Agent):
     def _measure(self) -> tuple[float, float, np.ndarray, np.ndarray]:
         pg = self.studio.pg
         small = pg.transform.smoothscale(self.studio.hand.canvas, (RES, RES))
-        lum = pg.surfarray.array3d(small).astype(float).mean(axis=2).T / 255.0
+        arr = pg.surfarray.array3d(small).astype(float) / 255.0
         paper = float(self.studio.paper_lum)
-        ink = np.clip((paper - lum) / paper, 0, 1)
+        if self.studio.args.color:                                         # coloured pencil darkens one channel more than the mean
+            P = self.studio.paper_rgb / 255.0
+            ink = np.clip(((P[None, None, :] - arr) / P[None, None, :]).max(axis=2), 0, 1).T
+        else:
+            ink = np.clip((paper - arr.mean(axis=2).T) / paper, 0, 1)
         pl = self.studio.planner
         T = 8
         f = lambda a: a[:RES // T * T, :RES // T * T].reshape(RES // T, T, RES // T, T).mean(axis=(1, 3))  # noqa: E731
@@ -1236,6 +1346,7 @@ class Studio:
         self.headless = a.headless
         self.speed = float(a.speed)
         self.paused = False
+        self.dragging = False
         self.show_hud = not a.no_hud
         self.job_complete = False
         self.logs: deque = deque(maxlen=9)
@@ -1255,7 +1366,7 @@ class Studio:
         self.paper_lum = pygame.surfarray.array3d(self.canvas).astype(float).mean() / 255.0
         self.paper_rgb = pygame.surfarray.array3d(self.canvas).astype(float).mean(axis=(0, 1))
         self.bus = MessageBus()
-        self.planner = PlannerAgent(self, a.concept, a.image, a.seed)
+        self.planner = PlannerAgent(self, a.concept, a.image, a.seed, a.color, a.sketchiness)
         self.kin = KinematicsAgent(self, a.seed + 1)
         self.hand = HandAgent(self, self.canvas)
         self.critic = CriticAgent(self, a.quality)
@@ -1295,6 +1406,44 @@ class Studio:
         self._prog = max(self._prog, min(total, 0.99))      # monotonic: a new correction pass never makes the bar go backwards
         return 1.0 if self.job_complete else self._prog
 
+    # ---- pace control: keys, mouse wheel, draggable slider, click the paper to pause --------------------------
+    def slider_rect(self):
+        return self.pg.Rect(CANVAS + 40, self.H - 84, HUD_W - 30, 10)
+
+    def speed_to_frac(self, v: float) -> float:
+        return math.log(v / SPEED_MIN) / math.log(SPEED_MAX / SPEED_MIN)
+
+    def frac_to_speed(self, f: float) -> float:
+        return SPEED_MIN * (SPEED_MAX / SPEED_MIN) ** min(1.0, max(0.0, f))
+
+    def handle_event(self, e) -> None:
+        pg = self.pg
+        r = self.slider_rect()
+        grab = r.inflate(14, 22)
+        if e.type == pg.KEYDOWN:
+            if e.key == pg.K_SPACE:
+                self.paused = not self.paused
+            elif e.key in (pg.K_PLUS, pg.K_EQUALS, pg.K_KP_PLUS):
+                self.speed = min(SPEED_MAX, self.speed * 1.5)
+            elif e.key in (pg.K_MINUS, pg.K_KP_MINUS):
+                self.speed = max(SPEED_MIN, self.speed / 1.5)
+            elif e.key == pg.K_h:
+                self.show_hud = not self.show_hud
+            elif e.key == pg.K_s:
+                pg.image.save(self.screen, os.path.join(self.args.out, "screenshot.png"))
+        elif e.type == pg.MOUSEWHEEL:
+            self.speed = min(SPEED_MAX, max(SPEED_MIN, self.speed * 1.25 ** e.y))
+        elif e.type == pg.MOUSEBUTTONDOWN and e.button == 1:
+            if self.show_hud and grab.collidepoint(e.pos):
+                self.dragging = True
+                self.speed = self.frac_to_speed((e.pos[0] - r.x) / r.w)
+            elif pg.Rect(20, 20, CANVAS, CANVAS).collidepoint(e.pos):
+                self.paused = not self.paused
+        elif e.type == pg.MOUSEMOTION and self.dragging:
+            self.speed = self.frac_to_speed((e.pos[0] - r.x) / r.w)
+        elif e.type == pg.MOUSEBUTTONUP and e.button == 1:
+            self.dragging = False
+
     # ---- the autonomous loop ------------------------------------------------------------
     def run(self) -> None:
         pg = self.pg
@@ -1307,17 +1456,7 @@ class Studio:
                     self.save_outputs()
                     pg.quit()
                     sys.exit(0)
-                if e.type == pg.KEYDOWN:
-                    if e.key == pg.K_SPACE:
-                        self.paused = not self.paused
-                    elif e.key in (pg.K_PLUS, pg.K_EQUALS, pg.K_KP_PLUS):
-                        self.speed = min(200, self.speed * 1.5)
-                    elif e.key in (pg.K_MINUS, pg.K_KP_MINUS):
-                        self.speed = max(0.25, self.speed / 1.5)
-                    elif e.key == pg.K_h:
-                        self.show_hud = not self.show_hud
-                    elif e.key == pg.K_s:
-                        pg.image.save(self.screen, os.path.join(self.args.out, "screenshot.png"))
+                self.handle_event(e)
             if not self.paused:
                 self.sim_time += dt * self.speed
                 # one cooperative tick of every agent; messages are delivered between agent slices
@@ -1411,7 +1550,7 @@ class Studio:
             out.append(f'<g id="{layer}">')
             for p in layers[layer]:
                 k = KIN[p["kind"]]
-                col = tuple(int(np.clip(c * m, 0, 255)) for c, m in zip(k["color"], scale))
+                col = tuple(p["color"]) if p.get("color") else tuple(int(np.clip(c * m, 0, 255)) for c, m in zip(k["color"], scale))
                 w = 0.5 * (k["wmin"] + k["wmax"])
                 op = 0.5 * (k["op"][0] + k["op"][1]) * (0.6 + 0.8 * min(1.0, p["tone"]) if p["kind"] == "hatch" else 1.0)
                 seg = p["segments"]
@@ -1543,13 +1682,20 @@ class Studio:
         for who, msg in list(self.logs):
             wrapped = self._wrap(f"{who}: {msg}", 47)[:2]
             lines += [(who, ln, i == 0) for i, ln in enumerate(wrapped)]
-        room = max(0, (self.H - 62 - y) // 14)                            # only what fits above the footer
+        room = max(0, (self.H - 106 - y) // 14)                            # only what fits above the footer
         for who, ln, first in lines[-room:] if room else []:
             scr.blit(self.f_s.render(ln, True, col.get(who, (200, 200, 200)) if first else (170, 172, 185)), (x0, y))
             y += 14
+        r = self.slider_rect()                                              # draggable pace slider (log scale)
+        scr.blit(self.f_s.render("pace", True, (150, 154, 170)), (x0, r.y - 16))
+        pg.draw.rect(scr, (45, 47, 58), r, border_radius=5)
+        kx = r.x + int(r.w * self.speed_to_frac(self.speed))
+        pg.draw.rect(scr, (120, 190, 255), (r.x, r.y, kx - r.x, r.h), border_radius=5)
+        pg.draw.circle(scr, (240, 244, 255), (kx, r.centery), 8 if self.dragging else 7)
+        scr.blit(self.f_s.render(f"x{self.speed:.1f}" + ("  PAUSED" if self.paused else ""), True, (255, 220, 120) if self.paused else (150, 154, 170)), (x0 + 50, r.y - 16))
         y = self.H - 52
-        scr.blit(self.f_s.render(f"sim speed x{self.speed:.1f}", True, (150, 154, 170)), (x0, y))
-        scr.blit(self.f_s.render("[+/-] speed  [space] pause  [h] HUD  [esc] quit", True, (110, 114, 130)), (x0, y + 15))
+        scr.blit(self.f_s.render("drag slider / wheel / [+/-]: pace", True, (110, 114, 130)), (x0, y))
+        scr.blit(self.f_s.render("click paper / [space]: pause  [h] HUD  [esc]", True, (110, 114, 130)), (x0, y + 15))
         if self.job_complete:
             scr.blit(self.f_b.render("JOB COMPLETE", True, (140, 255, 170)), (x0 + 200, y - 4))
 
@@ -1579,6 +1725,9 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--shots", type=int, default=0, help="headless: save a full-window frame every N frames")
     ap.add_argument("--timelapse", help="write an animated GIF of the whole drawing process to this path (needs Pillow)")
     ap.add_argument("--tl-frames", type=int, default=140, help="maximum number of GIF frames (the recording thins itself out)")
+    ap.add_argument("--color", action="store_true", help="colour pencils: hatch with the reference's colours (seed image or concept palette)")
+    ap.add_argument("--sketchiness", type=float, default=0.5, help="0..1: lighter re-strokes and overshoot over the outlines")
+    ap.add_argument("--skill", type=float, default=0.7, help="0..1: novice (shaky) to master (steady) hand")
     ap.add_argument("--no-hud", action="store_true")
     ap.add_argument("--verbose", action="store_true", help="print the agents' message log")
     ap.add_argument("--max-seconds", type=float, default=3600, help="wall-clock safety limit")

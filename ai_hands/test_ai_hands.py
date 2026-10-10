@@ -437,3 +437,154 @@ def test_timelapse_gif_is_written_and_thins_itself_to_the_frame_budget(tmp_path)
     assert 3 <= im.n_frames <= 30                                            # honoured the budget (+ the lingering last frames merge)
     assert im.size == ((ah.CANVAS + 40 + ah.HUD_W) // 2, (ah.CANVAS + 40) // 2)
     assert gif.stat().st_size < 4_000_000
+
+
+# ------------------------------------------------------------------ v4 additions: colour pencils, sketchiness, skill, mouse pace, review handshake
+def _fake_studio(**kw):
+    return SimpleNamespace(bus=ah.MessageBus(), palette="graphite", log=lambda *a: None, **kw)
+
+
+def _plan_all(concept="landscape", **kw):
+    studio = _fake_studio()
+    for box in ("Kinematics", "Critic"):
+        studio.bus.register(box)
+    pl = ah.PlannerAgent(studio, concept, None, 1, **kw)
+    while not pl.done:
+        pl.step(1.0)
+    return pl
+
+
+def test_colour_mode_tints_hatches_only_and_graphite_mode_stays_colourless():
+    col, mono = _plan_all(color=True), _plan_all(color=False)
+    hatches = [p for p in col.paths if p["kind"] == "hatch"]
+    assert hatches and all(len(p["color"]) == 3 and all(0 <= v <= 255 for v in p["color"]) for p in hatches)
+    assert len({tuple(p["color"]) for p in hatches}) > 20                    # a real range of colours, not one tint
+    assert all("color" not in p for p in col.paths if p["kind"] != "hatch")  # outlines stay graphite
+    assert all("color" not in p for p in mono.paths)
+
+
+def test_colour_is_darkened_and_saturated_like_layered_pencil():
+    pl = _plan_all(color=True)
+    pl.rgb = np.full((ah.RES, ah.RES, 3), (0.8, 0.5, 0.5))                   # a flat salmon reference
+    c = np.array(pl._tint([[[100, 100], [100, 100], [100, 100], [100, 100]]]))
+    assert c[0] / 255 < 0.8 and c[0] > c[1]                                  # darker than the target, hue kept
+    assert (c.max() - c.min()) / 255 > 0.8 - 0.5                             # more saturated than the target
+
+
+def test_kinematics_quantises_pencil_colours_so_sprites_can_be_cached(kin):
+    p = dict(path("hatch", STRAIGHT), color=[203, 61, 119], tone=0.5)
+    tr = kin.shape(p)
+    assert all(v % 12 == 0 for v in tr.color) and max(abs(a - b) for a, b in zip(tr.color, (203, 61, 119))) <= 6
+
+
+def test_colour_run_end_to_end_writes_coloured_svg_and_still_finishes(tmp_path):
+    out = run_cli("--concept", "mandala", "--color", "--speed", "400", "--quality", "0.5", "--out", str(tmp_path))
+    assert out.returncode == 0, out.stderr[-800:]
+    svg = (tmp_path / "drawing_mandala.svg").read_text()
+    import re
+    cols = set(re.findall(r'stroke="#([0-9a-f]{6})"', svg))
+    assert len(cols) > 20
+    assert any(abs(int(c[0:2], 16) - int(c[4:6], 16)) > 40 for c in cols)    # genuinely coloured, not grey
+
+
+def test_sketchiness_controls_the_lighter_restroke_pass():
+    none, lots = _plan_all(sketchiness=0.0), _plan_all(sketchiness=0.9)
+    assert not any(p["kind"] == "sketch" for p in none.paths)
+    sk = [p for p in lots.paths if p["kind"] == "sketch"]
+    assert len(sk) > 5 and all(p["layer"] == "details" for p in sk)
+
+
+def test_restroke_overshoots_both_ends_and_wobbles_off_the_original_line():
+    pl = _plan_all(sketchiness=0.8)
+    chain = np.stack([np.linspace(40, 140, 60), np.full(60, 100.0)], 1)      # a straight 100 px chain
+    segs = pl._restroke(chain)
+    pts = np.array([pt for seg in segs for pt in seg]) / ah.SCALE
+    assert pts[:, 0].min() < 40 - 0.5 and pts[:, 0].max() > 140 + 0.5        # ran past both ends
+    assert np.abs(pts[:, 1] - 100).max() > 0.1                               # and is not an exact retrace
+
+
+def test_skill_dial_makes_the_hand_steadier(kin):
+    def wobble(skill):
+        k = ah.KinematicsAgent(SimpleNamespace(bus=ah.MessageBus(), palette="graphite", log=lambda *a: None, args=SimpleNamespace(skill=skill)), 9)
+        devs = []
+        for _ in range(12):
+            tr = k.shape(path("contour", STRAIGHT))
+            devs.append(np.abs(tr.xy[:, 1] - 400).mean())
+        return float(np.mean(devs))
+    assert wobble(0.0) > 1.4 * wobble(1.0)
+
+
+def test_pace_slider_wheel_and_click_to_pause(tmp_path, monkeypatch):
+    import pygame
+    monkeypatch.setattr(sys, "argv", ["ai_hands.py", "--headless", "--out", str(tmp_path)])
+    st = ah.Studio(ah.parse_args())
+    r = st.slider_rect()
+    ev = lambda t, **kw: pygame.event.Event(t, **kw)  # noqa: E731
+    st.handle_event(ev(pygame.MOUSEBUTTONDOWN, pos=(r.x, r.centery), button=1))
+    assert st.dragging and st.speed == pytest.approx(ah.SPEED_MIN, rel=1e-6)
+    st.handle_event(ev(pygame.MOUSEMOTION, pos=(r.x + r.w // 2, r.centery), rel=(0, 0), buttons=(1, 0, 0)))
+    assert st.speed == pytest.approx(math.sqrt(ah.SPEED_MIN * ah.SPEED_MAX), rel=0.02)     # log scale: the middle is the geometric mean
+    st.handle_event(ev(pygame.MOUSEMOTION, pos=(r.right + 400, r.centery), rel=(0, 0), buttons=(1, 0, 0)))
+    assert st.speed == pytest.approx(ah.SPEED_MAX)                                          # clamped at the end of the track
+    st.handle_event(ev(pygame.MOUSEBUTTONUP, pos=(r.right, r.centery), button=1))
+    assert not st.dragging
+    st.handle_event(ev(pygame.MOUSEMOTION, pos=(r.x, r.centery), rel=(0, 0), buttons=(0, 0, 0)))
+    assert st.speed == pytest.approx(ah.SPEED_MAX)                                          # no longer dragging: moves are ignored
+    st.speed = 10.0
+    st.handle_event(ev(pygame.MOUSEWHEEL, x=0, y=2, flipped=False))
+    assert st.speed == pytest.approx(10 * 1.25 ** 2)
+    assert not st.paused
+    st.handle_event(ev(pygame.MOUSEBUTTONDOWN, pos=(300, 300), button=1))                   # click the paper
+    assert st.paused
+    st.handle_event(ev(pygame.MOUSEBUTTONDOWN, pos=(r.centerx, r.centery), button=1))       # clicking the slider must not toggle pause
+    assert st.paused
+    pygame.quit()
+
+
+def test_hand_waits_for_the_critics_verdict_before_the_next_layer():
+    studio, hand = _hand_rig()
+    kin = ah.KinematicsAgent(studio, 3)
+    seg = lambda y: [[[50, y], [150, y], [250, y], [350, y]]]  # noqa: E731
+    hand.pen = np.array([50.0, 300.0])
+    hand.queue.append(("traj", kin.shape(path("contour", seg(300)))))
+    hand.queue.append(("end", "contours"))
+    hand.queue.append(("traj", kin.shape(path("contour", seg(500)))))
+    for _ in range(200):
+        hand.step(0.05)
+    assert hand.strokes_done == 1 and hand.review_wait                       # drew layer 1, then stopped dead
+    assert any(m.topic == "layer_done" for m in studio.bus.boxes["Critic"])
+    ink = _ink(hand)
+    hand.step(0.5)
+    assert _ink(hand) == ink                                                 # still holding the pencil
+    studio.bus.send("Critic", "Hand", "review_done", "contours")
+    for _ in range(200):
+        hand.step(0.05)
+    assert hand.strokes_done == 2 and not hand.review_wait
+
+
+def test_each_segment_is_stamped_once_so_ink_does_not_depend_on_playback_speed():
+    studio, a = _hand_rig()
+    _, b = _hand_rig()
+    kin = ah.KinematicsAgent(studio, 3)
+    tr = kin.shape(path("contour", STRAIGHT))
+    for hand, dt in ((a, 0.0031), (b, 1.0)):
+        hand.pen = np.array([50.0, 400.0])
+        hand.queue.append(("traj", tr))
+        for _ in range(4000):
+            hand.step(dt)
+            if hand.strokes_done:
+                break
+    import pygame
+    assert np.array_equal(pygame.surfarray.array3d(a.canvas), pygame.surfarray.array3d(b.canvas))
+
+
+def test_the_plan_does_not_depend_on_playback_speed(tmp_path):
+    plans = []
+    for sp, d in (("40", tmp_path / "a"), ("400", tmp_path / "b")):
+        assert run_cli("--concept", "landscape", "--speed", sp, "--quality", "0.9", "--out", str(d)).returncode == 0
+        plans.append(json.loads((d / "plan_landscape.json").read_text())["paths"])
+    assert plans[0] == plans[1]
+
+
+def test_planner_keeps_its_hud_colour_in_every_mode():
+    assert _plan_all(color=True).color == ah.PlannerAgent.color == (120, 190, 255)   # regression: a bool once overwrote it
