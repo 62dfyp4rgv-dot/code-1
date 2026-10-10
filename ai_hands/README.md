@@ -7,11 +7,12 @@ Autonomous multi-agent simulation of an AI drawing vector art stroke by stroke (
     python ai_hands.py --concept landscape      # still_life | landscape | mandala | fruit_bowl
     python ai_hands.py --image photo.jpg        # trace and draw your own image
     python ai_hands.py --concept fruit_bowl --detail 1 --color   # the fully detailed fruit bowl, in colour pencil
+    python ai_hands.py --image painting.jpg --paint --color --res 448 --detail 0.8   # copy a painting: brush block-in, then line work
     python ai_hands.py --color                  # colour pencils: hatch with the reference's colours
     python ai_hands.py --sketchiness 0.9 --skill 0.2   # loose overshooting outlines; skill 0 = shaky novice, 1 = master
     python ai_hands.py --timelapse lapse.gif    # also record an animated GIF of the whole process (needs Pillow)
     python ai_hands.py --headless --speed 100   # no window; writes PNG + SVG + plan.json + run_log.json
-    pytest -q test_ai_hands.py                  # 48 tests
+    pytest -q test_ai_hands.py                  # 55 tests
 
 Keys: `+`/`-` speed, `space` pause, `h` HUD, `esc` quit (saves what is drawn so far).
 Mouse: drag the **pace slider** (log scale 0.25x-200x) or use the wheel; click the paper to pause.
@@ -50,3 +51,14 @@ and a bunch of grapes on a wooden table, lit by one lamp (cast shadows, glossy h
   the program works out from a photo; `--image` traces still use plain edge detection and one hatch direction.
 - Peel dimples and lenticels are added as small light marks; highlights are left as bare paper.
 - `--detail 0..1` sets how much of what the Eye sees is drawn in the first pass (0 = economical, 1 = fully detailed).
+
+## Copying a painting (`--paint`, `--res`)
+`--paint` adds a **masses** layer between the skeleton and the contours: the picture is quantised into 12 colour masses (k-means,
+clustered mostly on lightness so JPEG hue noise cannot split a mass), and a broad soft brush blocks them in lightest first, darks
+last on top, with several translucent coats on the darkest masses (hair). Paper-white background is left bare. The usual contour
+and detail line work then goes over the paint. Add `--color` for the picture's own colours, or leave it off for a grey ink wash.
+`--res 448` analyses at a finer grid so thin strands and facial features survive. `examples/portrait_*` show a stylised portrait
+copied this way next to the original (`portrait_comparison.png`).
+Honest limits: the result is a posterised, outlined interpretation. It keeps the composition, the solid black hair mass, the
+muted skin tones and the main features, but not the soft blending, the fine scratch/scar marks, the earring or the wispy
+individual strands of the original, and the figure is fitted inside a square canvas (so it is smaller than in the source).

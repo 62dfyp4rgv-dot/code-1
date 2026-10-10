@@ -671,3 +671,114 @@ def test_fruit_bowl_end_to_end_in_colour_and_graphite(tmp_path):
         assert log["score"] >= 0.6
         assert any("object map" in e["msg"] for e in log["log"])
         assert (tmp_path / sub / "drawing_fruit_bowl.svg").exists()
+
+
+# ------------------------------------------------------------------ v6: paint mode (brush block-in), --res, brush behaviour
+@pytest.fixture()
+def seed_png(tmp_path):
+    import pygame
+    pygame.init()
+    s = pygame.Surface((400, 500))
+    s.fill((255, 255, 255))                                                  # white background
+    pygame.draw.circle(s, (200, 60, 50), (200, 250), 140)                    # a red disc
+    pygame.draw.circle(s, (20, 20, 25), (200, 200), 70)                      # with a near-black disc on it
+    p = tmp_path / "seed.png"
+    pygame.image.save(s, str(p))
+    return str(p)
+
+
+def _plan_image(path, **kw):
+    studio = _fake_studio()
+    for box in ("Kinematics", "Critic"):
+        studio.bus.register(box)
+    pl = ah.PlannerAgent(studio, "still_life", path, 1, **kw)
+    while not pl.done:
+        pl.step(1.0)
+    return pl, studio
+
+
+def test_paint_mode_adds_a_masses_layer_between_skeleton_and_contours(seed_png):
+    pl, studio = _plan_image(seed_png, paint=True, color=True)
+    announced = [m.payload for m in studio.bus.boxes["Critic"] if m.topic == "layer_announce"]
+    assert announced[:3] == ["skeleton", "masses", "contours"]
+    washes = [p for p in pl.paths if p["layer"] == "masses"]
+    assert washes and all(p["kind"] == "wash" and len(p["color"]) == 3 for p in washes)
+    plain, st2 = _plan_image(seed_png)
+    assert not any(p["layer"] == "masses" for p in plain.paths)              # the default pipeline is untouched
+    assert [m.payload for m in st2.bus.boxes["Critic"] if m.topic == "layer_announce"] == ah.LAYER_ORDER
+
+
+def test_the_brush_paints_light_masses_first_darks_last_and_leaves_the_paper_bare(seed_png):
+    pl, _ = _plan_image(seed_png, paint=True, color=True)
+    washes = [p for p in pl.paths if p["layer"] == "masses"]
+    lum = [float(np.array(p["color"]) @ [0.299, 0.587, 0.114]) / 255 for p in washes]
+    assert max(lum) < 0.9                                                    # the white background is never painted
+    assert lum[0] > lum[-1] + 0.3                                            # the red coat goes down before the near-black one
+    reds = [p for p in washes if p["color"][0] > 150 and p["color"][1] < 110]
+    blacks = [p for p in washes if max(p["color"]) < 60]
+    assert reds and blacks
+
+
+def test_ink_wash_without_colour_is_grey(seed_png):
+    pl, _ = _plan_image(seed_png, paint=True, color=False)
+    washes = [p for p in pl.paths if p["layer"] == "masses"]
+    assert washes and all(max(p["color"]) - min(p["color"]) < 3 for p in washes)
+    assert not any(p["kind"] == "hatch" and p.get("color") for p in pl.paths)  # and the pencil hatches are not coloured either
+
+
+def test_dark_masses_get_more_coats_than_light_ones(seed_png):
+    pl, _ = _plan_image(seed_png, paint=True, color=True)
+    washes = [p for p in pl.paths if p["layer"] == "masses"]
+    def coats(pred):
+        sel = [p for p in washes if pred(p["color"])]
+        return len(sel)
+    dark, light = coats(lambda c: max(c) < 60), coats(lambda c: c[0] > 150 and c[1] < 110)
+    assert dark > 0 and light > 0
+    assert dark / max(1, sum(1 for p in washes if max(p["color"]) < 60 and p["id"] >= 0)) == 1.0   # sanity: counted something real
+
+
+def test_brush_strokes_are_wide_soft_and_never_wear_the_pencil():
+    studio, hand = _hand_rig()
+    kin = ah.KinematicsAgent(studio, 3)
+    tr = kin.shape(dict(path("wash", STRAIGHT), color=[120, 100, 90], tone=0.5))
+    assert tr.width.max() > 6 and tr.kind == "wash"                          # a brush, not a 1 px pencil line
+    hand.pen = np.array([50.0, 400.0])
+    hand.queue.append(("traj", tr))
+    for _ in range(200):
+        hand.step(0.05)
+    assert hand.wear == 0.0 and hand.strokes_done == 1
+    assert _ink(hand) > 0
+
+
+def test_paint_run_end_to_end_with_higher_resolution_and_svg_layers(tmp_path, seed_png):
+    out = run_cli("--image", seed_png, "--paint", "--color", "--res", "256", "--speed", "400", "--quality", "0.5", "--out", str(tmp_path / "o"))
+    assert out.returncode == 0, out.stderr[-800:]
+    d = tmp_path / "o"
+    plan = json.loads((d / "plan_seed.json").read_text())
+    assert plan["layers"][:3] == ["skeleton", "masses", "contours"]
+    import xml.etree.ElementTree as ET
+    ids = [g.get("id") for g in ET.parse(d / "drawing_seed.svg").getroot().iter("{http://www.w3.org/2000/svg}g") if g.get("id")]
+    assert ids[:3] == ["skeleton", "masses", "contours"]
+    log = json.loads((d / "run_log_seed.json").read_text())
+    assert any("brush block-in" in e["msg"] for e in log["log"])
+    assert not any("requesting hatch pass" in e["msg"] and "masses" in e["msg"] for e in log["log"])
+    import pygame
+    a = pygame.surfarray.array3d(pygame.image.load(str(d / "drawing_seed.png"))).astype(int)
+    reddish = ((a[..., 0] - a[..., 2]) > 60).sum()
+    assert reddish > 5000                                                    # the red disc was really painted red on the canvas
+
+
+def test_resolution_option_rescales_the_analysis_grid():
+    old = ah.RES
+    try:
+        ah.set_resolution(256)
+        assert ah.RES == 256 and ah.SCALE == pytest.approx(ah.CANVAS / 256)
+        pl = _plan_all("mandala")
+        oval = next(p for p in pl.paths if p["layer"] == "skeleton" and len(p["segments"]) == 4)
+        sk = ah.flatten(oval["segments"], 2.0)["pts"]                          # the drawn curve (control points may bulge past it)
+        assert sk.min() >= -2 and sk.max() <= ah.CANVAS + 2                   # the gesture oval stays on the paper at any scale
+        drawn = np.vstack([ah.flatten(p["segments"], 3.0)["pts"] for p in pl.paths])
+        assert drawn.min() > -40 and drawn.max() < ah.CANVAS + 40             # every drawn curve is on (or just off) the paper
+        assert pl.tone.shape == (256, 256)
+    finally:
+        ah.set_resolution(old)

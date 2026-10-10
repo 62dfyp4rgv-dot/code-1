@@ -81,11 +81,20 @@ KIN = {
     "skeleton": dict(vmax=1500, amax=7000, wmin=1.0, wmax=1.9, op=(0.25, 0.50), tremor=0.50, drift=1.7, color=(104, 140, 188)),
     "contour": dict(vmax=820, amax=4300, wmin=1.0, wmax=2.7, op=(0.55, 0.95), tremor=0.35, drift=0.9, color=(34, 31, 40)),
     "hatch": dict(vmax=1900, amax=11000, wmin=0.8, wmax=1.8, op=(0.20, 0.50), tremor=0.30, drift=0.55, color=(60, 57, 68)),
+    "wash": dict(vmax=1500, amax=8000, wmin=8.0, wmax=14.0, op=(0.30, 0.55), tremor=0.55, drift=1.1, color=(70, 62, 60)),
     "sketch": dict(vmax=1250, amax=6000, wmin=0.8, wmax=1.5, op=(0.22, 0.45), tremor=0.45, drift=1.2, color=(40, 38, 48)),
     "detail": dict(vmax=430, amax=2700, wmin=1.2, wmax=3.3, op=(0.70, 1.00), tremor=0.25, drift=0.5, color=(18, 14, 21)),
 }
 LAYER_ORDER = ["skeleton", "contours", "shading", "details"]
 LAYER_WEIGHT = {"skeleton": 0.05, "contours": 0.35, "shading": 0.45, "details": 0.15}
+ALL_LAYERS = ["skeleton", "masses", "contours", "shading", "details"]       # "masses" (the brush block-in) exists only in --paint mode
+LAYER_WEIGHT["masses"] = 0.45
+
+
+def set_resolution(n: int) -> None:
+    """Change the analysis resolution (call before any agent is created)."""
+    global RES, SCALE
+    RES, SCALE = int(n), CANVAS / int(n)
 PALETTES = {  # multiply the kind colours: graphite (default) or warm sepia
     "graphite": (1.0, 1.0, 1.0),
     "sepia": (1.9, 1.35, 0.85),
@@ -756,9 +765,11 @@ class PlannerAgent(Agent):
     color = (120, 190, 255)
 
     def __init__(self, studio: "Studio", concept: str, image: Optional[str], seed: int, color: bool = False, sketchiness: float = 0.5,
-                 detail: float = 0.5):
+                 detail: float = 0.5, paint: bool = False):
         super().__init__(studio)
         self.concept, self.image, self.rng = concept, image, random.Random(seed)
+        self.paint = paint                          # brush block-in of colour masses before the line work
+        self.paint_rgb: Optional[np.ndarray] = None
         self.detail = detail                         # 0 = very economical, 1 = draw everything the Eye sees
         self.regions: Optional[np.ndarray] = None   # object-id map (concepts that provide one)
         self.texmap: Optional[np.ndarray] = None
@@ -811,9 +822,11 @@ class PlannerAgent(Agent):
         c = np.clip((lum + (c - lum) * 1.45) * 0.82, 0, 1)
         return [int(v * 255) for v in c]
 
-    def _emit(self, layer: str, kind: str, segments: list, tone: float = 0.0) -> None:
+    def _emit(self, layer: str, kind: str, segments: list, tone: float = 0.0, color: Optional[list] = None) -> None:
         p = dict(id=self.next_id, layer=layer, kind=kind, segments=[[[round(float(x), 2) for x in pt] for pt in s] for s in segments], tone=round(tone, 3))
-        if kind == "hatch" and (col := self._tint(p["segments"])) is not None:
+        if color is not None:
+            p["color"] = color
+        elif kind == "hatch" and (col := self._tint(p["segments"])) is not None:
             p["color"] = col
         self.next_id += 1
         self.paths.append(p)
@@ -852,17 +865,22 @@ class PlannerAgent(Agent):
         self.set_status(f"Eye: looking at '{self.image or self.concept}'")
         yield
         dark = load_seed_image(self.image, RES) if self.image else CONCEPTS[self.concept](RES, self.rng)
-        self.tone = gaussian_blur(dark, 1.0)
+        sig = RES / 320.0                                              # blur scales are tuned for 320 px
+        self.tone = gaussian_blur(dark, 1.0 * sig)
         gray = 1 - dark
-        if self.colour_mode:
-            self.rgb = load_seed_rgb(self.image, RES) if self.image else concept_colors(self.concept, RES)
-            self.log("colour pencils: sampling the reference colours for hatching")
+        if self.colour_mode or self.paint:
+            full = load_seed_rgb(self.image, RES) if self.image else concept_colors(self.concept, RES)
+            if self.colour_mode:
+                self.rgb = full
+                self.log("colour pencils: sampling the reference colours for hatching")
+            if self.paint:                                                 # ink wash when not in colour mode: the same masses in grey
+                self.paint_rgb = full if self.colour_mode else np.repeat((full @ [0.299, 0.587, 0.114])[..., None], 3, axis=2)
         yield
         # ------------------------------------------------------------ analysis
         self.set_status("Eye: Gaussian + Sobel + Canny non-max suppression")
         d2 = 2 * self.detail - 1                                          # -1 .. +1 around the default
-        fine, self.mag = canny(gray, 1.0, 40 - 30 * max(d2, 0) + 20 * max(-d2, 0), 80 - 25 * max(d2, 0) + 10 * max(-d2, 0))
-        coarse, _ = canny(gray, 4.0, 70, 93)
+        fine, self.mag = canny(gray, 1.0 * sig, 40 - 30 * max(d2, 0) + 20 * max(-d2, 0), 80 - 25 * max(d2, 0) + 10 * max(-d2, 0))
+        coarse, _ = canny(gray, 4.0 * sig, 70, 93)
         aux = None if self.image else CONCEPT_AUX.get((self.concept, RES))
         id_chains: list[np.ndarray] = []
         if aux is not None:                                               # the Eye knows where one object ends and the next begins
@@ -904,6 +922,9 @@ class PlannerAgent(Agent):
             ev, evec = np.linalg.eigh(cov)
             ra, rb = 2.1 * math.sqrt(max(ev[1], 1)), 2.1 * math.sqrt(max(ev[0], 1))
             ang = math.atan2(evec[1, 1], evec[0, 1])
+            hx, hy = math.hypot(ra * math.cos(ang), rb * math.sin(ang)), math.hypot(ra * math.sin(ang), rb * math.cos(ang))
+            fit = min(1.0, (min(cx, RES - cx) - 1) / max(hx, 1e-6), (min(cy, RES - cy) - 1) / max(hy, 1e-6))
+            ra, rb = ra * max(fit, 0.2), rb * max(fit, 0.2)                    # the gesture oval must stay on the paper
             self._emit("skeleton", "skeleton", self._ellipse(cx, cy, ra, rb, ang))
             for s in (-1, 1):                                  # centre-line and cross line
                 a = np.array([cx, cy]) + np.array([math.cos(ang), math.sin(ang)]) * ra * s
@@ -916,6 +937,15 @@ class PlannerAgent(Agent):
                 self._emit("skeleton", "skeleton", segs)
             yield
         self._close_layer("skeleton")
+        # ------------------------------------------------------------ (paint mode) layer: block in the colour masses with a brush
+        if self.paint:
+            self._open_layer("masses")
+            for item in self._masses():
+                if item is None:
+                    yield
+                else:
+                    self._emit("masses", "wash", item[0], item[1], color=item[2])
+            self._close_layer("masses")
         # ------------------------------------------------------------ layer 2: primary contours (economy pass)
         self._open_layer("contours")
         self.set_status("Planner: primary contours (Schneider cubic fit)")
@@ -931,7 +961,7 @@ class PlannerAgent(Agent):
         self._open_layer("shading")
         sp0 = 8.0 - 3.0 * max(d2, 0) + 2.0 * max(-d2, 0)
         lv0 = 0.34 - 0.08 * max(d2, 0)
-        for lvl, spacing, ph in [(lv0, sp0, 0.0), (lv0 + 0.18, sp0, 0.5)]:      # economy pass: sparse, highlights stay paper
+        for lvl, spacing, ph in ([] if self.paint else [(lv0, sp0, 0.0), (lv0 + 0.18, sp0, 0.5)]):   # (the brush already carried the tone)
             self.set_status(f"Planner: optimizing hatch density (tone >= {lvl:.2f}, spacing {spacing:.1f}px)")
             for ang, mask in (self.hatch_classes or [(48, None)]):          # every object gets its own stroke direction
                 for p in self._hatch(self.tone, mask, lvl, spacing, ang, "shading", ph):
@@ -974,7 +1004,8 @@ class PlannerAgent(Agent):
         self.log(f"master plan: {len(self.paths)} Bezier paths")
 
     # ---- hatching: rotated scan lines through the tone map; each dark run becomes one slightly bowed cubic
-    def _hatch(self, tone: np.ndarray, mask: Optional[np.ndarray], level: float, spacing: float, angle_deg: float, layer: str, phase: float = 0.0):
+    def _hatch(self, tone: np.ndarray, mask: Optional[np.ndarray], level: float, spacing: float, angle_deg: float, layer: str, phase: float = 0.0,
+               dropout: float = 0.04):
         H, W = tone.shape
         a = math.radians(angle_deg)
         d, n = np.array([math.cos(a), math.sin(a)]), np.array([-math.sin(a), math.cos(a)])
@@ -991,7 +1022,7 @@ class PlannerAgent(Agent):
                 continue
             edges = np.diff(np.concatenate([[0], hit.astype(int), [0]]))
             runs = list(zip(np.nonzero(edges == 1)[0], np.nonzero(edges == -1)[0] - 1))
-            runs = [r_ for r_ in runs if r_[1] - r_[0] >= 4 and self.rng.random() > 0.04]
+            runs = [r_ for r_ in runs if r_[1] - r_[0] >= 4 and self.rng.random() > dropout]
             if flip:
                 runs = runs[::-1]
             for i0, i1 in runs:
@@ -1003,6 +1034,51 @@ class PlannerAgent(Agent):
                 out.append(([self._line_bez(p0 * SCALE, p1 * SCALE, self.rng.uniform(0.3, 1.2))], mid_tone))
             flip = not flip
         return out
+
+    def _masses(self):
+        """Block in the picture the way a painter does: quantise the colours (k-means), then brush each colour region with broad
+        strokes, lightest first so the darks sit crisply on top. Dark regions get more passes at different angles (several
+        translucent coats build up to near-black); paper-white regions are left bare. Yields None (time slice) or
+        (segments, tone, colour)."""
+        self.set_status("Planner: quantising the picture into colour masses (k-means)")
+        X = gaussian_blur(self.paint_rgb[..., 0], 0.8 * RES / 320)[..., None] * [1, 0, 0] + gaussian_blur(self.paint_rgb[..., 1], 0.8 * RES / 320)[..., None] * [0, 1, 0] \
+            + gaussian_blur(self.paint_rgb[..., 2], 0.8 * RES / 320)[..., None] * [0, 0, 1]      # de-noise (JPEG blotches) before clustering
+        X = X.reshape(-1, 3)
+        w = np.array([0.299, 0.587, 0.114])
+        k = 12
+        Lm = (X @ w)[:, None]
+        F = Lm + (X - Lm) * 0.35                                              # cluster mostly on lightness: hue noise must not split masses
+        order = np.argsort(Lm[:, 0])
+        Cf = F[order[(np.linspace(0.03, 0.97, k) * (len(F) - 1)).astype(int)]].copy()
+        for _ in range(9):
+            lab = ((F[:, None, :] - Cf[None, :, :]) ** 2).sum(-1).argmin(1)
+            for c in range(k):
+                if (lab == c).any():
+                    Cf[c] = F[lab == c].mean(axis=0)
+        C = np.array([X[lab == c].mean(axis=0) if (lab == c).any() else Cf[c] for c in range(k)])      # true colour of each mass
+        lab = lab.reshape(RES, RES)
+        yield None
+        width = 0.5 * (KIN["wash"]["wmin"] + KIN["wash"]["wmax"])
+        spacing = 0.42 * width / SCALE                                       # strokes overlap by more than half: no paper shows through
+        passes_angles = [38, 128, 83]
+        n_done = 0
+        for c in sorted(range(k), key=lambda i: -float(C[i] @ w)):           # lightest first
+            lum = float(C[c] @ w)
+            m = box_blur((lab == c).astype(float), 2) > 0.5                  # majority filter: no speckle, no thin anti-aliasing fringes
+            edge = np.zeros_like(m)
+            edge[:6], edge[-6:], edge[:, :6], edge[:, -6:] = True, True, True, True
+            is_paper = lum > 0.90 or (lum > 0.80 and (m & edge).sum() > 0.02 * m.sum())     # nothing can be lighter than the paper; a pale region on the frame is background
+            if is_paper or m.mean() < 0.004:
+                continue                                                      # background paper / negligible: leave bare
+            col = [int(v * 255) for v in np.clip(C[c], 0, 1)]
+            n_pass = 3 if lum < 0.25 else 2
+            self.set_status(f"Planner: brushing mass {n_done + 1} (luminance {lum:.2f}, {n_pass} coats)")
+            for pi in range(n_pass):
+                for segs, mid in self._hatch(self.tone, m, -1.0, spacing, passes_angles[pi] + self.rng.uniform(-6, 6), "masses", 0.31 * pi, dropout=0.0):
+                    yield segs, mid, col
+                yield None
+            n_done += 1
+        self.log(f"brush block-in: {n_done} colour masses")
 
     def _plan_hatch_classes(self) -> None:
         """Give every object its own hatching direction: greedy graph colouring of the object-adjacency graph so that two
@@ -1239,8 +1315,9 @@ class KinematicsAgent(Agent):
         scale = PALETTES[self.studio.palette]
         if path.get("color"):                                              # colour pencil: quantised so sprites can be cached
             col = tuple(int(np.clip(round(c / 12) * 12, 0, 255)) for c in path["color"])
-            alpha = np.clip(alpha * 1.7, 0, 1)                             # wax pencil lays down more pigment than graphite
-            width = width * 1.25
+            if path["kind"] == "hatch":
+                alpha = np.clip(alpha * 1.7, 0, 1)                         # wax pencil lays down more pigment than graphite
+                width = width * 1.25
         else:
             col = tuple(int(np.clip(c * m, 0, 255)) for c, m in zip(p["color"], scale))
         return Trajectory(path["id"], path["layer"], path["kind"], xy, press, width, alpha, speed, L, T, col)
@@ -1440,7 +1517,7 @@ class HandAgent(Agent):
             size = int(2 * rad + 4)
             yy, xx = np.mgrid[0:size, 0:size] - (size - 1) / 2
             d = np.hypot(xx, yy) / rad
-            grain = 0.62 + 0.38 * self.rng.random((size, size))
+            grain = (0.80 + 0.20 * self.rng.random((size, size))) if rad > 3.5 else (0.62 + 0.38 * self.rng.random((size, size)))   # paint is smoother than paper tooth
             alpha = np.clip(1 - d**2.4, 0, 1) * grain * (key[2] / 9.0 + 0.04)
             s = self.pg.Surface((size, size), self.pg.SRCALPHA)
             self.pg.surfarray.pixels3d(s)[:] = np.array(col, np.uint8)[None, None, :]
@@ -1456,8 +1533,9 @@ class HandAgent(Agent):
         for i in range(lo, i1):
             a, b = tr.xy[i], tr.xy[i + 1]
             dist = float(np.hypot(*(b - a)))
-            self.wear += dist
-            blunt = 1.0 + 0.5 * min(1.0, self.wear / WEAR_LEN)             # a worn nib draws a fatter, softer line
+            if tr.kind != "wash":                                          # a brush does not blunt like a pencil
+                self.wear += dist
+            blunt = 1.0 if tr.kind == "wash" else 1.0 + 0.5 * min(1.0, self.wear / WEAR_LEN)   # a worn nib draws a fatter, softer line
             w, al = float(tr.width[i + 1]) * blunt, float(tr.alpha[i + 1]) / (0.9 + 0.1 * blunt)
             steps = max(1, int(dist / max(0.6, 0.22 * w)))
             for k in range(1, steps + 1):
@@ -1535,6 +1613,12 @@ class CriticAgent(Agent):
             self.set_status("skeleton inked - checking proportions")
             return
         corr, recall, deficit, missing = self._measure()
+        if layer == "masses":                                              # the line work is still to come: only report
+            self.metrics = dict(tone=corr, edge=recall)
+            self.log(f"after the brush block-in: tone corr {corr:.2f}")
+            self.set_status(f"measured the masses: tone {corr:.2f}")
+            self.history.append(dict(after=layer, tone=round(corr, 3), edge=round(recall, 3), score=round(0.55 * corr + 0.45 * recall, 3)))
+            return
         self.metrics = dict(tone=corr, edge=recall)
         self.score = 0.55 * corr + 0.45 * recall
         self.history.append(dict(after=layer, tone=round(corr, 3), edge=round(recall, 3), score=round(self.score, 3)))
@@ -1609,7 +1693,7 @@ class Studio:
         self.paper_lum = pygame.surfarray.array3d(self.canvas).astype(float).mean() / 255.0
         self.paper_rgb = pygame.surfarray.array3d(self.canvas).astype(float).mean(axis=(0, 1))
         self.bus = MessageBus()
-        self.planner = PlannerAgent(self, a.concept, a.image, a.seed, a.color, a.sketchiness, a.detail)
+        self.planner = PlannerAgent(self, a.concept, a.image, a.seed, a.color, a.sketchiness, a.detail, a.paint)
         self.kin = KinematicsAgent(self, a.seed + 1)
         self.hand = HandAgent(self, self.canvas)
         self.critic = CriticAgent(self, a.quality)
@@ -1640,9 +1724,11 @@ class Studio:
         planned: dict[str, int] = {}
         for p in self.planner.paths:
             planned[p["layer"]] = planned.get(p["layer"], 0) + 1
-        for layer in LAYER_ORDER:
+        present = [l for l in ALL_LAYERS if l in planned or l in LAYER_ORDER]
+        norm = sum(LAYER_WEIGHT[l] for l in present)                         # weights are shares of the layers this run actually has
+        for layer in present:
             if layer in planned:
-                total += 0.92 * LAYER_WEIGHT[layer] * min(1.0, self.hand.layer_done.get(layer, 0) / planned[layer])
+                total += 0.92 * LAYER_WEIGHT[layer] / norm * min(1.0, self.hand.layer_done.get(layer, 0) / planned[layer])
         extra = [k for k in planned if k.startswith("refine")]
         if extra:                                           # correction passes can only fill the last 8 %
             total += 0.08 * (sum(min(self.hand.layer_done.get(k, 0), planned[k]) for k in extra) / max(1, sum(planned[k] for k in extra)))
@@ -1767,7 +1853,7 @@ class Studio:
             final.blit(self.hand.guide, (0, 0))
         self.pg.image.save(final, png)
         with open(os.path.join(self.args.out, f"plan_{name}.json"), "w") as f:
-            json.dump(dict(concept=name, canvas=[CANVAS, CANVAS], layers=LAYER_ORDER, paths=self.planner.paths), f)
+            json.dump(dict(concept=name, canvas=[CANVAS, CANVAS], layers=[l for l in ALL_LAYERS if l in LAYER_ORDER or any(p["layer"] == l for p in self.planner.paths)], paths=self.planner.paths), f)
         with open(os.path.join(self.args.out, f"run_log_{name}.json"), "w") as f:
             json.dump(dict(score=self.critic.score, passes=self.critic.passes, history=self.critic.history, log=self.run_log), f, indent=1)
         svg = os.path.join(self.args.out, f"drawing_{name}.svg")
@@ -1787,7 +1873,7 @@ class Studio:
         layers: dict[str, list[dict]] = {}
         for p in self.planner.paths:
             layers.setdefault(p["layer"], []).append(p)
-        for layer in LAYER_ORDER + sorted(k for k in layers if k.startswith("refine")):
+        for layer in ALL_LAYERS + sorted(k for k in layers if k.startswith("refine")):
             if layer not in layers:
                 continue
             out.append(f'<g id="{layer}">')
@@ -1835,6 +1921,17 @@ class Studio:
             return
         pg.draw.ellipse(scr, (60, 55, 50), (x - 4 + z * 0.5, y - 1 + z * 0.4, 8 + z * 0.2, 4 + z * 0.1), 0) if z > 0.5 else None
         tx, ty = x - z * 0.55, y - z * 1.0                 # tip position (lifted)
+        brush = (h.cur is not None and h.cur.kind == "wash") or (h.cur is None and h.travel is not None and getattr(h.cur_next, "kind", "") == "wash")
+        if brush:                                           # a round brush loaded with the stroke's paint
+            col = (h.cur or h.cur_next).color
+            ang = math.radians(-64)
+            d = np.array([math.cos(ang), math.sin(ang)])
+            n = np.array([-d[1], d[0]])
+            tip = np.array([tx, ty])
+            pg.draw.polygon(scr, col, [tip, tip + d * 26 + n * 6, tip + d * 26 - n * 6])
+            pg.draw.polygon(scr, (200, 202, 210), [tip + d * 26 + n * 6, tip + d * 26 - n * 6, tip + d * 46 - n * 6.5, tip + d * 46 + n * 6.5])
+            pg.draw.polygon(scr, (96, 62, 40), [tip + d * 46 + n * 5, tip + d * 46 - n * 5, tip + d * 200 - n * 3.5, tip + d * 200 + n * 3.5])
+            return
         ang = math.radians(-62)
         d = np.array([math.cos(ang), math.sin(ang)])
         n = np.array([-d[1], d[0]])
@@ -1874,7 +1971,7 @@ class Studio:
             planned[p["layer"]] = planned.get(p["layer"], 0) + 1
         scr.blit(self.f_m.render("Layers", True, (220, 220, 230)), (x0, y))
         y += 20
-        names = LAYER_ORDER + sorted(k for k in planned if k.startswith("refine"))
+        names = [l for l in ALL_LAYERS if l in LAYER_ORDER or l in planned] + sorted(k for k in planned if k.startswith("refine"))
         for nm in names:
             tot, done = planned.get(nm, 0), self.hand.layer_done.get(nm, 0)
             frac = done / tot if tot else 0.0
@@ -1972,10 +2069,14 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--sketchiness", type=float, default=0.5, help="0..1: lighter re-strokes and overshoot over the outlines")
     ap.add_argument("--skill", type=float, default=0.7, help="0..1: novice (shaky) to master (steady) hand")
     ap.add_argument("--detail", type=float, default=0.5, help="0..1: how much of what the Eye sees gets drawn (1 = fully detailed)")
+    ap.add_argument("--paint", action="store_true", help="paint the colour masses with a broad brush first, then draw the line work over them")
+    ap.add_argument("--res", type=int, default=320, help="analysis resolution (higher = finer strands and edges, slower planning)")
     ap.add_argument("--no-hud", action="store_true")
     ap.add_argument("--verbose", action="store_true", help="print the agents' message log")
     ap.add_argument("--max-seconds", type=float, default=3600, help="wall-clock safety limit")
     a = ap.parse_args()
+    if a.res != RES:
+        set_resolution(a.res)
     os.makedirs(a.out, exist_ok=True)
     return a
 
