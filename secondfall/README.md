@@ -1,7 +1,9 @@
 # secondfall - a procedural redraw of "Second Fall", Episode 1
 
 Renders the 53 illustrated panels of the Episode 1 webtoon strip (the 64-panel page keeps its original lettering and layout)
-in a noir, sepia, ink-lined style, built entirely in code (numpy + Pillow, no image model).
+in a Korean-webtoon look (pastel flesh, thin warm-brown line art, two-tone cel shading with rosy shadows, big detailed eyes, fine
+hair strands, high-key colour), built entirely in code (numpy + Pillow, no image model). The earlier noir/sepia look is still
+available: `SF_STYLE=noir python run.py ...` (default is `webtoon`; see `style.py`).
 
     python -m pip install numpy pillow
     SF_OUT=out python run.py 1.5 5 6 7        # S = scale vs the 800 px layout; then the panel numbers
@@ -13,9 +15,10 @@ in a noir, sepia, ink-lined style, built entirely in code (numpy + Pillow, no im
   projected through the head's rotation. `body.py`, `poses.py` - joint-driven bodies, hands with fingers, wrestling gear.
 - `world.py` - 2-D painting toolkit for backgrounds (brick, planks, curtains, crowds, light cones, rain, dust).
 - `scenes_a..d.py` - one scene function per panel. `cast.py` - the cast from the Character Reference Sheets.
-- `grade.py` - the first-life sepia grade and film finish.
+- `grade.py` - the webtoon grade (`finish_web`) and the original sepia grade / film finish (used when `SF_STYLE=noir`).
+- `style.py` - the global style switch (`webtoon` | `noir`) read by the stage, head painter, cast colours and grade.
 
 ## Honest limits
 The characters are stylised 3-D sculpts, not hand-drawn manhwa figures: faces are expressive but simple, bodies are mannequin-like
-in flat light (the scenes therefore use backlit noir lighting), and some action holds are approximate. Backgrounds and lighting are
+and the backgrounds were authored in a dusky palette that the webtoon grade only partly brightens, and some action holds are approximate. Backgrounds and lighting are
 the strongest part. A real image model would do much better on faces and anatomy.

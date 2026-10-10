@@ -12,6 +12,7 @@ from .head import Head, HeadSpec
 from .paintfx import Ink, ink_lines, paint_finish, shade_buf, to_img
 from .r3d import Buf, _blur, fnoise
 from .sdf import SDF
+from .style import WEB, LINE
 
 INK_RGB = np.array([0.055, 0.045, 0.05], np.float32)
 
@@ -53,6 +54,14 @@ class Stage:
         b = self.buf
         a = b.alpha
         rgb_bg = self.bg
+        if WEB:                                   # high-key, two-tone cel shading with rosy shadows and thin warm-brown line art
+            warm = np.asarray(key_color, np.float32)
+            key_color = tuple(0.55 * warm + 0.45 * np.array([1.0, 0.975, 0.955], np.float32))
+            ambient = 0.46 + 0.5 * ambient
+            shadow_tint = (0.80, 0.67, 0.76)
+            contrast_steps = (0.0, 0.0, 1.0, 1.0)
+            rim = rim * 0.45
+            ink_strength, scratch, ink_scale = 0.78, 0.06, ink_scale * 0.8
         if a.max() <= 0:
             out = rgb_bg
             return paint_finish(out, self.seed, brush * 0.6, grain)
@@ -70,7 +79,8 @@ class Stage:
         if features:
             for hd in self.heads:
                 rgb = hd.features(rgb, b, ink, scale=max(1.0, self.W / 800))
-        ln = ink_lines(b, scale=self.W / 800, seed=self.seed, scratch=scratch)
-        rgb = rgb * (1 - ln[..., None] * ink_strength) + INK_RGB * ln[..., None] * ink_strength
+        ln = ink_lines(b, scale=self.W / 800 * (0.75 if WEB else 1.0), seed=self.seed, scratch=scratch, silhouette=1.9 if WEB else 2.6)
+        ink_rgb = np.asarray(LINE, np.float32) if WEB else INK_RGB
+        rgb = rgb * (1 - ln[..., None] * ink_strength) + ink_rgb * ln[..., None] * ink_strength
         rgb = ink.composite_onto(rgb)
-        return paint_finish(rgb, self.seed, brush, grain)
+        return paint_finish(rgb, self.seed, brush * (0.25 if WEB else 1.0), grain * (0.3 if WEB else 1.0))

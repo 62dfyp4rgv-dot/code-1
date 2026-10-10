@@ -3,9 +3,12 @@ from __future__ import annotations
 
 from .body import BodySpec, Figure
 from .head import HeadSpec
+from .style import WEB
 
 # skin: muted, warm - matches the reference painting's grey-brown flesh tones; the sepia grade does the rest
 TOMMY_SKIN = (0.52, 0.41, 0.34)
+if WEB:                                               # pastel flesh: pale pink-peach for the light skins, warm caramel for Eli
+    TOMMY_SKIN = (0.93, 0.76, 0.68)
 
 
 def tommy43() -> tuple[HeadSpec, BodySpec]:
@@ -47,6 +50,17 @@ def promoter() -> tuple[HeadSpec, BodySpec]:
     return h, b
 
 
+_WEB_SKIN = {"tommy": (0.93, 0.76, 0.68), "brody": (0.96, 0.78, 0.64), "eli": (0.66, 0.46, 0.36), "ref": (0.92, 0.76, 0.68), "promoter": (0.92, 0.75, 0.66)}
+_WEB_HAIR = {"tommy": (0.20, 0.19, 0.21), "eli": (0.07, 0.065, 0.075), "promoter": (0.42, 0.40, 0.42)}
+
+
 def make(which: str, h: float) -> Figure:
     spec = {"tommy": tommy43, "brody": brody, "eli": eli, "ref": referee, "promoter": promoter}[which]()
+    if WEB:
+        sk = _WEB_SKIN[which]
+        spec[0].skin = sk
+        spec[1].skin = sk
+        if which in _WEB_HAIR:
+            spec[0].hair = _WEB_HAIR[which]
+        spec[0].iris = (0.30, 0.55, 0.40) if which == "tommy" else spec[0].iris
     return Figure(h, spec[1], spec[0])

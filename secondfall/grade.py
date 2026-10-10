@@ -5,6 +5,7 @@ import numpy as np
 
 from .paintfx import lum
 from .r3d import _blur, fnoise
+from .style import WEB
 
 # gradient map stops (luminance -> colour): warm black -> brown -> amber -> cream
 SEPIA = [(0.0, (0.020, 0.012, 0.010)), (0.18, (0.085, 0.052, 0.036)), (0.40, (0.30, 0.19, 0.12)), (0.65, (0.62, 0.43, 0.26)),
@@ -46,13 +47,26 @@ def film(rgb: np.ndarray, seed: int = 0, grain: float = 0.035, vig: float = 0.35
     return np.clip(out, 0, 1)
 
 
+def finish_web(rgb: np.ndarray, seed: int = 0, exposure: float = 1.0, sat: float = 1.12) -> np.ndarray:
+    """Webtoon grade: lifted blacks, clean pastel colour, soft glow, almost no grain."""
+    l = lum(rgb)[..., None]
+    out = np.clip((l + (rgb - l) * sat * 1.2) * exposure, 0, 1) ** 0.7              # brighter mids, richer colour
+    out = out + (1 - out) * 0.4 * np.array([0.35, 0.30, 0.55], np.float32) * (1 - l)   # cool violet shadows, like the reference palettes
+    out = bloom(out, 0.78, 0.22, 16)
+    return film(out, seed, 0.008, 0.10)
+
+
 def finish_sepia(rgb: np.ndarray, seed: int = 0, keep: float = 0.22, bloom_strength: float = 0.3, vig: float = 0.3, grain: float = 0.035,
                  contrast: float = 1.08, exposure: float = 1.3, gamma: float = 0.9) -> np.ndarray:
+    if WEB:
+        return finish_web(rgb, seed, exposure=1.0 + 0.3 * (exposure - 1.0))
     out = sepia(rgb * 1.0, keep, contrast, gamma, exposure)
     out = bloom(out, 0.7, bloom_strength)
     return film(out, seed, grain, vig)
 
 
 def finish_white(rgb: np.ndarray, seed: int = 0, grain: float = 0.02) -> np.ndarray:
+    if WEB:
+        return finish_web(rgb, seed, 1.0, 1.02)
     out = bloom(rgb, 0.8, 0.25, 18)
     return film(out, seed, grain, 0.06)
