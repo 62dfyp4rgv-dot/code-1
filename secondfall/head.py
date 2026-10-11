@@ -55,6 +55,7 @@ class Head:
     def __init__(self, spec: HeadSpec):
         self.s = spec
         self.lm: dict = {}
+        self.last_hair: Optional[np.ndarray] = None
 
     # ------------------------------------------------------------------ transforms
     def _setup(self, c, h, yaw, pitch, roll):
@@ -102,9 +103,9 @@ class Head:
         E((0, 0.12, 0.04), (0.285 * w, 0.40, 0.30), k=0.11)
         for sg in (-1, 1):
             E((sg * 0.215 * w, 0.045, 0.165), (0.085 * s.cheek, 0.065 * s.cheek, 0.075), k=0.08)               # cheekbone
-            C((sg * 0.29 * w, 0.06, -0.02), (sg * 0.10 * w * s.jaw, 0.42, 0.12), 0.07 * s.jaw, 0.04 * s.jaw, k=0.07)     # jaw line
+            C((sg * 0.29 * w, 0.06, -0.02), (sg * 0.135 * w * s.jaw, 0.42, 0.12), 0.07 * s.jaw, 0.04 * s.jaw, k=0.07)     # jaw line
             E((sg * 0.335 * w, 0.025, -0.01), (0.026 * s.ear, 0.082 * s.ear, 0.052 * s.ear), k=0.03, rot=(0, 0.25 * sg, 0.1 * sg))
-        E((0, 0.44, 0.20), (0.095 * s.jaw, 0.07, 0.09), k=0.07)                                                     # chin
+        E((0, 0.44, 0.20), (0.115 * s.jaw, 0.07, 0.09), k=0.07)                                                     # chin
         E((0, -0.095, 0.275), (0.265 * w, 0.045 * s.brow, 0.055 * s.brow), k=0.06)                                  # brow ridge
         # nose
         nl = s.nose_len
@@ -116,11 +117,11 @@ class Head:
             E((0.006, 0.015, 0.325), (0.036, 0.034, 0.034 + 0.02 * s.nose_bump), k=0.04)
         # lips
         lp = s.lips
-        E((0, 0.263, 0.312), (0.082, 0.020 * lp, 0.04), k=0.025)
-        E((0, 0.305, 0.312), (0.072, 0.026 * lp, 0.04), k=0.025)
+        E((0, 0.263, 0.312), (0.095, 0.020 * lp, 0.04), k=0.025)
+        E((0, 0.305, 0.312), (0.085, 0.026 * lp, 0.04), k=0.025)
         # carve: eye sockets, mouth slit, nostrils, chin dimple
         for sg in (-1, 1):
-            E((sg * 0.165 * w, -0.012, 0.215), (0.082, 0.062, 0.07), k=0.06, sub=True)
+            E((sg * 0.165 * w, -0.012, 0.215), (0.074, 0.056, 0.07), k=0.06, sub=True)
             E((sg * 0.034, 0.192 * nl, 0.375), (0.014, 0.011, 0.02), k=0.01, sub=True)
         E((0, 0.2845, 0.322), (0.07, 0.0035, 0.02), k=0.01, sub=True)
         E((0, 0.352, 0.315), (0.05, 0.012, 0.03), k=0.035, sub=True)
@@ -144,7 +145,7 @@ class Head:
         if neck_to is not None or sdf is None:
             top = self.P(0, 0.22, -0.13)
             nt = np.asarray(neck_to if neck_to is not None else self.c + np.array([0, 0.95 * hh, -0.08 * hh]), float)
-            sc.cone(tuple(top), tuple(nt), 0.15 * hh * s.neck, 0.19 * hh * s.neck, 0.05 * hh, False, s.skin, "skin", 0.0, 8.0, 0)
+            sc.cone(tuple(top), tuple(nt), 0.17 * hh * s.neck, 0.205 * hh * s.neck, 0.05 * hh, False, s.skin, "skin", 0.0, 8.0, 0)
         if march:
             r = 0.85 * hh
             sc.march(b, (self.c[0] - r, self.c[1] - 0.75 * hh, self.c[0] + r, self.c[1] + (neck_to[1] - self.c[1] if neck_to is not None else 1.2 * hh)),
@@ -158,6 +159,12 @@ class Head:
     def head_mask(self, b: Buf) -> np.ndarray:
         return b.part == self.part
 
+    @staticmethod
+    def hairline_top(style: str) -> float:
+        """Local y of the hairline's highest point is `hairline_top(style) - 0.09` (centre of the forehead)."""
+        recede = {"thin": 0.10, "undercut": 0.02, "short": 0.0, "mop": -0.08, "twists": -0.05, "curly": -0.05, "ponytail": 0.0, "long": -0.10}.get(style, 0.0)
+        return -0.30 - recede
+
     def hair_mask(self, b: Buf, expand: float = 1.0) -> np.ndarray:
         """Hair region = a dilated copy of the head's top above a (receding) hairline, plus sideburns."""
         s, h = self.s, self.h
@@ -170,8 +177,7 @@ class Head:
         if style == "bald":
             return np.zeros_like(hm)
         # hairline: a closed region in head-local space projected to the screen. We rasterise it with PIL.
-        recede = {"thin": 0.10, "undercut": 0.02, "short": 0.0, "mop": -0.04, "twists": -0.05, "curly": -0.05, "ponytail": 0.0, "long": -0.03}.get(style, 0.0)
-        top = -0.17 - recede
+        top = self.hairline_top(style)
         line = [self.surf(-0.345, 0.04), self.surf(-0.335, -0.06)]
         for i in range(0, 13):                                          # temple -> forehead -> temple (local x, y)
             t = i / 12
@@ -223,7 +229,8 @@ class Head:
         facing = self.R @ np.array([0, 0, 1.0])
         visible_front = facing[2] > 0.15
         # ---- hair mass first, so it sits under the brows / features that overlap it
-        hm = self.hair_mask(b, 1.07 if WEB else 1.0)
+        hm = self.hair_mask(b, (1.03 if s.hair_style == 'long' else 1.06) if WEB else 1.0)
+        self.last_hair = hm
         if hm.any():
             if WEB:                                                  # soft fringe shadow cast on the forehead
                 sh = _blur(np.roll(hm.astype(np.float32), int(h * 0.05), 0), h * 0.035) * (b.part == self.part) * (1 - hm)
@@ -398,7 +405,7 @@ class Head:
             outer = (0.29 * w * sg, by + 0.018 + 0.008 * s.brow_angle * -1)
             pts = bez(P2(*inner, 0.012), P2((inner[0] * 0.6 + peak[0] * 0.4), inner[1] - 0.006, 0.012), P2(peak[0], peak[1] - 0.004, 0.012), P2(*outer, 0.012), 18)
             col = tuple(int(255 * c) for c in np.clip(np.asarray(s.brow_color) * 1.4 + 0.05, 0, 1))
-            ink.stroke([tuple(p) for p in pts], h * 0.026 * s.brow_thick * sc, color=col, taper=(0.55, 0.12), mid=1.2)
+            ink.stroke([tuple(p) for p in pts], h * 0.020 * s.brow_thick * sc, color=col, taper=(0.55, 0.12), mid=1.2)
         # nose: a short shadow-side stroke, tiny nostril marks and a bright tip
         nl = s.nose_len
         side = bez(P2(0.04, -0.02), P2(0.052, 0.06), P2(0.06, 0.13 * nl), P2(0.044, 0.172 * nl), 14)
@@ -410,11 +417,11 @@ class Head:
         ink.blob([(tip[0] + math.cos(a_) * h * 0.012, tip[1] + math.sin(a_) * h * 0.007) for a_ in np.linspace(0, 6.28, 12)], color=(255, 246, 238), alpha=0.5)
         # lips: soft filled shapes with a dark seam and a highlight on the lower lip
         my = 0.285
-        w2 = 0.088
+        w2 = 0.105 * (0.5 + 0.5 * s.head_w)
         cl = -0.010 * s.smile
-        up = bez(P2(-w2, my + cl), P2(-w2 * 0.45, my - 0.032), P2(w2 * 0.45, my - 0.032), P2(w2, my - cl), 16)
+        up = bez(P2(-w2, my + cl), P2(-w2 * 0.45, my - 0.036), P2(w2 * 0.45, my - 0.036), P2(w2, my - cl), 16)
         mid = bez(P2(w2, my - cl), P2(w2 * 0.4, my + 0.006), P2(-w2 * 0.4, my + 0.006), P2(-w2, my + cl), 14)
-        lo = bez(P2(-w2 * 0.92, my + cl + 0.004), P2(-w2 * 0.4, my + 0.05 + 0.04 * s.mouth_open), P2(w2 * 0.4, my + 0.05 + 0.04 * s.mouth_open), P2(w2 * 0.92, my - cl + 0.004), 16)
+        lo = bez(P2(-w2 * 0.92, my + cl + 0.004), P2(-w2 * 0.4, my + 0.06 + 0.04 * s.mouth_open), P2(w2 * 0.4, my + 0.06 + 0.04 * s.mouth_open), P2(w2 * 0.92, my - cl + 0.004), 16)
         rose = (210, 120, 112) if s.age < 0.5 else (178, 108, 98)
         if s.mouth_open > 0.05:
             ink.blob([tuple(p) for p in up] + [tuple(p) for p in lo[::-1]], color=(60, 18, 20), alpha=1.0)
@@ -430,26 +437,33 @@ class Head:
         # a soft chin / jaw line is handled by the outline pass; age marks, but gentler than before
         self._age(ink, sc * 0.8)
 
+    def eye_dims(self) -> tuple[float, float, float, float]:
+        """(centre x for the +side eye, centre y, half-length, half-opening) in head units. Palpebral fissure ~ 1/4 of the face width,
+        a gap of about one eye between the eyes, opening about 0.45 of the length (a touch generous, as in webtoons)."""
+        s = self.s
+        ew = {"monolid": 0.086, "round": 0.080, "almond": 0.084, "wide": 0.086}[s.eye]
+        eh = {"monolid": 0.040, "round": 0.058, "almond": 0.050, "wide": 0.064}[s.eye] * (1 - 0.5 * s.lid)
+        return 0.165 * s.head_w, -0.012, ew, eh
+
     def _web_eye(self, sg: int, out: np.ndarray, ink: Ink, sc: float, line) -> None:
         s, h = self.s, self.h
         H_, W_ = out.shape[:2]
         w = s.head_w
-        ex, ey = 0.168 * w * sg, -0.012
-        ew = {"monolid": 0.134, "round": 0.126, "almond": 0.142, "wide": 0.148}[s.eye]
-        eh = {"monolid": 0.058, "round": 0.088, "almond": 0.078, "wide": 0.098}[s.eye] * (1 - 0.5 * s.lid)
+        ex, ey, ew, eh = self.eye_dims()
+        ex *= sg
         P2 = lambda x, y, o=0.004: self.S2(x, y, o)
-        inner = (ex - sg * ew * 0.92, ey + 0.012)
-        outer = (ex + sg * ew * 1.0, ey - 0.014 - (0.01 if s.eye in ("almond", "monolid") else 0.0))
+        inner = (ex - sg * ew * 0.92, ey + 0.008)
+        outer = (ex + sg * ew * 1.0, ey - 0.008 - (0.006 if s.eye in ("almond", "monolid") else 0.0))
         pin, pou = P2(*inner), P2(*outer)
-        up = bez(pin, P2(ex - sg * ew * 0.35, ey - eh * 1.25 - 0.012), P2(ex + sg * ew * 0.45, ey - eh * 1.25 - 0.008), pou, 24)
-        lo = bez(pou, P2(ex + sg * ew * 0.3, ey + eh * 0.55 + 0.004), P2(ex - sg * ew * 0.3, ey + eh * 0.55 + 0.008), pin, 24)
+        up = bez(pin, P2(ex - sg * ew * 0.35, ey - eh * 1.25 - 0.006), P2(ex + sg * ew * 0.45, ey - eh * 1.25 - 0.004), pou, 24)
+        lo = bez(pou, P2(ex + sg * ew * 0.3, ey + eh * 0.55 + 0.002), P2(ex - sg * ew * 0.3, ey + eh * 0.55 + 0.004), pin, 24)
         # rosy lid shadow above the eye
         soc = Image.new("L", (W_, H_), 0)
         cx, cy = P2(ex, ey - 0.03)
-        r = ew * h * 1.35
+        r = ew * h * 1.5
         ImageDraw.Draw(soc).ellipse((cx - r, cy - r * 0.62, cx + r, cy + r * 0.5), fill=255)
         soc = np.asarray(soc.filter(ImageFilter.GaussianBlur(h * 0.03)), np.float32) / 255.0
-        out[:] = out * (1 - 0.20 * soc[..., None]) + np.array([0.60, 0.36, 0.36], np.float32) * (0.20 * soc[..., None])
+        out[:] = out * (1 - 0.09 * soc[..., None]) + np.array([0.60, 0.36, 0.36], np.float32) * (0.09 * soc[..., None])
         poly = [tuple(p) for p in up] + [tuple(p) for p in lo]
         m = Image.new("L", (W_, H_), 0)
         ImageDraw.Draw(m).polygon(poly, fill=255)
@@ -463,7 +477,7 @@ class Head:
         out[:] = out * (1 - mk[..., None]) + sclera * mk[..., None]
         # iris: a large disc, dark at the top, lighter below, with a limbal ring; clipped by the lids
         ic = P2(ex + sg * 0.003, ey + 0.001)
-        rad = max(eh * h * 1.05, ew * h * 0.5)
+        rad = max(eh * h * 1.0, ew * h * 0.48)
         iris = Image.new("L", (W_, H_), 0)
         ImageDraw.Draw(iris).ellipse((ic[0] - rad, ic[1] - rad * 1.02, ic[0] + rad, ic[1] + rad * 1.02), fill=255)
         irm = np.asarray(iris.filter(ImageFilter.GaussianBlur(0.6)), np.float32) / 255.0 * mk
@@ -486,16 +500,16 @@ class Head:
             hm = np.asarray(hl.filter(ImageFilter.GaussianBlur(0.5)), np.float32) / 255.0 * mk
             out[:] = out * (1 - hm[..., None] * a_) + hm[..., None] * a_
         # upper lash line (thick, tapered, with a wing), lash flicks, double-lid crease and a faint lower line
-        lwid = h * 0.016 * sc
+        lwid = h * 0.012 * sc
         ink.stroke([tuple(p) for p in up], lwid * (2.0 if s.eye in ("monolid", "almond") else 1.6), color=line, taper=(0.3, 0.18), mid=1.35)
-        wing = [pou, tuple(np.asarray(pou) + np.array([sg * h * 0.032, -h * 0.010])), tuple(np.asarray(pou) + np.array([sg * h * 0.05, -h * 0.004]))]
+        wing = [pou, tuple(np.asarray(pou) + np.array([sg * h * 0.022, -h * 0.007])), tuple(np.asarray(pou) + np.array([sg * h * 0.036, -h * 0.003]))]
         ink.stroke(wing, lwid * 1.1, color=line, taper=(0.9, 0.05))
         for i in range(5):                                                        # lash flicks along the outer half of the upper lid
             idx = 10 + i * 3
             p0 = np.asarray(up[min(idx, len(up) - 1)])
-            ink.stroke([tuple(p0), tuple(p0 + np.array([sg * h * 0.014, -h * 0.018 - i * h * 0.002]))], lwid * 0.55, color=line, alpha=0.85, taper=(0.9, 0.05))
+            ink.stroke([tuple(p0), tuple(p0 + np.array([sg * h * 0.010, -h * 0.012 - i * h * 0.0015]))], lwid * 0.55, color=line, alpha=0.85, taper=(0.9, 0.05))
         ink.stroke([tuple(p) for p in lo[3:-6]], lwid * 0.4, color=line, alpha=0.4, taper=(0.1, 0.1))
-        crease = bez(P2(ex - sg * ew * 0.7, ey - eh * 1.6 - 0.02), P2(ex - sg * ew * 0.1, ey - eh * 1.9 - 0.03), P2(ex + sg * ew * 0.55, ey - eh * 1.8 - 0.022), P2(ex + sg * ew * 0.98, ey - eh * 1.2 - 0.012), 16)
+        crease = bez(P2(ex - sg * ew * 0.7, ey - eh * 1.6 - 0.010), P2(ex - sg * ew * 0.1, ey - eh * 1.9 - 0.016), P2(ex + sg * ew * 0.55, ey - eh * 1.8 - 0.012), P2(ex + sg * ew * 0.98, ey - eh * 1.2 - 0.007), 16)
         ink.stroke([tuple(p) for p in crease], lwid * 0.5, color=line, alpha=0.55 if s.eye != "monolid" else 0.35, taper=(0.1, 0.1))
         if s.age > 0.4:
             bag = bez(P2(ex - sg * ew * 0.6, ey + 0.05), P2(ex - sg * ew * 0.1, ey + 0.068), P2(ex + sg * ew * 0.55, ey + 0.062), P2(ex + sg * ew * 0.95, ey + 0.04), 12)
@@ -533,7 +547,8 @@ class Head:
         cx, cy = float(self.c[0]), float(self.c[1]) - 0.12 * h
         shade = np.clip((Y - (self.c[1] - 0.55 * h)) / (0.8 * h), 0, 1)
         col = base[None, None, :] * (1.15 - 0.35 * shade[..., None]) + 0.05
-        band = np.clip(1 - np.abs((Y - (self.c[1] - 0.33 * h)) / (0.07 * h)) - 0.3 * np.abs((X - (cx - 0.05 * h)) / (0.4 * h)), 0, 1)
+        arc = (self.c[1] - 0.36 * h) + 0.16 * h * ((X - (cx - 0.03 * h)) / (0.42 * h)) ** 2          # the sheen follows the curve of the skull
+        band = np.clip(1 - np.abs((Y - arc) / (0.055 * h)) - 0.25 * np.abs((X - (cx - 0.05 * h)) / (0.4 * h)), 0, 1)
         col = col + band[..., None] * np.array([0.30, 0.31, 0.36], np.float32) * 0.9
         if s.gray > 0:
             tx = np.abs(X - self.c[0]) / (0.38 * h)

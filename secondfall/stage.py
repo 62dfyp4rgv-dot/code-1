@@ -80,6 +80,14 @@ class Stage:
             for hd in self.heads:
                 rgb = hd.features(rgb, b, ink, scale=max(1.0, self.W / 800))
         ln = ink_lines(b, scale=self.W / 800 * (0.75 if WEB else 1.0), seed=self.seed, scratch=scratch, silhouette=STAGE["silhouette"] if WEB else 2.6)
+        if WEB:                                  # hair is drawn as flat colour with its own strand lines: no skull / depth lines inside it, just its outline
+            for hd in self.heads:
+                hm = hd.last_hair
+                if hm is not None and hm.any():
+                    hf = hm.astype(np.float32)
+                    inner = _blur(hf, 2.5 * self.W / 800) > 0.97
+                    outline = np.clip(hf - _blur(hf, 1.6 * self.W / 800), 0, 1) * 2.4
+                    ln = np.maximum(ln * (1 - inner), np.clip(outline, 0, 1) * 0.8)
         ink_rgb = np.asarray(LINE, np.float32) if WEB else INK_RGB
         rgb = rgb * (1 - ln[..., None] * ink_strength) + ink_rgb * ln[..., None] * ink_strength
         rgb = ink.composite_onto(rgb)
