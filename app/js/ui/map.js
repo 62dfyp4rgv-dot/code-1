@@ -48,13 +48,34 @@ export class MapView {
       const p = new Path2D();
       for (const poly of mc.polys)
         for (const ring of poly) {
+          // rings that cross the antimeridian jump by 360 degrees: unwrap them and draw the copy shifted by ±360 as well
+          const q = new Path2D();
+          let off = 0,
+            prev = 0,
+            wrapped = false;
           for (let i = 0; i < ring.length; i += 2) {
-            const x = ring[i] / 100 + 180,
-              y = LAT_TOP === 84 ? 84 - ring[i + 1] / 100 : 0;
-            if (i === 0) p.moveTo(x, y);
-            else p.lineTo(x, y);
+            let x = ring[i] / 100 + 180;
+            const y = LAT_TOP === 84 ? 84 - ring[i + 1] / 100 : 0;
+            if (i > 0) {
+              if (x + off - prev > 180) {
+                off -= 360;
+                wrapped = true;
+              } else if (x + off - prev < -180) {
+                off += 360;
+                wrapped = true;
+              }
+            }
+            x += off;
+            prev = x;
+            if (i === 0) q.moveTo(x, y);
+            else q.lineTo(x, y);
           }
-          p.closePath();
+          q.closePath();
+          p.addPath(q);
+          if (wrapped) {
+            p.addPath(q, new DOMMatrix().translate(360, 0));
+            p.addPath(q, new DOMMatrix().translate(-360, 0));
+          }
         }
       this.land.addPath(p);
       this.paths.push(p);

@@ -144,7 +144,7 @@ export function manageWar(sim, c, view) {
         for (let r = 0; r < st.reg.owner.length; r++)
           if (st.reg.ctrl[r] === c.idx && st.reg.owner[r] === f && r !== sim.geo.capitalRegion[f]) held.push(r);
         held.sort((x, y) => sim.geo.regions[y].popW - sim.geo.regions[x].popW);
-        for (const r of held.slice(0, 2)) terms.push({ kind: 'cede', region: r, to: c.idx });
+        for (const r of held.slice(0, adv > 45 ? 4 : adv > 30 ? 3 : 2)) terms.push({ kind: 'cede', region: r, to: c.idx });
         if (adv > 40) terms.push({ kind: 'reparations', pct: 0.005, years: 3 });
         if (adv > 60 && sim.geo.cRegions[f].length <= 2 && c.dip.vassalOf == null && !view.byIdx(f)?.vassal) terms.push({ kind: 'puppet' });
       }

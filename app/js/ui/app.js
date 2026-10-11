@@ -335,6 +335,10 @@ export class App {
         settings: 'more',
         more: 'more',
         trade: 'economy',
+        dipTarget: 'diplomacy',
+        force: 'military',
+        peace: 'military',
+        sea: 'map',
       }[id] || 'more'
     );
   }
@@ -699,7 +703,7 @@ export class App {
     el.innerHTML = `<div class="grow"><b>${esc(title)}</b>${esc(text)}</div>`;
     const box = this.$('#toasts');
     box.appendChild(el);
-    while (box.children.length > 3) box.firstChild.remove();
+    while (box.children.length > 2) box.firstChild.remove();
     el.addEventListener('click', () => el.remove());
     setTimeout(() => el.remove(), kind === 'bad' ? 7000 : 4500);
   }

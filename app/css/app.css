@@ -222,6 +222,9 @@ button {
   overflow-x: auto;
   scrollbar-width: none;
   padding-bottom: 2px;
+  /* fade the right edge so the clipped pill reads as 'scroll for more' */
+  -webkit-mask-image: linear-gradient(to right, #000 88%, transparent);
+  mask-image: linear-gradient(to right, #000 88%, transparent);
 }
 .pills::-webkit-scrollbar {
   display: none;
