@@ -73,7 +73,7 @@ plain objects per country. `save.js`:
 
 ## 5. Data pipeline
 
-`tools/build-map.mjs` (needs `world-atlas`): Natural Earth 110m → 175 map entities, 0.5° raster → 525 strategic
+`tools/build-map.mjs` (needs `world-atlas`): Natural Earth 110m → 175 map entities, 0.5° raster → 681 strategic
 regions (per-country k-means), 53 sea zones (flood fill), adjacency incl. strait links, coarse terrain. Output
 `app/data/map.json` is committed; the build is reproducible (`npm run build:map`). Everything else under
 `app/data/` is hand-authored and loaded by `data.js`; `tests/unit/data.test.js` checks referential integrity

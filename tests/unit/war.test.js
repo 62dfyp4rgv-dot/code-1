@@ -250,3 +250,23 @@ test('a ceasefire freezes the lines (occupation persists); a settlement with oth
     assert.equal(sim.state.reg.owner[rd], d, 'ownership does not change without a cession');
   }
 });
+test('nuclear escalation: needs weapons and a war; devastates, kills, and makes the user a pariah', async () => {
+  const { sim, a, d } = await duel('PRK', 'KOR');
+  const A = sim.country('PRK');
+  const w = declareWar(sim, a, d, { noAllies: true }).war;
+  assert.ok(w);
+  assert.equal(sim.exec({ type: 'nuclearStrike', actor: sim.geo.idOf.BRA, target: d }).ok, false, 'a non-nuclear state cannot');
+  sim.state.reg.ctrl[sim.geo.cRegions[d][0]] = a;
+  sim.rebuildOwnedRegions();
+  const pop0 = sim.country('KOR').pop.total;
+  const opinionOf = (j) => sim.state.rel.op[j * sim.geo.N + a];
+  const o0 = opinionOf(sim.geo.idOf.FRA);
+  const r = sim.exec({ type: 'nuclearStrike', actor: a, target: d });
+  assert.equal(r.ok, true, r.reason);
+  assert.ok(sim.country('KOR').pop.total < pop0, 'people die');
+  assert.ok(sim.state.reg.dev[r.region] >= 0.69, 'region devastated');
+  assert.ok(opinionOf(sim.geo.idOf.FRA) < o0 - 10, 'the world turns against the user');
+  assert.ok(A.dip.credibility < 40);
+  assert.equal(sim.state.world.nuclearUse, 1);
+  assert.equal(sim.exec({ type: 'nuclearStrike', actor: sim.geo.idOf.BRA, target: sim.geo.idOf.ARG }).ok, false, 'not at war');
+});

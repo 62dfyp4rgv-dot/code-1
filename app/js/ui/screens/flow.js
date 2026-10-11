@@ -229,7 +229,7 @@ export function installFlow(App) {
         )
         .join('')}</div>
       <div class="sec">Difficulty</div><div class="seg">${['easy', 'normal', 'hard'].map((k) => `<button data-d="${k}" class="${draft.difficulty === k ? 'on' : ''}" style="text-transform:capitalize">${k}</button>`).join('')}</div><div class="slider-row"><div class="top"><span>AI aggression</span><b id="nagg">×${(draft.aggression ?? 1).toFixed(1)}</b></div><input class="slider" type="range" id="nagr" min="0.3" max="1.8" step="0.1" value="${draft.aggression ?? 1}" aria-label="AI aggression"></div><div class="hint">Difficulty scales AI aggression, event severity, and your political capital. Starting position difficulty (●) is shown per country.</div>
-      <div class="row sp" style="margin-top:8px"><span class="mu">Seed ${draft.seed} (same seed + same choices = same world)</span><button class="btn small ghost" data-n="seed">Re-roll</button></div>
+      <div class="row sp" style="margin-top:8px"><span class="mu">Seed ${draft.seed} (same seed + same choices = same world)</span><button class="btn small ghost" data-n="seed" style="white-space:nowrap;flex:none">Re-roll</button></div>
       <div class="btnrow"><button class="btn primary block" data-n="start" style="min-height:52px;font-size:1.05rem">Begin as ${esc(pick.name)}</button></div></div>`);
     const ov = this.$('#overlay');
     ov.dataset.lock = '1';

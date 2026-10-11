@@ -18,11 +18,12 @@ import { buildTradeStatic, clearTrade, clearTradeGen } from './trade.js';
 import { initGovernment, politicsStep, warPressureOf } from './politics.js';
 import { initCohorts, demographyStep, servicesStep, yearlyMigration, climateStep } from './society.js';
 import { initResearch, researchStep, updateTopEconomies } from './research.js';
-import { refreshMods, snapshotBase } from './mods.js';
+import { refreshMods, snapshotBase, addTimedMod } from './mods.js';
 import * as MIL from './military.js';
 import * as DIP from './diplomacy.js';
 import * as INT from './intel.js';
 import * as EVT from './events.js';
+import * as PRJ from './projects.js';
 import * as AI from '../ai/ai.js';
 import * as CMD from './commands.js';
 import * as VIC from './victory.js';
@@ -216,6 +217,38 @@ export class Sim {
       st.sanctions.push({ id: st.nextId++, by: by[0], target: t, mask, coalition: by.slice(1), start: -400, note: sn.note });
       for (const b of by) {
         this.rel(t, b, -12, -10);
+      }
+    }
+    // optional scenario tuning: standing rivalries, starting relations, and temporary modifiers for countries / regions / everyone
+    const N = this.geo.N;
+    for (const [a, b, v] of sc.rivalries || []) {
+      const i = this.geo.idOf[a];
+      const j = this.geo.idOf[b];
+      if (i === undefined || j === undefined) continue;
+      st.rel.rivalry[i * N + j] = Math.max(st.rel.rivalry[i * N + j], v);
+      st.rel.rivalry[j * N + i] = Math.max(st.rel.rivalry[j * N + i], v);
+    }
+    for (const [a, b, dOp] of sc.relations || []) {
+      const i = this.geo.idOf[a];
+      const j = this.geo.idOf[b];
+      if (i !== undefined && j !== undefined) this.rel(i, j, dOp, dOp / 2);
+    }
+    for (const m of sc.mods || []) {
+      const until = st.day + Math.round(m.months * 30.4);
+      for (const c of st.countries) {
+        const hit = m.all || (m.countries || []).includes(c.id) || (m.regions || []).includes(this.geo.rows[c.idx].region);
+        if (hit) addTimedMod(c, m.mod, m.add, until, sc.name);
+      }
+    }
+    if (sc.debtShift || sc.rateShift) {
+      for (const c of st.countries) {
+        const e = c.econ;
+        if (sc.debtShift && e.debt / e.gdp > 0.5) e.debt += sc.debtShift * e.gdp * Math.min(1, e.debt / e.gdp / 1.2); // heavier debts accumulated before the scenario starts
+        if (sc.rateShift) {
+          c.policy.policyRate += sc.rateShift;
+          c.target.policyRate += sc.rateShift;
+          e.rStar += sc.rateShift;
+        }
       }
     }
     for (const w of sc.wars || []) MIL.startScenarioWar(this, w);
@@ -531,6 +564,7 @@ export class Sim {
     DIP.monthlyStep(this, day);
     yield;
     EVT.monthlyStep(this, day);
+    PRJ.monthlyStep(this, day);
     yield;
     const ta = performance.now();
     yield* AI.monthlyGen(this, day);

@@ -109,3 +109,17 @@ test('the simulation core refuses to serialise a half-processed day (no silent s
   while (!gen.next().done);
   assert.doesNotThrow(() => serialize(sim, {}));
 });
+
+test('every scenario boots, runs a year with finite state, and survives a save/load round trip', async () => {
+  const { loadDataNode } = await import('../../app/js/sim/data.js');
+  const { Sim } = await import('../../app/js/sim/world.js');
+  const data = await loadDataNode();
+  assert.ok(data.scenarios.length >= 6);
+  for (const sc of data.scenarios) {
+    const sim = new Sim(data, { seed: 9, scenario: sc.id, player: sc.recommended[0] });
+    sim.advanceMonths(12);
+    assert.deepEqual(findNonFinite(sim.state), [], sc.id);
+    const copy = deserialize(data, serialize(sim, {}));
+    assert.equal(copy.state.day, sim.state.day, sc.id);
+  }
+});

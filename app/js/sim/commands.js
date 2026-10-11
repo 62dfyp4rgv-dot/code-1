@@ -5,6 +5,7 @@ import * as WAR from './war.js';
 import * as DIP from './diplomacy.js';
 import * as INT from './intel.js';
 import * as EVT from './events.js';
+import * as PRJ from './projects.js';
 import { UNIT_TYPES } from './military.js';
 import { bump } from './achievements.js';
 import { techAvailable, canAdopt, adoptionCost, completeTech } from './research.js';
@@ -241,6 +242,17 @@ const HANDLERS = {
     if (r.ok) c.gov.pc -= 30;
     return r.ok ? ok({ war: r.war.id }) : no(r.reason, r);
   },
+  startProject(sim, a, cmd) {
+    return PRJ.startProject(sim, a, cmd.project);
+  },
+  cancelProject(sim, a, cmd) {
+    return PRJ.cancelProject(sim, a, cmd.project);
+  },
+  nuclearStrike(sim, a, cmd) {
+    if (cmd.preview) return ok({ options: WAR.nuclearOptions(sim, a, cmd.target) });
+    const r = WAR.nuclearStrike(sim, a, cmd.target, cmd.region);
+    return r.ok ? ok(r) : no(r.reason);
+  },
   proposePeace(sim, a, cmd) {
     const w = sim.state.wars.find((x) => x.id === cmd.war && x.active);
     if (!w) return no('no such war');
@@ -307,6 +319,9 @@ const REQUIRED = {
   liftSanction: ['id'],
   declareWar: ['target'],
   proposePeace: ['war', 'target'],
+  startProject: ['project'],
+  nuclearStrike: ['target'],
+  cancelProject: ['project'],
   answerOffer: ['id'],
   respondCall: ['war'],
   intelOp: ['op', 'target'],

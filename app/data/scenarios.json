@@ -272,6 +272,414 @@
      "note": "Political sanctions"
     }
    ]
+  },
+  {
+   "id": "strait_crisis",
+   "name": "Strait Crisis 2027",
+   "start": [
+    2027,
+    1,
+    1
+   ],
+   "years": 8,
+   "blurb": "A confrontation over Taiwan has frozen great-power relations. Chips, minerals and sea lanes are weapons; every alliance is being tested. Peace has to be kept without looking weak.",
+   "wars": [],
+   "shocks": {
+    "prices": {
+     "minerals": 1.45
+    }
+   },
+   "rivalries": [
+    [
+     "CHN",
+     "TWN",
+     98
+    ],
+    [
+     "CHN",
+     "USA",
+     88
+    ],
+    [
+     "CHN",
+     "JPN",
+     70
+    ],
+    [
+     "CHN",
+     "PHL",
+     72
+    ],
+    [
+     "CHN",
+     "KOR",
+     40
+    ],
+    [
+     "CHN",
+     "AUS",
+     50
+    ],
+    [
+     "CHN",
+     "IND",
+     65
+    ],
+    [
+     "USA",
+     "RUS",
+     70
+    ]
+   ],
+   "relations": [
+    [
+     "USA",
+     "CHN",
+     -35
+    ],
+    [
+     "CHN",
+     "USA",
+     -35
+    ],
+    [
+     "JPN",
+     "CHN",
+     -25
+    ],
+    [
+     "CHN",
+     "JPN",
+     -25
+    ],
+    [
+     "TWN",
+     "CHN",
+     -40
+    ]
+   ],
+   "mods": [
+    {
+     "countries": [
+      "CHN",
+      "USA",
+      "JPN",
+      "KOR",
+      "TWN"
+     ],
+     "mod": "invest.conf",
+     "add": -0.03,
+     "months": 24
+    }
+   ],
+   "recommended": [
+    "USA",
+    "CHN",
+    "TWN",
+    "JPN",
+    "IND",
+    "PHL",
+    "KOR",
+    "AUS",
+    "VNM",
+    "IDN"
+   ],
+   "sanctions": [
+    {
+     "target": "IRN",
+     "by": [
+      "USA",
+      "@org:eu",
+      "GBR",
+      "CAN",
+      "AUS",
+      "JPN",
+      "KOR"
+     ],
+     "mask": [
+      "oil",
+      "gas"
+     ],
+     "note": "Nuclear-programme sanctions"
+    },
+    {
+     "target": "PRK",
+     "by": [
+      "USA",
+      "KOR",
+      "JPN",
+      "@org:eu",
+      "GBR",
+      "AUS",
+      "CAN"
+     ],
+     "mask": [
+      "oil",
+      "gas",
+      "minerals"
+     ],
+     "note": "Weapons-programme sanctions"
+    },
+    {
+     "target": "VEN",
+     "by": [
+      "USA",
+      "CAN",
+      "GBR"
+     ],
+     "mask": [
+      "oil"
+     ],
+     "note": "Political sanctions"
+    },
+    {
+     "target": "CHN",
+     "by": [
+      "USA",
+      "JPN",
+      "KOR",
+      "AUS",
+      "@org:eu"
+     ],
+     "mask": [
+      "minerals"
+     ],
+     "note": "Technology and minerals controls"
+    }
+   ]
+  },
+  {
+   "id": "long_drought",
+   "name": "The Long Drought 2025",
+   "start": [
+    2025,
+    1,
+    1
+   ],
+   "years": 9,
+   "blurb": "Failed rains across several continents have driven food prices up and are emptying reservoirs. Hunger, migration and unrest spread; the climate question is no longer abstract.",
+   "wars": [],
+   "shocks": {
+    "prices": {
+     "food": 1.7
+    }
+   },
+   "rivalries": [
+    [
+     "ETH",
+     "EGY",
+     70
+    ],
+    [
+     "IND",
+     "PAK",
+     85
+    ],
+    [
+     "TUR",
+     "SYR",
+     50
+    ]
+   ],
+   "mods": [
+    {
+     "regions": [
+      "east_africa",
+      "west_africa",
+      "north_africa",
+      "middle_east",
+      "south_asia",
+      "southern_europe"
+     ],
+     "mod": "tfp.agri",
+     "add": -0.12,
+     "months": 36
+    },
+    {
+     "regions": [
+      "east_africa",
+      "west_africa",
+      "north_africa",
+      "middle_east",
+      "south_asia",
+      "southern_europe"
+     ],
+     "mod": "unrest.add",
+     "add": 0.02,
+     "months": 36
+    }
+   ],
+   "recommended": [
+    "IND",
+    "EGY",
+    "ETH",
+    "NGA",
+    "PAK",
+    "IRQ",
+    "ESP",
+    "BRA",
+    "MAR",
+    "KEN"
+   ],
+   "sanctions": [
+    {
+     "target": "IRN",
+     "by": [
+      "USA",
+      "@org:eu",
+      "GBR",
+      "CAN",
+      "AUS",
+      "JPN",
+      "KOR"
+     ],
+     "mask": [
+      "oil",
+      "gas"
+     ],
+     "note": "Nuclear-programme sanctions"
+    },
+    {
+     "target": "PRK",
+     "by": [
+      "USA",
+      "KOR",
+      "JPN",
+      "@org:eu",
+      "GBR",
+      "AUS",
+      "CAN"
+     ],
+     "mask": [
+      "oil",
+      "gas",
+      "minerals"
+     ],
+     "note": "Weapons-programme sanctions"
+    },
+    {
+     "target": "VEN",
+     "by": [
+      "USA",
+      "CAN",
+      "GBR"
+     ],
+     "mask": [
+      "oil"
+     ],
+     "note": "Political sanctions"
+    }
+   ]
+  },
+  {
+   "id": "debt_reckoning",
+   "name": "Debt Reckoning 2026",
+   "start": [
+    2026,
+    1,
+    1
+   ],
+   "years": 8,
+   "blurb": "Bond markets have turned. Rates are high, creditors are nervous and several governments face a choice between austerity, inflation and default. Keep the lights on — and your voters.",
+   "wars": [],
+   "shocks": {},
+   "mods": [
+    {
+     "all": true,
+     "mod": "invest.conf",
+     "add": -0.025,
+     "months": 30
+    },
+    {
+     "all": true,
+     "mod": "infl.add",
+     "add": 0.012,
+     "months": 18
+    }
+   ],
+   "recommended": [
+    "USA",
+    "JPN",
+    "GBR",
+    "FRA",
+    "ITA",
+    "BRA",
+    "EGY",
+    "ARG",
+    "TUR",
+    "ZAF"
+   ],
+   "sanctions": [
+    {
+     "target": "IRN",
+     "by": [
+      "USA",
+      "@org:eu",
+      "GBR",
+      "CAN",
+      "AUS",
+      "JPN",
+      "KOR"
+     ],
+     "mask": [
+      "oil",
+      "gas"
+     ],
+     "note": "Nuclear-programme sanctions"
+    },
+    {
+     "target": "PRK",
+     "by": [
+      "USA",
+      "KOR",
+      "JPN",
+      "@org:eu",
+      "GBR",
+      "AUS",
+      "CAN"
+     ],
+     "mask": [
+      "oil",
+      "gas",
+      "minerals"
+     ],
+     "note": "Weapons-programme sanctions"
+    },
+    {
+     "target": "VEN",
+     "by": [
+      "USA",
+      "CAN",
+      "GBR"
+     ],
+     "mask": [
+      "oil"
+     ],
+     "note": "Political sanctions"
+    },
+    {
+     "target": "RUS",
+     "by": [
+      "USA",
+      "GBR",
+      "CAN",
+      "JPN",
+      "AUS",
+      "NZL",
+      "KOR",
+      "CHE",
+      "NOR",
+      "@org:eu"
+     ],
+     "mask": [
+      "oil",
+      "gas"
+     ],
+     "note": "Sanctions over the war"
+    }
+   ],
+   "debtShift": 0.3,
+   "rateShift": 0.025
   }
  ],
  "difficulty": {

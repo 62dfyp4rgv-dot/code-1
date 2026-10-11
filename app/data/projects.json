@@ -1,0 +1,530 @@
+{
+ "meta": {
+  "note": "National projects: multi-year investments paid from the budget (as extra borrowing) that grant permanent modifiers on completion. Cost is % of GDP per year."
+ },
+ "projects": [
+  {
+   "id": "high_speed_rail",
+   "name": "High-speed rail network",
+   "desc": "Link the major cities with fast electric rail: better infrastructure, trade and lower emissions.",
+   "years": 6,
+   "cost": 0.009,
+   "pc": 10,
+   "when": [
+    [
+     "dev",
+     ">",
+     0.4
+    ]
+   ],
+   "effects": [
+    {
+     "mod": "infra.eff",
+     "add": 0.04
+    },
+    {
+     "mod": "trade.eff",
+     "add": 0.012
+    },
+    {
+     "mod": "tfp.services",
+     "add": 0.01
+    },
+    {
+     "mod": "emis.int",
+     "add": -0.02
+    }
+   ],
+   "tags": [
+    "prosperity"
+   ]
+  },
+  {
+   "id": "universal_healthcare",
+   "name": "Universal healthcare reform",
+   "desc": "Extend coverage to everyone: healthier population, more stable politics.",
+   "years": 5,
+   "cost": 0.011,
+   "pc": 10,
+   "when": [
+    [
+     "dev",
+     ">",
+     0.3
+    ]
+   ],
+   "effects": [
+    {
+     "mod": "health.rate",
+     "add": 0.06
+    },
+    {
+     "mod": "approval.add",
+     "add": 0.004
+    }
+   ],
+   "tags": [
+    "prosperity",
+    "welfare"
+   ]
+  },
+  {
+   "id": "grid_modernisation",
+   "name": "Grid modernisation",
+   "desc": "Smart grids, storage and interconnectors make the power system cheaper and sturdier.",
+   "years": 4,
+   "cost": 0.007,
+   "pc": 10,
+   "when": [
+    [
+     "dev",
+     ">",
+     0.25
+    ]
+   ],
+   "effects": [
+    {
+     "mod": "energy.eff",
+     "add": 0.05
+    },
+    {
+     "mod": "energy.clean_rate",
+     "add": 0.01
+    },
+    {
+     "mod": "disaster.resil",
+     "add": 0.03
+    }
+   ],
+   "tags": [
+    "energy"
+   ]
+  },
+  {
+   "id": "civil_nuclear",
+   "name": "Civil nuclear programme",
+   "desc": "A fleet of reactors lifts clean power and utility productivity (long lead time).",
+   "years": 8,
+   "cost": 0.008,
+   "pc": 10,
+   "when": [
+    [
+     "dev",
+     ">",
+     0.4
+    ],
+    [
+     "gov.stability",
+     ">",
+     0.4
+    ]
+   ],
+   "effects": [
+    {
+     "mod": "energy.clean_rate",
+     "add": 0.02
+    },
+    {
+     "mod": "emis.int",
+     "add": -0.03
+    },
+    {
+     "mod": "tfp.utilities",
+     "add": 0.03
+    }
+   ],
+   "tags": [
+    "energy"
+   ]
+  },
+  {
+   "id": "space_programme",
+   "name": "National space programme",
+   "desc": "Launchers, satellites and a science base: research, technology and reconnaissance.",
+   "years": 7,
+   "cost": 0.005,
+   "pc": 10,
+   "when": [
+    [
+     "dev",
+     ">",
+     0.5
+    ],
+    [
+     "research.idx",
+     ">",
+     0.2
+    ]
+   ],
+   "effects": [
+    {
+     "mod": "research.eff",
+     "add": 0.05
+    },
+    {
+     "mod": "tfp.tech",
+     "add": 0.02
+    },
+    {
+     "mod": "mil.recon",
+     "add": 0.05
+    }
+   ],
+   "tags": [
+    "influence",
+    "security"
+   ]
+  },
+  {
+   "id": "cyber_command",
+   "name": "Cyber command",
+   "desc": "A professional cyber force defends networks and builds offensive capability.",
+   "years": 3,
+   "cost": 0.003,
+   "pc": 10,
+   "when": [
+    [
+     "dev",
+     ">",
+     0.3
+    ]
+   ],
+   "effects": [
+    {
+     "mod": "cyber.def",
+     "add": 0.1
+    },
+    {
+     "mod": "mil.cyber_off",
+     "add": 0.08
+    },
+    {
+     "mod": "intel.eff",
+     "add": 0.04
+    }
+   ],
+   "tags": [
+    "security"
+   ]
+  },
+  {
+   "id": "semiconductor_fabs",
+   "name": "Semiconductor fabrication base",
+   "desc": "Domestic chip fabs raise technology-sector productivity.",
+   "years": 6,
+   "cost": 0.008,
+   "pc": 10,
+   "when": [
+    [
+     "dev",
+     ">",
+     0.45
+    ],
+    [
+     "research.idx",
+     ">",
+     0.15
+    ]
+   ],
+   "effects": [
+    {
+     "mod": "tfp.tech",
+     "add": 0.05
+    },
+    {
+     "mod": "tfp.industry",
+     "add": 0.01
+    }
+   ],
+   "tags": [
+    "prosperity"
+   ]
+  },
+  {
+   "id": "irrigation_programme",
+   "name": "Irrigation and water programme",
+   "desc": "Canals, storage and drip irrigation secure harvests and water supply.",
+   "years": 5,
+   "cost": 0.006,
+   "pc": 10,
+   "when": [
+    [
+     "econ.waterStress",
+     ">",
+     0.1
+    ]
+   ],
+   "effects": [
+    {
+     "mod": "agri.water",
+     "add": 0.1
+    },
+    {
+     "mod": "tfp.agri",
+     "add": 0.03
+    },
+    {
+     "mod": "water.supply",
+     "add": 0.05
+    }
+   ],
+   "tags": [
+    "prosperity"
+   ]
+  },
+  {
+   "id": "education_reform",
+   "name": "Education reform",
+   "desc": "Teachers, curricula and universities: a better skilled workforce.",
+   "years": 6,
+   "cost": 0.008,
+   "pc": 10,
+   "when": [
+    [
+     "dev",
+     ">",
+     0.2
+    ],
+    [
+     "pop.edu",
+     "<",
+     0.9
+    ]
+   ],
+   "effects": [
+    {
+     "mod": "edu.rate",
+     "add": 0.06
+    },
+    {
+     "mod": "research.eff",
+     "add": 0.02
+    }
+   ],
+   "tags": [
+    "prosperity"
+   ]
+  },
+  {
+   "id": "anticorruption_agency",
+   "name": "Anti-corruption agency",
+   "desc": "Independent prosecutors and open books raise tax collection and state capacity.",
+   "years": 3,
+   "cost": 0.002,
+   "pc": 15,
+   "when": [
+    [
+     "gov.corruption",
+     ">",
+     0.35
+    ]
+   ],
+   "effects": [
+    {
+     "mod": "admin.cap",
+     "add": 0.05
+    },
+    {
+     "mod": "tax.eff",
+     "add": 0.04
+    }
+   ],
+   "tags": [
+    "prosperity",
+    "welfare"
+   ]
+  },
+  {
+   "id": "border_defence_belt",
+   "name": "Border defence belt",
+   "desc": "Fortified lines, sensors and reserves on the likeliest invasion routes.",
+   "years": 3,
+   "cost": 0.004,
+   "pc": 10,
+   "when": [
+    [
+     "dev",
+     ">",
+     0.15
+    ]
+   ],
+   "effects": [
+    {
+     "mod": "mil.land",
+     "add": 0.03
+    },
+    {
+     "mod": "mil.mobil",
+     "add": 0.03
+    }
+   ],
+   "tags": [
+    "security"
+   ]
+  },
+  {
+   "id": "blue_water_navy",
+   "name": "Blue-water navy",
+   "desc": "Carrier-capable fleet and logistics ships for power projection.",
+   "years": 8,
+   "cost": 0.009,
+   "pc": 10,
+   "when": [
+    [
+     "dev",
+     ">",
+     0.5
+    ]
+   ],
+   "effects": [
+    {
+     "mod": "mil.sea",
+     "add": 0.08
+    },
+    {
+     "mod": "mil.logi",
+     "add": 0.02
+    }
+   ],
+   "tags": [
+    "security",
+    "influence"
+   ]
+  },
+  {
+   "id": "industrial_zones",
+   "name": "Industrial zones",
+   "desc": "Special zones with cheap land, ports and power attract manufacturers.",
+   "years": 5,
+   "cost": 0.007,
+   "pc": 10,
+   "when": [
+    [
+     "dev",
+     ">",
+     0.1
+    ],
+    [
+     "dev",
+     "<",
+     0.75
+    ]
+   ],
+   "effects": [
+    {
+     "mod": "tfp.industry",
+     "add": 0.04
+    },
+    {
+     "mod": "invest.conf",
+     "add": 0.02
+    },
+    {
+     "mod": "trade.eff",
+     "add": 0.02
+    }
+   ],
+   "tags": [
+    "prosperity"
+   ]
+  },
+  {
+   "id": "pandemic_preparedness",
+   "name": "Pandemic preparedness",
+   "desc": "Stockpiles, surveillance and surge capacity for the next outbreak.",
+   "years": 3,
+   "cost": 0.003,
+   "pc": 10,
+   "when": [
+    [
+     "dev",
+     ">",
+     0.2
+    ]
+   ],
+   "effects": [
+    {
+     "mod": "epid.resp",
+     "add": 0.15
+    },
+    {
+     "mod": "health.rate",
+     "add": 0.02
+    }
+   ],
+   "tags": [
+    "welfare",
+    "security"
+   ]
+  },
+  {
+   "id": "carbon_capture",
+   "name": "Carbon capture pilots",
+   "desc": "Capture at industrial sites and power plants.",
+   "years": 6,
+   "cost": 0.006,
+   "pc": 10,
+   "when": [
+    [
+     "dev",
+     ">",
+     0.5
+    ],
+    [
+     "research.idx",
+     ">",
+     0.15
+    ]
+   ],
+   "effects": [
+    {
+     "mod": "emis.int",
+     "add": -0.05
+    },
+    {
+     "mod": "energy.eff",
+     "add": 0.02
+    }
+   ],
+   "tags": [
+    "energy"
+   ]
+  },
+  {
+   "id": "digital_government",
+   "name": "Digital government",
+   "desc": "Online services and shared data cut costs and fraud and harden public networks.",
+   "years": 4,
+   "cost": 0.004,
+   "pc": 10,
+   "when": [
+    [
+     "dev",
+     ">",
+     0.35
+    ]
+   ],
+   "effects": [
+    {
+     "mod": "admin.cap",
+     "add": 0.06
+    },
+    {
+     "mod": "tax.eff",
+     "add": 0.03
+    },
+    {
+     "mod": "tfp.services",
+     "add": 0.015
+    },
+    {
+     "mod": "info.def",
+     "add": 0.03
+    }
+   ],
+   "tags": [
+    "prosperity"
+   ]
+  }
+ ]
+}

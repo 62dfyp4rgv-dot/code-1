@@ -564,3 +564,47 @@ test('policy slider: a large (expensive) change asks for confirmation; cancel re
   assert.deepEqual(page.errors, []);
   await page.context().close();
 });
+
+test('real taps only: tab bar opens each screen, sheet tabs switch content, close returns to the map', async () => {
+  const page = await newPage(browser);
+  await startGame(page, { scenario: 'quiet_decade', country: 'FRA' });
+  for (const [tab, expect] of [
+    ['nation', /Nation|Government|Policy/i],
+    ['economy', /Economy/],
+    ['diplomacy', /Diplomacy/],
+    ['military', /Military/],
+  ]) {
+    await page.tap(`#tabbar button[data-tab="${tab}"]`);
+    await page.waitForSelector('#sheet.open', { timeout: 3000 });
+    assert.match(await page.locator('#sheet h2').first().innerText(), expect, `${tab} sheet opened by a real tap`);
+    const tabs = page.locator('#sheet [data-sheettab]');
+    const n = await tabs.count();
+    assert.ok(n >= 2, `${tab} has sheet tabs`);
+    const before = await page.locator('#sheetBody').innerText();
+    await tabs.nth(1).tap();
+    await page.waitForTimeout(250);
+    assert.notEqual(await page.locator('#sheetBody').innerText(), before, `${tab}: tapping a sheet tab changes the content`);
+    await page.tap('#sheet [data-act="closeSheet"]');
+    await page.waitForFunction(() => !document.querySelector('#sheet.open'), null, { timeout: 3000 });
+  }
+  assert.deepEqual(page.errors, []);
+  await page.context().close();
+});
+
+test('national projects: the Projects tab lists them, starting one spends political capital and shows progress', async () => {
+  const page = await newPage(browser);
+  await startGame(page, { scenario: 'quiet_decade', country: 'DEU' });
+  await page.evaluate(() => {
+    window.__app.sheetTab.nation = 'projects';
+    window.__app.openSheet('nation', {}, 'full');
+  });
+  await page.waitForTimeout(300);
+  const pc0 = await page.evaluate(() => window.__app.sim.player.gov.pc);
+  await page.locator('#sheetBody [data-cmd*="startProject"]').first().tap();
+  await page.waitForTimeout(300);
+  assert.ok((await page.evaluate(() => window.__app.sim.player.gov.pc)) < pc0, 'political capital spent');
+  assert.equal(await page.evaluate(() => window.__app.sim.player.projects.active.length), 1);
+  assert.match(await page.locator('#sheetBody').innerText(), /Progress/);
+  assert.deepEqual(page.errors, []);
+  await page.context().close();
+});

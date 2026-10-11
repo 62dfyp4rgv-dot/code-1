@@ -19,6 +19,9 @@ clean-energy priority, immigration, press freedom, surveillance, conscription. E
 expected effects first, and takes months to act (lags). Budget screen splits spending across categories; industrial focus biases sectors.
 Larger moves cost more PC, so plan which levers matter.
 
+## National projects
+Nation → Projects: 16 multi-year investments (high-speed rail, universal healthcare, grid modernisation, civil nuclear, space programme, cyber command, semiconductor fabs, irrigation, education reform, anti-corruption agency, border defence, blue-water navy, industrial zones, pandemic preparedness, carbon capture, digital government). Each needs conditions (development, research, corruption, water stress…), costs political capital to start and a share of GDP per year (borrowed), and grants permanent modifiers when finished. Two at a time; cancelling forfeits what was spent.
+
 ## Economy
 Watch **GDP growth, inflation vs target, unemployment vs natural rate, deficit/debt, reserves**. Energy and food
 imports expose you to price shocks and chokepoints; sanctions and embargoes cut trade both ways.

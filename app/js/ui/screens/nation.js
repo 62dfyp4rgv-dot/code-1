@@ -4,6 +4,7 @@ import { stat, kv, sec, tag, btn, li, note, slider, fmtLever } from './util.js';
 import { gauge, bars, spark } from '../charts.js';
 import { policyIdeology, ideologyDistance } from '../../sim/politics.js';
 import { policyCost } from '../../sim/commands.js';
+import * as PRJ from '../../sim/projects.js';
 import { GOV_PROFILE } from '../../sim/constants.js';
 
 // Shared by the Nation and Economy screens: commit a policy slider, asking first when the change is expensive.
@@ -44,6 +45,7 @@ export const nation = {
       { id: 'government', label: 'Government' },
       { id: 'policy', label: 'Policies' },
       { id: 'society', label: 'Society' },
+      { id: 'projects', label: 'Projects' },
     ];
     let h = '';
     if (tab === 'government') {
@@ -156,6 +158,31 @@ export const nation = {
         h += note(
           `Active outbreak: ${esc(st.pandemic.name)} — ${(st.pandemic.infected[st.playerId] * 100).toFixed(1)}% of your population infected.`,
         );
+    }
+    if (tab === 'projects') {
+      const ps = PRJ.ensure(c);
+      h += note(
+        `National projects take years and cost a share of GDP each year (financed by borrowing). Each grants permanent bonuses when finished. You can run ${PRJ.MAX_ACTIVE} at a time; starting one costs political capital.`,
+      );
+      const fx = (p) => p.effects.map((e) => `${e.mod.replace('.', ' ')} ${e.add > 0 ? '+' : ''}${(e.add * 100).toFixed(1)}%`).join(' · ');
+      const order = { active: 0, available: 1, locked: 2, done: 3 };
+      const list = sim.data.projects.map((p) => ({ p, s: PRJ.status(sim, c, p) })).sort((a, b) => order[a.s.state] - order[b.s.state]);
+      for (const { p, s: ps2 } of list) {
+        const cost = `${(p.cost * 100).toFixed(1)}% of GDP/yr for ${p.years} years`;
+        let right = '';
+        if (ps2.state === 'active')
+          right = btn(
+            'Cancel',
+            `data-cmd="${esc(JSON.stringify({ type: 'cancelProject', project: p.id }))}" data-confirm="Cancel this project? Money already spent is lost."`,
+            'small danger',
+          );
+        else if (ps2.state === 'available')
+          right = btn(`Start · ${p.pc} PC`, `data-cmd="${esc(JSON.stringify({ type: 'startProject', project: p.id }))}"`, 'small primary');
+        else if (ps2.state === 'locked') right = tag('Requirements not met', 'warn');
+        else right = tag('Completed', 'good');
+        h += `<div class="card"><div class="row sp"><b>${esc(p.name)}</b>${right}</div><div class="hint">${esc(p.desc)}</div><div class="hint">${esc(cost)} · ${esc(fx(p))}</div>${ps2.state === 'active' ? gauge('Progress', ps2.progress, { text: Math.round(ps2.progress * 100) + '%' }) : ''}</div>`;
+      }
+      if (!ps.active.length && !ps.done.length) h += `<div class="hint">No projects yet.</div>`;
     }
     return { title: 'Nation', sub: esc(c.name), tabs, html: h };
   },

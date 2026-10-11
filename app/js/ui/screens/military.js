@@ -176,6 +176,13 @@ export const military = {
     if (el.dataset.scope === 'mil') app.cmd({ type: 'setManualWar', value: el.checked });
   },
 };
+// regions owned by one side but controlled by the other
+function heldOf(sim, holders, owners) {
+  const reg = sim.state.reg;
+  let n = 0;
+  for (let r = 0; r < reg.owner.length; r++) if (owners.includes(reg.owner[r]) && holders.includes(reg.ctrl[r])) n++;
+  return n;
+}
 function warCard(app, w) {
   const sim = app.sim,
     st = sim.state,
@@ -194,7 +201,9 @@ function warCard(app, w) {
   h +=
     kv('Your side', friends.map((i) => esc(st.countries[i].name)).join(', ')) +
     kv('Enemy', foes.map((i) => esc(st.countries[i].name)).join(', ')) +
-    kv('Casualties (you)', Math.round(w.cas[me] || 0) + 'k') +
+    kv('Casualties', 'you ' + Math.round(w.cas[me] || 0) + 'k · enemy ' + Math.round(foes.reduce((a, i) => a + (w.cas[i] || 0), 0)) + 'k') +
+    kv('Territory', `you hold ${heldOf(sim, friends, foes)} enemy region(s) · they hold ${heldOf(sim, foes, friends)} of ours`) +
+    kv('Stocks', `ammo ${Math.round(sim.player.mil.ammo)} · fuel ${Math.round(sim.player.mil.fuel)}`) +
     kv('War exhaustion', idx100(sim.player.mil.exhaustion) + '%', sim.player.mil.exhaustion > 0.5 ? 'dn' : '') +
     `</div>`;
   for (const e of foes) {
@@ -207,7 +216,11 @@ function warCard(app, w) {
       .map(([s, l]) => `<button data-act="stance" data-e="${e}" data-s="${s}" class="${po.stance === s ? 'on' : ''}">${l}</button>`)
       .join(
         '',
-      )}</div><div class="hint">Objective: ${po.objective >= 0 ? esc(regionLabel(sim, po.objective)) : 'none — forces pick targets by value and odds'}</div><div class="btnrow">${btn(icon('target', '', 16) + ' Set objective on map', `data-act="objective" data-e="${e}"`, 'small')}${btn('Negotiate peace', `data-act="peace" data-w="${w.id}" data-e="${e}"`, 'small primary')}</div></div>`;
+      )}</div><div class="hint">Objective: ${po.objective >= 0 ? esc(regionLabel(sim, po.objective)) : 'none — forces pick targets by value and odds'}</div><div class="btnrow">${btn(icon('target', '', 16) + ' Set objective on map', `data-act="objective" data-e="${e}"`, 'small')}${btn('Negotiate peace', `data-act="peace" data-w="${w.id}" data-e="${e}"`, 'small primary')}</div>${
+      sim.player.mil.nukes > 0
+        ? `<div class="btnrow">${btn('Use a nuclear weapon', `data-cmd="${esc(JSON.stringify({ type: 'nuclearStrike', target: e }))}" data-confirm="Use a nuclear weapon against ${esc(st.countries[e].name)}? It devastates a region and kills many people. The world will turn against you and investors will flee. This cannot be undone."`, 'small danger')}</div>`
+        : ''
+    }</div>`;
   }
   for (const p of sim.player.dip.pending.filter((x) => x.kind === 'call' && x.war === w.id))
     h += `<div class="card" style="border-color:var(--warn)"><b>Call to arms</b><div class="hint">${esc(st.countries[p.principal].name)} asks you to join.</div><div class="btnrow">${btn('Join', `data-act="callyes" data-w="${w.id}"`, 'primary small')}${btn('Decline', `data-act="callno" data-w="${w.id}"`, 'small')}</div></div>`;

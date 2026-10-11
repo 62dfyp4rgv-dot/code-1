@@ -1,5 +1,6 @@
 // AI economic layer: budget composition, lever steering (via commands, PC-limited), research & technology adoption.
 import { clamp, BUDGET_CATS } from '../sim/constants.js';
+import * as PRJ from '../sim/projects.js';
 import { techAvailable, techCostRP, canAdopt, adoptionCost } from '../sim/research.js';
 import { ideologyDistance, policyIdeology } from '../sim/politics.js';
 
@@ -58,6 +59,7 @@ export function manageEconomy(sim, c, view) {
     sim.exec({ type: 'setPolicy', actor: c.idx, key: 'conscription', value: 0 });
   if (c.gov.unrest > 0.5 && c.gov.type !== 'lib_dem') tryPolicy('surveillance', clamp(t.surveillance + 0.08, 0, 1));
   researchMgmt(sim, c);
+  manageProjects(sim, c);
 }
 
 const BRANCH_NEED = (c, A, e) => ({
@@ -110,5 +112,34 @@ function researchMgmt(sim, c) {
       }
     }
     if (best) sim.exec({ type: 'adoptTech', actor: c.idx, tech: best.id });
+  }
+}
+
+// National projects: governments with fiscal space and political capital start the project that best fits their priorities.
+const TAG_WEIGHT = { prosperity: 'prosperity', welfare: 'prosperity', energy: 'prosperity', security: 'security', influence: 'influence' };
+function manageProjects(sim, c) {
+  const e = c.econ;
+  const A = c.ai;
+  const st = PRJ.ensure(c);
+  if (st.active.length >= 1 + (c.dev0 > 0.6 ? 1 : 0) || c.gov.pc < 30 || e.deficit / e.gdp > 0.045 || e.debtRatio > 1.4 || e.util > 1.04)
+    return;
+  if (!sim.rng.chance(0.07)) return;
+  const options = [];
+  for (const p of sim.data.projects) {
+    if (PRJ.status(sim, c, p).state !== 'available') continue;
+    let w = 0.2;
+    for (const tag of p.tags) w += A.w[TAG_WEIGHT[tag]] || 0;
+    if (A.goal === 'secure' && p.tags.includes('security')) w *= 1.8;
+    if (sim.atWar(c.idx) && !p.tags.includes('security')) w *= 0.3;
+    options.push([p, w]);
+  }
+  if (!options.length) return;
+  let r = sim.rng.next() * options.reduce((a, [, w]) => a + w, 0);
+  for (const [p, w] of options) {
+    r -= w;
+    if (r <= 0) {
+      sim.exec({ type: 'startProject', actor: c.idx, project: p.id });
+      return;
+    }
   }
 }

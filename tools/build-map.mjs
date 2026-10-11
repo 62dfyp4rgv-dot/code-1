@@ -291,7 +291,7 @@ for (const c of countries) {
   if (!cells.length) continue;
   const comps = components(cells);
   const effA = cells.reduce((s, i) => s + Math.cos((cellLat((i / W) | 0) * Math.PI) / 180), 0);
-  const kTotal = Math.max(1, Math.min(22, Math.round(Math.sqrt(effA) / 4.2)));
+  const kTotal = Math.max(1, Math.min(30, Math.round(Math.sqrt(effA) / 3.1)));
   const small = [];
   const countryRegions = [];
   comps.forEach((comp, ci) => {

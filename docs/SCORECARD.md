@@ -47,6 +47,9 @@ Military outcomes are still mostly static fronts with parameter-driven endings (
 ### Changes made after round 2 (not yet independently re-scored)
 Ceasefires now freeze the lines (occupied land is kept; only other settlements return it) — the evaluator found occupation never survived a ceasefire; the core refuses to serialise a half-processed day (previously only the UI protected against it); the AI's view of other governments' opinion of it is now noisy (the evaluator found an exact leak); touch targets raised to ≥ 44 px (HUD pills 40 px); AI perception look-ups made O(1)/O(allies); stale doc claims corrected (events count, performance figures, lint description, unit-control claim).
 
+### Further changes after round 2 (also not yet independently re-scored)
+National projects (16, with AI use), three new scenarios, 33 more rivalries (≈ 1.7–1.8 spontaneous wars per decade over ~9 country pairs, up from ≈ 0.6 over 5), finer map (681 regions), offensives that concentrate on one thrust, a per-war casualty/territory/stock panel, a nuclear-strike escalation command (AI uses it rarely), real-tap UI tests, regenerated screenshots.
+
 ### Evaluator findings that remain open (honest list)
 Autoplay wars still do not change borders (AI proposes at most two regions); client states only for targets with ≤ 2 regions; war variety ~0.6 per decade among the same pairs; top-5 economies identical across seeds; median growth still high and China occasionally reaches parity with the USA; Japan collapsed once in 11 runs; war panel is thin; iOS never built and device performance unmeasured; UI tests lean on `window.__app` (69 uses vs 22 real clicks); CI never executed.
 

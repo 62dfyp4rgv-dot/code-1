@@ -2,7 +2,8 @@
 // Operations are resolved daily from doctrine, logistics, terrain, readiness, air superiority and fortification - never by a
 // raw headcount comparison. Player and AI use identical orders (setStance / moveForce / attackRegion / declareWar / proposePeace).
 import { clamp, TERRAIN, COM } from './constants.js';
-import { modv } from './mods.js';
+import { modv, addTimedMod } from './mods.js';
+import { worldOpinionShift } from './diplomacy.js';
 import { UNIT_TYPES } from './military.js';
 import { bump } from './achievements.js';
 
@@ -460,11 +461,24 @@ function autoDeploy(sim, c) {
     // no contact: hold around capital; if enemy has no land contact (overseas) stay
     return;
   }
-  // desired stance: attack if posture says so or if locally superior; else defend
+  const stanceOf = (enemy) => (c.mil.posture[enemy] ? c.mil.posture[enemy].stance : 'defend');
+  // offensive: concentrate on one main thrust (the front touching the most valuable enemy region) instead of spreading evenly
+  if ([...enemies].some((e) => stanceOf(e) === 'attack')) {
+    let thrust = null;
+    let tv = -1;
+    for (const f of fronts)
+      for (const a of f.foes) {
+        const v = geo.regions[a.to].popW * 10 + (a.to === geo.capitalRegion[reg.owner[a.to]] ? 8 : 0);
+        if (v > tv) {
+          tv = v;
+          thrust = f;
+        }
+      }
+    if (thrust) thrust.threat *= 3;
+  }
   const total = fronts.reduce((s, f) => s + f.threat, 0);
   const reserveFrac = 0.2;
   const freeForces = myForces.filter((f) => f.dest < 0 && !(f.order.kind === 'attack' && f.prep > 0 && f.inCombat));
-  const stanceOf = (enemy) => (c.mil.posture[enemy] ? c.mil.posture[enemy].stance : 'defend');
   const quota = fronts.map((f) => ({
     ...f,
     want: Math.max(1, Math.round(((1 - reserveFrac) * freeForces.length * f.threat) / total)),
@@ -1074,6 +1088,7 @@ export function monthlyWar(sim, day) {
       : 0;
     d -= 0.004 * clamp(adv / 50, -1, 1) * 1.0;
     m.exhaustion = clamp(m.exhaustion + d, 0, 1);
+    for (const w of my) w.cas[c.idx] = (w.cas[c.idx] || 0) + (m.casualtiesMonth || 0) / my.length; // per-war ledger shown in the war panel
     m.casualtiesMonth = 0;
   }
 }
@@ -1229,4 +1244,54 @@ export function applyTerms(sim, w, winner, loser, terms) {
     reg.contestBy[r] = -1;
   }
   sim.rebuildOwnedRegions();
+}
+
+// ---------------------------------------------------------------------------------------------------- nuclear escalation
+// A nuclear-armed belligerent can use a weapon against an enemy-held region. It is an irreversible escalation: the target region is
+// devastated and loses people and forces, but the user becomes a pariah (opinion, credibility, investment confidence, oil price).
+export function nuclearOptions(sim, actor, enemy) {
+  const st = sim.state;
+  const geo = sim.geo;
+  const reg = st.reg;
+  const out = [];
+  for (let r = 0; r < reg.owner.length; r++) {
+    if (reg.owner[r] !== enemy && reg.ctrl[r] !== enemy) continue;
+    const near =
+      geo.regions[r].adj.some((a) => reg.ctrl[a.to] === actor) || (sim.forcesAtRegion.get(r) || []).some((f) => f.owner === enemy);
+    if (near) out.push(r);
+  }
+  return out;
+}
+export function nuclearStrike(sim, actor, enemy, region) {
+  const st = sim.state;
+  const geo = sim.geo;
+  const reg = st.reg;
+  const c = st.countries[actor];
+  const victim = st.countries[enemy];
+  if (!(c.mil.nukes > 0)) return { ok: false, reason: 'no nuclear weapons' };
+  if (!enemiesOf(sim, actor).has(enemy)) return { ok: false, reason: 'not at war with that country' };
+  const opts = nuclearOptions(sim, actor, enemy);
+  const r = region !== undefined && region !== null ? region : opts.sort((a, b) => geo.regions[b].popW - geo.regions[a].popW)[0];
+  if (r === undefined || !opts.includes(r)) return { ok: false, reason: 'no valid target region' };
+  const share = geo.regions[r].popW;
+  reg.dev[r] = clamp(reg.dev[r] + 0.7, 0, 0.95);
+  const deaths = victim.pop.total * Math.min(0.12, 0.02 + 0.1 * share);
+  victim.pop.total = Math.max(0.01, victim.pop.total - deaths);
+  for (const f of sim.forcesAtRegion.get(r) || []) f.size = Math.max(0.05, f.size * 0.35);
+  victim.econ.infra = clamp(victim.econ.infra - 0.04 - 0.1 * share, 0.05, 0.98);
+  victim.gov.stability = clamp(victim.gov.stability - 0.12, 0.01, 0.98);
+  victim.mil.exhaustion = clamp(victim.mil.exhaustion + 0.15, 0, 1);
+  for (const w of st.wars)
+    if (w.active && sideOf(w, actor) && sideOf(w, enemy)) w.score[sideOf(w, actor)] = clamp(w.score[sideOf(w, actor)] + 30, -50, 100);
+  // the world reacts
+  worldOpinionShift(sim, actor, -35, 0.8);
+  c.dip.credibility = clamp(c.dip.credibility - 35, 0, 100);
+  c.dip.infamy = (c.dip.infamy || 0) + 40;
+  c.gov.legitimacy = clamp(c.gov.legitimacy - 0.08, 0.02, 0.98);
+  st.prices[1] = clamp(st.prices[1] * 1.25, 0.35, 6);
+  for (const x of st.countries) addTimedMod(x, 'invest.conf', -0.05, st.day + 36 * 30, 'nuclear use');
+  st.world.nuclearUse = (st.world.nuclearUse || 0) + 1;
+  sim.log(actor, 'war', `${c.name} uses a nuclear weapon against ${victim.name}`, { war: true, att: actor, def: enemy }, 'high');
+  sim.emit('nuclear', { by: actor, on: enemy, region: r });
+  return { ok: true, region: r, deaths };
 }

@@ -35,7 +35,7 @@ Install as a PWA (Safari → Share → Add to Home Screen) or build the native s
 
 ## What you can do
 
-- Pick one of 168 countries and one of 3 scenarios (*Fault Lines 2025*, *A Quiet Decade*, *Energy Crunch*), a
+- Pick one of 168 countries and one of 6 scenarios (*Fault Lines 2025*, *A Quiet Decade*, *Energy Crunch*, *Strait Crisis 2027*, *The Long Drought 2025*, *Debt Reckoning 2026*), a
   difficulty, an AI-aggression setting and a seed. Same seed + same commands ⇒ identical game.
 - Run the state: 11 policy levers (taxes, spending, tariffs, policy rate, regulation, environment, clean-energy
   priority, immigration, press freedom, surveillance, conscription), budget categories, industrial focus.
@@ -48,8 +48,9 @@ Install as a PWA (Safari → Share → Add to Home Screen) or build the native s
   veto, sanctions, call-to-arms, proposals that show *why* a partner accepts or refuses.
 - Run intelligence: networks, 8 covert operations, exposure risk, cyber disruption; the world is seen through
   noisy, delayed perception (fog of war).
+- Launch national projects (rail, healthcare, nuclear, space, cyber command, …): multi-year investments that cost GDP share and grant permanent bonuses; the AI does too.
 - Respond to ~80 authored events and world events (crises, pandemics, disasters, scandals) with branching decisions.
-- Pursue 6 victory paths (prosperity, economic, diplomatic, scientific, stability/welfare, security) — conquest is
+- Play 6 scenarios (incl. Strait Crisis, The Long Drought, Debt Reckoning) and pursue 6 victory paths (prosperity, economic, diplomatic, scientific, stability/welfare, security) — conquest is
   never required — plus 15 achievements.
 - Autosave (double-buffered, IndexedDB with localStorage fallback), manual slots, export/import, recovery of an
   interrupted session.

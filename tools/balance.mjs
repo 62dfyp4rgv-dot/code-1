@@ -13,7 +13,7 @@ const q = (a, p) => {
   const s = a.slice().sort((x, y) => x - y);
   return s[Math.min(s.length - 1, Math.floor(p * (s.length - 1)))];
 };
-const scenarios = ['fault_lines', 'quiet_decade', 'energy_crunch'];
+const scenarios = data.scenarios.map((x) => x.id);
 const rows = [];
 const collapses = new Map();
 const wars = [];

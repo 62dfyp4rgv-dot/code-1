@@ -118,6 +118,7 @@ export function manageMilitaryPosture(sim, c, view) {
 export function manageWar(sim, c, view) {
   const A = c.ai,
     st = sim.state;
+  considerNuclear(sim, c, view);
   // ---------------- peace
   for (const w of view.wars) {
     const side = w.attackers.includes(c.idx) ? 'a' : w.defenders.includes(c.idx) ? 'd' : null;
@@ -188,6 +189,29 @@ export function manageWar(sim, c, view) {
     if (r.ok) {
       A.lastWar = st.day;
       for (const e of [best.idx]) sim.exec({ type: 'setStance', actor: c.idx, enemy: e, stance: 'attack' });
+    }
+  }
+}
+
+// A nuclear power that is losing badly, exhausted and facing defeat at home may use a weapon on a non-nuclear (or weaker) enemy.
+function considerNuclear(sim, c, view) {
+  const A = c.ai;
+  if (!(c.mil.nukes > 0) || c.mil.exhaustion < 0.55 || sim.state.day - (A.lastNuke ?? -9999) < 720) return;
+  const reg = sim.state.reg;
+  const cap = sim.geo.capitalRegion[c.idx];
+  const threatened = reg.ctrl[cap] !== c.idx || sim.geo.regions[cap].adj.some((a) => view.enemies.has(reg.ctrl[a.to]));
+  if (!threatened) return;
+  for (const w of view.wars) {
+    const side = w.attackers.includes(c.idx) ? 'a' : w.defenders.includes(c.idx) ? 'd' : null;
+    if (!side || w.score[side] - w.score[side === 'a' ? 'd' : 'a'] > -30) continue;
+    const foes = side === 'a' ? w.defenders : w.attackers;
+    for (const f of foes) {
+      const o = view.byIdx(f);
+      if (!o || o.nukes >= c.mil.nukes) continue; // no first use against an equal: retaliation
+      if (!sim.rng.chance(0.05 * (0.5 + A.risk))) continue;
+      A.lastNuke = sim.state.day;
+      sim.exec({ type: 'nuclearStrike', actor: c.idx, target: f });
+      return;
     }
   }
 }

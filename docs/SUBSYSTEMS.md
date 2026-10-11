@@ -61,6 +61,9 @@ All file names are under `app/js/sim/` unless noted. Quantities are in model uni
 - **Purpose**: ~80 data-driven events + world events. Conditions on stat paths, weighted mean-time-to-happen, options with whitelisted effects (stat, mod, price, rel, treasury, policy, flag, infra, devastate, treaty, newLeader, …), delayed follow-ups, pandemic SIR model.
 - **Invariants**: effects can only write whitelisted stats; AI resolves events with its own utility; player gets decision modals. **Tests**: validity of every event; emergence in stressed economy; pandemic.
 
+## 11b. National projects (`projects.js`, `data/projects.json`)
+- **Purpose**: long-horizon investment choices. Inputs: country stats (conditions), political capital, `startProject`/`cancelProject` commands. Outputs: monthly extra borrowing (`cost × GDP / 12`) and permanent modifiers on completion. Frequency: monthly. Invariants: ≤ 2 active; no work while the market is closed or reserves negative; effects use known modifier keys (tested). AI: `ai/econ.js manageProjects` (needs fiscal space and PC).
+
 ## 12. World AI (`app/js/ai/`)
 - **Purpose**: each country has a personality (risk, security, ideology weights) and acts monthly (great powers/belligerents) or quarterly (others): fiscal rule and policy shifting, research choice, diplomacy proposals and alliance seeking, war posture/declaration/peace, air & naval tasking, intelligence ops, event resolution.
 - **Constraints**: acts only through `commands.js`; sees only `perception.js`. **Failure modes**: reactive rather than planning for multi-year campaigns (see KNOWN_ISSUES).

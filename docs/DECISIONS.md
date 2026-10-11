@@ -33,7 +33,7 @@ Nuclear weapons are modelled as deterrence rating only (no nuclear exchange mech
 - **Amphibious assaults**: landing across a strait now has a much larger penalty, and the AI needs ≥ 2.5:1 power for non-neighbour targets. Chosen because balance runs produced a China–Taiwan war in most decades lasting weeks.
 - **Neutral-by-construction policy rate**: each country's Taylor-rule neutral rate (`rStar`) is set so the rule outputs the starting policy rate at t0; optional `rate0`/`homeBias` profile fields model low-rate, domestically financed debtors (Japan). Chosen because a global initial monetary-tightening transient pushed Japan into a deflation/debt spiral and regime collapse in most runs.
 - **Downward price rigidity** and a flatter Phillips curve in slack, to prevent deflation spirals.
-- Nuclear exchange remains unmodelled (D-004).
+- Nuclear exchange remains unmodelled beyond a single-use strike (see D-008).
 
 ## D-006 Changes after the first independent review (2026-10-11)
 - **Offers, not impositions**: AI peace proposals to the human become answerable offers (`answerOffer`). Chosen over auto-accept because the review showed it removed player agency.
@@ -44,3 +44,9 @@ Nuclear weapons are modelled as deterrence rating only (no nuclear exchange mech
 
 ## D-007 Changes after the second independent review (2026-10-11)
 Ceasefires freeze the lines (occupation persists, truce forbids new fighting); raw `serialize` refuses mid-day; AI-perceived opinion is noisy; touch targets ≥ 44 px; central-bank output gap measured against the model's norm (0.99). The AI spends more time near zero rates before; now median inflation ≈ 2.5 %.
+
+## D-008 Depth additions after round 2 (2026-10-11)
+- **National projects** (`projects.json`): 16 multi-year investments with permanent modifiers; AI uses them too.
+- **Three more scenarios** (Strait Crisis 2027, The Long Drought 2025, Debt Reckoning 2026) using new scenario fields: `rivalries`, `relations`, regional/national/global timed `mods`, `debtShift`, `rateShift`.
+- **More rivalries** (33 added) for more varied spontaneous wars (~1.8 per decade in balance runs); map regions ×1.3 (681) for finer fronts; offensives concentrate on one main thrust; per-war casualty ledger and territory/stock readouts in the war panel.
+- **Nuclear strike**: single-use escalation with heavy global consequences (D-004 amended); AI very rarely uses it.
