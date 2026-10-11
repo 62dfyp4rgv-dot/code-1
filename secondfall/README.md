@@ -8,6 +8,12 @@ available: `SF_STYLE=noir python run.py ...` (default is `webtoon`; see `style.p
     python -m pip install numpy pillow
     SF_OUT=out python run.py 1.5 5 6 7        # S = scale vs the 800 px layout; then the panel numbers
 
+## Styles
+`SF_STYLE=<name>` picks the look (default `webtoon`): `webtoon`, `noir`, `inkwash`, `comic`, `watercolor`, `riso`, `dream`, `pixel`, `neon`.
+Everything except `noir` shares the webtoon base (pastel flesh, big eyes, strand hair, thin lines); `style.py` holds per-style shading
+constants and `looks.py` the whole-panel post look. `python -m secondfall.showcase out.jpg` renders the long-haired heroine portrait in
+the active style (hair style `long` is available on any `HeadSpec`).
+
 ## How it is built
 - `r3d.py`, `sdf.py` - a small renderer: signed-distance volumes with smooth blends (so shoulders melt into arms), ray-marched into a
   z-buffer with normals, then lit with a painterly ramp, ambient occlusion, screen-space cast shadows and rim light.
