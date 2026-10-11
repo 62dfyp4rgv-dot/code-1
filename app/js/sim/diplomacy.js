@@ -26,6 +26,11 @@ export function initOrgsAndTreaties(sim) {
     const ia = geo.idOf[a], ib = geo.idOf[b]; if (ia === undefined || ib === undefined) continue;
     state.treaties.push({ id: state.nextId++, type: 'defense_pact', parties: [ia, ib], start: 0, active: true, end: null });
   }
+  // implicit security guarantees (data: orgs.json "guarantees"): [guarantor, protected]; not alliances, but they deter aggressors
+  for (const [g, p] of data.guarantees || []) {
+    const ig = geo.idOf[g], ip = geo.idOf[p]; if (ig === undefined || ip === undefined) continue;
+    state.treaties.push({ id: state.nextId++, type: 'guarantee', parties: [ig, ip], guarantor: ig, start: 0, active: true, end: null });
+  }
 }
 export function initRelations(sim) {
   const { geo, state, data } = sim; const N = geo.N;

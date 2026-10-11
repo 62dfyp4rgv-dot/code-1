@@ -13,7 +13,7 @@
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font: 400 var(--fs)/1.38 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, Roboto, sans-serif; overflow: hidden; overscroll-behavior: none; -webkit-text-size-adjust: 100%; font-variant-numeric: tabular-nums; }
 button { font: inherit; color: inherit; }
-#app { position: fixed; inset: 0; overflow: hidden; }
+#app { position: fixed; inset: 0; overflow: hidden; overflow: clip; }
 #map { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
 .ic { flex: none; vertical-align: middle; }
 /* ---------- HUD ---------- */
@@ -111,7 +111,7 @@ button { font: inherit; color: inherit; }
 /* ---------- layout adaptations ---------- */
 @media (orientation: landscape) and (max-height: 520px) {
   :root { --hud-h: 56px; --tab-h: 46px; }
-  #tabbar button { flex-direction: row; display: flex; justify-content: center; gap: 4px; padding: 4px 0; min-height: var(--tab-h); font-size: .7rem; } #tabbar .ic { width: 18px; height: 18px; }
+  #tabbar button { flex-direction: row; display: flex; justify-content: center; align-items: center; gap: 4px; padding: 4px 0; min-height: var(--tab-h); font-size: .7rem; } #tabbar .ic { width: 18px; height: 18px; }
   #hud { grid-template-columns: 1fr auto; align-items: center; } #hud .pills { display: none; }
   #sheet { left: auto; right: 0; width: min(46vw, 460px); max-width: none; bottom: calc(var(--tab-h) + var(--sab)); top: calc(var(--sat) + var(--hud-h)); height: auto !important; border-radius: 16px 0 0 0; transform: translateX(105%); }
   #sheet.open { transform: none; } .grab { display: none; }

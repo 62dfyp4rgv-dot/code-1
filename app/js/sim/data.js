@@ -29,7 +29,7 @@ export async function loadData(readText) {
     countries: parseCSV(countries),
     resources: Object.fromEntries(parseCSV(resources).map((r) => [r.iso3, r])),
     cities: parseCSV(cities),
-    map, econProfiles: econ, orgs: orgs.orgs, defensePacts: orgs.defensePacts,
+    map, econProfiles: econ, orgs: orgs.orgs, defensePacts: orgs.defensePacts, guarantees: orgs.guarantees || [],
     rivalries: geo.rivalries, claims: geo.claims, chokepoints: choke.chokepoints,
     policies, scenarios: scen.scenarios, difficulty: scen.difficulty,
     techs: parseTechs(techs), events: events.events, eventMeta: events.meta || {},

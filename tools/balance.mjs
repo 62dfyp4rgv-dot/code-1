@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import { loadDataNode } from '../app/js/sim/data.js';
 import { Sim } from '../app/js/sim/world.js';
 import { findNonFinite } from '../tests/helpers.js';
-const years = +process.argv[2] || 10, seedCount = +process.argv[3] || 3, outPath = process.argv[4] || 'docs/BALANCE_REPORT.md';
+const passive = process.argv.includes('--passive'); const years = +process.argv[2] || 10, seedCount = +process.argv[3] || 3, outPath = process.argv[4] || 'docs/BALANCE_REPORT.md';
 const data = await loadDataNode();
 const q = (a, p) => { const s = a.slice().sort((x, y) => x - y); return s[Math.min(s.length - 1, Math.floor(p * (s.length - 1)))]; };
 const scenarios = ['fault_lines', 'quiet_decade', 'energy_crunch'];
@@ -14,12 +14,12 @@ for (const sc of scenarios) for (let sd = 1; sd <= seedCount; sd++) {
   const seed = 100 * sd + 7; const player = ['USA', 'CHN', 'IND', 'DEU', 'BRA', 'NGA', 'JPN', 'EGY'][(sd + scenarios.indexOf(sc)) % 8];
   let sim; const t0 = performance.now();
   try {
-    sim = new Sim(data, { seed, scenario: sc, player }); const gdp0 = sim.state.countries.map((c) => c.econ.gdp); const g0 = gdp0.reduce((a, b) => a + b, 0);
-    sim.advanceMonths(years * 12); months += years * 12;
+    sim = new Sim(data, { seed, scenario: sc, player }); if (!passive) sim.state.countries[sim.state.playerId].autoAI = true; /* AI drives the player's country unless --passive */ const gdp0 = sim.state.countries.map((c) => c.econ.gdp); const g0 = gdp0.reduce((a, b) => a + b, 0);
+    const day0 = sim.state.day; sim.advanceMonths(years * 12); const yrs = (sim.state.day - day0) / 365.25; months += Math.round(yrs * 12);
     const cs = sim.state.countries; const g1 = cs.reduce((s, c) => s + c.econ.gdp, 0);
     nonFinite += findNonFinite(sim.state).length;
-    const growth = cs.map((c, i) => Math.pow(c.econ.gdp / gdp0[i], 1 / years) - 1);
-    const row = { sc, seed, worldGrowth: Math.pow(g1 / g0, 1 / years) - 1, medGrowth: q(growth, 0.5), p10: q(growth, 0.1), p90: q(growth, 0.9), infl: q(cs.map((c) => c.econ.infl), 0.5), inflP90: q(cs.map((c) => c.econ.infl), 0.9), unemp: q(cs.map((c) => c.econ.unemp), 0.5), debt: q(cs.map((c) => c.econ.debtRatio), 0.5), badUtil: cs.filter((c) => c.econ.util < 0.8 || c.econ.infl > 0.25).length, wars: sim.state.wars.length, activeWars: sim.state.wars.filter((w) => w.active).length, regime: cs.reduce((s, c) => s + c.gov.collapses, 0), temp: sim.state.world.temp, prices: sim.state.prices.slice(), treaties: sim.state.treaties.filter((t) => t.active).length, techAvg: cs.reduce((s, c) => s + c.tech.known.length, 0) / cs.length };
+    const growth = cs.map((c, i) => Math.pow(c.econ.gdp / gdp0[i], 1 / yrs) - 1);
+    const row = { sc, seed, worldGrowth: Math.pow(g1 / g0, 1 / yrs) - 1, medGrowth: q(growth, 0.5), p10: q(growth, 0.1), p90: q(growth, 0.9), infl: q(cs.map((c) => c.econ.infl), 0.5), inflP90: q(cs.map((c) => c.econ.infl), 0.9), unemp: q(cs.map((c) => c.econ.unemp), 0.5), debt: q(cs.map((c) => c.econ.debtRatio), 0.5), badUtil: cs.filter((c) => c.econ.util < 0.8 || c.econ.infl > 0.25).length, wars: sim.state.wars.length, activeWars: sim.state.wars.filter((w) => w.active).length, regime: cs.reduce((s, c) => s + c.gov.collapses, 0), temp: sim.state.world.temp, prices: sim.state.prices.slice(), treaties: sim.state.treaties.filter((t) => t.active).length, techAvg: cs.reduce((s, c) => s + c.tech.known.length, 0) / cs.length };
     rows.push(row);
     for (const w of sim.state.wars) wars.push({ sc, seed, name: w.name, months: ((w.end ?? sim.state.day) - w.start) / 30, ended: !!w.end, reason: w.endReason });
     for (const h of sim.state.events.history) events.set(h.id, (events.get(h.id) || 0) + 1);

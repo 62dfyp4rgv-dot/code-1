@@ -27,3 +27,10 @@ Trade-offs accepted: WebKit (iOS) JS performance is lower than native; no Metal;
 ## D-004 Scope control
 175 map entities (Natural Earth 110m). Everything is simulated by the same rules; ~40 countries get hand-authored detail (resources, alliances, rivalries), the rest are derived from population/GDP/regime with seeded variation and flagged `derived`.
 Nuclear weapons are modelled as deterrence rating only (no nuclear exchange mechanic).
+
+## D-005 Balance-driven design changes (2026-10-11, from `tools/balance.mjs`)
+- **Security guarantees** (`orgs.json: guarantees`): implicit third-party commitments (e.g. US→Taiwan) are seeded as `guarantee` treaties. They are not alliances (no obligation to fight) but the AI counts a guarantor's strength at 0.7 weight when judging an attack. Chosen over adding fake alliances; values are gameplay judgement (see DATA_SOURCES.md).
+- **Amphibious assaults**: landing across a strait now has a much larger penalty, and the AI needs ≥ 2.5:1 power for non-neighbour targets. Chosen because balance runs produced a China–Taiwan war in most decades lasting weeks.
+- **Neutral-by-construction policy rate**: each country's Taylor-rule neutral rate (`rStar`) is set so the rule outputs the starting policy rate at t0; optional `rate0`/`homeBias` profile fields model low-rate, domestically financed debtors (Japan). Chosen because a global initial monetary-tightening transient pushed Japan into a deflation/debt spiral and regime collapse in most runs.
+- **Downward price rigidity** and a flatter Phillips curve in slack, to prevent deflation spirals.
+- Nuclear exchange remains unmodelled (D-004).

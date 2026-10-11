@@ -248,7 +248,7 @@ export class Sim {
     yield;
   }
   advance(days) { for (let i = 0; i < days; i++) { this.step(); if (this.state.ended && this.state.ended.final) break; } }
-  advanceMonths(m) { const target = this.calendar.dayOf(...this.addMonths(this.date, m)); while (this.state.day < target) this.step(); }
+  advanceMonths(m) { const target = this.calendar.dayOf(...this.addMonths(this.date, m)); while (this.state.day < target) { this.step(); if (this.state.ended && this.state.ended.final) break; } }
   addMonths(d, m) { let y = d.y, mo = d.m + m; while (mo > 12) { mo -= 12; y++; } return [y, mo, 1]; }
   monthly(day) { for (const _ of this.monthlyGen(day)) { /* run to completion */ } }
   *monthlyGen(day) {

@@ -29,7 +29,10 @@ export function buildView(sim, me) {
   return { me, c: mc, day: st.day, prices: st.prices, others, byIdx: (j) => others.find((o) => o.idx === j), enemies, allies, self, wars: st.wars.filter((w) => w.active) };
 }
 export function alliedPowerOf(sim, me, view, j) {
-  let s = 0; for (const o of view.others) if (o.idx !== j && sim.alliesOf(j).has(o.idx)) s += o.mil; return s;
+  let s = 0; for (const o of view.others) if (o.idx !== j && sim.alliesOf(j).has(o.idx)) s += o.mil;
+  // public security guarantees count at reduced weight (they are pledges, not obligations)
+  for (const t of sim.state.treaties) if (t.active && t.type === 'guarantee' && t.parties[1] === j && t.parties[0] !== me && !sim.alliesOf(j).has(t.parties[0])) { const g = view.byIdx(t.parties[0]); if (g) s += 0.7 * g.mil; }
+  return s;
 }
 
 function neighborsOrNear(sim, me, j) { return sim.geo.dist[me * sim.geo.N + j] < 7000; }

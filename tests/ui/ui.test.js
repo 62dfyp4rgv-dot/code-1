@@ -128,3 +128,50 @@ test('layouts: no horizontal overflow and tab bar visible on all iPhone sizes; s
     assert.deepEqual(page.errors, [], name); await page.context().close();
   }
 });
+
+test('regression: the app shell cannot be scrolled sideways by off-screen (closed) sheets, in every orientation', async () => {
+  for (const [name, dev] of Object.entries(DEVICES)) {
+    const page = await newPage(browser, dev); await startGame(page);
+    const r = await page.evaluate(() => { const a = document.getElementById('app'); a.scrollLeft = 120; a.scrollTop = 40; return { sl: a.scrollLeft, st: a.scrollTop, hud: document.getElementById('hud').getBoundingClientRect().left }; });
+    assert.equal(r.sl, 0, `${name}: #app.scrollLeft stays 0`); assert.equal(r.st, 0, `${name}: #app.scrollTop stays 0`); assert.ok(r.hud >= 0, `${name}: HUD not shifted off-screen`);
+    await page.context().close();
+  }
+});
+test('end of game: final report offers sandbox continuation, which resumes the clock', async () => {
+  const page = await newPage(browser); await startGame(page, { scenario: 'quiet_decade', country: 'BRA' });
+  await page.evaluate(() => { const a = window.__app; a.sim.endGame('time'); });
+  await page.waitForSelector('[data-e="sandbox"]', { timeout: 5000 });
+  assert.match(await page.locator('#overlay').innerText(), /Final report/);
+  const d0 = await page.evaluate(() => window.__app.sim.state.day);
+  await page.click('[data-e="sandbox"]');
+  const ended = await page.evaluate(() => { const a = window.__app; a.sim.step(); return !!a.sim.state.ended; });
+  assert.equal(ended, false, 'sandbox clears the ended flag'); assert.ok((await page.evaluate(() => window.__app.sim.state.day)) > d0);
+  assert.deepEqual(page.errors, []); await page.context().close();
+});
+test('saves screen: manual slot saves, lists with metadata, and loads back the same state', async () => {
+  const page = await newPage(browser); await startGame(page, { country: 'JPN' });
+  await page.evaluate(() => { window.__app.setSpeed(2); window.__app.play(); }); await page.waitForTimeout(1200); await page.evaluate(() => window.__app.pause());
+  await page.evaluate(() => window.__app.openSheet('saves')); await page.waitForTimeout(150);
+  await page.click('[data-act="saveslot"][data-slot="manual"]'); await page.waitForTimeout(800);
+  const snap = await page.evaluate(() => ({ day: window.__app.sim.state.day, gdp: window.__app.sim.player.econ.gdp }));
+  await page.evaluate(() => { window.__app.sim.advanceMonths(2); }); // diverge
+  await page.evaluate(() => window.__app.openSheet('saves')); await page.waitForTimeout(300);
+  const body = await page.locator('#sheetBody').innerText(); assert.match(body, /JPN/, 'slot lists the country');
+  const loadBtn = page.locator('[data-act="loadslot"]').first(); assert.ok(await loadBtn.count() >= 1, 'a load button exists');
+  await loadBtn.click(); await page.waitForTimeout(1500);
+  const back = await page.evaluate(() => ({ day: window.__app.sim.state.day, gdp: window.__app.sim.player.econ.gdp }));
+  assert.deepEqual(back, snap, 'loaded the manual slot state'); assert.deepEqual(page.errors, []); await page.context().close();
+});
+test('tutorial coach marks step through and can be skipped; new-game search and seed are honoured', async () => {
+  const page = await newPage(browser); await page.goto(base); await page.waitForSelector('[data-m="new"]');
+  await page.click('[data-m="new"]'); await page.waitForSelector('[data-sc]'); await page.fill('#nq', 'Braz'); await page.waitForFunction(() => document.querySelectorAll('[data-c]').length === 1, null, { timeout: 5000 });
+  assert.equal(await page.locator('[data-c]').count(), 1, 'search narrows the list to one country');
+  await page.click('[data-c="BRA"]');
+  const shownSeed = +(/Seed (\d+)/.exec(await page.locator('#overlay').innerText())[1]);
+  await page.click('[data-n="start"]'); await page.waitForFunction(() => window.__app && window.__app.sim, null, { timeout: 30000 });
+  assert.equal(await page.evaluate(() => window.__app.sim.state.seed), shownSeed, 'the displayed seed is the one used');
+  await page.waitForSelector('.coach', { timeout: 5000 }); const t1 = await page.locator('.coach b').innerText();
+  await page.click('.coach [data-t="next"]'); const t2 = await page.locator('.coach b').innerText(); assert.notEqual(t1, t2, 'advances to the next tip');
+  await page.click('.coach [data-t="skip"]'); await page.waitForTimeout(100); assert.equal(await page.locator('.coach').count(), 0, 'skip dismisses tips');
+  assert.deepEqual(page.errors, []); await page.context().close();
+});

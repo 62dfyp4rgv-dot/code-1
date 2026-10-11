@@ -97,7 +97,7 @@ export function manageWar(sim, c, view) {
     const nuke = o.nukes >= 2 ? 3 : o.nukes ? 1.2 : 0;
     const hasCB = sim.hasCasusBelli(c.idx, o.idx);
     const value = 0.9 * claim + 0.8 * rivalry + 0.2 * A.w.ideology * (1 - o.dem / 100) + (o.landNeighbor ? 0.2 : 0);
-    const odds = clamp((ratio - 1) / 2, 0, 1) * (o.landNeighbor || o.neighbor ? 1 : 0.4);
+    const odds = o.landNeighbor ? clamp((ratio - 1) / 2, 0, 1) : clamp((ratio - 2.5) / 4, 0, 1) * (o.neighbor ? 0.6 : 0.3); // amphibious war needs overwhelming superiority
     const cost = 0.35 + (hasCB ? 0 : 0.35) + nuke + 0.8 * (1 - c.gov.stability) + 0.4 * (c.econ.util < 0.95 ? 1 : 0) + 0.3 * (o.stab < 0.35 ? -1 : 0);
     const u = aggression * (value * odds * 2.2) - cost * 0.55;
     if (u > bu) { bu = u; best = o; }

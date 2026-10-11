@@ -1,0 +1,10 @@
+import { loadDataNode } from '../../app/js/sim/data.js';
+import { Sim } from '../../app/js/sim/world.js';
+const data = await loadDataNode();
+const sim = new Sim(data, { seed: 7, scenario: 'quiet_decade', player: 'USA' });
+sim.on((t, p) => { if (t === 'log' && ['war', 'peace'].includes(p.kind)) console.log(sim.calendar.format(p.day), p.text); });
+sim.advanceMonths(14);
+const w = sim.state.wars.find((x) => x.name.includes('Israel'));
+console.log(w && { start: w.start, end: w.end, reason: w.endReason, att: w.attackers, def: w.defenders });
+const isr = sim.country('ISR'), syr = sim.country('SYR');
+console.log('SYR regions', sim.geo.cRegions[syr.idx].map((r) => [r, sim.state.reg.owner[r], sim.state.reg.ctrl[r]]), 'ISR', sim.geo.cRegions[isr.idx].map((r) => [r, sim.state.reg.owner[r], sim.state.reg.ctrl[r]]));

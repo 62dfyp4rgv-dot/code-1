@@ -15,6 +15,7 @@
     {"id":"opec","name":"Oil Producers' Cartel (OPEC+)","type":"cartel","desc":"Coordinated oil output quotas.","members":["SAU","RUS","IRQ","IRN","ARE","KWT","NGA","DZA","LBY","VEN","AGO","GAB","GNQ","COG","KAZ","OMN","AZE","MYS"]},
     {"id":"un","name":"Global Assembly (UN-style)","type":"assembly","desc":"Universal membership body; Security Council with five permanent seats and veto.","members":["*"],"permanent":["USA","GBR","FRA","RUS","CHN"],"rotating":10}
   ],
+  "guarantees": [["USA","TWN"],["USA","UKR"],["GBR","UKR"],["POL","UKR"],["GRC","CYP"],["GBR","CYP"],["USA","XKX"],["USA","GUY"],["GBR","GUY"],["FRA","GEO"],["USA","GEO"]],
   "defensePacts": [
     ["USA","JPN"],["USA","KOR"],["USA","PHL"],["USA","AUS"],["AUS","NZL"],["RUS","PRK"],["CHN","PRK"],["FRA","GRC"],["TUR","AZE"],["USA","ISR"],["SAU","PAK"],["GBR","AUS"]
   ]

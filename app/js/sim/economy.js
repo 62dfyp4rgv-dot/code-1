@@ -184,7 +184,8 @@ export function finishEconomyInit(sim) {
     e.fxDepth = clamp((dev - 0.6) / 0.3, 0, 1) * (e.gdp > 1000 ? 1 : 0.5);
     e.nfa = e.ca0 * e.gdp * 8;
     e.reserves = e.gdp * e.openness * 0.5 / 12 * clamp(3 + 2 * dev + 80 * Math.max(0, e.ca0), 3, 30);
-    e.interest = e.debt * (0.025 + 0.02 * (1 - dev));
+    const yield0 = c.prof.rate0 !== undefined ? c.prof.rate0 + 0.005 : 0.025 + 0.02 * (1 - dev);
+    e.interest = e.debt * yield0;
     const deficit0 = clamp(0.025 - e.ca0 * 0.4, -0.04, 0.07) * e.gdp;
     const rentRev0 = e.stateShare * (e.Y[S.oil] + e.Y[S.gas] + e.Y[S.mining] * 0.5);
     const collect0 = 1 - 0.45 * c.gov.corruption;
@@ -193,7 +194,7 @@ export function finishEconomyInit(sim) {
     const taxNeeded = spend0 + e.interest - deficit0 - tariff0 * impVal - rentRev0;
     const taxRate0 = clamp(taxNeeded / (e.gdp * collect0), 0.05, 0.5);
     c.policy = {
-      taxRate: taxRate0, spendRate: spend0 / e.gdp, tariff: tariff0, policyRate: clamp(0.03 + 0.04 * (1 - dev) + (c.prof.pr || 0), 0.02, 0.15),
+      taxRate: taxRate0, spendRate: spend0 / e.gdp, tariff: tariff0, policyRate: c.prof.rate0 ?? clamp(0.03 + 0.04 * (1 - dev) + (c.prof.pr || 0), 0.02, 0.15),
       regulation: clamp(0.4 + 0.3 * dev, 0.1, 0.9), envRegulation: clamp(0.15 + 0.5 * dev, 0.05, 0.85), cleanPriority: clamp(0.15 + 0.4 * dev, 0.05, 0.8),
       immigration: clamp(0.35 + 0.2 * dev, 0.1, 0.8), pressFreedom: clamp(c.gov.dem / 100, 0.02, 0.98), surveillance: clamp(1 - c.gov.dem / 120, 0.1, 0.95), conscription: row.troops_k > 150 && row.mil_pct > 2.5 ? 1 : 0, focus: 'none',
       budget: Object.fromEntries(BUDGET_CATS.map((k) => [k, b[k] * e.gdp / spend0])),
@@ -216,14 +217,15 @@ export function finishEconomyInit(sim) {
     e.realRate0 = c.policy.policyRate - 0.03;
     e.nxTotal0 = nxTotal;
     // goods net exports (non-resource); resource part set after first clearing
-    e.cons = C0; e.exp = 0; e.imp = 0;
+    e.cons = C0; e.govC = govC0; e.exp = Math.max(0, nxTotal); e.imp = Math.max(0, -nxTotal);
     // social
     e.gini = clamp(0.28 + 0.2 * (1 - dev) + 0.06 * rnd2(c, 'g') + (row.region === 'caribbean' || row.region === 'south_america' || row.region === 'southern_africa' ? 0.08 : 0), 0.24, 0.65);
     e.poverty = clamp(0.5 * Math.pow(1 - dev, 3.2) + 0.03, 0.01, 0.75);
     e.hdi = hdiOf(c);
     e.resRev0 = rentRev0;
     e.pubK = e.pubK0 = 22.5 * b.infrastructure * e.gdp;
-    e.effYield = 0.025 + 0.02 * (1 - dev);
+    e.effYield = yield0;
+    e.rStar = c.prof.rstar ?? clamp(c.policy.policyRate - 0.042, -0.04, 0.12); /* neutral by construction: Taylor target equals the starting rate at t0 */ e.homeBias = c.prof.homeBias ?? 0;
     e.emis = emissionsOf(c);
   }
   sim.cal.normalCover = [0, 1, 2, 3].map((k) => state.countries.reduce((a, c) => a + c.econ.stock[k], 0) / state.countries.reduce((a, c) => a + c.econ.dem0[k], 0));
@@ -364,7 +366,7 @@ export function financeStep(sim, c, day) {
   const debtRatio = e.debt / Math.max(1, e.gdp);
   const reservesMonths = e.reserves / Math.max(1e-6, (impVal + goodsImp) / 12);
   e.reservesMonths = reservesMonths;
-  const premium = 0.006 + (0.045 - 0.032 * e.fxDepth) * Math.max(0, debtRatio - 0.5 - 0.5 * e.fxDepth) ** 1.3 + 0.1 * Math.max(0, 0.55 - c.gov.stability) + 0.35 * Math.max(0, e.infl - 0.05) + 0.03 * Math.max(0, 3 * (1 - 0.7 * e.fxDepth) - reservesMonths) / 3 + 0.01 * (1 - c.dev0) + modv(c, 'invest.conf') * -0.02;
+  const premium = 0.006 + (1 - (e.homeBias || 0)) * (0.045 - 0.032 * e.fxDepth) * Math.max(0, debtRatio - 0.5 - 0.5 * e.fxDepth) ** 1.3 + 0.1 * Math.max(0, 0.55 - c.gov.stability) + 0.35 * Math.max(0, e.infl - 0.05) + 0.03 * Math.max(0, 3 * (1 - 0.7 * e.fxDepth) - reservesMonths) / 3 + 0.01 * (1 - c.dev0) + modv(c, 'invest.conf') * -0.02;
   e.risk = premium;
   const y = p.policyRate + premium;
   e.bondYield = y;
@@ -417,14 +419,16 @@ export function financeStep(sim, c, day) {
   const cost = (e.wOil * dp(1) + e.wGas * dp(2) + e.wFood * dp(0) * 0.6) * 12 * 0.3 * (0.5 + 0.5 * (b.subsidies * p.spendRate > e.fiscal0.subsidies ? 0.5 : 1));
   for (let k = 0; k < 4; k++) e.priceLast[k] = prices[k];
   const fx = -0.3 * Math.log(e.rer / Math.max(0.01, e.rerPrev || e.rer)) * 12 * e.openness;
-  const pull = 0.6 * (util - 1);
+  const pull = (util < 1 ? 0.3 : 0.6) * (util - 1); // flatter Phillips curve in slack
   const shortage = 0.04 * (e.shortage[0] + e.shortage[1] * 0.7 + e.shortage[2] * 0.5);
   const moneyPress = 0.8 * (monet / Math.max(1, e.gdp));
   const tight = -0.25 * (realRate - e.realRate0);
   const target = e.inflExp + cost + pull + fx + shortage + moneyPress + tight + modv(c, 'infl.add');
   const prevInfl = e.infl;
-  e.infl = clamp(e.infl + 0.28 * (target - e.infl), -0.05, 2.5);
-  e.inflExp = clamp(e.inflExp + (0.04 + 0.05 * (1 - e.cbIndep)) * (e.infl - e.inflExp) + 0.012 * e.cbIndep * (0.02 - e.inflExp), 0, 2);
+  // downward nominal rigidity: disinflation slows once inflation is near/below zero, so economies do not spiral into deflation
+  const step = target - e.infl, damp = step < 0 ? clamp(0.35 + 0.65 * (e.infl + 0.01) / 0.03, 0.35, 1) : 1;
+  e.infl = clamp(e.infl + 0.28 * damp * step, -0.05, 2.5);
+  e.inflExp = clamp(e.inflExp + (0.04 + 0.05 * (1 - e.cbIndep)) * (e.infl - e.inflExp) + 0.025 * e.cbIndep * (0.02 - e.inflExp), 0, 2);
   e.cpi *= 1 + e.infl / 12;
   // ---- labour market ----
   e.unemp = clamp(e.uNat + 0.6 * Math.max(0, 1 - util) - 0.25 * Math.max(0, util - 1) + 0.5 * e.warLoss * 0.2, 0.01, 0.65);
@@ -438,7 +442,7 @@ export function financeStep(sim, c, day) {
 // central bank rule (independent of government if cbIndep high). Writes c.target.policyRate; lag applied in policy step.
 export function centralBankStep(c) {
   const e = c.econ;
-  const taylor = 0.015 + e.inflExp + 1.2 * (e.infl - 0.02) + 1.5 * (e.util - 1);
+  const taylor = (e.rStar ?? 0.015) + e.inflExp + 1.2 * (e.infl - 0.02) + 1.5 * (e.util - 1);
   const tr = clamp(taylor, -0.005, 0.3);
   const w = 0.6 + 0.3 * e.cbIndep;
   c.target.policyRate = clamp(c.target.policyRate + w * 0.5 * (tr - c.target.policyRate), -0.005, 0.5);

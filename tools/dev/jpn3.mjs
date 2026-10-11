@@ -1,0 +1,4 @@
+import { loadDataNode } from '../../app/js/sim/data.js';
+import { Sim } from '../../app/js/sim/world.js';
+const data = await loadDataNode(); const sim = new Sim(data, { seed: 107, scenario: 'quiet_decade', player: 'USA' }); const i = sim.geo.idOf[process.argv[2]];
+for (let m = 0; m < 40; m++) { sim.advanceMonths(1); if (m % 2) continue; const c = sim.state.countries[i], e = c.econ; console.log(sim.calendar.format(sim.state.day), 'gdp', e.gdp.toFixed(0), 'util', e.util.toFixed(3), 'risk', (e.risk*100).toFixed(1), 'yld', (e.bondYield*100).toFixed(1), 'eff', (e.effYield*100).toFixed(1), 'mc', e.marketClosed?1:0, 'int', (e.interest/e.gdp*100).toFixed(1), 'def', (e.deficit/e.gdp*100).toFixed(1), 'debt', (e.debt/e.gdp*100).toFixed(0), 'rer', e.rer.toFixed(2), 'stab', c.gov.stability.toFixed(2), 'conf', e.conf?.toFixed?.(2), 'credit', e.credit?.toFixed?.(2), 'Ipriv', (e.inv/e.gdp).toFixed(3), 'res', e.reservesMonths.toFixed(1)); }

@@ -421,7 +421,7 @@ function landPhase(sim, day) {
     const airSup = airSuperiority(sim, mainOwner, defCountry, T);
     const air = 1 + 0.22 * airSup + 0.08 * Math.min(1, wingsNear(sim, mainOwner, T).ground / 4);
     const link = geo.regions[atk[0].loc].adj.find((a) => a.to === T);
-    const strait = link && link.strait ? Math.max(0.35, 0.8 - 0.1 * link.gap) : 1;
+    const strait = link && link.strait ? Math.max(0.22, 0.5 - 0.08 * link.gap) : 1; // opposed landing: much harder than an overland advance
     if (link && link.strait && link.gap >= 3 && !sim.forcesOf[mainOwner].some((x) => x.branch === 'sea' && x.size > 0.3)) { for (const f of atk) f.order = { kind: 'hold', target: -1 }; continue; }
     A *= combinedArms * (1 + Math.min(0.25, prepAvg * 0.012)) * terr.attack * air * strait;
     // defender strength
