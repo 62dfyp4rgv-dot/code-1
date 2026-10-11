@@ -254,20 +254,24 @@ for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     if (r2 && s) { if (!coastal.has(r2)) coastal.set(r2, new Map()); coastal.get(r2).set(s, (coastal.get(r2).get(s) || 0) + 1); }
   }
 }
-// narrow-strait links: land cells within 2 cells across water belonging to a different region and not already adjacent
-const strait = new Map();
+// narrow-strait links: land cells within 4 cells (~220 km) across water in a different region, not already adjacent.
+// Stored with the minimum gap (in cells); gap<=2 are short ferry/strait links, 3-4 need real sealift.
+const R = 4;
+const strait = new Map(); // key -> {n, gap}
 for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
   const r = cellRegion[y * W + x]; if (!r) continue;
-  for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) {
-    const nx = x + dx, ny = y + dy; if (nx < 0 || nx >= W || ny < 0 || ny >= H || (Math.abs(dx) < 2 && Math.abs(dy) < 2)) continue;
+  for (let dy = -R; dy <= R; dy++) for (let dx = -R; dx <= R; dx++) {
+    const nx = x + dx, ny = y + dy; if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
+    const gap = Math.max(Math.abs(dx), Math.abs(dy)); if (gap < 2) continue;
     const r2 = cellRegion[ny * W + nx]; if (!r2 || r2 === r) continue;
     const key = r < r2 ? `${r}-${r2}` : `${r2}-${r}`;
-    if (!landAdj.has(key)) strait.set(key, (strait.get(key) || 0) + 1);
+    if (landAdj.has(key)) continue;
+    const e = strait.get(key) || { n: 0, gap: 99 }; e.n++; e.gap = Math.min(e.gap, gap); strait.set(key, e);
   }
 }
 const adj = [];
 for (const [k, e] of landAdj) { const [a, b] = k.split('-').map(Number); if (e.border >= 1) adj.push([a, b, Math.round(e.border), 0]); }
-for (const [k, n] of strait) { const [a, b] = k.split('-').map(Number); if (n >= 2) adj.push([a, b, n, 1]); }
+for (const [k, e] of strait) { const [a, b] = k.split('-').map(Number); if (e.n >= 2) adj.push([a, b, e.n, e.gap]); }
 const coast = [];
 for (const [r, m] of coastal) for (const [s, n] of m) if (n >= 1) coast.push([r, s, n]);
 const seaLinks = [...seaAdj].map(([k, e]) => { const [a, b] = k.split('-').map(Number); return [a, b, e.border]; });

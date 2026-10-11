@@ -1,0 +1,68 @@
+# id|branch|name|tier|cost(RP)|devReq|prereqs(comma)|effects(key:value,...)
+civ_mech_agri|civil|Mechanised Agriculture|1|80|0.15||tfp.agri:0.08
+civ_irrigation|civil|Efficient Irrigation|2|140|0.30|civ_mech_agri|tfp.agri:0.05,agri.water:0.12
+civ_precision_ag|civil|Precision Agriculture|3|300|0.55|civ_irrigation,cmp_cloud|tfp.agri:0.08,agri.water:0.10
+civ_egov|civil|Digital Government|2|150|0.35||tax.eff:0.04,admin.cap:0.06
+civ_smart_infra|civil|Smart Infrastructure|3|320|0.55|civ_egov,com_fiber|infra.eff:0.08
+civ_ai_admin|civil|AI-Assisted Administration|4|600|0.75|civ_egov,cmp_ai|admin.cap:0.10,tax.eff:0.04
+civ_urban_transit|civil|Mass Transit Systems|2|160|0.40||infra.eff:0.05,tfp.services:0.02
+civ_education_reform|civil|Education Reform|2|140|0.30||edu.rate:0.004
+civ_digital_edu|civil|Digital Education|3|280|0.50|civ_education_reform,com_fiber|edu.rate:0.004,research.eff:0.04
+ind_automation|industrial|Industrial Automation|1|100|0.25||tfp.industry:0.07
+ind_adv_mfg|industrial|Advanced Manufacturing|3|320|0.55|ind_automation|tfp.industry:0.08
+ind_robotics|industrial|Robotics Integration|4|600|0.75|ind_adv_mfg,cmp_ai|tfp.industry:0.10
+ind_semicon|industrial|Semiconductor Fabrication|3|400|0.60|ind_automation|tfp.tech:0.10
+ind_logistics|industrial|Logistics Networks|2|150|0.35||trade.eff:0.06,mil.logi:0.04
+ind_materials|industrial|Advanced Materials|3|300|0.55|ind_automation|tfp.mining:0.05,tfp.industry:0.03
+ind_extraction|industrial|Mechanised Mining|1|90|0.20||tfp.mining:0.08
+ind_deep_mining|industrial|Deep and Remote Extraction|3|320|0.55|ind_extraction|tfp.mining:0.08,tfp.oil:0.05
+ind_recycling|industrial|Industrial Recycling|3|260|0.50|ind_materials|min.recycle:0.10
+med_primary|medical|Primary Care Networks|1|90|0.20||health.rate:0.004
+med_sanitation|medical|Water and Sanitation Systems|1|80|0.10||health.rate:0.005,epid.resp:0.05
+med_vaccines|medical|Vaccine Platforms|2|200|0.40|med_primary|epid.resp:0.20,health.rate:0.002
+med_biotech|medical|Biotechnology|3|380|0.60|med_vaccines|tfp.tech:0.04,health.rate:0.003
+med_telehealth|medical|Telehealth|2|160|0.40|com_fiber|health.rate:0.003
+med_genomics|medical|Genomic Medicine|4|650|0.78|med_biotech,cmp_ai|health.rate:0.004,tfp.tech:0.04
+en_grid|energy|Modern Power Grid|1|100|0.25||tfp.utilities:0.06
+en_solar|energy|Utility-Scale Solar|2|180|0.40|en_grid|energy.clean_rate:0.012
+en_wind|energy|Wind Power|2|180|0.40|en_grid|energy.clean_rate:0.010
+en_storage|energy|Grid Storage|3|340|0.55|en_solar|energy.clean_rate:0.012,tfp.utilities:0.03
+en_nuclear_adv|energy|Advanced Nuclear|4|700|0.70|en_grid|energy.clean_rate:0.015,tfp.utilities:0.04
+en_efficiency|energy|Efficiency Standards|2|150|0.35||energy.eff:0.06
+en_hydrogen|energy|Green Hydrogen|4|620|0.72|en_storage|energy.clean_rate:0.010,emis.int:0.05
+en_unconv|energy|Unconventional Hydrocarbons|2|200|0.45||tfp.oil:0.08,tfp.gas:0.08
+en_lng|energy|LNG Value Chain|2|180|0.40||trade.eff:0.03,tfp.gas:0.04
+en_ccs|energy|Carbon Capture|4|560|0.70|en_efficiency|emis.int:0.10
+cmp_cloud|computing|Cloud Infrastructure|2|180|0.45||tfp.services:0.05
+cmp_ai|computing|Applied Machine Learning|3|420|0.62|cmp_cloud|tfp.tech:0.08,tfp.services:0.04,research.eff:0.06
+cmp_cybersec|computing|Cybersecurity Practices|2|200|0.45|cmp_cloud|cyber.def:0.15
+cmp_datacenters|computing|Data Centre Capacity|3|320|0.58|cmp_cloud|tfp.tech:0.05
+cmp_hpc|computing|High-Performance Computing|3|360|0.60|cmp_cloud|research.eff:0.08
+cmp_quantum|computing|Quantum-Safe Systems|5|1100|0.85|cmp_ai,cmp_cybersec|cyber.def:0.20,tfp.tech:0.06
+int_analytics|computing|Intelligence Analytics|3|340|0.58|cmp_ai|intel.eff:0.12
+com_mobile|communications|Mobile Broadband|1|90|0.25||tfp.services:0.03
+com_fiber|communications|Fibre Backbone|2|170|0.40|com_mobile|tfp.services:0.03,infra.eff:0.02
+com_5g|communications|Advanced Wireless|3|300|0.55|com_fiber|tfp.industry:0.03,mil.logi:0.03
+com_satcom|communications|Satellite Constellations|4|560|0.70|com_5g|mil.recon:0.08,mil.logi:0.04,trade.eff:0.02
+com_secure|communications|Secure Communications|2|180|0.45|com_mobile|ci.eff:0.10
+com_media|communications|Information Integrity Tools|3|260|0.55|com_secure|info.def:0.15
+mil_combined|military|Combined-Arms Doctrine|1|110|0.30||mil.land:0.08
+mil_armor|military|Modern Armour|2|220|0.45|mil_combined|mil.land:0.08
+mil_precision|military|Precision Munitions|3|400|0.60|mil_combined|mil.land:0.05,mil.air:0.05,mil.sea:0.05
+mil_airdef|military|Integrated Air Defence|3|380|0.58||mil.air_def:0.15
+mil_stealth|military|Low-Observable Aircraft|4|750|0.78|mil_precision|mil.air:0.12
+mil_drones|military|Uncrewed Systems|3|320|0.55|com_mobile|mil.recon:0.06,mil.land:0.04,mil.air:0.04
+mil_naval|military|Modern Surface Fleet|2|220|0.45||mil.sea:0.08
+mil_subs|military|Quiet Submarines|3|420|0.62|mil_naval|mil.sea:0.10
+mil_logi_auto|military|Automated Military Logistics|3|340|0.55|ind_logistics|mil.logi:0.10
+mil_c4i|military|Networked Command (C4I)|3|380|0.60|com_secure|mil.recon:0.08,mil.land:0.03
+mil_ew|military|Electronic Warfare|3|340|0.58|mil_airdef|mil.air_def:0.08,mil.recon:0.04
+mil_cyber_ops|military|Cyber Operations Units|3|360|0.58|cmp_cybersec|mil.cyber_off:0.15
+mil_reserves|military|Reserve Mobilisation System|1|90|0.25||mil.mobil:0.15
+mil_hypersonic|military|Hypersonic Strike|5|1000|0.85|mil_precision|mil.air:0.08,mil.sea:0.05
+mil_missile_def|military|Strategic Missile Defence|4|800|0.78|mil_airdef|mil.air_def:0.10
+env_climate_adapt|environment|Climate Adaptation|2|180|0.40||disaster.resil:0.15
+env_water_tech|environment|Desalination and Reuse|2|220|0.45||agri.water:0.10,water.supply:0.15
+env_carbon|environment|Carbon Markets|3|260|0.55|en_efficiency|emis.int:0.06
+env_circular|environment|Circular Economy|3|280|0.55|ind_recycling|min.recycle:0.06,emis.int:0.04
+env_reforest|environment|Land Restoration|2|150|0.35||tfp.agri:0.02,disaster.resil:0.05

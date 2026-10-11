@@ -1,0 +1,203 @@
+{
+  "meta": {"note": "Events fire from simulation conditions (stat paths) with a mean time to happen in months. Effects use a whitelisted vocabulary validated by tools/validate-data.mjs."},
+  "events": [
+    {"id":"cost_of_living_protests","title":"Cost-of-living protests in {country}","text":"Rising prices have brought crowds into the streets of {country}. Unions and opposition parties demand action from {leader}.","when":[["econ.infl",">",0.075],["gov.approval","<",0.5]],"mtth":4,"cooldown":18,"severe":true,
+     "options":[
+       {"text":"Introduce price controls and subsidies","hint":"Costs money; eases inflation pressure on households","effects":[{"policy":{"key":"spendRate","add":0.01,"max":0.62}},{"stat":"gov.approval","add":0.04},{"mod":"unrest.add","add":-0.04,"months":6}],"aiWeight":1,"aiBias":{"econ.deficit":-6}},
+       {"text":"Tighten monetary policy and hold firm","hint":"Cools prices but hurts jobs","effects":[{"policy":{"key":"policyRate","add":0.01,"max":0.4}},{"stat":"gov.approval","add":-0.03},{"mod":"unrest.add","add":0.04,"months":4}],"aiWeight":1.2},
+       {"text":"Deploy police and ban demonstrations","hint":"Short-term order, long-term resentment","effects":[{"stat":"gov.stability","add":0.03},{"stat":"gov.legitimacy","add":-0.05},{"mod":"approval.add","add":-0.03,"months":6}],"if":[["policy.surveillance",">",0.4]],"aiWeight":0.6}],"defaultOption":1},
+    {"id":"strike_wave","title":"Strike wave across {country}","text":"Tight labour markets and rising costs trigger coordinated strikes in transport and manufacturing.","when":[["econ.unemp","<",0.065],["econ.infl",">",0.045],["gov.stability","<",0.8]],"mtth":10,"cooldown":24,
+     "options":[
+       {"text":"Concede wage increases","effects":[{"mod":"cons.conf","add":-0.01,"months":6},{"stat":"gov.approval","add":0.03},{"mod":"tfp.industry","add":-0.004,"months":8}],"aiWeight":1},
+       {"text":"Hold the line","effects":[{"mod":"gdp.shock","add":-0.01,"months":3},{"stat":"gov.approval","add":-0.02}],"aiWeight":1}]},
+    {"id":"corruption_scandal","title":"Corruption scandal rocks {country}","text":"Investigative reporting reveals kickbacks in public contracts linked to senior officials.","when":[["gov.corruption",">",0.45]],"mtth":14,"cooldown":30,
+     "options":[
+       {"text":"Launch an independent inquiry","hint":"Costs political capital; improves governance","effects":[{"stat":"gov.pc","add":-10},{"stat":"gov.corruption","add":-0.04},{"stat":"gov.approval","add":0.02}],"if":[["policy.pressFreedom",">",0.3]],"aiWeight":0.8},
+       {"text":"Quietly bury the matter","effects":[{"stat":"gov.scandal","add":0.4},{"stat":"gov.corruption","add":0.02}],"aiWeight":1}],"defaultOption":1},
+    {"id":"constitutional_crisis","title":"Constitutional crisis in {country}","text":"Rival institutions dispute the limits of executive power; courts and legislature are at an impasse.","when":[["gov.stability","<",0.45],["gov.legitimacy","<",0.5],["gov.type","in",["lib_dem","flawed_dem","hybrid"]]],"mtth":6,"cooldown":36,"severe":true,
+     "options":[
+       {"text":"Negotiate a compromise","effects":[{"stat":"gov.legitimacy","add":0.06},{"stat":"gov.pc","add":-8},{"stat":"gov.stability","add":0.04}],"aiWeight":1.2},
+       {"text":"Press on with executive decrees","effects":[{"stat":"gov.pc","add":8},{"stat":"gov.legitimacy","add":-0.08},{"stat":"gov.unrest","add":0.05}],"aiWeight":0.7}]},
+    {"id":"coalition_crisis","title":"Government crisis in {country}","text":"The governing coalition fractures amid falling approval. Early elections are being demanded.","when":[["gov.approval","<",0.38],["gov.elect","==",1],["gov.monthsToElection",">",10]],"mtth":8,"cooldown":48,
+     "options":[
+       {"text":"Call early elections","effects":[{"log":"Early elections called in {country}"},{"stat":"gov.pc","add":5}],"aiWeight":0.6},
+       {"text":"Reshuffle the cabinet","effects":[{"stat":"gov.approval","add":0.03},{"stat":"gov.pc","add":-6}],"aiWeight":1.2}]},
+    {"id":"youth_unemployment_unrest","title":"Jobless youth take to the streets in {country}","text":"A large youth cohort faces few prospects; protests spread through university towns.","when":[["econ.unemp",">",0.09],["pop.youth",">",0.27]],"mtth":6,"cooldown":24,
+     "options":[
+       {"text":"Fund a national jobs and training programme","effects":[{"treasury":0.004,"pctGdp":true},{"mod":"unrest.add","add":-0.05,"months":12},{"stat":"pop.edu","add":0.004}],"aiWeight":1},
+       {"text":"Crack down on organisers","effects":[{"stat":"gov.stability","add":0.02},{"stat":"gov.legitimacy","add":-0.04}],"if":[["policy.surveillance",">",0.35]],"aiWeight":0.7},
+       {"text":"Do nothing","effects":[{"mod":"unrest.add","add":0.05,"months":6}],"aiWeight":0.4}]},
+    {"id":"coup_plot","title":"Officers plot against {leader}","text":"Senior officers are said to be consulting about removing the government.","when":[["gov.type","in",["military","hybrid","one_party","monarchy"]],["gov.stability","<",0.3]],"mtth":9,"cooldown":30,"severe":true,
+     "options":[
+       {"text":"Purge the officer corps","effects":[{"stat":"gov.stability","add":0.08},{"stat":"gov.legitimacy","add":-0.05},{"mil":{"readiness":-0.08}}],"aiWeight":1},
+       {"text":"Buy loyalty with budget and privileges","effects":[{"treasury":0.003,"pctGdp":true},{"stat":"gov.stability","add":0.05}],"aiWeight":1},
+       {"text":"Ignore the rumours","effects":[{"stat":"gov.stability","add":-0.06}],"aiWeight":0.3}]},
+    {"id":"regional_autonomy_demands","title":"Regional leaders demand autonomy in {country}","text":"Provincial governments argue for more control over taxes and resources.","when":[["econ.gini",">",0.42],["gov.stability","<",0.65]],"mtth":14,"cooldown":48,
+     "options":[
+       {"text":"Devolve powers","effects":[{"stat":"gov.stability","add":0.05},{"stat":"gov.pc","add":-5},{"policy":{"key":"taxRate","add":-0.005,"min":0.08}}],"aiWeight":1},
+       {"text":"Reject the demands","effects":[{"stat":"gov.unrest","add":0.05},{"stat":"gov.pc","add":4}],"aiWeight":1}]},
+    {"id":"banking_stress","title":"Banks under stress in {country}","text":"Rising defaults and falling asset prices threaten a credit crunch.","when":[["econ.util","<",0.96],["econ.debtRatio",">",0.7]],"mtth":14,"cooldown":36,"severe":true,
+     "options":[
+       {"text":"Bail out the banking sector","hint":"Adds public debt; protects credit","effects":[{"treasury":0.03,"pctGdp":true},{"stat":"econ.credit","add":0.1},{"stat":"gov.approval","add":-0.03}],"aiWeight":1.1},
+       {"text":"Let weak banks fail","hint":"Cheaper now, deeper recession","effects":[{"mod":"gdp.shock","add":-0.02,"months":8},{"stat":"econ.credit","add":-0.15},{"mod":"invest.conf","add":-0.05,"months":10}],"aiWeight":0.6}]},
+    {"id":"currency_run","title":"Currency under attack in {country}","text":"Reserves are thin and investors are pulling out of {country}.","when":[["econ.reservesMonths","<",1.5],["econ.ca","<",-0.02]],"mtth":4,"cooldown":24,"severe":true,
+     "options":[
+       {"text":"Hike rates sharply","effects":[{"policy":{"key":"policyRate","add":0.04,"max":0.5}},{"mod":"gdp.shock","add":-0.015,"months":6}],"aiWeight":1},
+       {"text":"Seek an international rescue loan with austerity","hint":"Reserves up; spending cut; unpopular","effects":[{"stat":"econ.reserves","add":6},{"policy":{"key":"spendRate","add":-0.02,"min":0.1}},{"stat":"gov.approval","add":-0.05}],"aiWeight":1.2},
+       {"text":"Impose capital controls","effects":[{"mod":"invest.conf","add":-0.08,"months":12},{"stat":"econ.reserves","add":2}],"aiWeight":0.5}]},
+    {"id":"commodity_windfall","title":"Commodity windfall for {country}","text":"Soaring export prices fill the treasury.","when":[["econ.resourceRent",">",0.25],["price.oil",">",1.25]],"mtth":6,"cooldown":24,
+     "options":[
+       {"text":"Save it in a sovereign fund","effects":[{"treasury":-0.02,"pctGdp":true},{"mod":"invest.conf","add":0.03,"months":12}],"aiWeight":1},
+       {"text":"Spend on popular programmes","effects":[{"stat":"gov.approval","add":0.05},{"stat":"gov.corruption","add":0.02},{"policy":{"key":"spendRate","add":0.01,"max":0.62}}],"aiWeight":1}]},
+    {"id":"sovereign_downgrade","title":"Rating downgrade for {country}","text":"Agencies warn that the debt trajectory is unsustainable.","when":[["econ.debtRatio",">",1.1],["econ.risk",">",0.04]],"mtth":8,"cooldown":30,
+     "options":[
+       {"text":"Announce a consolidation plan","effects":[{"policy":{"key":"spendRate","add":-0.015,"min":0.1}},{"policy":{"key":"taxRate","add":0.01,"max":0.5}},{"stat":"gov.approval","add":-0.04},{"mod":"invest.conf","add":0.03,"months":12}],"aiWeight":1.2},
+       {"text":"Defy the markets","effects":[{"stat":"gov.approval","add":0.02},{"mod":"invest.conf","add":-0.04,"months":12}],"aiWeight":0.5}]},
+    {"id":"food_price_spike","title":"Food prices spike in {country}","text":"Poor harvests and global prices push staples out of reach.","when":[["price.food",">",1.3],["econ.shortage.food",">",0.02]],"mtth":4,"cooldown":18,
+     "options":[
+       {"text":"Subsidise staples and release reserves","effects":[{"policy":{"key":"spendRate","add":0.008,"max":0.62}},{"stat":"gov.approval","add":0.03}],"aiWeight":1},
+       {"text":"Rely on markets","effects":[{"mod":"unrest.add","add":0.05,"months":6},{"stat":"pop.health","add":-0.005}],"aiWeight":0.6}]},
+    {"id":"rolling_blackouts","title":"Rolling blackouts hit {country}","text":"Fuel shortages force the grid operator to ration electricity.","when":[["econ.shortage.gas",">",0.04]],"mtth":3,"cooldown":12,"severe":true,
+     "options":[
+       {"text":"Emergency fuel purchases at any price","effects":[{"treasury":0.004,"pctGdp":true},{"mod":"gdp.shock","add":-0.004,"months":2}],"aiWeight":1},
+       {"text":"Mandate conservation","effects":[{"mod":"gdp.shock","add":-0.012,"months":3},{"stat":"gov.approval","add":-0.03}],"aiWeight":1}]},
+    {"id":"fuel_shortage","title":"Fuel shortages in {country}","text":"Queues form at filling stations as imports fall short.","when":[["econ.shortage.oil",">",0.04]],"mtth":3,"cooldown":12,"severe":true,
+     "options":[
+       {"text":"Ration fuel","effects":[{"stat":"gov.approval","add":-0.03},{"mod":"gdp.shock","add":-0.008,"months":3}],"aiWeight":1},
+       {"text":"Draw on strategic reserves","effects":[{"treasury":0.002,"pctGdp":true},{"stat":"gov.approval","add":0.01}],"aiWeight":1}]},
+    {"id":"energy_exporter_boom","title":"Energy boom in {country}","text":"High gas and oil prices lift export earnings and invite new investment.","when":[["econ.netExport.oil",">",0.04],["price.oil",">",1.35]],"mtth":8,"cooldown":30,
+     "options":[
+       {"text":"Reinvest in exploration","effects":[{"mod":"tfp.oil","add":0.02,"months":18},{"mod":"invest.conf","add":0.02,"months":12}],"aiWeight":1},
+       {"text":"Distribute dividends to citizens","effects":[{"stat":"gov.approval","add":0.04},{"mod":"cons.conf","add":0.01,"months":6}],"aiWeight":1}]},
+    {"id":"earthquake","title":"Major earthquake strikes {country}","text":"A powerful earthquake has devastated a populous region.","when":[["region","in",["east_asia","south_asia","middle_east","south_america","southeast_asia","central_asia","southern_europe"]]],"mtth":420,"cooldown":60,"severe":true,
+     "options":[
+       {"text":"Mobilise national reconstruction","effects":[{"devastate":0.12},{"infra":-0.03},{"treasury":0.012,"pctGdp":true},{"mod":"disaster.resil","add":0.02,"months":60},{"stat":"gov.approval","add":0.03}],"aiWeight":1.2},
+       {"text":"Appeal for international aid","effects":[{"devastate":0.12},{"infra":-0.03},{"treasury":0.006,"pctGdp":true},{"rel":{"with":"target","op":3}}],"aiWeight":1}]},
+    {"id":"severe_flooding","title":"Catastrophic floods in {country}","text":"Record rainfall inundates farmland and cities.","when":[["region","in",["southeast_asia","south_asia","east_asia","caribbean","central_africa","west_africa","east_africa","north_america","western_europe"]],["world.temp",">",1.25]],"mtth":110,"cooldown":30,"severe":true,
+     "options":[
+       {"text":"Fund relief and flood defences","effects":[{"mod":"gdp.shock","add":-0.01,"months":4},{"treasury":0.006,"pctGdp":true},{"mod":"disaster.resil","add":0.03,"months":60}],"aiWeight":1},
+       {"text":"Minimal relief","effects":[{"mod":"gdp.shock","add":-0.02,"months":6},{"stat":"gov.approval","add":-0.05},{"stat":"pop.health","add":-0.004}],"aiWeight":0.4}]},
+    {"id":"severe_drought","title":"Severe drought in {country}","text":"Reservoirs run low and harvests fail.","when":[["econ.drought",">",0.45],["econ.waterStress",">",0.35]],"mtth":5,"cooldown":24,
+     "options":[
+       {"text":"Emergency water and farm support","effects":[{"treasury":0.005,"pctGdp":true},{"mod":"tfp.agri","add":0.01,"months":8},{"stat":"gov.approval","add":0.01}],"aiWeight":1},
+       {"text":"Let markets adjust","effects":[{"mod":"tfp.agri","add":-0.03,"months":8},{"mod":"unrest.add","add":0.03,"months":8}],"aiWeight":0.6}]},
+    {"id":"heatwave","title":"Deadly heatwave over {country}","text":"Record temperatures strain hospitals and the power grid.","when":[["world.temp",">",1.3]],"mtth":60,"cooldown":18,
+     "options":[
+       {"text":"Activate emergency health response","effects":[{"treasury":0.002,"pctGdp":true},{"stat":"pop.health","add":-0.001}],"aiWeight":1},
+       {"text":"Ride it out","effects":[{"stat":"pop.health","add":-0.006},{"stat":"gov.approval","add":-0.03}],"aiWeight":0.5}]},
+    {"id":"pandemic_outbreak","scope":"world","title":"A novel pathogen emerges","mtth":420,"when":[["world.pandemic","==",0]],"effects":[{"pandemic":{"name":"Novel respiratory virus","r0":2.6,"ifr":0.004}}]},
+    {"id":"pandemic_response","title":"Pandemic response in {country}","text":"A new virus is spreading in {country}. How will {leader} respond?","when":[["world.pandemic","==",1],["flag.pandemicChoice","==",0]],"mtth":2,"cooldown":18,"severe":true,
+     "options":[
+       {"text":"Strict lockdown and testing","hint":"Saves lives, costs output","effects":[{"flag":"lockdown","days":120},{"flag":"pandemicChoice","days":300},{"stat":"gov.approval","add":-0.02}],"aiWeight":1},
+       {"text":"Targeted measures","effects":[{"flag":"pandemicChoice","days":300},{"mod":"epid.resp","add":0.0,"months":1}],"aiWeight":1.3},
+       {"text":"Minimal restrictions","effects":[{"flag":"pandemicChoice","days":300},{"stat":"pop.health","add":-0.004}],"aiWeight":0.5}]},
+    {"id":"border_incident","title":"Border incident with {target}","text":"Troops of {country} and {target} have exchanged fire along a disputed frontier.","when":[["gov.stability",">",0.1]],"target":"neighbor","whenTarget":[["target.rivalry",">",35]],"mtth":18,"cooldown":18,"severe":true,
+     "options":[
+       {"text":"Escalate: demonstrate resolve","effects":[{"rel":{"with":"target","op":-15,"trust":-10}},{"cb":true,"days":240},{"stat":"gov.approval","add":0.03},{"mil":{"readiness":0.05}}],"aiWeight":0.8,"aiBias":{"mil.readiness":0.3}},
+       {"text":"De-escalate through the hotline","effects":[{"rel":{"with":"target","op":6,"trust":8}},{"stat":"gov.approval","add":-0.02}],"aiWeight":1.3}]},
+    {"id":"trade_dispute","title":"Trade dispute with {target}","text":"{target} has raised tariffs on exports from {country}.","when":[["policy.tariff",">",0.0]],"target":"partner","whenTarget":[["target.opinion","<",30]],"mtth":40,"cooldown":24,
+     "options":[
+       {"text":"Retaliate with tariffs","effects":[{"policy":{"key":"tariff","add":0.01,"max":0.35}},{"rel":{"with":"target","op":-5}}],"aiWeight":0.8},
+       {"text":"Negotiate","effects":[{"rel":{"with":"target","op":3,"trust":3}},{"mod":"gdp.shock","add":-0.002,"months":3}],"aiWeight":1.2}]},
+    {"id":"diplomatic_overture","title":"Overture from {target}","text":"{target} proposes closer commercial ties with {country}.","when":[["dip.influence",">",5]],"target":"partner","whenTarget":[["target.theirOpinion",">",25]],"mtth":30,"cooldown":30,
+     "options":[
+       {"text":"Sign a trade agreement","effects":[{"treaty":"trade_agreement"},{"rel":{"with":"target","op":6,"trust":6}}],"aiWeight":1.5},
+       {"text":"Politely decline","effects":[{"rel":{"with":"target","op":-1}}],"aiWeight":0.5}]},
+    {"id":"summit_invitation","title":"Invitation to an international summit","text":"{country} is invited to a high-level summit on economic coordination.","when":[["dev",">",0.45],["dip.influence",">",5]],"mtth":36,"cooldown":36,
+     "options":[
+       {"text":"Attend and lead a working group","effects":[{"stat":"dip.influence","add":8},{"stat":"dip.credibility","add":2},{"stat":"gov.pc","add":-4}],"aiWeight":1},
+       {"text":"Send a junior delegation","effects":[{"stat":"dip.influence","add":2}],"aiWeight":1}]},
+    {"id":"refugee_surge","title":"Refugees arrive from {target}","text":"War in {target} drives thousands across the border into {country}.","when":[["gov.stability",">",0.1]],"target":"neighbor","whenTarget":[["target.atWar","==",1],["target.exhaustion",">",0.3]],"mtth":6,"cooldown":18,
+     "options":[
+       {"text":"Welcome and resettle","effects":[{"refugees":0.15},{"treasury":0.002,"pctGdp":true},{"rel":{"with":"target","op":4}},{"stat":"gov.approval","add":-0.01}],"aiWeight":1},
+       {"text":"Close the border","effects":[{"stat":"gov.approval","add":0.015},{"stat":"dip.credibility","add":-1}],"aiWeight":1}]},
+    {"id":"research_breakthrough","title":"Scientific breakthrough in {country}","text":"Researchers at national laboratories announce a major advance.","when":[["research.idx",">",0.35]],"mtth":36,"cooldown":24,
+     "options":[
+       {"text":"Commercialise it quickly","effects":[{"mod":"tfp.tech","add":0.03,"months":24},{"stat":"gov.approval","add":0.01}],"aiWeight":1.2},
+       {"text":"Invest in basic research","effects":[{"research":40},{"stat":"pop.edu","add":0.003}],"aiWeight":1}]},
+    {"id":"brain_drain","title":"Brain drain from {country}","text":"Skilled workers leave for better prospects abroad.","when":[["pop.edu",">",0.6],["econ.unemp",">",0.08],["gov.stability","<",0.6]],"mtth":14,"cooldown":30,
+     "options":[
+       {"text":"Offer retention incentives","effects":[{"treasury":0.002,"pctGdp":true},{"mod":"tfp.tech","add":0.004,"months":12}],"aiWeight":1},
+       {"text":"Accept the loss","effects":[{"mod":"tfp.tech","add":-0.01,"months":18}],"aiWeight":0.8}]},
+    {"id":"ransomware_wave","title":"Ransomware wave hits {country}","text":"Hospitals and municipal services are paralysed by criminal cyber attacks.","when":[["cyber.disruption",">",0.25]],"mtth":6,"cooldown":18,"severe":true,
+     "options":[
+       {"text":"Fund a national cyber-resilience programme","effects":[{"treasury":0.002,"pctGdp":true},{"mod":"cyber.def","add":0.04,"months":36}],"aiWeight":1.2},
+       {"text":"Leave it to victims","effects":[{"mod":"gdp.shock","add":-0.005,"months":3}],"aiWeight":0.6}]},
+    {"id":"disinformation_surge","title":"Disinformation surge in {country}","text":"Coordinated fake accounts inflame public debate.","when":[["policy.pressFreedom",">",0.3],["gov.approval","<",0.55]],"mtth":24,"cooldown":24,
+     "options":[
+       {"text":"Invest in media literacy and fact-checking","effects":[{"mod":"info.def","add":0.04,"months":36},{"treasury":0.001,"pctGdp":true}],"aiWeight":1},
+       {"text":"Pass emergency content restrictions","effects":[{"stat":"gov.stability","add":0.02},{"policy":{"key":"pressFreedom","add":-0.05}},{"stat":"gov.legitimacy","add":-0.02}],"if":[["policy.pressFreedom",">",0.2]],"aiWeight":0.6}]},
+    {"id":"pension_pressure","title":"Pension system under strain in {country}","text":"An ageing population strains public finances.","when":[["pop.elder",">",0.18],["econ.deficit",">",0.03]],"mtth":14,"cooldown":48,
+     "options":[
+       {"text":"Raise the retirement age","effects":[{"policy":{"key":"spendRate","add":-0.008,"min":0.1}},{"stat":"gov.approval","add":-0.05},{"mod":"unrest.add","add":0.03,"months":8}],"aiWeight":1},
+       {"text":"Raise payroll taxes","effects":[{"policy":{"key":"taxRate","add":0.01,"max":0.5}},{"stat":"gov.approval","add":-0.02}],"aiWeight":1},
+       {"text":"Defer the problem","effects":[{"stat":"gov.approval","add":0.01}],"aiWeight":0.5}]},
+    {"id":"low_fertility_debate","title":"Falling birth rate prompts debate in {country}","text":"Demographers warn of a shrinking workforce.","when":[["pop.fertility","<",1.5]],"mtth":30,"cooldown":60,
+     "options":[
+       {"text":"Introduce family support and childcare","effects":[{"policy":{"key":"spendRate","add":0.004,"max":0.62}},{"stat":"gov.approval","add":0.02}],"aiWeight":1},
+       {"text":"Open the door to immigration","effects":[{"policy":{"key":"immigration","add":0.1}},{"stat":"gov.approval","add":-0.02}],"aiWeight":1}]},
+    {"id":"healthcare_strain","title":"Healthcare strain in {country}","text":"Waiting lists lengthen and clinics close.","when":[["pop.health","<",0.6],["pop.elder",">",0.1]],"mtth":18,"cooldown":36,
+     "options":[
+       {"text":"Increase health funding","effects":[{"policy":{"key":"spendRate","add":0.006,"max":0.62}},{"stat":"pop.health","add":0.01}],"aiWeight":1},
+       {"text":"Encourage private provision","effects":[{"stat":"econ.credit","add":0.0},{"stat":"gov.approval","add":-0.02},{"mod":"cons.conf","add":0.005,"months":6}],"aiWeight":0.7}]},
+    {"id":"inequality_backlash","title":"Inequality backlash in {country}","text":"Rising inequality fuels populist politics and street mobilisation.","when":[["econ.gini",">",0.5],["gov.approval","<",0.55]],"mtth":14,"cooldown":36,
+     "options":[
+       {"text":"Redistribute through taxes and welfare","effects":[{"policy":{"key":"taxRate","add":0.01,"max":0.5}},{"policy":{"key":"spendRate","add":0.006,"max":0.62}},{"stat":"gov.stability","add":0.03}],"aiWeight":1},
+       {"text":"Defend the status quo","effects":[{"mod":"unrest.add","add":0.04,"months":10}],"aiWeight":0.8}]},
+    {"id":"war_weariness_protests","title":"War-weariness protests in {country}","text":"Casualty lists lengthen and families demand answers.","when":[["mil.atWar","==",1],["mil.exhaustion",">",0.45]],"mtth":4,"cooldown":12,"severe":true,
+     "options":[
+       {"text":"Stay the course","effects":[{"stat":"gov.approval","add":-0.03},{"mod":"unrest.add","add":0.03,"months":4}],"aiWeight":1},
+       {"text":"Open peace channels","effects":[{"mil":{"exhaustion":-0.06}},{"stat":"gov.approval","add":0.02}],"aiWeight":1.1}]},
+    {"id":"occupation_resistance","title":"Resistance in occupied territory of {country}","text":"Partisans and strikes disrupt the occupier in regions of {country}.","when":[["mil.occupied",">",0.05]],"mtth":6,"cooldown":12,
+     "options":[
+       {"text":"Support the resistance covertly","effects":[{"mod":"stab.add","add":0.02,"months":6},{"stat":"intel.points","add":-5}],"aiWeight":1},
+       {"text":"Focus on the regular front","effects":[],"aiWeight":1}]},
+    {"id":"arms_offer","title":"Arms offer to {country}","text":"A foreign supplier offers advanced equipment at a discount.","when":[["dev",">",0.2]],"target":"partner","whenTarget":[["target.theirOpinion",">",20]],"mtth":40,"cooldown":30,
+     "options":[
+       {"text":"Buy the package","effects":[{"treasury":0.004,"pctGdp":true},{"mil":{"readiness":0.04}},{"rel":{"with":"target","op":4}}],"aiWeight":1},
+       {"text":"Decline","effects":[],"aiWeight":1}]},
+    {"id":"climate_pledge","title":"Climate summit calls for pledges","text":"Global temperatures keep rising. {country} is asked to raise its ambitions.","when":[["world.temp",">",1.3],["dev",">",0.35]],"mtth":30,"cooldown":48,
+     "options":[
+       {"text":"Pledge accelerated decarbonisation","effects":[{"policy":{"key":"cleanPriority","add":0.1}},{"stat":"dip.credibility","add":2},{"stat":"gov.approval","add":-0.01}],"aiWeight":1},
+       {"text":"Hold to current targets","effects":[{"stat":"dip.credibility","add":-1}],"aiWeight":1}]},
+    {"id":"oil_discovery","title":"Offshore energy discovery in {country}","text":"Exploration reveals significant reserves.","when":[["dev",">",0.1],["econ.drought","<",2]],"mtth":380,"cooldown":120,
+     "options":[
+       {"text":"Develop it with foreign partners","effects":[{"mod":"tfp.oil","add":0.06,"months":60},{"mod":"tfp.gas","add":0.06,"months":60},{"mod":"invest.conf","add":0.03,"months":24}],"aiWeight":1}]},
+    {"id":"mineral_discovery","title":"Critical-mineral discovery in {country}","text":"Surveys confirm large deposits of strategic minerals.","when":[["dev",">",0.05]],"mtth":300,"cooldown":120,
+     "options":[
+       {"text":"License to international miners","effects":[{"mod":"tfp.mining","add":0.08,"months":72},{"rel":{"with":"target","op":0}}],"aiWeight":1},
+       {"text":"Develop under state control","effects":[{"mod":"tfp.mining","add":0.05,"months":72},{"stat":"gov.corruption","add":0.01}],"aiWeight":1}]},
+    {"id":"leader_health","title":"{leader} steps down","text":"Citing health reasons, {leader} leaves office; a successor is named.","when":[["gov.type","in",["monarchy","one_party","theocracy","military"]]],"mtth":700,"cooldown":120,"auto":true,"effects":[{"newLeader":true},{"stat":"gov.stability","add":-0.03}]},
+    {"id":"tech_adoption_boom","title":"Digital investment boom in {country}","text":"Businesses pour money into automation and cloud services.","when":[["gdp.growth",">",0.025],["dev",">",0.4],["econ.infl","<",0.05]],"mtth":40,"cooldown":48,
+     "options":[
+       {"text":"Back it with tax incentives","effects":[{"mod":"tfp.tech","add":0.03,"months":24},{"mod":"tfp.services","add":0.01,"months":24},{"policy":{"key":"taxRate","add":-0.004,"min":0.08}}],"aiWeight":1},
+       {"text":"Leave it to the market","effects":[{"mod":"tfp.tech","add":0.015,"months":18}],"aiWeight":1}]},
+    {"id":"gas_price_spike_world","scope":"world","title":"Gas market disruption pushes prices up","mtth":150,"effects":[{"price":"gas","mul":1.45},{"price":"oil","mul":1.1}]},
+    {"id":"oil_supply_shock_world","scope":"world","title":"Oil supply disruption","mtth":170,"effects":[{"price":"oil","mul":1.35},{"chokepoint":{"id":"hormuz","close":0.2}}]},
+    {"id":"cartel_cut_world","scope":"world","title":"Producers' cartel announces output cuts","mtth":120,"when":[["price.oil","<",0.9]],"effects":[{"cartelQuota":0.92}]},
+    {"id":"cartel_restore_world","scope":"world","title":"Producers' cartel restores output","mtth":50,"when":[["price.oil",">",1.25]],"effects":[{"cartelQuota":1.08}]},
+    {"id":"global_harvest_failure","scope":"world","title":"Widespread crop failures in major growing regions","mtth":260,"effects":[{"price":"food","mul":1.35}]},
+    {"id":"global_slowdown_sentiment","scope":"world","title":"Global investor sentiment sours","mtth":160,"effects":[{"allMod":{"k":"invest.conf","add":-0.04,"months":12}}]},
+    {"id":"global_tech_wave","scope":"world","title":"A general-purpose technology diffuses rapidly","mtth":240,"effects":[{"allMod":{"k":"tfp.services","add":0.012,"months":36}}]},
+    {"id":"spy_arrested","title":"Foreign spies arrested in {country}","text":"Security services announce the arrest of foreign agents allegedly working for {target}.","when":[["intel.level",">",0.3]],"target":"rival","whenTarget":[["target.rivalry",">",45]],"mtth":40,"cooldown":24,
+     "options":[
+       {"text":"Expel diplomats and publicise","effects":[{"rel":{"with":"target","op":-12,"trust":-12}},{"stat":"gov.approval","add":0.02},{"cb":true,"days":200}],"aiWeight":0.8},
+       {"text":"Handle it quietly","effects":[{"rel":{"with":"target","op":-3,"trust":-4}}],"aiWeight":1.2}]},
+    {"id":"alliance_summit","title":"Allies call for burden-sharing","text":"Partners press {country} to raise defence spending.","when":[["dev",">",0.4],["mil.atWar","==",0]],"target":"ally","whenTarget":[["target.theirOpinion",">",10]],"mtth":36,"cooldown":36,
+     "options":[
+       {"text":"Increase defence spending","effects":[{"policy":{"key":"spendRate","add":0.004,"max":0.62}},{"rel":{"with":"target","op":5,"trust":4}},{"mil":{"readiness":0.03}}],"aiWeight":1},
+       {"text":"Resist the pressure","effects":[{"rel":{"with":"target","op":-4,"trust":-4}}],"aiWeight":1}]},
+    {"id":"housing_shortage","title":"Housing shortage in {country}","text":"Rents and prices outpace wages in major cities.","when":[["dev",">",0.4],["pop.growth",">",0.005]],"mtth":40,"cooldown":48,
+     "options":[
+       {"text":"Fund large-scale construction","effects":[{"treasury":0.005,"pctGdp":true},{"stat":"gov.approval","add":0.02},{"mod":"tfp.industry","add":0.004,"months":18}],"aiWeight":1},
+       {"text":"Cap rents","effects":[{"stat":"gov.approval","add":0.02},{"mod":"invest.conf","add":-0.02,"months":18}],"aiWeight":0.8}]},
+    {"id":"nuclear_posturing","title":"Nuclear signalling by {target}","text":"{target} conducts a provocative strategic exercise near {country}.","when":[["gov.stability",">",0.1]],"target":"rival","whenTarget":[["target.rivalry",">",55]],"mtth":60,"cooldown":36,
+     "options":[
+       {"text":"Raise alert levels","effects":[{"mil":{"readiness":0.06}},{"rel":{"with":"target","op":-6}}],"aiWeight":1},
+       {"text":"Seek arms-control talks","effects":[{"rel":{"with":"target","op":4,"trust":5}},{"stat":"dip.credibility","add":1}],"aiWeight":1}]},
+    {"id":"port_congestion","title":"Port and logistics congestion in {country}","text":"Rail and port bottlenecks delay shipments.","when":[["econ.util",">",1.02],["dev",">",0.2]],"mtth":18,"cooldown":24,
+     "options":[
+       {"text":"Fast-track infrastructure projects","effects":[{"treasury":0.004,"pctGdp":true},{"infra":0.015}],"aiWeight":1},
+       {"text":"Wait it out","effects":[{"mod":"gdp.shock","add":-0.004,"months":4}],"aiWeight":0.7}]}
+  ]
+}
