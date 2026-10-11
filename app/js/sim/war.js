@@ -1216,9 +1216,11 @@ export function applyTerms(sim, w, winner, loser, terms) {
       m.active *= 0.75;
     }
   }
-  // all occupied regions between the pair revert to owners (unless ceded above)
+  // a ceasefire freezes the lines: occupation persists (and the truce forbids new fighting); every other settlement returns occupied land to its owners (unless ceded above)
+  const freeze = terms.some((t) => t.kind === 'ceasefire' || t.kind === 'status_quo');
   for (let r = 0; r < reg.owner.length; r++) {
     if (
+      !freeze &&
       reg.ctrl[r] !== reg.owner[r] &&
       ((reg.ctrl[r] === winner && reg.owner[r] === loser) || (reg.ctrl[r] === loser && reg.owner[r] === winner))
     )

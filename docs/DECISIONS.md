@@ -41,3 +41,6 @@ Nuclear weapons are modelled as deterrence rating only (no nuclear exchange mech
 - **Economy recalibration**: capital/output ratios ×1.25, a global-frontier TFP term, smaller catch-up and research terms, investment shares of investment-heavy economies drift down with income, AI governments spend available fiscal space (stops debt ratios deflating), tariff pass-through to prices, output shocks raise unemployment, manual rate setting disables the independent central bank. Result: world growth ≈ 3.2–3.8 %, USA ≈ 1.8 %, China ≈ 5.5–6 % instead of 0.4 % / 7 %.
 - **Save safety**: `App.snapshot()` finishes the in-flight day before serialising; perception is stateless.
 - **Formatting**: Prettier (140 cols) applied to all JS/CSS; long one-line modules are now reviewable (≈ 12 k lines).
+
+## D-007 Changes after the second independent review (2026-10-11)
+Ceasefires freeze the lines (occupation persists, truce forbids new fighting); raw `serialize` refuses mid-day; AI-perceived opinion is noisy; touch targets ≥ 44 px; central-bank output gap measured against the model's norm (0.99). The AI spends more time near zero rates before; now median inflation ≈ 2.5 %.

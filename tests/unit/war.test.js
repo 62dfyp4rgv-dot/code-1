@@ -232,3 +232,21 @@ test('client states: tribute, shared side, no foreign wars, and a revolt once th
   }
   assert.equal(G.dip.vassalOf, null, 'a weak overlord loses its client');
 });
+
+test('a ceasefire freezes the lines (occupation persists); a settlement with other terms returns occupied land', async () => {
+  for (const [terms, kept] of [
+    [[{ kind: 'ceasefire' }], true],
+    [[{ kind: 'reparations', pct: 0.01, years: 3 }], false],
+  ]) {
+    const { sim, a, d } = await duel('RUS', 'EST');
+    const [, rd] = borderPair(sim, a, d);
+    const w = declareWar(sim, a, d, { noAllies: true }).war;
+    sim.state.reg.ctrl[rd] = a;
+    sim.rebuildOwnedRegions();
+    w.score.a = 70;
+    sim.country('EST').mil.exhaustion = 0.9;
+    assert.equal(proposePeace(sim, w, a, d, terms, { force: true }).ok, true);
+    assert.equal(sim.state.reg.ctrl[rd] === a, kept, kept ? 'ceasefire keeps the occupation' : 'settlement returns the region');
+    assert.equal(sim.state.reg.owner[rd], d, 'ownership does not change without a cession');
+  }
+});

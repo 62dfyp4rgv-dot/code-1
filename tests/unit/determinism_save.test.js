@@ -97,3 +97,15 @@ test('save at an arbitrary month and continue for 6 months is bit-identical (reg
     assert.equal(body(A) === body(B), true, `${scenario}/${seed}: state diverged after load at month ${m0}`);
   }
 });
+
+test('the simulation core refuses to serialise a half-processed day (no silent state loss)', async () => {
+  const { loadDataNode } = await import('../../app/js/sim/data.js');
+  const { Sim } = await import('../../app/js/sim/world.js');
+  const sim = new Sim(await loadDataNode(), { seed: 5, scenario: 'quiet_decade', player: 'NOR' });
+  while (!sim.calendar.isMonthStart(sim.state.day + 1)) sim.step();
+  const gen = sim.stepGen();
+  gen.next();
+  assert.throws(() => serialize(sim, {}), SaveError);
+  while (!gen.next().done);
+  assert.doesNotThrow(() => serialize(sim, {}));
+});

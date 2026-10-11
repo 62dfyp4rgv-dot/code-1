@@ -68,6 +68,7 @@ export function migrate(state) {
 }
 
 export function serialize(sim, meta = {}) {
+  if (sim.midDay) throw new SaveError('cannot save while a simulated day is half-processed (finish the generator first)');
   sim.state.rngState = sim.rng.getState();
   const stateJson = JSON.stringify(sim.state, replacer);
   const head = {

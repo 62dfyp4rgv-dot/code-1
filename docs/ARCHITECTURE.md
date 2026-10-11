@@ -40,8 +40,7 @@ Rules that are enforced rather than hoped for:
 1. **Sim has no browser dependencies**, so it runs unchanged in Node (tests, balance, benchmark) and in the browser.
 2. **One command layer** (`commands.js`): player UI and AI call the same handlers; arguments are schema-validated
    (`REQUIRED`/`IDX`), costs and legality are checked once.
-3. **AI fog of war** — `tests/unit/ai_lint.test.js` fails the build if AI modules read another country's true state
-   outside `ai/perception.js`.
+3. **AI fog of war** — `ai/perception.js` builds the only view the AI uses; other countries' economy, military and stability arrive as noisy estimates, and their opinion of us is noisy too. `tests/unit/ai_lint.test.js` is a *regex* check over four AI files (it catches direct `state.countries` access and raw `perceive()` use) — a cheap tripwire, not a proof; some quantities (war scores, region control, treaties) are deliberately public.
 4. **Determinism** — all randomness is a seeded `sfc32` stream (`rng.js`) or a stateless `hash01(seed, …)` noise
    function; no wall-clock reads in sim; iteration order is index-based.
 5. **State is plain data** (`sim.state`) separate from static geography (`Sim.geo`, rebuilt from data), so save =
@@ -100,7 +99,7 @@ nothing leaves the device), forwards haptics and save export to native APIs. Xco
 
 ## 8. Performance budget (measured on desktop, see tools/bench.mjs)
 
-~100–160 ms of CPU per simulated month; sliced so that the typical slice is < 1 ms and the worst observed slice is
+~125–280 ms of CPU per simulated month (the same commit measured 125 ms on an idle machine and 282 ms on a loaded one — expect host-dependent numbers); sliced so that the typical slice is < 1 ms and the worst observed slice is
 ~25–35 ms. Headless-Chromium frame time: median ~17 ms, p95 ~50 ms with *software* rendering. These are not phone
 numbers; an A15 phone's single-thread JS speed is usually comparable to or better than this server CPU, but that is
 an expectation, not a measurement.

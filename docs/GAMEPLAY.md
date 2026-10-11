@@ -44,7 +44,7 @@ Build networks first (more networks ⇒ sharper numbers about others), then run 
 cyber, technology acquisition, support for opposition, counter-intelligence. Failure can expose you and damage relations.
 
 ## Events
-~55 authored crises and opportunities fire from the *state of the world*, not a script. Many have 2–3 options with trade-offs. An unanswered decision expires after its deadline (default 30 days) and the default option is applied.
+~80 authored crises and opportunities fire from the *state of the world*, not a script. Many have 2–3 options with trade-offs. An unanswered decision expires after its deadline (default 30 days) and the default option is applied.
 
 ## Winning
 Six paths: **Prosperity** (+35 % GDP per head, poverty −20 %, development up), **Economic leadership**, **Diplomatic influence**,

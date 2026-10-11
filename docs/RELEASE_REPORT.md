@@ -8,12 +8,12 @@ A single-player modern-era grand-strategy game: 168 playable countries, 3 scenar
 ## Verified (evidence in the repo; reproducible with the commands shown)
 | Claim | How verified |
 |---|---|
-| Simulation, AI, saves, data: 59 unit/integration tests pass | `npm run test:fast` |
+| Simulation, AI, saves, data: 61 unit/integration tests pass | `npm run test:fast` |
 | UI flows work in Chromium with iPhone viewports/touch: 18 tests pass | `npm run ui:test` |
 | Data integrity (roster↔map, tech DAG, event validity, modifier keys consumed) | `npm run validate:data` |
 | Save → load → continue is bit-identical (several seeds/scenarios/load points) | `tests/unit/determinism_save.test.js`, UI snapshot test |
-| 9 ten-year balance runs: 0 exceptions, 0 non-finite values; world growth ≈ 3.6 %, collapses ≈ 0.8 per decade | `npm run balance` → `docs/BALANCE_REPORT.md` |
-| Desktop performance ≈ 125–160 ms CPU per simulated month, worst slice ≈ 27–35 ms, save ≈ 3 MB | `npm run bench` → `docs/BENCHMARK.md` |
+| 9 ten-year balance runs: 0 exceptions, 0 non-finite values; world growth ≈ 3.3 %, median inflation ≈ 2.5 %, collapses ≈ 1.1 per decade | `npm run balance` → `docs/BALANCE_REPORT.md` |
+| Desktop performance ≈ 125–280 ms CPU per simulated month (host-load dependent), worst slice ≈ 30–90 ms, save ≈ 3 MB | `npm run bench` → `docs/BENCHMARK.md` |
 | Genuine screenshots of the running game (Chromium emulation of iPhone 14, SE, landscape) | `npm run shots` → `docs/screenshots/` |
 | Independent evaluation | `docs/REVIEW_ROUND1.md` (verbatim) |
 

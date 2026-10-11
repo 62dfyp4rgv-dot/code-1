@@ -33,3 +33,8 @@ Status: **Fixed** (with the guarding test/tool where one exists) or **Open** (se
 | 27 | independent review | `ai_lint` contained a vacuous assertion (`|| true`) | leftover | Removed; the lint is still a regex check (see KNOWN_ISSUES) |
 | 28 | war probes | Units idling in their own territory had zero supply and collapsing morale (huge countries paralysed) | supply only flowed from capital/port hubs | Fixed: uncontested home territory has a supply floor |
 | 29 | probe | A big output shock did not raise unemployment (supply-side shock left demand slack negative) | unemployment only read demand slack | Fixed: shock term in the labour market |
+| 30 | round-2 review | Ceasefires returned all occupied land, so occupation never mattered | `applyTerms` always reverted control | Fixed: a ceasefire freezes the lines; other settlements return land unless ceded (unit test) |
+| 31 | round-2 review | `serialize` on the raw simulation mid-day silently lost the rest of the day | only the UI guarded it | Fixed: the core refuses (`SaveError`) while a day is half-processed (unit test) |
+| 32 | round-2 review | AI saw other governments' exact opinion of it | `theirOpinion` copied from the matrix | Fixed: noisy, network-dependent estimate |
+| 33 | balance run | USA (and others) drifted to ~zero interest rates and regime collapse | the Taylor rule measured the output gap against 1.0 although the model's norm of capacity use is ~0.99 (a permanent −1 % "gap" pushed rates ~1.5 pt too low) | Fixed: gap measured against 0.99; median inflation now ≈ 2.5 % |
+| 34 | unit test | debt stock-flow test broke when new treasury events fired | event bail-outs/stimulus change debt legitimately | Test skips event months |

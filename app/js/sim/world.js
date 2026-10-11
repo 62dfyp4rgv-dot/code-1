@@ -450,6 +450,7 @@ export class Sim {
     if (st.ended && st.ended.final) return;
     st.day++;
     const day = st.day;
+    this.midDay = true; // cleared when the day (including its monthly phases) completes; saving in between is refused
     const t0 = performance.now();
     MIL.dailyStep(this, day);
     DIP.dailyStep(this, day);
@@ -462,6 +463,7 @@ export class Sim {
       this.perf.monthlyCount++;
       if (this.calendar.isYearStart(day)) this.yearly(day);
     }
+    this.midDay = false;
     yield;
   }
   advance(days) {

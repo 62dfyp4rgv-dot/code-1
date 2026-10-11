@@ -1,7 +1,8 @@
 // The AI's window on the world. AI modules must read other countries ONLY through this file (enforced by a test that greps
 // app/js/ai/*.js for direct country-state access). Other nations' economies and forces arrive through noisy, intel-limited
 // estimates; only public facts (regime type, borders, treaties, wars, relations, prices) are exact.
-import { perceive } from '../sim/intel.js';
+import { perceive, netLevel } from '../sim/intel.js';
+import { hash01 } from '../sim/rng.js';
 
 export function buildView(sim, me) {
   const st = sim.state,
@@ -30,7 +31,7 @@ export function buildView(sim, me) {
       mt: p.mt,
       nukes: p.nukes,
       conf: p.conf,
-      theirOpinion: st.rel.op[j * N + me],
+      theirOpinion: perceivedOpinion(sim, me, j, st.rel.op[j * N + me]),
       myOpinion: st.rel.op[me * N + j],
       trust: st.rel.trust[me * N + j],
       rivalry: st.rel.rivalry[me * N + j],
@@ -52,6 +53,8 @@ export function buildView(sim, me) {
       vassal: t.dip.vassalOf !== null && t.dip.vassalOf !== undefined, // client status is public
     });
   }
+  const byIndex = new Array(N);
+  for (const o of others) byIndex[o.idx] = o;
   const self = perceive(sim, me, me);
   return {
     me,
@@ -59,7 +62,7 @@ export function buildView(sim, me) {
     day: st.day,
     prices: st.prices,
     others,
-    byIdx: (j) => others.find((o) => o.idx === j),
+    byIdx: (j) => byIndex[j],
     enemies,
     allies,
     self,
@@ -68,10 +71,15 @@ export function buildView(sim, me) {
 }
 export function alliedPowerOf(sim, me, view, j) {
   let s = 0;
-  for (const o of view.others) if (o.idx !== j && sim.alliesOf(j).has(o.idx)) s += o.mil;
+  const allies = sim.alliesOf(j);
+  for (const a of allies) {
+    if (a === j) continue;
+    const o = view.byIdx(a);
+    if (o) s += o.mil;
+  }
   // public security guarantees count at reduced weight (they are pledges, not obligations)
   for (const t of sim.state.treaties)
-    if (t.active && t.type === 'guarantee' && t.parties[1] === j && t.parties[0] !== me && !sim.alliesOf(j).has(t.parties[0])) {
+    if (t.active && t.type === 'guarantee' && t.parties[1] === j && t.parties[0] !== me && !allies.has(t.parties[0])) {
       const g = view.byIdx(t.parties[0]);
       if (g) s += 0.7 * g.mil;
     }
@@ -80,4 +88,14 @@ export function alliedPowerOf(sim, me, view, j) {
 
 function neighborsOrNear(sim, me, j) {
   return sim.geo.dist[me * sim.geo.N + j] < 7000;
+}
+
+// Another government's opinion of us is read through diplomacy and the press: noisy, and less so with better networks.
+function perceivedOpinion(sim, me, j, truth) {
+  const st = sim.state,
+    month = (st.day / 30) | 0,
+    net = netLevel(sim, me, j);
+  const amp = 14 * (1 - 0.6 * Math.min(1, net / 60));
+  const noise = (hash01(st.countries[me].id + st.countries[j].id + 'op' + month) - 0.5) * 2 * amp;
+  return Math.max(-100, Math.min(100, truth + noise));
 }

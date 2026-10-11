@@ -679,7 +679,7 @@ export function financeStep(sim, c, day) {
 // central bank rule (independent of government if cbIndep high). Writes c.target.policyRate; lag applied in policy step.
 export function centralBankStep(c) {
   const e = c.econ;
-  const taylor = (e.rStar ?? 0.015) + e.inflExp + 1.2 * (e.infl - 0.02) + 1.5 * (e.util - 1);
+  const taylor = (e.rStar ?? 0.015) + e.inflExp + 1.2 * (e.infl - 0.02) + 1.2 * (e.util - 0.99); // gap measured against the model's empirical capacity-use norm (~0.99), not 1.0
   const tr = clamp(taylor, -0.005, 0.3);
   const w = 0.6 + 0.3 * e.cbIndep;
   c.target.policyRate = clamp(c.target.policyRate + w * 0.5 * (tr - c.target.policyRate), -0.005, 0.5);

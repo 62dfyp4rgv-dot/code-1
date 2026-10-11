@@ -4,7 +4,7 @@ Ordered by importance for a release decision. "Unverified" means *not tested*, n
 
 ## Blockers for an App Store release (outside this environment's reach)
 1. **No iOS build, Simulator or device run has ever happened.** `ios/` (Swift, XcodeGen) is uncompiled; WebKit/WKWebView behaviour of the UI is unknown. All UI evidence comes from Chromium device emulation.
-2. **No on-device performance, memory or thermal data.** Desktop numbers (`docs/BENCHMARK.md`): ~100–160 ms CPU per simulated month, sliced; worst single slice ~25–35 ms (can drop a frame on fast speed settings). Phone behaviour is unknown.
+2. **No on-device performance, memory or thermal data.** Desktop numbers (`docs/BENCHMARK.md`): ~125–280 ms CPU per simulated month depending on host load, sliced; worst single slice ~30–90 ms (can drop frames on fast speed settings; at ×40 a loaded host delivered only ~23 simulated days per second). Phone behaviour is unknown.
 3. **Licence not chosen** (`UNLICENSED`) and bundle id is `com.example.modernage`; signing team blank.
 4. App Store assets (real-device screenshots, privacy label, age rating) not produced.
 
@@ -14,7 +14,7 @@ Ordered by importance for a release decision. "Unverified" means *not tested*, n
 7. **War variety is low**: ~0.7 wars per decade in the balance runs, concentrated on a few pairs (Russia–Ukraine in *Fault Lines*, China–Vietnam, Russia–Georgia). Wars last ~9–15 months and end mostly by negotiated peace; front lines are mostly static (the Russia–Ukraine war moves almost no territory). Territory changes hands in forced wars against weak neighbours and tiny states become client states, but spontaneous conquest is rare.
 8. **AI is reactive, not strategic**: it evaluates utility each turn; it does not plan multi-year campaigns, coordinate combined operations or exploit player-specific weaknesses. Air and naval AI tasking is lightly tuned.
 9. **Nuclear weapons are a deterrence rating only** — no escalation or exchange mechanic (D-004).
-10. **Regime collapse** ≈ 0.8 per decade in the latest balance report (Ukraine, Argentina recur); consolidated democracies now need ten months of instability before collapse.
+10. **Regime collapse** ≈ 1.1 per decade in the latest balance report (almost all Ukraine, whose occupied land now persists across ceasefires); consolidated democracies now need ten months of instability before collapse.
 11. **Event repetition**: shortage-driven events (`rolling_blackouts`, `fuel_shortage`) and `heatwave` remain the most frequent (~18 % of all events in long runs). ~80 authored events (26 added after the first review) is still modest for replayability.
 12. **Geography is coarse**: 110 m borders (micro-states absent), synthetic region names, approximate terrain, 525 regions; some islands are weakly connected.
 13. **Statistics are approximate** and partly derived (DATA_SOURCES.md); not suitable as reference data.

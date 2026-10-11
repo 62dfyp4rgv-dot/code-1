@@ -103,8 +103,11 @@ test('debt follows deficit: no free money', async () => {
   for (const id of ['USA', 'DEU', 'BRA', 'NGA']) {
     const c = sim.country(id);
     const d0 = c.econ.debt;
+    const day0 = sim.state.day;
     sim.advanceMonths(1);
     const e = c.econ;
+    // events can legitimately move the treasury (bail-outs, stimulus): the stock-flow identity is only checked for event-free months
+    if (sim.state.events.history.some((h) => h.c === c.idx && h.day > day0)) continue;
     const expect =
       d0 +
       (e.deficit - e.monet - 0.7 * e.infl * Math.max(0, d0)) / 12 +
