@@ -4,3 +4,4 @@ node_modules/
 artifacts/
 ios/build/
 ios/ModernAge.xcodeproj/
+ios/ModernAge/www/

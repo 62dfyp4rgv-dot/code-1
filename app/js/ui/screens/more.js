@@ -40,7 +40,7 @@ export const saves = {
     saveslot: async (app) => { const text = serialize(app.sim, { savedAt: Date.now(), label: 'manual save' }); const n = (app.saveList || []).filter((x) => x.key.startsWith('slot')).length + 1; const key = 'slot' + Date.now().toString(36).slice(-4); await store.put(key, text); app.toast('Saved', 'Game saved to ' + key, 'good'); refreshSaves(app); },
     loadslot: async (app, el) => { const t = await store.get(el.dataset.key); if (!t) return app.toast('Missing save', 'That slot is empty.', 'bad'); await loadText(app, t, el.dataset.key); },
     delslot: async (app, el) => { await store.del(el.dataset.key); refreshSaves(app); },
-    export: (app) => { const text = serialize(app.sim, { savedAt: Date.now(), label: 'exported' }); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: 'text/plain' })); a.download = `modern-age-${app.sim.calendar.format(app.sim.state.day)}.mage`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); },
+    export: (app) => { const text = serialize(app.sim, { savedAt: Date.now(), label: 'exported' }); const wk = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.exportSave; if (wk) { wk.postMessage(text); return; } const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: 'text/plain' })); a.download = `modern-age-${app.sim.calendar.format(app.sim.state.day)}.mage`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); },
     import: (app) => app.$('#importfile').click(),
   },
 };

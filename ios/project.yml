@@ -1,0 +1,63 @@
+# XcodeGen spec: `brew install xcodegen && cd ios && xcodegen generate && open ModernAge.xcodeproj`
+# NOT BUILT IN THE AUTHORING ENVIRONMENT (Linux, no Xcode) - see docs/IOS_BUILD.md for the verification status.
+name: ModernAge
+options:
+  bundleIdPrefix: com.example
+  deploymentTarget:
+    iOS: "16.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    DEVELOPMENT_TEAM: ""            # set your Apple Developer Team ID before archiving
+    CODE_SIGN_STYLE: Automatic
+targets:
+  ModernAge:
+    type: application
+    platform: iOS
+    sources:
+      - path: ModernAge
+        excludes: ["www/**"]
+    resources:
+      - path: ModernAge/www
+        type: folder                 # copied verbatim; produced by tools/ios-sync.sh
+      - path: ModernAge/Assets.xcassets
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.example.modernage
+        INFOPLIST_FILE: ModernAge/Info.plist
+        TARGETED_DEVICE_FAMILY: "1,2"   # iPhone + iPad
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ENABLE_BITCODE: NO
+    info:
+      path: ModernAge/Info.plist
+      properties:
+        CFBundleDisplayName: Modern Age
+        UILaunchScreen:
+          UIColorName: LaunchBackground
+        UIRequiresFullScreen: true
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        UISupportedInterfaceOrientations~ipad: [UIInterfaceOrientationPortrait, UIInterfaceOrientationPortraitUpsideDown, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        UIStatusBarStyle: UIStatusBarStyleLightContent
+        UIViewControllerBasedStatusBarAppearance: true
+        ITSAppUsesNonExemptEncryption: false
+        LSApplicationCategoryType: public.app-category.strategy-games
+        UIFileSharingEnabled: false
+  ModernAgeTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [ModernAgeTests]
+    dependencies:
+      - target: ModernAge
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.example.modernage.tests
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  ModernAge:
+    build:
+      targets: { ModernAge: all, ModernAgeTests: [test] }
+    test:
+      targets: [ModernAgeTests]

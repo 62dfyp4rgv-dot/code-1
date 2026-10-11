@@ -12,4 +12,9 @@ export const sfx = {
   alert: () => { tone(880, 0, 0.1, 'square', 0.25); tone(660, 0.12, 0.16, 'square', 0.25); }, war: () => { tone(110, 0, 0.5, 'sawtooth', 0.5, 70); tone(165, 0.05, 0.4, 'square', 0.2, 90); },
   tech: () => { [523, 659, 784, 1046].forEach((f, i) => tone(f, i * 0.07, 0.18, 'sine', 0.5)); }, month: () => tone(300, 0, 0.03, 'sine', 0.25),
 };
-export function haptic(ms = 10, enabled = true) { if (enabled && navigator.vibrate) { try { navigator.vibrate(ms); } catch { /* unsupported */ } } }
+export function haptic(ms = 10, enabled = true) {
+  if (!enabled) return;
+  const wk = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.haptic; // iOS shell bridge
+  if (wk) { try { wk.postMessage(ms); } catch { /* ignore */ } return; }
+  if (navigator.vibrate) { try { navigator.vibrate(ms); } catch { /* unsupported */ } }
+}
