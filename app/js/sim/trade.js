@@ -70,7 +70,8 @@ export function buildTradeContext(sim) {
   return { N, blocMult, embargo, atWar, blockade, chokes };
 }
 
-export function clearTrade(sim, { commitStocks = true } = {}) {
+export function clearTrade(sim, opts) { let r; const g = clearTradeGen(sim, opts); for (;;) { const n = g.next(); if (n.done) { r = n.value; break; } } return r; }
+export function* clearTradeGen(sim, { commitStocks = true } = {}) {
   const { geo, state } = sim; const N = geo.N; const cs = state.countries;
   const ctx = buildTradeContext(sim);
   const prices = state.prices;
@@ -158,6 +159,7 @@ export function clearTrade(sim, { commitStocks = true } = {}) {
       e.curtailed[k] = curtailed;
       sumUnmet += sh; sumCurt += curtailed; sumSup += s; sumDem += d; sumStock += e.stock[k]; traded += expo[i];
     }
+    yield;
     world.unmet[k] = sumUnmet; world.curtail[k] = sumCurt; world.supply[k] = sumSup; world.demand[k] = sumDem; world.stock[k] = sumStock; world.traded[k] = traded;
   }
   // prices

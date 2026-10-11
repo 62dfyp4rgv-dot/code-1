@@ -29,7 +29,8 @@ export function initAI(sim) {
   }
 }
 
-export function monthlyStep(sim, day) {
+export function monthlyStep(sim, day) { for (const _ of monthlyGen(sim, day)) { /* run to completion */ } }
+export function* monthlyGen(sim, day) {
   const st = sim.state; const month = (day / 30) | 0;
   sim._bigPowers = new Set(st.countries.slice().sort((a, b) => b.econ.gdp - a.econ.gdp).slice(0, 30).map((c) => c.idx));
   for (const c of st.countries) {
@@ -47,6 +48,7 @@ export function monthlyStep(sim, day) {
       if ((month + c.idx) % 2 === 1) manageIntel(sim, c, view);
     }
     if (c.dip.pending.length) answerCalls(sim, c);
+    if (c.idx % 12 === 11) yield;
   }
 }
 function answerCalls(sim, c) { for (const p of c.dip.pending.slice()) if (p.kind === 'call') sim.exec({ type: 'respondCall', actor: c.idx, war: p.war, join: sim.callWillingness(c.idx, sim.state.wars.find((w) => w.id === p.war), { ally: c.idx, side: p.side, principal: p.principal }) > 0 }); }

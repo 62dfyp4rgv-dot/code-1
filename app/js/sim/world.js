@@ -4,7 +4,7 @@ import { RNG } from './rng.js';
 import { Calendar } from './calendar.js';
 import { COM, COMMODITIES, BUDGET_CATS, clamp } from './constants.js';
 import { initCountryEconomy, calibrateWorld, finishEconomyInit, productionStep, goodsTradeStep, financeStep, investmentStep, centralBankStep, externalFinanceStep } from './economy.js';
-import { buildTradeStatic, clearTrade } from './trade.js';
+import { buildTradeStatic, clearTrade, clearTradeGen } from './trade.js';
 import { initGovernment, politicsStep, warPressureOf } from './politics.js';
 import { initCohorts, demographyStep, servicesStep, yearlyMigration, climateStep } from './society.js';
 import { initResearch, researchStep, updateTopEconomies } from './research.js';
@@ -142,6 +142,10 @@ export class Sim {
       e.C0 = e.gdp - e.inv - e.pubI0 - e.govC0 - nxTotal;
       e.consK = e.C0 / e.Yd0; e.savBase = 1 - e.consK;
       e.cons = e.C0; e.stock = e.stock.slice();
+      // readouts for the first frame (before the first monthly update)
+      e.debtRatio = e.debt / e.gdp; e.taxRev = c.policy.taxRate * e.gdp * e.collect0; e.tariffRev = e.tariff0 * e.impVal0; e.rentRev = e.rentRev0; e.spend = e.spend0; e.revenue = e.taxRev + e.tariffRev + e.rentRev; e.deficit = e.spend + e.interest - e.revenue;
+      c.spendCat = Object.fromEntries(BUDGET_CATS.map((k) => [k, c.policy.budget[k] * e.spend]));
+      e.bondYield = e.effYield; e.reservesMonths = e.reserves / Math.max(1e-6, (e.impVal0 + e.openness * e.gdp * 0.45) / 12); e.collect = e.collect0; e.dInv = 0;
     }
     this.state.prices = p0;
     for (const c of cs) for (let k = 0; k < 4; k++) { c.econ.prod[k] = c.econ.prod[k]; }
@@ -213,7 +217,9 @@ export class Sim {
   shrinkForces(c, k) { MIL.shrinkForces(this, c, k); }
   epidemicMortality(c) { return EVT.epidemicMortality(this, c); }
   get date() { return this.calendar.ymd(this.state.day); }
-  step() {
+  step() { for (const _ of this.stepGen()) { /* run to completion */ } }
+  // Generator form of one simulated day: yields between heavy phases so a UI can spread a monthly update over several frames.
+  *stepGen() {
     const st = this.state;
     if (st.ended && st.ended.final) return;
     st.day++;
@@ -225,37 +231,46 @@ export class Sim {
     this.perf.daily += performance.now() - t0;
     if (this.calendar.isMonthStart(day)) {
       const t1 = performance.now();
-      this.monthly(day);
+      yield* this.monthlyGen(day);
       this.perf.monthly += performance.now() - t1; this.perf.monthlyCount++;
       if (this.calendar.isYearStart(day)) this.yearly(day);
     }
+    yield;
   }
   advance(days) { for (let i = 0; i < days; i++) { this.step(); if (this.state.ended && this.state.ended.final) break; } }
   advanceMonths(m) { const target = this.calendar.dayOf(...this.addMonths(this.date, m)); while (this.state.day < target) this.step(); }
   addMonths(d, m) { let y = d.y, mo = d.m + m; while (mo > 12) { mo -= 12; y++; } return [y, mo, 1]; }
-  monthly(day) {
-    const st = this.state, cs = st.countries;
+  monthly(day) { for (const _ of this.monthlyGen(day)) { /* run to completion */ } }
+  *monthlyGen(day) {
+    const st = this.state, cs = st.countries, N = cs.length, CH = 42;
+    const chunked = function* (fn) { for (let i = 0; i < N; i += CH) { for (let j = i; j < Math.min(N, i + CH); j++) fn(cs[j]); yield; } };
     for (const c of cs) refreshMods(c, day);
     for (const c of cs) { this.policyLag(c); if (c.idx !== st.playerId || c.autoCB) centralBankStep(c); }
     for (const c of cs) if (c.idx !== st.playerId || c.autoFiscal) AI.fiscalRule(this, c);
-    for (const c of cs) productionStep(this, c);
+    yield;
+    yield* chunked((c) => productionStep(this, c));
     goodsTradeStep(this);
-    clearTrade(this);
-    for (const c of cs) financeStep(this, c, day);
+    yield* clearTradeGen(this);
+    yield* chunked((c) => financeStep(this, c, day));
     externalFinanceStep(this);
-    for (const c of cs) { investmentStep(this, c); }
+    yield* chunked((c) => investmentStep(this, c));
     climateStep(this);
-    for (const c of cs) { servicesStep(this, c); demographyStep(this, c); researchStep(this, c, day); }
-    for (const c of cs) politicsStep(this, c, day);
+    yield* chunked((c) => { servicesStep(this, c); demographyStep(this, c); researchStep(this, c, day); });
+    yield* chunked((c) => politicsStep(this, c, day));
     MIL.monthlyStep(this, day);
+    yield;
     INT.monthlyStep(this, day);
+    yield;
     DIP.monthlyStep(this, day);
+    yield;
     EVT.monthlyStep(this, day);
+    yield;
     const ta = performance.now();
-    AI.monthlyStep(this, day);
+    yield* AI.monthlyGen(this, day);
     this.perf.ai += performance.now() - ta;
     VIC.monthlyStep(this, day);
     STAT.monthlyStep(this, day);
+    yield;
   }
   yearly(day) {
     yearlyMigration(this);
