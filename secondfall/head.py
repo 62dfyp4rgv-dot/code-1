@@ -170,7 +170,7 @@ class Head:
         if style == "bald":
             return np.zeros_like(hm)
         # hairline: a closed region in head-local space projected to the screen. We rasterise it with PIL.
-        recede = {"thin": 0.10, "undercut": 0.02, "short": 0.0, "mop": -0.04, "twists": -0.05, "curly": -0.05, "ponytail": 0.0}.get(style, 0.0)
+        recede = {"thin": 0.10, "undercut": 0.02, "short": 0.0, "mop": -0.04, "twists": -0.05, "curly": -0.05, "ponytail": 0.0, "long": -0.03}.get(style, 0.0)
         top = -0.17 - recede
         line = [self.surf(-0.345, 0.04), self.surf(-0.335, -0.06)]
         for i in range(0, 13):                                          # temple -> forehead -> temple (local x, y)
@@ -199,6 +199,12 @@ class Head:
         if style in ("mop", "twists", "curly"):
             for sg in (-1, 1):
                 d.polygon([tuple(self.P(sg * 0.34, -0.05, 0.1)[:2]), tuple(self.P(sg * 0.40, 0.18, 0.0)[:2]), tuple(self.P(sg * 0.31, 0.16, 0.15)[:2])], fill=255)
+            mask = np.asarray(im) > 127
+        if style == "long":                                          # curtains of hair falling past the jaw onto the shoulders
+            for sg in (-1, 1):
+                d.polygon([tuple(self.P(sg * 0.30, -0.12, 0.05)[:2]), tuple(self.P(sg * 0.43, 0.05, 0.0)[:2]), tuple(self.P(sg * 0.50, 0.45, -0.05)[:2]),
+                           tuple(self.P(sg * 0.47, 0.95, -0.05)[:2]), tuple(self.P(sg * 0.33, 1.02, 0.0)[:2]), tuple(self.P(sg * 0.285, 0.55, 0.12)[:2]),
+                           tuple(self.P(sg * 0.275, 0.18, 0.2)[:2])], fill=255)
             mask = np.asarray(im) > 127
         # lumpy, hand-cut edge
         n = fnoise(H, W, h * 0.05, h * 0.05, self.s.seed) * h * 0.035
@@ -545,8 +551,9 @@ class Head:
             i = rng.integers(len(xs))
             x, y = float(xs[i]), float(ys[i])
             dx = (x - cx) / (0.42 * h)
-            ang = math.radians(90 + 46 * dx + 4 * rng.normal())
-            L = h * rng.uniform(0.14, 0.30)
+            low = s.hair_style == "long" and y > self.c[1] + 0.05 * h
+            ang = math.radians(90 + (12 if low else 46) * dx + 3 * rng.normal())
+            L = h * rng.uniform(0.14, 0.30) * (1.7 if low else 1.0)
             ex, ey = x + math.cos(ang) * L, y + math.sin(ang) * L
             bend = rng.normal(0, h * 0.02) + dx * h * 0.03
             mx, my = (x + ex) / 2 + bend, (y + ey) / 2

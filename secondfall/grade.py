@@ -53,7 +53,9 @@ def finish_web(rgb: np.ndarray, seed: int = 0, exposure: float = 1.0, sat: float
     out = np.clip((l + (rgb - l) * sat * 1.2) * exposure, 0, 1) ** 0.7              # brighter mids, richer colour
     out = out + (1 - out) * 0.4 * np.array([0.35, 0.30, 0.55], np.float32) * (1 - l)   # cool violet shadows, like the reference palettes
     out = bloom(out, 0.78, 0.22, 16)
-    return film(out, seed, 0.008, 0.10)
+    out = film(out, seed, 0.008, 0.10)
+    from .looks import apply
+    return apply(out, seed)
 
 
 def finish_sepia(rgb: np.ndarray, seed: int = 0, keep: float = 0.22, bloom_strength: float = 0.3, vig: float = 0.3, grain: float = 0.035,
