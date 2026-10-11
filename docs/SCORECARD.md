@@ -1,0 +1,36 @@
+# Amazement Score card
+
+**Rules followed**: scores are evidence-based; only categories that can be verified in this environment are counted; nothing is rounded up to reach a gate. The authors' own opinion is *not* used as a score — scores come from an independent evaluator (a fresh-context sub-agent that did not write the code, was told to be sceptical, and ran the tests/probes itself). The authors record what they changed in response, and every change to a score is logged below (permanent record).
+
+Weights (from the brief): Strategic depth 15 % · Economic realism 12 % · Military/logistics 12 % · Diplomacy & world AI 12 % · Emergent/replay 12 % · iPhone UX 12 % · Visual 8 % · Performance/stability/saves 10 % · Code quality 7 %. Gates: every category ≥ 8.0 and weighted ≥ 8.5.
+
+## Round 1 — independent evaluation of commit `0428cfe` (verbatim report: `docs/REVIEW_ROUND1.md`)
+
+| Category | Weight | Score | Counted? |
+|---|---|---|---|
+| Strategic depth | 15 % | 5.5 | yes |
+| Economic realism | 12 % | 5.5 | yes |
+| Military / logistics | 12 % | 4.8 | yes |
+| Diplomacy & world AI | 12 % | 5.8 | yes |
+| Emergent behaviour / replayability | 12 % | 4.5 | yes |
+| iPhone UX | 12 % | 6.5 | capped: Chromium emulation only, **iOS UNVERIFIED** |
+| Visual quality | 8 % | 6.3 | yes (screenshots are emulation) |
+| Performance / stability / saves | 10 % | 7.0 | desktop only, **device performance UNVERIFIED** |
+| Code quality | 7 % | 5.5 | yes |
+| **Weighted total** | | **5.7** (5.4 excluding UX and performance) | |
+
+**Gate status after round 1: NOT PASSED** (every category below 8.0; weighted total 5.7 < 8.5).
+
+### Evaluator findings the authors acted on (see BUGS.md #19–#29, DECISIONS D-006)
+Save during suspended monthly update lost state (fixed + test); AI peace imposed on the human (offers now answerable); client states and territorial consequences; inert policy-rate lever; economy optimism and debt deflation (recalibrated); slider commit without confirmation; day-0 military budget; chart axis clipping; vacuous lint assertion; ~35 scratch scripts removed; Prettier applied; 27 more events; missing docs (this file, RELEASE_REPORT) written. A further determinism bug (time-keyed perception cache) was found by the authors while reproducing the evaluator's save defect.
+
+### Not addressed (honest list)
+Military outcomes are still mostly static fronts with parameter-driven endings; the player cannot command units beyond stances/orders; replay variety is limited (few wars per decade, same rivalries); no real iOS/device verification; AI fog-of-war lint is a regex check; map and UI visual polish is functional rather than distinctive.
+
+## Score-change log (permanent)
+
+| Date | Event | Strategic | Economic | Military | Diplomacy/AI | Emergent | UX | Visual | Perf/Stab | Code | Weighted | Evidence |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 2026-10-11 | Round 1 independent review, commit 0428cfe | 5.5 | 5.5 | 4.8 | 5.8 | 4.5 | 6.5* | 6.3 | 7.0* | 5.5 | 5.7 | docs/REVIEW_ROUND1.md |
+
+\* capped/unverified: emulation or desktop-only evidence.

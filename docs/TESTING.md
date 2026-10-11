@@ -4,8 +4,8 @@
 
 | Command | What it does | Needs |
 |---|---|---|
-| `npm run test:fast` | 55 unit/integration tests of the simulation, AI, saves, data (≈ 50 s) | Node ≥ 20 |
-| `npm run ui:test` | 15 Playwright tests drive the real UI in Chromium device emulation (≈ 1–2 min) | `playwright` + Chromium |
+| `npm run test:fast` | 59 unit/integration tests of the simulation, AI, saves, data (≈ 50 s) | Node ≥ 20 |
+| `npm run ui:test` | 18 Playwright tests drive the real UI in Chromium device emulation (≈ 1–2 min) | `playwright` + Chromium |
 | `npm test` | everything above | both |
 | `npm run validate:data` | data-integrity tests + content inventory | Node |
 | `npm run bench` | simulation timing, save size/time, slice distribution | Node |

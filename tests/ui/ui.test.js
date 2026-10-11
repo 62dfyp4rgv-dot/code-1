@@ -37,6 +37,16 @@ async function startGame(page, { scenario = 'fault_lines', country = 'DEU' } = {
   });
 }
 
+// Live games can raise decision / peace-offer modals at any time; tests that tap elsewhere dismiss them first.
+async function clearModals(page) {
+  for (let i = 0; i < 8; i++) {
+    const b = page.locator('#overlay [data-opt], #overlay [data-po="0"]').first();
+    if ((await b.count()) === 0) return;
+    await b.click();
+    await page.waitForTimeout(350);
+  }
+}
+
 test('boot -> menu -> new game wizard -> map with HUD, no console errors', async () => {
   const page = await newPage(browser);
   await startGame(page);
@@ -404,6 +414,7 @@ test('saves screen: manual slot saves, lists with metadata, and loads back the s
   });
   await page.waitForTimeout(1200);
   await page.evaluate(() => window.__app.pause());
+  await clearModals(page);
   await page.evaluate(() => window.__app.openSheet('saves'));
   await page.waitForTimeout(150);
   await page.click('[data-act="saveslot"][data-slot="manual"]');
@@ -412,6 +423,7 @@ test('saves screen: manual slot saves, lists with metadata, and loads back the s
   await page.evaluate(() => {
     window.__app.sim.advanceMonths(2);
   }); // diverge
+  await clearModals(page);
   await page.evaluate(() => window.__app.openSheet('saves'));
   await page.waitForTimeout(300);
   const body = await page.locator('#sheetBody').innerText();
