@@ -20,6 +20,14 @@ def _sat(rgb, k):
     return np.clip(l + (rgb - l) * k, 0, 1)
 
 
+def _levels(rgb: np.ndarray, lo: float = 1.0, hi: float = 99.5, gamma: float = 1.0) -> np.ndarray:
+    """Stretch the panel so its darkest tone reaches black and its lightest reaches paper white (the print looks need real paper)."""
+    l = lum(rgb)
+    a, b = np.percentile(l, lo), np.percentile(l, hi)
+    k = np.clip((l - a) / max(1e-3, b - a), 0, 1) ** gamma
+    return np.clip(rgb * (k / np.maximum(l, 0.02))[..., None], 0, 1)
+
+
 def _halftone(d: np.ndarray, cell: float, angle_deg: float) -> np.ndarray:
     """Ink coverage 0..1 for darkness d (0..1) printed as a rotated dot screen."""
     H, W = d.shape
@@ -35,16 +43,18 @@ def _halftone(d: np.ndarray, cell: float, angle_deg: float) -> np.ndarray:
 def inkwash(rgb: np.ndarray, seed: int = 0) -> np.ndarray:
     H, W = rgb.shape[:2]
     s = W / 800
+    rgb0 = rgb
+    rgb = _levels(rgb, 2, 99.0, 0.9)
     l = lum(rgb)
     wash = 0.55 * _blur(l, 2.2 * s) + 0.45 * l
-    t = np.clip((wash - 0.10) / 0.85, 0, 1) ** 1.35                    # deep blacks, long grey scale
+    t = np.clip((wash - 0.06) / 0.85, 0, 1) ** 0.85                    # deep blacks, long grey scale
     t = np.clip(t + 0.05 * fnoise(H, W, 40 * s, 40 * s, seed + 1), 0, 1)   # uneven wash density
     bleed = _blur(1 - t, 5 * s)
     t = np.clip(t - 0.16 * np.clip(bleed - (1 - t), 0, 1), 0, 1)      # ink pooled and bled beside dark masses
     fibre = 1 + 0.035 * fnoise(H, W, 1.3 * s, 1.3 * s, seed + 2) + 0.03 * fnoise(H, W, 5 * s, 0.9 * s, seed + 3)
     ink = np.array([0.055, 0.055, 0.065], np.float32)
     out = _mix(ink, PAPER * np.array([1.0, 0.985, 0.95], np.float32), t[..., None]) * fibre[..., None]
-    red = np.clip((rgb[..., 0] - (rgb[..., 1] + rgb[..., 2]) / 2 - 0.16) / 0.2, 0, 1)     # keep strong reds: the seal-red accent
+    red = np.clip((rgb0[..., 0] - (rgb0[..., 1] + rgb0[..., 2]) / 2 - 0.30) / 0.2, 0, 1) * (rgb0[..., 1] < 0.45 * rgb0[..., 0])     # keep strong reds: the seal-red accent
     red = _blur(red, 1.0)[..., None]
     out = _mix(out, np.array([0.72, 0.10, 0.09], np.float32) * (0.55 + 0.45 * t[..., None]), red * 0.9)
     Y, X = np.mgrid[0:H, 0:W].astype(np.float32)
@@ -56,12 +66,12 @@ def inkwash(rgb: np.ndarray, seed: int = 0) -> np.ndarray:
 def comic(rgb: np.ndarray, seed: int = 0) -> np.ndarray:
     H, W = rgb.shape[:2]
     s = W / 800
-    c = _sat(rgb, 1.45)
+    c = _sat(_levels(rgb, 1, 99.8), 1.4)
     l = lum(c)
-    n = 4
+    n = 5
     band = np.floor(np.clip(l, 0, 0.999) * n) / (n - 1)
     band = _blur(band, 0.8 * s)
-    k = (0.18 + 0.95 * band) / np.maximum(l, 0.08)
+    k = np.clip((0.16 + 0.88 * band) / np.maximum(l, 0.08), 0.5, 1.2)
     out = np.clip(c * k[..., None], 0, 1)
     d = np.clip((0.5 - l) / 0.5, 0, 1)
     dots = _halftone(d * 0.9, 5.5 * s, 45.0)
@@ -76,7 +86,7 @@ def watercolor(rgb: np.ndarray, seed: int = 0) -> np.ndarray:
     H, W = rgb.shape[:2]
     s = W / 800
     im = to_img(rgb).filter(ImageFilter.MedianFilter(5)).filter(ImageFilter.GaussianBlur(1.3 * s))
-    c = _sat(from_img(im), 1.1)
+    c = _sat(_levels(from_img(im), 1, 99.5, 0.85), 1.15)
     l = lum(c)
     gx, gy = np.gradient(_blur(l, 1.4 * s), axis=1), np.gradient(_blur(l, 1.4 * s), axis=0)
     edge = np.clip(np.hypot(gx, gy) * 9, 0, 1)
@@ -101,6 +111,7 @@ def riso(rgb: np.ndarray, seed: int = 0) -> np.ndarray:
     H, W = rgb.shape[:2]
     s = W / 800
     rng = np.random.default_rng(seed)
+    rgb = _levels(rgb, 1, 99.0, 0.8)
     pink, blue = np.array([1.0, 0.30, 0.48], np.float32), np.array([0.0, 0.46, 0.78], np.float32)
     cov_p = np.clip((1 - rgb[..., 1] * 1.15) * 1.25 - 0.05, 0, 1)         # pink plate follows missing green
     cov_b = np.clip((1 - rgb[..., 0] * 1.1) * 1.25 - 0.02, 0, 1)          # blue plate follows missing red
@@ -117,12 +128,12 @@ def dream(rgb: np.ndarray, seed: int = 0) -> np.ndarray:
     H, W = rgb.shape[:2]
     s = W / 800
     c = _sat(rgb, 0.9)
-    c = 0.30 + 0.70 * c ** 0.8
+    c = 0.22 + 0.78 * c ** 0.85
     soft = _blur(c, 2.4 * s)
     c = 0.62 * c + 0.38 * soft                                           # soft-focus
     l = lum(c)
-    glow = np.clip((l - 0.62) / 0.38, 0, 1)[..., None] * c
-    c = c + _blur(glow, 12 * s) * 0.55 + _blur(glow, 36 * s) * 0.35
+    glow = np.clip((l - 0.75) / 0.25, 0, 1)[..., None] * c
+    c = np.clip(c + _blur(glow, 12 * s) * 0.22 + _blur(glow, 36 * s) * 0.14, 0, 1)
     c = c * np.array([1.0, 0.965, 0.985], np.float32)
     Y, X = np.mgrid[0:H, 0:W].astype(np.float32)
     d = np.sqrt(((X - W / 2) / (W * 0.58)) ** 2 + ((Y - H / 2) / (H * 0.58)) ** 2)
@@ -131,14 +142,14 @@ def dream(rgb: np.ndarray, seed: int = 0) -> np.ndarray:
     spark = Image.new("RGBA", im.size, (0, 0, 0, 0))
     dr = ImageDraw.Draw(spark)
     rng = np.random.default_rng(seed + 9)
-    ys, xs = np.nonzero(l > np.percentile(l, 93))
+    ys, xs = np.nonzero((l > np.percentile(l, 70)) & (l < 0.62))
     for i in (rng.choice(len(xs), size=min(26, len(xs)), replace=False) if len(xs) else []):
         x, y, r = float(xs[i]), float(ys[i]), rng.uniform(7, 20) * s
         for L, w_ in ((r, 2), (r * 0.55, 2)):
             ang = 0 if L == r else np.pi / 4
             for k in range(2):
                 a = ang + k * np.pi / 2
-                dr.line([(x - np.cos(a) * L, y - np.sin(a) * L), (x + np.cos(a) * L, y + np.sin(a) * L)], fill=(255, 255, 255, 235), width=max(1, int(w_ * s)))
+                dr.line([(x - np.cos(a) * L, y - np.sin(a) * L), (x + np.cos(a) * L, y + np.sin(a) * L)], fill=(255, 244, 214, 235), width=max(1, int(w_ * s)))
         dr.ellipse((x - 2 * s, y - 2 * s, x + 2 * s, y + 2 * s), fill=(255, 255, 255, 255))
     spark = spark.filter(ImageFilter.GaussianBlur(0.7 * s))
     im.alpha_composite(spark)
