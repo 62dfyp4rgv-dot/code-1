@@ -3,6 +3,7 @@
 import { clamp, COM, BUDGET_CATS } from './constants.js';
 import { addTimedMod, MODIFIER_KEYS } from './mods.js';
 import { rel, adjustCredibility } from './diplomacy.js';
+import { bump } from './achievements.js';
 
 // --------------------------------------------------------------------------- stat resolver
 const PRICE_IDX = { food: 0, oil: 1, gas: 2, minerals: 3 };
@@ -138,6 +139,7 @@ export function resolvePending(sim, inst, optionIndex, expired) {
   const opt = (def.options || [])[optionIndex];
   if (opt) applyEffects(sim, c, opt.effects, inst.target, def);
   st.events.history.push({ day: st.day, id: def.id, c: inst.country, t: inst.target, opt: optionIndex });
+  if (inst.country === st.playerId) bump(sim, 'decisions');
   if (inst.country === st.playerId) sim.log(inst.country, 'event', `Decision: ${eventText(sim, inst).title} → ${opt ? opt.text : '(no action)'}${expired ? ' (expired)' : ''}`, { id: def.id, opt: optionIndex }, 'low');
   sim.emit('event_resolved', { inst, optionIndex });
   return true;

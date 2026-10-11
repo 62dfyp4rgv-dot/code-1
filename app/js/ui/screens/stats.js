@@ -3,6 +3,7 @@ import { icon } from '../icons.js';
 import { stat, kv, sec, tag, btn, li, note, swatch } from './util.js';
 import { gauge, bars, lineChart, spark } from '../charts.js';
 import { gradeOf } from '../../sim/victory.js';
+import { ACHIEVEMENTS } from '../../sim/achievements.js';
 
 export const stats = {
   render(app, p) {
@@ -39,12 +40,19 @@ export const stats = {
   },
 };
 export const objectives = {
-  render(app) {
-    const sim = app.sim, st = sim.state, V = st.victory, c = sim.player;
-    const yrsLeft = Math.max(0, (V.endDay - st.day) / 365);
-    let h = `<div class="grid3">${stat('Standing', V.standing + '/100', 'vs all nations', '', 'star')}${stat('Paths won', V.counts + '/6', gradeOf(V), V.counts >= 2 ? 'up' : '')}${stat('Time left', yrsLeft.toFixed(1) + ' yr', sim.calendar.format(V.endDay))}</div>`;
-    h += `<div class="note">There is no single way to win. Complete victory paths through prosperity, economic weight, diplomacy, science, stability or security — conquest is optional. The scenario ends on ${sim.calendar.format(V.endDay)}; two paths is a success, four is a triumph.</div>`;
-    h += Object.values(V.paths).map((p) => `<div class="card" style="${p.done ? 'border-color:var(--good)' : ''}"><div class="row sp"><b>${esc(p.title)}</b>${p.done ? tag('Achieved', 'good') : tag(Math.round(p.progress * 100) + '%')}</div><div class="hint">${esc(p.desc)}</div>${gauge('Progress', p.progress, { cls: p.done ? 'good' : '' })}</div>`).join('');
-    return { title: 'Objectives', sub: `${esc(sim.scenario.name)}`, html: h };
+  render(app, p) {
+    const sim = app.sim, st = sim.state, V = st.victory, c = sim.player; const tab = p.tab || 'paths';
+    const tabs = [{ id: 'paths', label: 'Victory paths' }, { id: 'ach', label: 'Achievements' }];
+    const yrsLeft = Math.max(0, (V.endDay - st.day) / 365); let h = '';
+    if (tab === 'paths') {
+      h += `<div class="grid3">${stat('Standing', V.standing + '/100', 'vs all nations', '', 'star')}${stat('Paths won', V.counts + '/6', gradeOf(V), V.counts >= 2 ? 'up' : '')}${stat('Time left', yrsLeft.toFixed(1) + ' yr', sim.calendar.format(V.endDay))}</div>`;
+      h += `<div class="note">There is no single way to win. Complete victory paths through prosperity, economic weight, diplomacy, science, stability or security — conquest is optional. The scenario ends on ${sim.calendar.format(V.endDay)}; two paths is a success, four is a triumph.</div>`;
+      h += Object.values(V.paths).map((p) => `<div class="card" style="${p.done ? 'border-color:var(--good)' : ''}"><div class="row sp"><b>${esc(p.title)}</b>${p.done ? tag('Achieved', 'good') : tag(Math.round(p.progress * 100) + '%')}</div><div class="hint">${esc(p.desc)}</div>${gauge('Progress', p.progress, { cls: p.done ? 'good' : '' })}</div>`).join('');
+    } else {
+      const earnedAll = app.earnedAchievements || {};
+      h += `<div class="note">Optional challenges. ${Object.keys(st.ach).length}/${ACHIEVEMENTS.length} earned this game · ${Object.keys(earnedAll).length} across all games.</div>`;
+      h += ACHIEVEMENTS.map((a) => { const done = st.ach[a.id] !== undefined; return `<div class="card" style="${done ? 'border-color:var(--good)' : ''}"><div class="row sp"><b>${esc(a.name)}</b>${done ? tag('Unlocked', 'good') : earnedAll[a.id] ? tag('Earned before') : tag('Locked')}</div><div class="hint">${esc(a.desc)}</div></div>`; }).join('');
+    }
+    return { title: 'Objectives', sub: `${esc(sim.scenario.name)}`, tabs, html: h };
   },
 };

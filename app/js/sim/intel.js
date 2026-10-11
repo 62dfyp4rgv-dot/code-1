@@ -5,6 +5,7 @@ import { modv } from './mods.js';
 import { hash01 } from './rng.js';
 import { rel, adjustCredibility } from './diplomacy.js';
 import { addTimedMod } from './mods.js';
+import { bump } from './achievements.js';
 
 export const OPS = {
   gather:       { name: 'Build intelligence network', cost: 8,  months: 3, risk: 0.10, desc: 'Raises your network level in the target; improves estimates of its true strength.' },
@@ -128,6 +129,7 @@ function resolveOp(sim, c, op) {
     if (op.target === st.playerId) sim.log(op.target, 'intel', `${c.name} caught conducting ${OPS[op.type].name.toLowerCase()} against us`, { by: c.idx }, 'high');
   }
   sim.log(c.idx, 'intel', msg, { op: op.type, target: op.target, ok, exposed }, c.idx === st.playerId ? 'high' : 'low');
+  if (ok && c.idx === st.playerId) bump(sim, 'opsOk');
   sim.emit('intel', { actor: c.idx, op: op.type, target: op.target, ok, exposed });
 }
 function stealTech(sim, c, t) {

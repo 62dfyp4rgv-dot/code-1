@@ -1,41 +1,297 @@
 {
-  "scenarios": [
+ "scenarios": [
+  {
+   "id": "fault_lines",
+   "name": "Fault Lines 2025",
+   "start": [
+    2025,
+    1,
+    1
+   ],
+   "years": 10,
+   "blurb": "The world as it stands: great-power rivalry, an ongoing war in Eastern Europe, fragile energy markets and ageing societies. Lead your nation to lasting standing.",
+   "wars": [
     {
-      "id": "fault_lines",
-      "name": "Fault Lines 2025",
-      "start": [2025, 1, 1],
-      "years": 10,
-      "blurb": "The world as it stands: great-power rivalry, an ongoing war in Eastern Europe, fragile energy markets and ageing societies. Lead your nation to lasting standing.",
-      "wars": [
-        {"attackers": ["RUS"], "defenders": ["UKR"], "goal": "territory", "startOccupation": [{"by": "RUS", "lat": 45.0, "lon": 34.0}, {"by": "RUS", "lat": 48.0, "lon": 38.0}]}
-      ],
-      "shocks": {},
-      "recommended": ["USA", "CHN", "IND", "DEU", "BRA", "NGA", "UKR", "IDN", "POL", "TUR"]
-    },
-    {
-      "id": "quiet_decade",
-      "name": "A Quiet Decade 2025",
-      "start": [2025, 1, 1],
-      "years": 10,
-      "blurb": "No wars are underway, though rivalries simmer. A sandbox for economic, diplomatic and scientific play, where peace has to be kept.",
-      "wars": [],
-      "shocks": {},
-      "recommended": ["JPN", "KOR", "BRA", "SAU", "NGA", "GBR", "EGY", "VNM", "POL", "ARG"]
-    },
-    {
-      "id": "energy_crunch",
-      "name": "Energy Crunch 2025",
-      "start": [2025, 1, 1],
-      "years": 8,
-      "blurb": "A supply shock has pushed oil and gas prices sharply higher and tightened the Hormuz lane. Watch inflation, elections and alliances strain.",
-      "wars": [],
-      "shocks": {"prices": {"oil": 1.7, "gas": 2.1}, "chokepoints": {"hormuz": 0.7}, "cartelQuota": 0.85},
-      "recommended": ["DEU", "JPN", "IND", "TUR", "SAU", "NOR", "EGY", "KOR", "POL", "PAK"]
+     "attackers": [
+      "RUS"
+     ],
+     "defenders": [
+      "UKR"
+     ],
+     "goal": "territory",
+     "startOccupation": [
+      {
+       "by": "RUS",
+       "lat": 45.0,
+       "lon": 34.0
+      },
+      {
+       "by": "RUS",
+       "lat": 48.0,
+       "lon": 38.0
+      }
+     ]
     }
-  ],
-  "difficulty": {
-    "easy":   {"pcMult": 1.4, "aiAggression": 0.7, "aiNoise": 0.35, "eventSeverity": 0.8},
-    "normal": {"pcMult": 1.0, "aiAggression": 1.0, "aiNoise": 0.2,  "eventSeverity": 1.0},
-    "hard":   {"pcMult": 0.8, "aiAggression": 1.3, "aiNoise": 0.1,  "eventSeverity": 1.2}
+   ],
+   "shocks": {},
+   "recommended": [
+    "USA",
+    "CHN",
+    "IND",
+    "DEU",
+    "BRA",
+    "NGA",
+    "UKR",
+    "IDN",
+    "POL",
+    "TUR"
+   ],
+   "sanctions": [
+    {
+     "target": "IRN",
+     "by": [
+      "USA",
+      "@org:eu",
+      "GBR",
+      "CAN",
+      "AUS",
+      "JPN",
+      "KOR"
+     ],
+     "mask": [
+      "oil",
+      "gas"
+     ],
+     "note": "Nuclear-programme sanctions"
+    },
+    {
+     "target": "PRK",
+     "by": [
+      "USA",
+      "KOR",
+      "JPN",
+      "@org:eu",
+      "GBR",
+      "AUS",
+      "CAN"
+     ],
+     "mask": [
+      "oil",
+      "gas",
+      "minerals"
+     ],
+     "note": "Weapons-programme sanctions"
+    },
+    {
+     "target": "VEN",
+     "by": [
+      "USA",
+      "CAN",
+      "GBR"
+     ],
+     "mask": [
+      "oil"
+     ],
+     "note": "Political sanctions"
+    },
+    {
+     "target": "RUS",
+     "by": [
+      "USA",
+      "GBR",
+      "CAN",
+      "JPN",
+      "AUS",
+      "NZL",
+      "KOR",
+      "CHE",
+      "NOR",
+      "@org:eu"
+     ],
+     "mask": [
+      "oil",
+      "gas"
+     ],
+     "note": "Sanctions over the war"
+    }
+   ]
+  },
+  {
+   "id": "quiet_decade",
+   "name": "A Quiet Decade 2025",
+   "start": [
+    2025,
+    1,
+    1
+   ],
+   "years": 10,
+   "blurb": "No wars are underway, though rivalries simmer. A sandbox for economic, diplomatic and scientific play, where peace has to be kept.",
+   "wars": [],
+   "shocks": {},
+   "recommended": [
+    "JPN",
+    "KOR",
+    "BRA",
+    "SAU",
+    "NGA",
+    "GBR",
+    "EGY",
+    "VNM",
+    "POL",
+    "ARG"
+   ],
+   "sanctions": [
+    {
+     "target": "IRN",
+     "by": [
+      "USA",
+      "@org:eu",
+      "GBR",
+      "CAN",
+      "AUS",
+      "JPN",
+      "KOR"
+     ],
+     "mask": [
+      "oil",
+      "gas"
+     ],
+     "note": "Nuclear-programme sanctions"
+    },
+    {
+     "target": "PRK",
+     "by": [
+      "USA",
+      "KOR",
+      "JPN",
+      "@org:eu",
+      "GBR",
+      "AUS",
+      "CAN"
+     ],
+     "mask": [
+      "oil",
+      "gas",
+      "minerals"
+     ],
+     "note": "Weapons-programme sanctions"
+    },
+    {
+     "target": "VEN",
+     "by": [
+      "USA",
+      "CAN",
+      "GBR"
+     ],
+     "mask": [
+      "oil"
+     ],
+     "note": "Political sanctions"
+    }
+   ]
+  },
+  {
+   "id": "energy_crunch",
+   "name": "Energy Crunch 2025",
+   "start": [
+    2025,
+    1,
+    1
+   ],
+   "years": 8,
+   "blurb": "A supply shock has pushed oil and gas prices sharply higher and tightened the Hormuz lane. Watch inflation, elections and alliances strain.",
+   "wars": [],
+   "shocks": {
+    "prices": {
+     "oil": 1.7,
+     "gas": 2.1
+    },
+    "chokepoints": {
+     "hormuz": 0.7
+    },
+    "cartelQuota": 0.85
+   },
+   "recommended": [
+    "DEU",
+    "JPN",
+    "IND",
+    "TUR",
+    "SAU",
+    "NOR",
+    "EGY",
+    "KOR",
+    "POL",
+    "PAK"
+   ],
+   "sanctions": [
+    {
+     "target": "IRN",
+     "by": [
+      "USA",
+      "@org:eu",
+      "GBR",
+      "CAN",
+      "AUS",
+      "JPN",
+      "KOR"
+     ],
+     "mask": [
+      "oil",
+      "gas"
+     ],
+     "note": "Nuclear-programme sanctions"
+    },
+    {
+     "target": "PRK",
+     "by": [
+      "USA",
+      "KOR",
+      "JPN",
+      "@org:eu",
+      "GBR",
+      "AUS",
+      "CAN"
+     ],
+     "mask": [
+      "oil",
+      "gas",
+      "minerals"
+     ],
+     "note": "Weapons-programme sanctions"
+    },
+    {
+     "target": "VEN",
+     "by": [
+      "USA",
+      "CAN",
+      "GBR"
+     ],
+     "mask": [
+      "oil"
+     ],
+     "note": "Political sanctions"
+    }
+   ]
   }
+ ],
+ "difficulty": {
+  "easy": {
+   "pcMult": 1.4,
+   "aiAggression": 0.7,
+   "aiNoise": 0.35,
+   "eventSeverity": 0.8
+  },
+  "normal": {
+   "pcMult": 1.0,
+   "aiAggression": 1.0,
+   "aiNoise": 0.2,
+   "eventSeverity": 1.0
+  },
+  "hard": {
+   "pcMult": 0.8,
+   "aiAggression": 1.3,
+   "aiNoise": 0.1,
+   "eventSeverity": 1.2
+  }
+ }
 }

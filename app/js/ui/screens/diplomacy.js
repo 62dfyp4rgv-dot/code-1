@@ -1,7 +1,7 @@
 import { esc, money, pct, REGION_LABEL, GOV_LABEL } from '../fmt.js';
 import { icon } from '../icons.js';
 import { stat, kv, sec, tag, btn, cmdBtn, li, opinionTag, note, swatch, probBar } from './util.js';
-import { dipCost } from '../../sim/diplomacy.js';
+import { dipCost, UN_KINDS } from '../../sim/diplomacy.js';
 import { OPS } from '../../sim/intel.js';
 
 const ACTIONS = [
@@ -64,6 +64,8 @@ export const dipTarget = {
       h += sec('Pressure');
       const sanc = st.sanctions.some((s) => s.by === me && s.target === i);
       h += `<div class="card"><div class="row sp"><b>${sanc ? 'Sanctions in force' : 'Impose sanctions'}</b><span class="tag">${dipCost('sanction')} inf</span></div><div class="hint">Embargo on energy trade and restricted market access. You and the target both lose trade; sanctions hurt more when allies join.</div><div class="btnrow">${sanc ? btn('Lift sanctions', `data-act="liftsanc" data-to="${i}"`, 'small') : btn('Impose', `data-act="sanction" data-to="${i}"`, 'danger small')}</div></div>`;
+      h += sec('Global Assembly');
+      for (const kind of ['condemn', 'sanction', 'ceasefire']) { if (kind === 'ceasefire' && !sim.atWar(i)) continue; const pv = sim.exec({ type: 'unResolution', kind, target: i, preview: true }); const v = pv.vote; h += `<div class="card"><div class="row sp"><b>${UN_KINDS[kind]}</b><span class="tag">${pv.cost} inf</span></div><div class="hint">Forecast: ${v.yes} for · ${v.no} against · ${v.abstain} abstain${v.vetoBy.length ? ' · <b class="dn">veto by ' + v.vetoBy.map((x) => esc(st.countries[x].name)).join(', ') + '</b>' : ''}</div>${probBar(v.passes ? 0.85 : v.vetoBy.length ? 0.03 : 0.2)}<div class="btnrow">${btn('Table resolution', `data-act="unres" data-kind="${kind}" data-to="${i}"`, 'small primary')}</div></div>`; }
       const cb = sim.hasCasusBelli(me, i);
       h += `<div class="card"><div class="row sp"><b>Declare war</b>${cb ? tag('Casus belli', 'good') : tag('No casus belli', 'warn')}</div><div class="hint">Costs 30 political capital. Without a recognised cause you lose legitimacy and credibility. Allies of ${esc(c.name)} may join.</div><div class="btnrow">${btn('Declare war…', `data-act="warconfirm" data-to="${i}"`, 'danger small')}</div></div>`;
     }
@@ -72,6 +74,7 @@ export const dipTarget = {
   actions: {
     propose: (app, el) => { const to = +el.dataset.to, kind = el.dataset.kind; const r = app.cmd({ type: 'propose', to, kind }); if (r.ok) app.toast(r.accepted ? 'Accepted' : 'Declined', `${app.sim.state.countries[to].name} ${r.accepted ? 'agrees' : 'declines'}: ${kind.replace(/_/g, ' ')}`, r.accepted ? 'good' : 'bad'); },
     sanction: (app, el) => { app.cmd({ type: 'sanction', target: +el.dataset.to }); },
+    unres: (app, el) => { const r = app.cmd({ type: 'unResolution', kind: el.dataset.kind, target: +el.dataset.to }); if (r.ok) app.toast(r.passed ? 'Resolution adopted' : 'Resolution failed', `${r.vote.yes} for, ${r.vote.no} against${r.vote.vetoBy.length ? ' — vetoed' : ''}`, r.passed ? 'good' : 'bad'); },
     liftsanc: (app, el) => { const s = app.sim.state.sanctions.find((x) => x.by === app.sim.state.playerId && x.target === +el.dataset.to); if (s) app.cmd({ type: 'liftSanction', id: s.id }); },
     warconfirm: (app, el) => { const to = +el.dataset.to, c = app.sim.state.countries[to]; const pv = app.sim.exec({ type: 'declareWar', target: to, preview: true }); app.openOverlay(`<div class="modal center"><h2>Declare war on ${esc(c.name)}?</h2><p>${pv.cb ? 'You have a recognised casus belli.' : '<b>You have no casus belli</b>: legitimacy and credibility will fall.'} Costs ${pv.cost} political capital. War will drive up exhaustion, casualties and costs.</p><div class="btnrow"><button class="btn" data-act="closeOverlay2">Cancel</button><button class="btn danger" data-act="dowar" data-to="${to}">Declare war</button></div></div>`); const ov = app.$('#overlay'); ov.onclick = (e) => { const b = e.target.closest('[data-act]'); if (!b) { if (e.target === ov) app.closeOverlay(); return; } if (b.dataset.act === 'closeOverlay2') app.closeOverlay(); if (b.dataset.act === 'dowar') { app.closeOverlay(); const r = app.cmd({ type: 'declareWar', target: +b.dataset.to, goal: 'territory' }); if (r.ok) app.openSheet('military', { tab: 'war' }); } }; },
   },

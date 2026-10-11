@@ -1,6 +1,7 @@
 // Diplomacy (init part; full rules appended below in later revisions)
 import { clamp } from './constants.js';
 import { hash01 } from './rng.js';
+import { bump } from './achievements.js';
 
 export function initOrgsAndTreaties(sim) {
   const { data, geo, state } = sim;
@@ -190,7 +191,7 @@ export function actOnProposal(sim, from, to, type, params = {}) {
   const rng = sim.rng;
   const accepted = type === 'improve' ? true : rng.chance(ev.prob);
   const res = { ok: true, accepted, eval: ev };
-  const add = (t, extra = {}) => { st.treaties.push({ id: st.nextId++, type: t, parties: [from, to], start: st.day, end: extra.years ? st.day + extra.years * 365 : null, active: true, ...extra }); };
+  const add = (t, extra = {}) => { if (from === st.playerId || to === st.playerId) bump(sim, 'treaties'); st.treaties.push({ id: st.nextId++, type: t, parties: [from, to], start: st.day, end: extra.years ? st.day + extra.years * 365 : null, active: true, ...extra }); };
   switch (type) {
     case 'improve': rel(sim, to, from, 8 + A.gov.bureaucracy * 4, 3); rel(sim, from, to, 2, 1); res.accepted = true; break;
     case 'trade_agreement': if (accepted) { add('trade_agreement'); rel(sim, to, from, 6, 4); rel(sim, from, to, 6, 4); } else rel(sim, to, from, -2); break;
@@ -336,3 +337,49 @@ export function monthlyStep(sim, day) {
   for (const c of cs) if (c.reparations) { const r = c.reparations; if (r.until < day) { c.reparations = null; continue; } const amt = r.pct * c.econ.gdp / 12; c.econ.debt += amt; cs[r.to].econ.debt -= amt; }
 }
 export function yearlyStep(sim, day) {}
+
+// ============================================================================ Global Assembly / Security Council resolutions
+export const UN_KINDS = { condemn: 'Condemn', sanction: 'Collective sanctions', ceasefire: 'Call for a ceasefire' };
+export function unVote(sim, from, kind, target) {
+  const st = sim.state, N = sim.geo.N; const un = st.orgs.find((o) => o.id === 'un'); if (!un) return null;
+  const votes = { yes: [], no: [], abstain: [] }; const scores = new Array(N).fill(0);
+  const allies = sim.alliesOf(target);
+  for (const m of un.members) {
+    if (m === from) { votes.yes.push(m); scores[m] = 1; continue; }
+    if (m === target) { votes.no.push(m); scores[m] = -1; continue; }
+    let s = 0.012 * opinion(sim, m, from) - 0.011 * opinion(sim, m, target);
+    if (allies.has(m)) s -= 0.7;
+    s += 0.004 * st.rel.rivalry[m * N + target];
+    if (sim.atWarWith(m, target)) s += 0.5;
+    if (kind === 'ceasefire') { s += 0.25 * (st.countries[m].gov.dem / 100) + (sim.atWar(m) ? -0.5 : 0.15); }
+    if (kind === 'sanction') s -= 0.12 * (1 - st.countries[m].gov.dem / 100) + 0.0000 * 0;
+    s += (hash01(st.countries[m].id + kind + target) - 0.5) * 0.3;
+    scores[m] = s;
+    (s > 0.15 ? votes.yes : s < -0.15 ? votes.no : votes.abstain).push(m);
+  }
+  const vetoBy = un.permanent.filter((p) => p !== from && scores[p] < -0.35);
+  const passes = votes.yes.length > votes.no.length && vetoBy.length === 0;
+  return { votes, vetoBy, passes, yes: votes.yes.length, no: votes.no.length, abstain: votes.abstain.length, scores };
+}
+export function unResolution(sim, from, kind, target, preview = false) {
+  const st = sim.state; const A = st.countries[from];
+  if (!UN_KINDS[kind]) return { ok: false, reason: 'unknown resolution' };
+  if (kind === 'ceasefire' && !sim.atWar(target)) return { ok: false, reason: 'target is not at war' };
+  const v = unVote(sim, from, kind, target); const cost = COSTS.un_resolution;
+  if (preview) return { ok: true, vote: v, cost };
+  if (A.dip.influence < cost) return { ok: false, reason: `needs ${cost} influence` };
+  if (A.dip.cooldown['un:' + kind + ':' + target] > st.day) return { ok: false, reason: 'recently tabled' };
+  A.dip.influence -= cost; A.dip.cooldown['un:' + kind + ':' + target] = st.day + 180;
+  const T = st.countries[target];
+  if (v.passes) {
+    adjustCredibility(sim, from, 1); if (from === st.playerId) bump(sim, 'resolutions');
+    if (kind === 'condemn') { T.gov.legitimacy = clamp(T.gov.legitimacy - 0.03, 0, 1); for (const m of v.votes.yes) rel(sim, m, target, -5, -3); }
+    else if (kind === 'sanction') { const coalition = v.votes.yes.filter((m) => m !== from && m !== target).sort((a, b) => st.countries[b].econ.gdp - st.countries[a].econ.gdp).slice(0, 40); addSanction(sim, from, target, 0b0110, coalition); }
+    else if (kind === 'ceasefire') { for (const w of st.wars) if (w.active && (w.attackers.includes(target) || w.defenders.includes(target))) for (const x of [...w.attackers, ...w.defenders]) st.countries[x].mil.exhaustion = clamp(st.countries[x].mil.exhaustion + 0.12, 0, 1); }
+    sim.log(from, 'diplomacy', `Resolution adopted: ${UN_KINDS[kind]} (${T.name}) — ${v.yes} for, ${v.no} against`, { kind, target }, 'high');
+  } else {
+    adjustCredibility(sim, from, -1);
+    sim.log(from, 'diplomacy', v.vetoBy.length ? `Resolution on ${T.name} vetoed by ${v.vetoBy.map((p) => st.countries[p].name).join(', ')}` : `Resolution on ${T.name} fails (${v.yes} for, ${v.no} against)`, { kind, target }, 'high');
+  }
+  return { ok: true, passed: v.passes, vote: v };
+}

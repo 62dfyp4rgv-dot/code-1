@@ -59,7 +59,7 @@ function assess(sim, c, view) {
   for (const o of view.others) {
     const ratio = o.mil / Math.max(1, view.self.mil);
     const prox = o.landNeighbor ? 1 : o.neighbor ? 0.6 : o.dist < 4000 ? 0.25 : 0.05;
-    let t = prox * (0.35 * Math.min(2.5, ratio) + o.rivalry / 100 + (o.atWar ? 1 : 0) + (o.iClaimedByThem ? 0.6 : 0) + (o.theirOpinion < -30 ? 0.2 : 0)) * (1 - 0.5 * (o.ally ? 1 : 0));
+    let t = prox * (0.18 * Math.min(2.5, ratio) * (0.4 + o.rivalry / 50) + o.rivalry / 100 + (o.atWar ? 1 : 0) + (o.iClaimedByThem ? 0.6 : 0) + (o.theirOpinion < -30 ? 0.2 : 0)) * (1 - 0.5 * (o.ally ? 1 : 0));
     if (o.nukes && o.rivalry > 30) t += 0.2;
     if (t > topScore) { topScore = t; top = o; }
     threat = Math.max(threat, t);

@@ -2,6 +2,36 @@
 import { clamp } from '../sim/constants.js';
 import { alliedPowerOf } from './perception.js';
 
+// Air and naval tasking: counter-air at the front, strategic bombing of high-value targets in range, blockade of enemy ports.
+function manageAirNaval(sim, c, view) {
+  const g = sim.geo, st = sim.state, reg = st.reg; const enemies = view.enemies;
+  const wings = sim.forcesOf[c.idx].filter((f) => f.branch === 'air' && f.dest < 0 && f.order.kind !== 'locked');
+  const fleets = sim.forcesOf[c.idx].filter((f) => f.branch === 'sea' && f.dest < 0 && f.order.kind !== 'locked');
+  // front regions of ours (adjacent to an enemy-controlled region)
+  const front = [];
+  for (const r of sim.controlledBy[c.idx]) if (g.regions[r].adj.some((a) => enemies.has(reg.ctrl[a.to]))) front.push(r);
+  if (wings.length && front.length) {
+    const hub = front.reduce((b, r) => (g.regions[r].popW + (g.regions[r].port ? 0.02 : 0) > g.regions[b].popW ? r : b), front[0]);
+    for (const f of wings) {
+      if (f.type === 'fighter') { if (f.loc !== hub && f.order.kind !== 'rest' && !f.inCombat) sim.exec({ type: 'moveForce', actor: c.idx, force: f.id, region: hub }); }
+      else if (f.order.kind !== 'bomb') {
+        // strike wing: best enemy region within two hops of the hub by value (population, capital, devastation headroom)
+        let best = -1, bv = -1; const seen = new Set([hub]); let fr = [hub];
+        for (let h = 0; h < 2; h++) { const nf = []; for (const u of fr) for (const a of g.regions[u].adj) if (!seen.has(a.to)) { seen.add(a.to); nf.push(a.to); const own = reg.owner[a.to], ctl = reg.ctrl[a.to]; if (!enemies.has(ctl) && !enemies.has(own)) continue; const v = g.regions[a.to].popW * 10 + (a.to === g.capitalRegion[own] ? 6 : 0) + (g.regions[a.to].port ? 1 : 0) - 8 * reg.dev[a.to]; if (v > bv) { bv = v; best = a.to; } } fr = nf; }
+        if (best >= 0) { if (f.loc !== hub) sim.exec({ type: 'moveForce', actor: c.idx, force: f.id, region: hub }); sim.exec({ type: 'setOrder', actor: c.idx, force: f.id, kind: 'bomb', target: best }); }
+      }
+    }
+  }
+  if (fleets.length) {
+    // blockade the sea zone beside the enemy's busiest port within reach
+    let bestSea = -1, bv = 0;
+    for (const r of g.regions) { const ctl = reg.ctrl[r.idx], own = reg.owner[r.idx]; if (!(enemies.has(own)) || ctl !== own || !r.port) continue; for (const co of r.coast) { const v = r.port * co.n; if (v > bv) { bv = v; bestSea = co.sea; } } }
+    if (bestSea >= 0) for (const f of fleets.filter((x) => x.type !== 'carrier').slice(0, Math.ceil(fleets.length * 0.7))) {
+      if (f.loc === bestSea) { if (f.order.kind !== 'blockade') sim.exec({ type: 'setOrder', actor: c.idx, force: f.id, kind: 'blockade', target: -1 }); }
+      else if (sim.exec({ type: 'moveForce', actor: c.idx, force: f.id, region: bestSea }).ok) f.afterMoveOrder = 'blockade';
+    }
+  }
+}
 export function manageMilitaryPosture(sim, c, view) {
   const m = c.mil, A = c.ai; const atWar = sim.atWar(c.idx);
   // doctrine suited to circumstances (rare, PC-gated)
@@ -19,6 +49,7 @@ export function manageMilitaryPosture(sim, c, view) {
     const stance = ratio > 1.4 && c.mil.exhaustion < 0.6 ? 'attack' : ratio < 0.8 ? 'defend' : (m.posture[e]?.stance || 'defend');
     sim.exec({ type: 'setStance', actor: c.idx, enemy: e, stance });
   }
+  if (atWar) manageAirNaval(sim, c, view);
   // raise new formations when badly outnumbered and funded
   if (atWar && c.gov.pc > 20 && m.reserve > 40 && sim.rng.chance(0.15)) sim.exec({ type: 'raiseForce', actor: c.idx, unit: 'inf' });
 }

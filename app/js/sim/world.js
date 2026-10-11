@@ -18,6 +18,7 @@ import * as CMD from './commands.js';
 import * as VIC from './victory.js';
 import * as STAT from './stats.js';
 import * as WAR from './war.js';
+import { checkAchievements } from './achievements.js';
 import { GOV_PROFILE } from './constants.js';
 
 export const SAVE_VERSION = 1;
@@ -45,9 +46,9 @@ export class Sim {
     const playerId = geo.idOf[this.opts.player];
     if (playerId === undefined) throw new Error('unknown player country ' + this.opts.player);
     this.state = {
-      cal: null, lastBlockade: {}, version: SAVE_VERSION, seed: this.opts.seed, scenario: sc.id, day: 0, playerId, settings: { difficulty: this.opts.difficulty, strictElections: false, permadeath: false, aiAggression: this.diff.aiAggression },
+      cal: null, lastBlockade: {}, version: SAVE_VERSION, seed: this.opts.seed, scenario: sc.id, day: 0, playerId, settings: { difficulty: this.opts.difficulty, strictElections: false, permadeath: false, aiAggression: this.diff.aiAggression * (this.opts.aiMult ?? 1), aiMult: this.opts.aiMult ?? 1 },
       countries: [], prices: [1, 1, 1, 1], reg: null, orgs: [], treaties: [], sanctions: [], wars: [], chokes: [], world: { temp: 1.2, emis: 0, cumEmis: 0 }, pandemic: null, cartel: { quota: 1 },
-      forces: [], nextId: 1, log: [], inbox: [], events: { fired: {}, cooldown: {}, pending: [] }, techAdopt: {}, topEconomies: [], ended: null, flags: {},
+      counters: {}, ach: {}, forces: [], nextId: 1, log: [], inbox: [], events: { fired: {}, cooldown: {}, pending: [] }, techAdopt: {}, topEconomies: [], ended: null, flags: {},
     };
     const st = this.state;
     // countries
@@ -119,6 +120,15 @@ export class Sim {
     if (sc.shocks?.chokepoints) for (const [k, v] of Object.entries(sc.shocks.chokepoints)) { const cp = st.chokes.find((x) => x.id === k); if (cp) cp.open = v; }
     if (sc.shocks?.cartelQuota) st.cartel.quota = sc.shocks.cartelQuota;
     for (const c of st.countries) c.econ.priceLast = [1, 1, 1, 1]; // pre-shock price level: the first month sees the shock
+    const COMBIT = { oil: 0b0010, gas: 0b0100, minerals: 0b1000, food: 0b0001 };
+    for (const sn of sc.sanctions || []) {
+      const t = this.geo.idOf[sn.target]; if (t === undefined) continue;
+      const by = [...new Set(sn.by.flatMap((x) => (x.startsWith('@org:') ? (st.orgs.find((o) => o.id === x.slice(5))?.members || []) : [this.geo.idOf[x]])).filter((x) => x !== undefined && x !== t))];
+      if (!by.length) continue;
+      const mask = sn.mask.reduce((m, k) => m | COMBIT[k], 0);
+      st.sanctions.push({ id: st.nextId++, by: by[0], target: t, mask, coalition: by.slice(1), start: -400, note: sn.note });
+      for (const b of by) { this.rel(t, b, -12, -10); }
+    }
     for (const w of sc.wars || []) MIL.startScenarioWar(this, w);
   }
   initTradeBaseline() {
@@ -270,6 +280,7 @@ export class Sim {
     this.perf.ai += performance.now() - ta;
     VIC.monthlyStep(this, day);
     STAT.monthlyStep(this, day);
+    checkAchievements(this);
     yield;
   }
   yearly(day) {

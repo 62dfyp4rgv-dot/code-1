@@ -6,6 +6,7 @@ import * as DIP from './diplomacy.js';
 import * as INT from './intel.js';
 import * as EVT from './events.js';
 import { UNIT_TYPES } from './military.js';
+import { bump } from './achievements.js';
 import { techAvailable, canAdopt, adoptionCost, completeTech } from './research.js';
 
 const ok = (extra = {}) => ({ ok: true, ...extra });
@@ -28,7 +29,7 @@ const HANDLERS = {
     const cost = policyCost(sim, c, cmd.key, v);
     if (cost > c.gov.pc) return no(`needs ${cost.toFixed(1)} political capital`, { cost });
     if (cmd.preview) return ok({ cost, value: v });
-    c.gov.pc -= cost; c.target[cmd.key] = v;
+    c.gov.pc -= cost; c.target[cmd.key] = v; if (a === sim.state.playerId) bump(sim, 'policy');
     return ok({ cost, value: v });
   },
   setBudget(sim, a, cmd) {
@@ -110,6 +111,7 @@ const HANDLERS = {
     return r.ok ? ok(r) : no('the other side rejects these terms', r);
   },
   respondCall(sim, a, cmd) { return DIP.respondToCall(sim, a, cmd.war, !!cmd.join) ? ok() : no('no pending call'); },
+  unResolution(sim, a, cmd) { return DIP.unResolution(sim, a, cmd.kind, cmd.target, !!cmd.preview); },
   // ---------------------------------------------------------------- intelligence
   intelOp(sim, a, cmd) { return INT.startOp(sim, a, cmd.op, cmd.target, cmd.params || {}); },
   // ---------------------------------------------------------------- events
@@ -120,7 +122,7 @@ const HANDLERS = {
 const REQUIRED = {
   setPolicy: ['key', 'value'], setBudget: ['shares'], setFocus: ['sector'], toggleAuto: ['what'], queueTech: ['tech'], dequeueTech: ['tech'], prioritizeTech: ['tech'], adoptTech: ['tech'],
   setStance: ['enemy', 'stance'], setDoctrine: ['doctrine'], mobilize: ['level'], moveForce: ['force', 'region'], attackRegion: ['force', 'target'], setOrder: ['force', 'kind'], raiseForce: ['unit'], assignCommander: ['force', 'commander'],
-  propose: ['to', 'kind'], sanction: ['target'], liftSanction: ['id'], declareWar: ['target'], proposePeace: ['war', 'target'], respondCall: ['war'], intelOp: ['op', 'target'], resolveEvent: ['uid', 'option'],
+  propose: ['to', 'kind'], unResolution: ['kind', 'target'], sanction: ['target'], liftSanction: ['id'], declareWar: ['target'], proposePeace: ['war', 'target'], respondCall: ['war'], intelOp: ['op', 'target'], resolveEvent: ['uid', 'option'],
 };
 const IDX_FIELDS = ['enemy', 'to', 'target', 'force', 'region', 'commander', 'war', 'uid', 'option', 'id'];
 export function exec(sim, cmd) {
@@ -128,7 +130,7 @@ export function exec(sim, cmd) {
   if (!h) return no('unknown command ' + (cmd && cmd.type));
   for (const k of REQUIRED[cmd.type] || []) if (cmd[k] === undefined || cmd[k] === null) return no(`missing argument '${k}'`);
   for (const k of IDX_FIELDS) if (cmd[k] !== undefined && cmd.type !== 'setPolicy' && cmd.type !== 'setFocus' && !(Number.isInteger(cmd[k]) && cmd[k] >= 0)) return no(`invalid argument '${k}'`);
-  if (cmd.target !== undefined && cmd.type !== 'queueTech' && cmd.target >= sim.geo.N && ['sanction', 'declareWar', 'intelOp', 'proposePeace'].includes(cmd.type)) return no('no such country');
+  if (cmd.target !== undefined && cmd.type !== 'queueTech' && cmd.target >= sim.geo.N && ['sanction', 'declareWar', 'intelOp', 'proposePeace', 'unResolution'].includes(cmd.type)) return no('no such country');
   if (cmd.to !== undefined && cmd.to >= sim.geo.N) return no('no such country');
   const actor = cmd.actor ?? sim.state.playerId;
   const r = h(sim, actor, cmd);

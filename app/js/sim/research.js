@@ -2,6 +2,7 @@
 import { clamp } from './constants.js';
 import { modv, recomputeTechMods } from './mods.js';
 import { hash01 } from './rng.js';
+import { bump } from './achievements.js';
 
 export function initResearch(sim, c, row) {
   const { data } = sim;
@@ -59,6 +60,7 @@ export function researchStep(sim, c, day) {
 }
 export function completeTech(sim, c, t, how) {
   if (c.tech.known.includes(t.id)) return;
+  if (c.idx === sim.state.playerId) bump(sim, 'researched');
   c.tech.known.push(t.id);
   recomputeTechMods(c, sim.data);
   sim.state.techAdopt[t.id] = (sim.state.techAdopt[t.id] || 0) + (sim.state.topEconomies.includes(c.idx) ? 1 : 0);

@@ -4,6 +4,7 @@
 import { clamp, TERRAIN, COM } from './constants.js';
 import { modv } from './mods.js';
 import { UNIT_TYPES } from './military.js';
+import { bump } from './achievements.js';
 
 const DOCTRINES = {
   combined:   { atk: 1.0,  def: 1.0,  logi: 1.0,  org: 1.0,  desc: 'Balanced combined-arms doctrine.' },
@@ -187,7 +188,7 @@ function moveAll(sim, day) {
     f.moveProg += km;
     if (f.moveProg >= dkm) {
       f.moveProg = 0; f.loc = next; f.path.shift(); f.org = Math.max(0.2, f.org - 0.02);
-      if (!f.path.length) { f.dest = -1; if (f.afterMove) { const am = f.afterMove; f.afterMove = null; if (am.kind === 'attack') f.order = { kind: 'attack', target: am.target }; } else f.order = { kind: 'hold', target: -1 }; f.prep = 0; }
+      if (!f.path.length) { f.dest = -1; if (f.afterMoveOrder) { f.order = { kind: f.afterMoveOrder, target: -1 }; f.afterMoveOrder = null; } else if (f.afterMove) { const am = f.afterMove; f.afterMove = null; if (am.kind === 'attack') f.order = { kind: 'attack', target: am.target }; } else f.order = { kind: 'hold', target: -1 }; f.prep = 0; }
     }
   }
 }
@@ -609,6 +610,7 @@ export function proposePeace(sim, w, proposer, target, terms) {
   const leadersPair = (w.leaders.includes(proposer) && w.leaders.includes(target));
   if (leadersPair) { for (const x of [...w.attackers, ...w.defenders]) { if (x !== proposer && x !== target) sim.log(x, 'peace', `${sim.state.countries[x].name}: war ended by leaders' settlement`, {}, 'low'); } w.active = false; w.end = sim.state.day; w.endReason = 'negotiated peace'; for (const x of [...w.attackers, ...w.defenders]) { sim.state.countries[x].mil.mobilizationTarget = atWar(sim, x) ? 1 : 0; } }
   else { endWarFor(sim, w, target, 'separate peace'); if (!w.attackers.includes(proposer) && !w.defenders.includes(proposer)) { /* ended */ } }
+  for (const pp of [proposer, target]) if (pp === sim.state.playerId) { bump(sim, 'peace'); if (!Object.keys(sim.state.reg.owner).some((r) => sim.state.reg.owner[r] === pp && sim.state.reg.ctrl[r] !== pp)) bump(sim, 'defended'); }
   if (!w.active) { sim.log(proposer, 'peace', `${w.name} ends: negotiated peace`, { war: w.id }, 'high'); sim.emit('war', { type: 'ended', war: w.id }); }
   for (const x of [proposer, target]) sim.state.countries[x].mil.mobilizationTarget = atWar(sim, x) ? 1 : 0;
   sim.state.treaties.push({ id: sim.state.nextId++, type: 'ceasefire', parties: [proposer, target], start: sim.state.day, end: sim.state.day + 365 * 4, active: true });

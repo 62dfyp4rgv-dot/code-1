@@ -88,3 +88,29 @@ test('pandemic mechanics: spreads, mortality tied to health, ends', async () => 
   assert.ok(sim.state.countries.some((c) => c.econ.pandemicLoad > 0.01));
   sim.advanceMonths(40); assert.equal(sim.state.pandemic, null, 'pandemics burn out');
 });
+test('Global Assembly resolutions: forecast equals outcome; veto blocks; effects apply', async () => {
+  const { unVote } = await import('../../app/js/sim/diplomacy.js');
+  const sim = await makeSim({ player: 'FRA', seed: 4 }); const g = sim.geo; const ru = g.idOf.RUS, fr = g.idOf.FRA;
+  const fc = unVote(sim, fr, 'condemn', ru); assert.ok(fc.yes + fc.no + fc.abstain === g.N);
+  const pv = sim.exec({ type: 'unResolution', kind: 'condemn', target: ru, preview: true }); assert.equal(pv.vote.passes, fc.passes);
+  sim.player.dip.influence = 100; const leg0 = sim.country('RUS').gov.legitimacy; const r = sim.exec({ type: 'unResolution', kind: 'condemn', target: ru });
+  assert.ok(r.ok); assert.equal(r.passed, fc.passes);
+  if (r.passed) assert.ok(sim.country('RUS').gov.legitimacy < leg0); else assert.ok(fc.vetoBy.length > 0 || fc.yes <= fc.no);
+  // a P5 member shielding its ally vetoes
+  const cn = g.idOf.CHN; const vp = unVote(sim, fr, 'sanction', g.idOf.PRK); assert.ok(vp.vetoBy.includes(cn) || vp.vetoBy.includes(ru) || !vp.passes, 'allies of the target are shielded by the Council');
+  assert.equal(sim.exec({ type: 'unResolution', kind: 'ceasefire', target: ru }).ok, false, 'ceasefire calls need an actual war');
+});
+test('scenario sanctions are in force from day one and cut trade', async () => {
+  const sim = await makeSim({ scenario: 'fault_lines', player: 'USA', seed: 3 });
+  assert.ok(sim.state.sanctions.some((s) => s.target === sim.geo.idOf.RUS), 'Russia sanctioned in the hot-start scenario');
+  assert.ok(!(await makeSim({ scenario: 'quiet_decade' })).state.sanctions.some((s) => s.target === sim.geo.idOf.RUS), 'but not in the quiet scenario');
+  sim.advanceMonths(3); const ru = sim.country('RUS').econ; assert.ok(ru.tradeAccess < 1);
+  const eu = sim.geo.idOf.DEU; const flow = sim.lastFlows[COM.gas].filter(([i, j]) => i === eu && j === sim.geo.idOf.RUS).reduce((s, f) => s + f[2], 0); assert.equal(flow, 0);
+});
+test('achievements unlock from real play and persist in the save', async () => {
+  const { serialize, deserialize } = await import('../../app/js/sim/save.js'); const { getData } = await import('../helpers.js');
+  const sim = await makeSim({ player: 'BRA', seed: 2 }); assert.equal(Object.keys(sim.state.ach).length, 0);
+  assert.ok(sim.exec({ type: 'setPolicy', key: 'tariff', value: 0.1 }).ok); sim.advanceMonths(2);
+  assert.ok(sim.state.ach.first_policy !== undefined, 'first policy change recorded');
+  const back = deserialize(await getData(), serialize(sim)); assert.ok(back.state.ach.first_policy !== undefined);
+});

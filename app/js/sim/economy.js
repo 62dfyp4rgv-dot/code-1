@@ -309,7 +309,7 @@ export function commodityDemand(sim, c) {
     e.dem0[3] * (e.Y[S.industry] / (e.Y0i || (e.Y0i = Math.max(1e-6, e.Y[S.industry])))) * (1 - modd(c, 'min.recycle')),
   ];
   // military procurement adds mineral demand
-  dem[3] *= 1 + 0.2 * c.mil.procRatio;
+  dem[3] *= 1 + 0.05 * c.mil.procRatio;
   return dem;
 }
 const subsidyShield = (c) => c.policy.budget.subsidies;

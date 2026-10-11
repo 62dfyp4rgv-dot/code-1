@@ -13,6 +13,7 @@ export class App {
   constructor(root, data) {
     this.root = root; this.data = data; this.settings = loadSettings(); this.screens = {}; this.sheetTab = {}; this.sim = null; this.paused = true; this.speed = this.settings.speed ?? 1;
     this.acc = 0; this.gen = null; this.lastT = 0; this.lastHud = ''; this.sheetScreen = null; this.sheetParams = {}; this.unread = 0; this.interacting = false; this.history = [];
+    try { this.earnedAchievements = JSON.parse(localStorage.getItem('ma:ach') || '{}'); } catch { this.earnedAchievements = {}; }
     this.build(); this.applySettings(); this.bindGlobal();
   }
   build() {
@@ -97,6 +98,7 @@ export class App {
     } else if (type === 'decision') { this.pause(); sfx.alert(); haptic(25, this.settings.haptics); this.showDecision(p); }
     else if (type === 'ended') { this.pause(); this.showEnd?.(); }
     else if (type === 'tech' && p.country === me) sfx.tech();
+    else if (type === 'achievement') { this.earnedAchievements = { ...this.earnedAchievements, [p.id]: Date.now() }; try { localStorage.setItem('ma:ach', JSON.stringify(this.earnedAchievements)); } catch { /* storage unavailable */ } sfx.tech(); this.toast('Achievement', p.name + ' — ' + p.desc, 'good'); }
     else if (type === 'capture') this.map.markDirty('colors');
   }
   // ------------------------------------------------------------------------------------------------ HUD

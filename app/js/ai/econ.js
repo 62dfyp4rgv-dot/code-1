@@ -9,7 +9,7 @@ export function manageEconomy(sim, c, view) {
   // ---- budget composition (routine administration, free like the player's auto-budget) ----
   const spend = Math.max(0.1, t.spendRate);
   const f0 = e.fiscal0;
-  const defWant = clamp((m.D0 / e.gdp0) * (0.75 + 0.9 * A.threat) + (atWar ? 0.025 : 0), 0.004, 0.16);
+  const defWant = clamp((m.D0 / e.gdp0) * (0.85 + 0.45 * Math.min(1.5, A.threat)) + (atWar ? 0.025 : 0), 0.004, 0.16);
   const w = {
     health: f0.health * (1 + 1.2 * Math.max(0, 0.62 - c.pop.health) + 0.5 * Math.max(0, c.pop.elder - 0.15)),
     education: f0.education * (1 + 1.2 * Math.max(0, 0.6 - c.pop.edu)),
