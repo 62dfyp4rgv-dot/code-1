@@ -21,7 +21,7 @@ function reviver(k, v) {
   }
   return v;
 }
-export function checksum(str) { let h = 5381; for (let i = 0; i < str.length; i += 7) h = ((h << 5) + h + str.charCodeAt(i)) | 0; return (h >>> 0).toString(16) + ':' + str.length; }
+export function checksum(str) { let h = 0x811c9dc5; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193); } return (h >>> 0).toString(16) + ':' + str.length; }
 
 // ---------------------------------------------------------------------------------------------- migrations
 // Each entry upgrades a save of version N to N+1. Add a new function here when SAVE_VERSION is incremented.

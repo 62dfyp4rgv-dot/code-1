@@ -73,7 +73,7 @@ const HANDLERS = {
   mobilize(sim, a, cmd) { const c = sim.state.countries[a]; const lvl = clamp(Math.round(cmd.level), 0, 3); const cost = lvl > c.mil.mobilizationTarget ? 6 * (lvl - (c.mil.mobilizationTarget || 0)) : 0; if (cost > c.gov.pc) return no(`needs ${cost} political capital`); c.gov.pc -= cost; c.mil.mobilizationTarget = lvl; return ok({ cost }); },
   setManualWar(sim, a, cmd) { sim.state.countries[a].mil.manual = !!cmd.value; return ok(); },
   moveForce(sim, a, cmd) { const f = sim.forceById(cmd.force); if (!f || f.owner !== a) return no('not your formation'); if (!WAR.moveForce(sim, f, cmd.region)) return no('no path'); f.order = { kind: 'move', target: cmd.region }; return ok(); },
-  attackRegion(sim, a, cmd) { const f = sim.forceById(cmd.force); if (!f || f.owner !== a) return no('not your formation'); if (f.branch !== 'land') return no('land formations only'); if (!sim.hostile || !sim.enemiesOf(a).has(sim.state.reg.ctrl[cmd.target])) return no('target not controlled by an enemy'); return WAR.attackRegion(sim, f, cmd.target) ? ok() : no('cannot reach'); },
+  attackRegion(sim, a, cmd) { const f = sim.forceById(cmd.force); if (!f || f.owner !== a) return no('not your formation'); if (f.branch !== 'land') return no('land formations only'); if (!sim.enemiesOf(a).has(sim.state.reg.ctrl[cmd.target])) return no('target not controlled by an enemy'); return WAR.attackRegion(sim, f, cmd.target) ? ok() : no('cannot reach'); },
   setOrder(sim, a, cmd) { const f = sim.forceById(cmd.force); if (!f || f.owner !== a) return no('not your formation'); if (!['hold', 'defend', 'bomb', 'blockade', 'patrol', 'rest', 'locked'].includes(cmd.kind)) return no('invalid order'); f.order = { kind: cmd.kind, target: cmd.target ?? -1 }; f.dest = -1; return ok(); },
   raiseForce(sim, a, cmd) {
     const c = sim.state.countries[a]; const u = UNIT_TYPES[cmd.unit]; if (!u) return no('unknown type');
@@ -116,9 +116,20 @@ const HANDLERS = {
   resolveEvent(sim, a, cmd) { const inst = sim.state.events.pending.find((p) => p.uid === cmd.uid && p.country === a); if (!inst) return no('no such decision'); const def = sim.eventById[inst.id]; if (!def.options[cmd.option]) return no('no such option'); EVT.resolvePending(sim, inst, cmd.option, false); return ok(); },
 };
 
+// Required arguments per command (validated before any handler runs, so malformed UI/AI calls fail cleanly).
+const REQUIRED = {
+  setPolicy: ['key', 'value'], setBudget: ['shares'], setFocus: ['sector'], toggleAuto: ['what'], queueTech: ['tech'], dequeueTech: ['tech'], prioritizeTech: ['tech'], adoptTech: ['tech'],
+  setStance: ['enemy', 'stance'], setDoctrine: ['doctrine'], mobilize: ['level'], moveForce: ['force', 'region'], attackRegion: ['force', 'target'], setOrder: ['force', 'kind'], raiseForce: ['unit'], assignCommander: ['force', 'commander'],
+  propose: ['to', 'kind'], sanction: ['target'], liftSanction: ['id'], declareWar: ['target'], proposePeace: ['war', 'target'], respondCall: ['war'], intelOp: ['op', 'target'], resolveEvent: ['uid', 'option'],
+};
+const IDX_FIELDS = ['enemy', 'to', 'target', 'force', 'region', 'commander', 'war', 'uid', 'option', 'id'];
 export function exec(sim, cmd) {
-  const h = HANDLERS[cmd.type];
-  if (!h) return no('unknown command ' + cmd.type);
+  const h = cmd && HANDLERS[cmd.type];
+  if (!h) return no('unknown command ' + (cmd && cmd.type));
+  for (const k of REQUIRED[cmd.type] || []) if (cmd[k] === undefined || cmd[k] === null) return no(`missing argument '${k}'`);
+  for (const k of IDX_FIELDS) if (cmd[k] !== undefined && cmd.type !== 'setPolicy' && cmd.type !== 'setFocus' && !(Number.isInteger(cmd[k]) && cmd[k] >= 0)) return no(`invalid argument '${k}'`);
+  if (cmd.target !== undefined && cmd.type !== 'queueTech' && cmd.target >= sim.geo.N && ['sanction', 'declareWar', 'intelOp', 'proposePeace'].includes(cmd.type)) return no('no such country');
+  if (cmd.to !== undefined && cmd.to >= sim.geo.N) return no('no such country');
   const actor = cmd.actor ?? sim.state.playerId;
   const r = h(sim, actor, cmd);
   if (r.ok && !cmd.preview && actor === sim.state.playerId) { const L = sim.state.cmdLog || (sim.state.cmdLog = []); L.push({ day: sim.state.day, cmd: { ...cmd, actor } }); if (L.length > 2000) L.shift(); }

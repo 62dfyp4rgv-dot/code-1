@@ -207,26 +207,29 @@ function fireWorld(sim, def) {
 export function startPandemic(sim, spec) {
   const st = sim.state; if (st.pandemic) return;
   const origin = sim.rng.int(0, sim.geo.N - 1);
-  st.pandemic = { name: spec.name || 'Novel pathogen', r0: spec.r0 || 2.6, ifr: spec.ifr || 0.004, start: st.day, infected: new Array(sim.geo.N).fill(0), peak: 0, deaths: 0, origin };
+  st.pandemic = { name: spec.name || 'Novel pathogen', r0: spec.r0 || 2.6, ifr: spec.ifr || 0.004, start: st.day, infected: new Array(sim.geo.N).fill(0), recovered: new Array(sim.geo.N).fill(0), peak: 0, deaths: 0, origin };
   st.pandemic.infected[origin] = 0.0005;
   sim.log(origin, 'world', `Outbreak of ${st.pandemic.name} reported in ${st.countries[origin].name}`, {}, 'high');
 }
-// monthly epidemic dynamics (called from society via sim.epidemicMortality / here via monthly world hook)
+// Monthly SIR dynamics per country, coupled by trade/travel (land borders weigh more). Response measures and health reduce transmission.
+const GAMMA = 0.7; // recovery rate per month
 export function pandemicStep(sim) {
   const st = sim.state, p = st.pandemic; if (!p) return;
-  const N = sim.geo.N; const next = p.infected.slice(); let total = 0;
+  const N = sim.geo.N; const nextI = p.infected.slice(), nextR = p.recovered.slice(); let total = 0;
   for (let i = 0; i < N; i++) {
-    const c = st.countries[i]; const I = p.infected[i];
+    const c = st.countries[i]; const I = p.infected[i], R = p.recovered[i], S = Math.max(0, 1 - I - R);
     const resp = clamp(0.3 * c.pop.health + 0.25 * c.gov.bureaucracy + 0.5 * (c.mc['epid.resp'] || 0) + (c.flags.lockdown > st.day ? 0.25 : 0), 0, 0.85);
-    const beta = p.r0 * (1 - resp) * 0.9;
-    let imp = 0; for (let j = 0; j < N; j++) if (j !== i && p.infected[j] > 0.0001) imp += p.infected[j] * 0.002 * (sim.geo.landNeighbors[i].has(j) ? 8 : 1) * (1 + 8 * (c.econ.openness));
-    const dI = beta * I * (1 - I) * 0.7 - I * 0.9 + imp * (1 - I);
-    next[i] = clamp(I + dI, 0, 0.6); total += next[i];
-    c.econ.pandemicLoad = next[i];
-    if (next[i] > 0.02) addTimedMod(c, 'gdp.shock', -0.04 * next[i] * (c.flags.lockdown > st.day ? 1.8 : 1), st.day + 40, 'pandemic');
-    if (next[i] > 0.05 && c.idx === st.playerId && !c.flags.pandemicWarned) { c.flags.pandemicWarned = st.day + 120; sim.log(c.idx, 'health', `${p.name}: ${(next[i] * 100).toFixed(0)}% of ${c.name} infected`, {}, 'high'); }
+    const beta = p.r0 * GAMMA * (1 - resp);
+    let imp = 0; for (let j = 0; j < N; j++) if (j !== i && p.infected[j] > 0.0001) imp += p.infected[j] * 0.002 * (sim.geo.landNeighbors[i].has(j) ? 8 : 1) * (1 + 8 * c.econ.openness);
+    const newInf = Math.min(S, beta * I * S + imp * S);
+    nextI[i] = clamp(I + newInf - GAMMA * I, 0, 1); nextR[i] = clamp(R + GAMMA * I, 0, 1);
+    total += nextI[i];
+    c.econ.pandemicLoad = nextI[i];
+    p.deaths += c.pop.total * p.ifr * GAMMA * I * (1.2 - 0.6 * c.pop.health) * (1 - 0.5 * (c.mc['epid.resp'] || 0));
+    if (nextI[i] > 0.02) addTimedMod(c, 'gdp.shock', -0.04 * nextI[i] * (c.flags.lockdown > st.day ? 1.8 : 1), st.day + 40, 'pandemic');
+    if (nextI[i] > 0.05 && c.idx === st.playerId && !(c.flags.pandemicWarned > st.day)) { c.flags.pandemicWarned = st.day + 120; sim.log(c.idx, 'health', `${p.name}: ${(nextI[i] * 100).toFixed(0)}% of ${c.name} infected`, {}, 'high'); }
   }
-  p.infected = next; p.peak = Math.max(p.peak, total);
-  if (total < 0.0004 && st.day - p.start > 150) { sim.log(null, 'world', `${p.name} subsides worldwide`, { deaths: p.deaths }, 'high'); st.pandemic = null; for (const c of st.countries) c.econ.pandemicLoad = 0; }
+  p.infected = nextI; p.recovered = nextR; p.peak = Math.max(p.peak, total);
+  if (total < 0.0004 && st.day - p.start > 150) { sim.log(null, 'world', `${p.name} subsides worldwide (${p.deaths.toFixed(1)}M deaths)`, { deaths: p.deaths }, 'high'); st.pandemic = null; for (const c of st.countries) c.econ.pandemicLoad = 0; }
 }
-export function epidemicMortality(sim, c) { const p = sim.state.pandemic; if (!p) return 0; const I = p.infected[c.idx]; const m = p.ifr * I * 6 * (1.2 - 0.6 * c.pop.health) * (1 - 0.5 * (c.mc['epid.resp'] || 0)); p.deaths += m * c.pop.total / 12 * 1e6 * 0 ; return m; }
+export function epidemicMortality(sim, c) { const p = sim.state.pandemic; if (!p) return 0; const I = p.infected[c.idx]; return p.ifr * GAMMA * I * 12 * (1.2 - 0.6 * c.pop.health) * (1 - 0.5 * (c.mc['epid.resp'] || 0)); }

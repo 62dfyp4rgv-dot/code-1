@@ -7,8 +7,8 @@
   "license": "UNLICENSED",
   "engines": { "node": ">=20" },
   "scripts": {
-    "test": "node --test --test-reporter=spec tests/",
-    "test:fast": "node --test tests/unit/",
+    "test": "node --test --test-reporter=spec \"tests/**/*.test.js\"",
+    "test:fast": "node --test \"tests/unit/*.test.js\"",
     "build:map": "node tools/build-map.mjs",
     "validate:data": "node tools/validate-data.mjs",
     "bench": "node tools/bench.mjs",

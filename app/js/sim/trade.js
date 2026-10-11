@@ -64,7 +64,7 @@ export function buildTradeContext(sim) {
     const def = sim.chokeDefs[cp.id];
     return {
       id: cp.id, open: cp.open, share: def.share, commodities: new Set(def.commodities.map((x) => COM[x])),
-      uses: def.uses,
+      uses: def.uses, exporterSet: def.exporterSet,
     };
   });
   return { N, blocMult, embargo, atWar, blockade, chokes };
@@ -95,10 +95,12 @@ export function clearTrade(sim, { commitStocks = true } = {}) {
       const aff = e.reserves <= 0.01 * e.gdp && e.ca < 0 ? 0.6 : 1;
       need[i] = (shortfall + refill[i]) * aff * (1 - 0.0);
       cap[i] = d * (0.8 + 0.5 * e.infra) * (1 - 0.8 * ctx.blockade[i]);
-      need[i] = Math.min(need[i], Math.max(cap[i], 0));
+      need[i] = Math.min(need[i], Math.max(cap[i], 0), 0.22 * e.gdp / Math.max(0.3, prices[k])); // a country cannot buy more than ~22% of GDP of one commodity
       rem[i] = Math.max(0, s - d); // exportable surplus
       if (rem[i] > 0 && sup[i] > 0 && c.gov.type === 'military' && false) rem[i] = 0;
     }
+    const blocked = new Float64Array(N);
+    for (const cp of ctx.chokes) if (cp.exporterSet && cp.open < 0.999 && cp.commodities.has(k)) for (const j of cp.exporterSet) { const cut = rem[j] * cp.share * (1 - cp.open); rem[j] -= cut; blocked[j] += cut; }
     const resid = need.slice();
     const flows = []; // [i,j,qty]
     const A = sim.tradeA[k];
@@ -151,6 +153,9 @@ export function clearTrade(sim, { commitStocks = true } = {}) {
       e.shortage[k] = d > 1e-9 ? clamp(sh / d, 0, 1) : 0;
       e.cons = e.cons; e.dem[k] = d; e.curtailed = e.curtailed || [0, 0, 0, 0]; e.curtailed[k] = curtailed; e.consumed = e.consumed || [0, 0, 0, 0]; e.consumed[k] = consume;
       e.unmet = e.unmet || [0, 0, 0, 0]; e.unmet[k] = sh;
+      e.curtailPhys = e.curtailPhys || [0, 0, 0, 0]; e.curtailPhys[k] = curtailed;
+      curtailed = Math.max(0, curtailed - blocked[i]); // supply physically blocked in a closed lane is not 'surplus' to the market
+      e.curtailed[k] = curtailed;
       sumUnmet += sh; sumCurt += curtailed; sumSup += s; sumDem += d; sumStock += e.stock[k]; traded += expo[i];
     }
     world.unmet[k] = sumUnmet; world.curtail[k] = sumCurt; world.supply[k] = sumSup; world.demand[k] = sumDem; world.stock[k] = sumStock; world.traded[k] = traded;

@@ -100,16 +100,17 @@ export class Sim {
     const geo = this.geo; this.chokeDefs = {};
     for (const cp of this.data.chokepoints) {
       let uses;
+      let exporterSet = null;
       if (cp.exporters) {
-        const ex = new Set(cp.exporters.map((x) => geo.idOf[x]).filter((x) => x !== undefined));
-        uses = (i, j) => ex.has(j) && (!cp.importerRegionsExcluded?.length || true);
-        if (cp.id === 'hormuz') { uses = (i, j) => ex.has(j) && !ex.has(i); }
+        // lane carries the physical exports of these countries: closure caps what they can ship (any destination)
+        exporterSet = new Set(cp.exporters.map((x) => geo.idOf[x]).filter((x) => x !== undefined));
+        uses = () => false;
       } else {
         const [A, B] = cp.between;
         const rs = geo.rows;
         uses = (i, j) => (A.includes(rs[i].region) && B.includes(rs[j].region)) || (B.includes(rs[i].region) && A.includes(rs[j].region));
       }
-      this.chokeDefs[cp.id] = { share: cp.share, commodities: cp.commodities, uses };
+      this.chokeDefs[cp.id] = { share: cp.share, commodities: cp.commodities, uses, exporterSet };
     }
   }
   applyScenario(sc) {
@@ -117,7 +118,7 @@ export class Sim {
     if (sc.shocks?.prices) for (const [k, v] of Object.entries(sc.shocks.prices)) st.prices[COM[k]] = v;
     if (sc.shocks?.chokepoints) for (const [k, v] of Object.entries(sc.shocks.chokepoints)) { const cp = st.chokes.find((x) => x.id === k); if (cp) cp.open = v; }
     if (sc.shocks?.cartelQuota) st.cartel.quota = sc.shocks.cartelQuota;
-    for (const c of st.countries) c.econ.priceLast = st.prices.slice();
+    for (const c of st.countries) c.econ.priceLast = [1, 1, 1, 1]; // pre-shock price level: the first month sees the shock
     for (const w of sc.wars || []) MIL.startScenarioWar(this, w);
   }
   initTradeBaseline() {

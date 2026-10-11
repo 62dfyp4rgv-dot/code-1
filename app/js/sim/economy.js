@@ -55,7 +55,7 @@ export function calibrateWorld(sim) {
     const row = geo.rows[c.idx];
     const gdp = row.gdp_bn, pop = row.pop_m, gdppc = gdp / pop, dev = c.dev0;
     const v = c.econ._init;
-    v[S.agri] = clamp(v[S.agri] * agriScale, gdp * 0.008, gdp * 0.42);
+    v[S.agri] = clamp(v[S.agri] * agriScale, gdp * (0.01 + 0.2 * Math.pow(1 - dev, 2)), gdp * 0.42);
     let nonServ = 0; for (let k = 0; k < NS; k++) if (k !== S.services) nonServ += v[k];
     if (nonServ > 0.78 * gdp) { const f = (0.78 * gdp) / nonServ; for (let k = 0; k < NS; k++) if (k !== S.services) v[k] *= f; nonServ *= f; }
     v[S.services] = gdp - nonServ;
@@ -155,7 +155,7 @@ export function finishEconomyInit(sim) {
     const e = c.econ, row = geo.rows[c.idx], pop = c.pop.total, gdppc = e.gdp / pop;
     const cold = clamp(Math.abs(geo.regions[geo.capitalRegion[c.idx]].lat) / 60, 0.2, 1.1);
     const indSh = e.Y[S.industry] / e.gdp;
-    const fpc = 0.25 + 0.012 * Math.min(gdppc, 40);
+    const fpc = Math.min(0.25 + 0.012 * Math.min(gdppc, 40), 0.36 * gdppc);
     c._raw = [
       pop * fpc,
       e.gdp * (0.5 + 1.6 * indSh) * (1.25 - 0.35 * Math.min(1, gdppc / 40)) * (1 - 0.3 * e.clean),

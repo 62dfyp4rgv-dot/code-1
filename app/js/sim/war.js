@@ -398,7 +398,8 @@ function landPhase(sim, day) {
   // supply & fort update for every region with forces
   for (const f of st.forces) {
     if (f.branch === 'sea') { if (f.port !== undefined) f.supply += 0.1 * (1 - f.supply); continue; }
-    const tgt = supplyAt(sim, f.owner, f.loc);
+    const mm = st.countries[f.owner].mil;
+    const tgt = supplyAt(sim, f.owner, f.loc) * (mm.ammo > 0 ? 1 : 0.45) * (mm.fuel > 0 ? 1 : 0.6);
     f.supply += 0.3 * (tgt - f.supply);
     if (f.supply < 0.25 && f.branch === 'land') { f.morale = clamp(f.morale - 0.006, 0, 1); f.size = Math.max(0.05, f.size * 0.9985); }
     if (f.branch === 'land' && !(f.order.kind === 'attack') && f.dest < 0 && f.loc >= 0) reg.fort[f.loc] = Math.min(0.5, reg.fort[f.loc] + 0.002);
