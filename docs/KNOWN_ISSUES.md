@@ -9,13 +9,13 @@ Ordered by importance for a release decision. "Unverified" means *not tested*, n
 4. App Store assets (real-device screenshots, privacy label, age rating) not produced.
 
 ## Gameplay / simulation
-5. **Growth is optimistic**: median country grows ~4.5 %/yr and world GDP ~3.7 %/yr over 10 years, above typical real-world figures (~3 %). Cross-country divergence is plausible (p10 ≈ 2.2 %, p90 ≈ 5.6 %) but the level is high. Prices of food/gas drift 25–35 % below baseline after a decade (productivity outpaces demand).
-6. **Japan is fragile**: with ~240 % debt and shrinking population it entered a deflation/debt slump ending in regime collapse in 3 of 9 balance runs (still 1 of 9 flagged distressed at the end). The AI player's country is AI-driven in those runs; a fully *unmanaged* big player (`npm run balance -- 10 3 out.md --passive`) makes it worse. Treat Japan and other very-high-debt ageing states as the weakest part of the economic model.
-7. **War variety is lower than ideal**: after adding deterrence/amphibious penalties (D-005) there are ~0.7–2 wars per decade, concentrated on a handful of pairs (Russia–Ukraine in *Fault Lines*, China–Vietnam, Israel–Syria). Wars between neighbours end in ~9–15 months, usually by negotiated peace; tiny states can be overrun in 1–4 months. Taiwan/Korean-peninsula-type scenarios rarely occur spontaneously.
+5. **Growth is still somewhat optimistic**: after recalibration (D-006) world GDP grows ~3.5 %/yr and the median country ~4.2 %/yr over 10 years (real-world: ~3 % and ~3.5–4 %); USA ≈ 1.8 %, China ≈ 5.5–6 % (above most forecasts). Food/gas prices drift 25–35 % below baseline after a decade.
+6. **Very-high-debt ageing economies (Japan) are the most fragile large economies.** After the monetary-neutrality and fiscal-rule fixes Japan stopped collapsing in the balance runs (0 of 9 flagged distressed, 0 collapses in the latest report) but still shows ±3 % growth swings in some seeds. A fully unmanaged big player (`--passive`) can still drag partners into slumps.
+7. **War variety is low**: ~0.7 wars per decade in the balance runs, concentrated on a few pairs (Russia–Ukraine in *Fault Lines*, China–Vietnam, Russia–Georgia). Wars last ~9–15 months and end mostly by negotiated peace; front lines are mostly static (the Russia–Ukraine war moves almost no territory). Territory changes hands in forced wars against weak neighbours and tiny states become client states, but spontaneous conquest is rare.
 8. **AI is reactive, not strategic**: it evaluates utility each turn; it does not plan multi-year campaigns, coordinate combined operations or exploit player-specific weaknesses. Air and naval AI tasking is lightly tuned.
 9. **Nuclear weapons are a deterrence rating only** — no escalation or exchange mechanic (D-004).
-10. **Regime collapse frequency** ~2 per decade across the world (Ukraine and Argentina recur); collapses are driven mostly by sustained unemployment/inflation and war.
-11. **Event repetition**: shortage-driven events (`rolling_blackouts`, `fuel_shortage`) and `heatwave` account for ~25 % of all events in long runs; they are condition-driven so they cluster in stressed economies. ~55 authored events is modest for replayability.
+10. **Regime collapse** ≈ 0.8 per decade in the latest balance report (Ukraine, Argentina recur); consolidated democracies now need ten months of instability before collapse.
+11. **Event repetition**: shortage-driven events (`rolling_blackouts`, `fuel_shortage`) and `heatwave` remain the most frequent (~18 % of all events in long runs). ~80 authored events (26 added after the first review) is still modest for replayability.
 12. **Geography is coarse**: 110 m borders (micro-states absent), synthetic region names, approximate terrain, 525 regions; some islands are weakly connected.
 13. **Statistics are approximate** and partly derived (DATA_SOURCES.md); not suitable as reference data.
 
@@ -28,7 +28,7 @@ Ordered by importance for a release decision. "Unverified" means *not tested*, n
 
 ## Engineering debt
 19. Several modules (`war.js`, `diplomacy.js`, `economy.js`) are large and use very long lines; some magic constants are tuned empirically rather than documented per-constant.
-20. `tools/dev/` contains ad-hoc diagnostics that are not part of the supported tooling or tests.
+20. `cube.html` in the repository root is an unrelated file that predates this project's work (an earlier commit in the repo); it is not part of the game.
 21. Cross-engine floating-point determinism is not guaranteed (a seed may yield a different world on a different JS engine); saves restore state exactly regardless (D-003).
 22. The CI workflow has never run on GitHub; the iOS job is disabled.
 23. Service-worker precache list (`sw.js`) is maintained by hand; forgetting to bump `VERSION` on release serves stale assets.

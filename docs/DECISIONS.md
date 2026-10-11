@@ -34,3 +34,10 @@ Nuclear weapons are modelled as deterrence rating only (no nuclear exchange mech
 - **Neutral-by-construction policy rate**: each country's Taylor-rule neutral rate (`rStar`) is set so the rule outputs the starting policy rate at t0; optional `rate0`/`homeBias` profile fields model low-rate, domestically financed debtors (Japan). Chosen because a global initial monetary-tightening transient pushed Japan into a deflation/debt spiral and regime collapse in most runs.
 - **Downward price rigidity** and a flatter Phillips curve in slack, to prevent deflation spirals.
 - Nuclear exchange remains unmodelled (D-004).
+
+## D-006 Changes after the first independent review (2026-10-11)
+- **Offers, not impositions**: AI peace proposals to the human become answerable offers (`answerOffer`). Chosen over auto-accept because the review showed it removed player agency.
+- **Client states** replace the stub `puppet` term: tribute 1.5 % GDP, shared side in wars, no independent war declarations, revolt hazard that rises when the overlord is exhausted/unstable. Tiny non-player states whose capital falls become clients, so conquest has lasting consequences.
+- **Economy recalibration**: capital/output ratios ×1.25, a global-frontier TFP term, smaller catch-up and research terms, investment shares of investment-heavy economies drift down with income, AI governments spend available fiscal space (stops debt ratios deflating), tariff pass-through to prices, output shocks raise unemployment, manual rate setting disables the independent central bank. Result: world growth ≈ 3.2–3.8 %, USA ≈ 1.8 %, China ≈ 5.5–6 % instead of 0.4 % / 7 %.
+- **Save safety**: `App.snapshot()` finishes the in-flight day before serialising; perception is stateless.
+- **Formatting**: Prettier (140 cols) applied to all JS/CSS; long one-line modules are now reviewable (≈ 12 k lines).

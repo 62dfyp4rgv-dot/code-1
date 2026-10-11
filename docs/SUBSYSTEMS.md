@@ -45,12 +45,12 @@ All file names are under `app/js/sim/` unless noted. Quantities are in model uni
 - **Failure**: unpaid forces lose readiness; exhaustion rises in long wars.
 
 ## 8. War (`war.js`)
-- **Purpose**: declaration (with casus belli and alliance legality), mobilisation, supply, movement, land phase (terrain, fortification, air support, combined arms, supply, doctrine, opposed landings across straits), air and naval phases, capture/occupation, devastation, war score, exhaustion, capitulation, peace proposals with terms (cede region, reparations, ceasefire…) and acceptance factors.
+- **Purpose**: declaration (with casus belli and alliance legality), mobilisation, supply, movement, land phase (terrain, fortification, air support, combined arms, supply, doctrine, opposed landings across straits), air and naval phases, capture/occupation, devastation, war score, exhaustion, capitulation, peace proposals with terms (cede region, reparations, demilitarisation, client state, ceasefire) and acceptance factors; AI offers to a human are parked as an offer (45 days) and answered with `answerOffer`.
 - **Frequency**: daily combat; monthly scoring. **Invariants**: every region has exactly one owner and one controller; no duplicate wars; allies cannot be attacked by partners; truces block new wars.
 - **Failure**: capital held by enemy > 60 days, total occupation or exhaustion > 0.97 ⇒ capitulation. **Tests**: `war.test.js`.
 
 ## 9. Diplomacy & organisations (`diplomacy.js`)
-- **Purpose**: opinion/trust matrices (Int8, N×N), treaties (alliance, defence pact, trade, non-aggression, ceasefire…), proposals with transparent acceptance factors, sanctions/embargoes, calls to arms, 14 organisations (membership criteria + consent), UN-style Global Assembly resolutions with a veto.
+- **Purpose**: opinion/trust matrices (Int8, N×N), treaties (alliance, defence pact, trade, non-aggression, ceasefire…), proposals with transparent acceptance factors, sanctions/embargoes, calls to arms, client states (vassalage: tribute, shared side, no independent wars, revolt when the overlord is weak), implicit security guarantees, 14 organisations (membership criteria + consent), UN-style Global Assembly resolutions with a veto.
 - **Frequency**: monthly drift; daily timers. **Invariants**: opinions clamped; treaty parties distinct; forecasts equal outcomes for resolutions. **Tests**: `diplomacy_intel_events.test.js`.
 
 ## 10. Intelligence & cyber (`intel.js`)
@@ -58,7 +58,7 @@ All file names are under `app/js/sim/` unless noted. Quantities are in model uni
 - **Invariants**: perception noise is stateless (`hash01`) so saves stay deterministic. **Tests**: `ai_lint.test.js` (perception), intel/cyber tests.
 
 ## 11. Events (`events.js`, `data/events.json`)
-- **Purpose**: ~55 data-driven events + world events. Conditions on stat paths, weighted mean-time-to-happen, options with whitelisted effects (stat, mod, price, rel, treasury, policy, flag, infra, devastate, treaty, newLeader, …), delayed follow-ups, pandemic SIR model.
+- **Purpose**: ~80 data-driven events + world events. Conditions on stat paths, weighted mean-time-to-happen, options with whitelisted effects (stat, mod, price, rel, treasury, policy, flag, infra, devastate, treaty, newLeader, …), delayed follow-ups, pandemic SIR model.
 - **Invariants**: effects can only write whitelisted stats; AI resolves events with its own utility; player gets decision modals. **Tests**: validity of every event; emergence in stressed economy; pandemic.
 
 ## 12. World AI (`app/js/ai/`)

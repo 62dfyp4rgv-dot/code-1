@@ -43,12 +43,12 @@ Install as a PWA (Safari → Share → Add to Home Screen) or build the native s
   (Hormuz, Suez, Malacca, Bosporus, Panama), sanctions and embargoes, inflation, debt, reserves, central bank.
 - Research 67 technologies in 8 branches; modifiers feed back into production, military, society.
 - Fight wars: ~1 270 land/air/naval formations, terrain, supply, air and naval phases, amphibious/strait rules,
-  occupation, capitulation, war exhaustion, negotiated peace with transparent acceptance factors.
+  occupation, capitulation, war exhaustion, negotiated peace with transparent acceptance factors, client states (puppet terms: tribute, shared wars, revolt when the overlord weakens). Peace offers from the AI are put to you, never imposed.
 - Do diplomacy: opinion/trust matrices, treaties, 14 international organisations, UN-style resolutions with a
   veto, sanctions, call-to-arms, proposals that show *why* a partner accepts or refuses.
 - Run intelligence: networks, 8 covert operations, exposure risk, cyber disruption; the world is seen through
   noisy, delayed perception (fog of war).
-- Respond to ~55 authored events and world events (crises, pandemics, disasters, scandals) with branching decisions.
+- Respond to ~80 authored events and world events (crises, pandemics, disasters, scandals) with branching decisions.
 - Pursue 6 victory paths (prosperity, economic, diplomatic, scientific, stability/welfare, security) — conquest is
   never required — plus 15 achievements.
 - Autosave (double-buffered, IndexedDB with localStorage fallback), manual slots, export/import, recovery of an
@@ -65,7 +65,7 @@ Install as a PWA (Safari → Share → Add to Home Screen) or build the native s
 | `app/data/` | Data-driven content (CSV/PSV/JSON + generated `map.json`) |
 | `ios/` | WKWebView shell + XcodeGen project (**never compiled by the authors**) |
 | `tests/` | Unit (`node:test`) and UI (Playwright) suites |
-| `tools/` | Map build, benchmark, balance, screenshots, release gate; `tools/dev/` ad-hoc diagnostics |
+| `tools/` | Map build, benchmark, balance, screenshots, release gate, data validation |
 | `docs/` | Architecture, subsystems, data sources, testing, iOS build, scorecard, known issues, release report |
 
 ## Licence & data

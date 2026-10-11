@@ -5,7 +5,9 @@
   "private": true,
   "type": "module",
   "license": "UNLICENSED",
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "test": "node --test --test-reporter=spec \"tests/**/*.test.js\"",
     "test:fast": "node --test \"tests/unit/*.test.js\"",
@@ -16,9 +18,11 @@
     "serve": "node tools/serve.mjs",
     "shots": "node tools/screenshots.mjs",
     "ui:test": "node tools/ui-test.mjs",
+    "format": "prettier --write app/js app/css tests tools",
     "release:check": "node tools/release-check.mjs"
   },
   "devDependencies": {
+    "prettier": "^3.3.3",
     "world-atlas": "2.0.2"
   }
 }
