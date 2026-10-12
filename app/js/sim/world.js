@@ -623,6 +623,7 @@ export class Sim {
     DIP.yearlyStep(this, day);
     EVT.yearlyStep(this, day);
     VIC.yearlyStep(this, day);
+    this.emit('year', { day });
   }
   snapshotStats() {
     STAT.monthlyStep(this, this.state.day);

@@ -7,6 +7,7 @@ import { eventText } from '../../sim/events.js';
 import { Sim } from '../../sim/world.js';
 import { gradeOf } from '../../sim/victory.js';
 import { regionLabel } from '../../sim/war.js';
+import { advise } from '../../sim/advisor.js';
 import { loadAutosave, store } from '../storage.js';
 import { loadText, refreshSaves } from './more.js';
 import { sfx } from '../audio.js';
@@ -70,6 +71,47 @@ export function installFlow(App) {
         (x) => x.country === this.sim.state.playerId,
       );
       if (nxt) setTimeout(() => this.showDecision(nxt), 250);
+    };
+  };
+  P.showYearReview = function () {
+    const sim = this.sim;
+    const st = sim.state;
+    const c = sim.player;
+    const S = st.stats.monthly;
+    const at = (k, back) => S[k][Math.max(0, S[k].length - 1 - back)];
+    const d = (k, back = 12) => at(k, 0) - at(k, back);
+    const year = sim.date.y - 1;
+    const rows = [
+      ['GDP', money(c.econ.gdp), (c.econ.gdp / at('gdp', 12) - 1) * 100, '%', true],
+      ['Inflation', pct(c.econ.infl), d('infl') * 100, ' pt', false],
+      ['Unemployment', pct(c.econ.unemp), d('unemp') * 100, ' pt', false],
+      ['Public debt', pct(c.econ.debtRatio ?? 0, 0), d('debt') * 100, ' pt', false],
+      ['Approval', pct(c.gov.approval, 0), d('approval') * 100, ' pt', true],
+      ['Stability', pct(c.gov.stability, 0), d('stability') * 100, ' pt', true],
+    ];
+    const rank = 1 + st.countries.filter((x) => x.econ.gdp > c.econ.gdp).length;
+    const log = st.log.filter((l) => l.c === st.playerId && l.day > st.day - 365 && l.level !== 'low').slice(-5);
+    const ad = advise(sim).slice(0, 3);
+    this.pause();
+    this
+      .openOverlay(`<div class="modal"><div class="row sp"><span class="tag acc">Year in review</span><span class="mu">${year}</span></div><h2>${esc(c.name)} in ${year}</h2>
+      ${rows
+        .map(
+          ([k, v, dv, unit, upGood]) =>
+            `<div class="row sp card"><span>${k}</span><span><b>${v}</b> <span class="${Math.abs(dv) < 0.05 ? 'mu' : dv > 0 === upGood ? 'up' : 'dn'}">${dv >= 0 ? '+' : '−'}${Math.abs(dv).toFixed(1)}${unit}</span></span></div>`,
+        )
+        .join('')}
+      <div class="hint">World economy rank: ${rank} of ${st.countries.length}.</div>
+      ${log.length ? `<div class="sec">What happened</div>${log.map((l) => `<div class="hint">${esc(sim.calendar.format(l.day))} — ${esc(l.text)}</div>`).join('')}` : ''}
+      <div class="sec">Advisor suggests</div>${ad.map((a) => `<div class="hint"><b>${esc(a.title)}</b> — ${esc(a.text)}</div>`).join('')}
+      <div class="btnrow"><button class="btn primary" data-yr="go">Continue</button><button class="btn" data-yr="adv">Open advisor</button></div></div>`);
+    const ov = this.$('#overlay');
+    ov.dataset.lock = '1';
+    ov.onclick = (e) => {
+      const b = e.target.closest('[data-yr]');
+      if (!b) return;
+      this.closeOverlay();
+      if (b.dataset.yr === 'adv') this.openSheet('advisor');
     };
   };
   P.showPeaceOffer = function (offer) {

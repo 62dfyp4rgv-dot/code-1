@@ -4,8 +4,8 @@
 
 | Command | What it does | Needs |
 |---|---|---|
-| `npm run test:fast` | 68 unit/integration tests of the simulation, AI, saves, data (≈ 50 s) | Node ≥ 20 |
-| `npm run ui:test` | 20 Playwright tests drive the real UI in Chromium device emulation (≈ 1–2 min) | `playwright` + Chromium |
+| `npm run test:fast` | 73 unit/integration tests of the simulation, AI, saves, data (≈ 50 s) | Node ≥ 20 |
+| `npm run ui:test` | 22 Playwright tests drive the real UI in Chromium device emulation (≈ 1–2 min) | `playwright` + Chromium |
 | `npm test` | everything above | both |
 | `npm run validate:data` | data-integrity tests + content inventory | Node |
 | `npm run bench` | simulation timing, save size/time, slice distribution | Node |
@@ -44,7 +44,7 @@ Run `npx playwright install chromium` if no browser is present. **Do not** treat
 ### UI (`tests/ui/ui.test.js`, Chromium emulating iPhone viewports)
 Boot + new-game wizard; every sheet and tab renders without console errors; touch tap selection; pan, wheel and
 CDP-synthesised pinch zoom; game loop and decision modal; policy slider; diplomacy flow; war UI; autosave +
-reload → "Continue" recovery; accessibility attributes/labels; layout on 5 viewport sizes without horizontal overflow; shell cannot be scrolled sideways (regression for the landscape defect); end-of-game report + sandbox continuation; manual save slot → load round-trip; tutorial coach marks, new-game search and displayed seed honoured.
+reload → "Continue" recovery; accessibility attributes/labels; layout on 5 viewport sizes without horizontal overflow; shell cannot be scrolled sideways (regression for the landscape defect); end-of-game report + sandbox continuation; manual save slot → load round-trip; tutorial coach marks, new-game search and displayed seed honoured; peace offers; policy-slider confirmation; real-tap navigation; national projects; the advisor; the yearly review modal.
 
 ## What is NOT covered (be careful when reading green checks)
 - No real-device or iOS Safari/WKWebView run: touch latency, memory pressure, backgrounding/kill behaviour,

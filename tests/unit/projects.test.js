@@ -82,3 +82,12 @@ test('advisor: flags real problems, stays read-only, and points at screens', asy
   assert.equal(advise(sim)[0].sev, 'bad', 'urgent items come first');
   for (const a of advise(sim)) assert.ok(typeof a.open === 'string' && a.title && a.text);
 });
+
+test('the world emits one "year" event per January for the yearly review', async () => {
+  const sim = await makeSim({ seed: 5, player: 'FRA' });
+  const years = [];
+  sim.listeners.push((t, p) => t === 'year' && years.push(p.day));
+  sim.advanceMonths(26);
+  assert.ok(years.length >= 2 && years.length <= 3, 'about one per 365 days, got ' + years.length);
+  for (let i = 1; i < years.length; i++) assert.ok(years[i] - years[i - 1] > 300);
+});

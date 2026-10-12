@@ -121,6 +121,7 @@ export const defaultSettings = {
   lowPower: false,
   sound: true,
   music: false,
+  yearReview: true,
   haptics: true,
   autosaveDays: 30,
   speed: 2,

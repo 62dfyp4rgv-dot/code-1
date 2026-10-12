@@ -255,6 +255,8 @@ export class App {
       sfx.alert();
       haptic(25, this.settings.haptics);
       this.showPeaceOffer(p);
+    } else if (type === 'year') {
+      if (this.settings.yearReview && !sim.state.ended && sim.state.day > 360) this.showYearReview?.();
     } else if (type === 'ended') {
       this.pause();
       this.showEnd?.();

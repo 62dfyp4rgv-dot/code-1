@@ -33,6 +33,7 @@ async function startGame(page, { scenario = 'fault_lines', country = 'DEU' } = {
   await page.waitForFunction(() => window.__app && window.__app.sim, null, { timeout: 30000 });
   await page.evaluate(() => {
     window.__app.settings.tutorial = false;
+    window.__app.settings.yearReview = false; // the January modal would interrupt unrelated tests; it has its own test
     document.querySelector('.coach')?.remove();
   });
 }
@@ -625,6 +626,37 @@ test('advisor: the HUD pill opens the advisor and an item navigates to the right
   await page.locator('#sheetBody [data-act="advgo"]').first().tap();
   await page.waitForTimeout(300);
   assert.match(await page.locator('#sheet h2').first().innerText(), /Economy|Inbox|Nation|Military|Research|Diplomacy/);
+  assert.deepEqual(page.errors, []);
+  await page.context().close();
+});
+
+test("year in review: opens each January with the player's figures, Continue closes it, Open advisor navigates", async () => {
+  const page = await newPage(browser);
+  await startGame(page, { scenario: 'quiet_decade', country: 'FRA' });
+  await page.evaluate(() => {
+    const a = window.__app;
+    a.settings.yearReview = true;
+    a.sim.state.day = Math.max(a.sim.state.day, 400);
+    a.sim.emit('year', { day: a.sim.state.day });
+  });
+  await page.waitForSelector('#overlay [data-yr="go"]', { timeout: 3000 });
+  const txt = await page.locator('#overlay').innerText();
+  assert.match(txt, /Year in review/);
+  assert.match(txt, /GDP/);
+  assert.match(txt, /World economy rank: \d+ of \d+/);
+  await page.locator('#overlay [data-yr="go"]').tap();
+  await page.waitForTimeout(200);
+  assert.equal(await page.locator('#overlay [data-yr]').count(), 0);
+  await page.evaluate(() => window.__app.sim.emit('year', { day: window.__app.sim.state.day }));
+  await page.waitForSelector('#overlay [data-yr="adv"]', { timeout: 3000 });
+  await page.locator('#overlay [data-yr="adv"]').tap();
+  await page.waitForSelector('#sheet.open [data-act="advgo"], #sheet.open .li', { timeout: 3000 });
+  await page.evaluate(() => {
+    window.__app.settings.yearReview = false;
+  });
+  await page.evaluate(() => window.__app.sim.emit('year', { day: window.__app.sim.state.day }));
+  await page.waitForTimeout(200);
+  assert.equal(await page.locator('#overlay [data-yr]').count(), 0, 'the setting turns it off');
   assert.deepEqual(page.errors, []);
   await page.context().close();
 });

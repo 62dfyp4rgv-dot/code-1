@@ -536,6 +536,7 @@ export class MapView {
     this.drawFronts(ctx);
     if (this.mode === 'trade') this.drawFlows(ctx);
     this.drawChokepoints(ctx);
+    this.drawAlerts(ctx);
     this.drawLabels(ctx);
     this.drawCities(ctx);
     this.drawForces(ctx);
@@ -818,6 +819,37 @@ export class MapView {
       ctx.moveTo(x1, y1);
       ctx.quadraticCurveTo(mx, my, x2, y2);
       ctx.stroke();
+    }
+  }
+  // civil conflicts (double red ring on the country) and heavily devastated regions (dark red dots at close zoom)
+  drawAlerts(ctx) {
+    const st = this.sim.state;
+    const g = this.sim.geo;
+    for (const c of st.countries) {
+      if (!c.gov.civil) continue;
+      const lp = this.labelPts[c.idx];
+      const [x, y] = this.toScreen(lp.x - 180, 84 - lp.y);
+      if (x < -20 || y < -20 || x > this.vw + 20 || y > this.vh + 20) continue;
+      const k = c.gov.civil.intensity;
+      ctx.strokeStyle = 'rgba(224,90,90,0.9)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(x, y, 9 + 4 * k, 0, 6.3);
+      ctx.stroke();
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(x, y, 15 + 6 * k, 0, 6.3);
+      ctx.stroke();
+    }
+    if (this.view.s < 3) return;
+    ctx.fillStyle = 'rgba(120,20,20,0.8)';
+    for (let r = 0; r < st.reg.dev.length; r++) {
+      if (st.reg.dev[r] < 0.45) continue;
+      const [x, y] = this.toScreen(g.regions[r].lon, g.regions[r].lat);
+      if (x < 0 || y < 0 || x > this.vw || y > this.vh) continue;
+      ctx.beginPath();
+      ctx.arc(x, y, 4 + 6 * st.reg.dev[r], 0, 6.3);
+      ctx.fill();
     }
   }
   drawChokepoints(ctx) {

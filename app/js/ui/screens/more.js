@@ -55,6 +55,7 @@ export const settings = {
       tg('music', 'Ambient music', 'Slow generative pads that darken in tense times and wars (needs sound on).') +
       tg('haptics', 'Haptics', 'Vibration on important alerts (where supported).') +
       tg('confirmDestructive', 'Confirm risky actions', 'Ask before declaring war or lifting protections.') +
+      tg('yearReview', 'Yearly review', 'Pause every January with a summary of the year that passed.') +
       tg('tutorial', 'Show tips on new games', '');
     h +=
       sec('Autosave') +
