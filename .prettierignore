@@ -1,0 +1,6 @@
+node_modules
+app/data
+ios
+docs
+*.md
+package-lock.json

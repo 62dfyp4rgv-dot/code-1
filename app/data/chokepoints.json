@@ -1,0 +1,10 @@
+{
+  "_note": "Strategic sea chokepoints. 'exporters'/'regions' define which trade flows depend on the lane; 'share' = fraction of such flows that must transit it (no practical bypass). open=1 means unobstructed.",
+  "chokepoints": [
+    {"id":"hormuz","name":"Strait of Hormuz","lat":26.5,"lon":56.3,"seas":["Persian Gulf","Arabian Sea"],"commodities":["oil","gas"],"exporters":["SAU","IRQ","KWT","QAT","ARE","IRN","OMN"],"importerRegionsExcluded":[],"share":0.75,"riparian":["IRN","OMN","ARE"]},
+    {"id":"malacca","name":"Strait of Malacca","lat":2.5,"lon":101.5,"seas":["Andaman Sea","South China Sea"],"commodities":["oil","gas","minerals","food"],"between":[["middle_east","south_asia","north_africa","east_africa","western_europe","southern_europe","northern_europe","eastern_europe","west_africa","central_africa","southern_africa"],["east_asia","southeast_asia","oceania"]],"share":0.6,"riparian":["MYS","IDN","THA"]},
+    {"id":"suez","name":"Suez Canal and Red Sea","lat":27.0,"lon":34.0,"seas":["Red Sea","Eastern Mediterranean"],"commodities":["oil","gas","minerals","food"],"between":[["western_europe","southern_europe","northern_europe","eastern_europe","north_africa","west_africa"],["middle_east","south_asia","east_asia","southeast_asia","oceania","east_africa"]],"share":0.35,"riparian":["EGY","YEM","SAU","ERI","DJI","SDN"]},
+    {"id":"bosporus","name":"Black Sea Straits","lat":41.1,"lon":29.05,"seas":["Black Sea","Eastern Mediterranean"],"commodities":["food","oil","minerals"],"exporters":["UKR","RUS","ROU","BGR","KAZ","GEO"],"share":0.5,"riparian":["TUR","UKR","RUS"]},
+    {"id":"taiwan","name":"Taiwan Strait and East Asian Lanes","lat":24.5,"lon":119.5,"seas":["East China Sea","South China Sea"],"commodities":["minerals","oil","gas","food"],"between":[["east_asia"],["east_asia","southeast_asia","oceania","middle_east","south_asia"]],"share":0.25,"riparian":["TWN","CHN","JPN","PHL"]}
+  ]
+}

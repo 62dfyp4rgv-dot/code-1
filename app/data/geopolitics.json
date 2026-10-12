@@ -1,0 +1,565 @@
+{
+ "_note": "Rivalries: standing tensions at game start (intensity 0-100), historically inspired and approximate. Claims: geographic claims resolved to strategic regions by lat/lon. Both are DATA, not rules; changing them changes scenarios, not code.",
+ "rivalries": [
+  [
+   "IND",
+   "PAK",
+   80,
+   "Kashmir and cross-border militancy"
+  ],
+  [
+   "IND",
+   "CHN",
+   55,
+   "Disputed Himalayan border"
+  ],
+  [
+   "CHN",
+   "TWN",
+   85,
+   "Sovereignty of Taiwan"
+  ],
+  [
+   "CHN",
+   "JPN",
+   45,
+   "Maritime boundary and history"
+  ],
+  [
+   "CHN",
+   "PHL",
+   55,
+   "South China Sea claims"
+  ],
+  [
+   "CHN",
+   "VNM",
+   40,
+   "South China Sea claims"
+  ],
+  [
+   "CHN",
+   "USA",
+   65,
+   "Strategic competition"
+  ],
+  [
+   "RUS",
+   "UKR",
+   95,
+   "War and territorial dispute"
+  ],
+  [
+   "RUS",
+   "USA",
+   60,
+   "Strategic competition"
+  ],
+  [
+   "RUS",
+   "POL",
+   55,
+   "Security order in Eastern Europe"
+  ],
+  [
+   "RUS",
+   "EST",
+   45,
+   "Security order"
+  ],
+  [
+   "RUS",
+   "LVA",
+   45,
+   "Security order"
+  ],
+  [
+   "RUS",
+   "LTU",
+   45,
+   "Security order"
+  ],
+  [
+   "RUS",
+   "FIN",
+   40,
+   "Security order"
+  ],
+  [
+   "RUS",
+   "GEO",
+   55,
+   "Occupied territories"
+  ],
+  [
+   "RUS",
+   "MDA",
+   45,
+   "Transnistria"
+  ],
+  [
+   "KOR",
+   "PRK",
+   90,
+   "Korean division"
+  ],
+  [
+   "JPN",
+   "PRK",
+   55,
+   "Missile and abductions issues"
+  ],
+  [
+   "USA",
+   "PRK",
+   60,
+   "Nuclear programme"
+  ],
+  [
+   "USA",
+   "IRN",
+   75,
+   "Nuclear programme and regional influence"
+  ],
+  [
+   "ISR",
+   "IRN",
+   85,
+   "Regional confrontation"
+  ],
+  [
+   "ISR",
+   "PSE",
+   90,
+   "Occupation and conflict"
+  ],
+  [
+   "ISR",
+   "LBN",
+   65,
+   "Border conflict"
+  ],
+  [
+   "ISR",
+   "SYR",
+   50,
+   "Occupied Golan"
+  ],
+  [
+   "SAU",
+   "IRN",
+   60,
+   "Gulf rivalry"
+  ],
+  [
+   "TUR",
+   "GRC",
+   45,
+   "Aegean and Cyprus disputes"
+  ],
+  [
+   "TUR",
+   "CYP",
+   40,
+   "Division of Cyprus"
+  ],
+  [
+   "ARM",
+   "AZE",
+   70,
+   "Nagorno-Karabakh legacy"
+  ],
+  [
+   "SRB",
+   "XKX",
+   70,
+   "Status of Kosovo"
+  ],
+  [
+   "ETH",
+   "ERI",
+   50,
+   "Border and Red Sea access"
+  ],
+  [
+   "ETH",
+   "EGY",
+   50,
+   "Nile dam"
+  ],
+  [
+   "MAR",
+   "DZA",
+   55,
+   "Western Sahara"
+  ],
+  [
+   "VEN",
+   "GUY",
+   55,
+   "Essequibo claim"
+  ],
+  [
+   "ARG",
+   "GBR",
+   35,
+   "Falkland Islands"
+  ],
+  [
+   "KOR",
+   "JPN",
+   25,
+   "Historical disputes"
+  ],
+  [
+   "PAK",
+   "AFG",
+   45,
+   "Border and militancy"
+  ],
+  [
+   "RWA",
+   "COD",
+   60,
+   "Eastern Congo"
+  ],
+  [
+   "THA",
+   "KHM",
+   40,
+   "Border dispute"
+  ],
+  [
+   "SDN",
+   "SSD",
+   40,
+   "Border and oil"
+  ],
+  [
+   "IRN",
+   "AZE",
+   25,
+   "Regional influence"
+  ],
+  [
+   "USA",
+   "VEN",
+   45,
+   "Sanctions and influence"
+  ],
+  [
+   "USA",
+   "CUB",
+   40,
+   "Embargo"
+  ],
+  [
+   "KEN",
+   "SOM",
+   40,
+   "Maritime boundary and militancy"
+  ],
+  [
+   "ETH",
+   "SOM",
+   45,
+   "Ogaden and Somaliland recognition"
+  ],
+  [
+   "SDN",
+   "ETH",
+   35,
+   "Al-Fashaga border"
+  ],
+  [
+   "UGA",
+   "RWA",
+   35,
+   "Border closures and proxies"
+  ],
+  [
+   "IND",
+   "BGD",
+   30,
+   "Border and water disputes"
+  ],
+  [
+   "IND",
+   "NPL",
+   25,
+   "Kalapani border"
+  ],
+  [
+   "THA",
+   "MMR",
+   30,
+   "Border insecurity"
+  ],
+  [
+   "MYS",
+   "PHL",
+   25,
+   "Sabah claim"
+  ],
+  [
+   "TJK",
+   "KGZ",
+   55,
+   "Border clashes"
+  ],
+  [
+   "UZB",
+   "TJK",
+   30,
+   "Water and border"
+  ],
+  [
+   "AFG",
+   "IRN",
+   30,
+   "Helmand water"
+  ],
+  [
+   "IRQ",
+   "TUR",
+   30,
+   "Kurdish operations"
+  ],
+  [
+   "SYR",
+   "TUR",
+   45,
+   "Northern Syria"
+  ],
+  [
+   "YEM",
+   "SAU",
+   50,
+   "Border war legacy"
+  ],
+  [
+   "ARE",
+   "IRN",
+   40,
+   "Gulf islands"
+  ],
+  [
+   "EGY",
+   "ISR",
+   25,
+   "Sinai and Gaza border"
+  ],
+  [
+   "IRQ",
+   "KWT",
+   25,
+   "Historical dispute"
+  ],
+  [
+   "SRB",
+   "ALB",
+   30,
+   "Kosovo question"
+  ],
+  [
+   "SRB",
+   "BIH",
+   30,
+   "Republika Srpska"
+  ],
+  [
+   "BLR",
+   "POL",
+   50,
+   "Border and migration pressure"
+  ],
+  [
+   "BLR",
+   "LTU",
+   40,
+   "Border and migration pressure"
+  ],
+  [
+   "COL",
+   "VEN",
+   45,
+   "Border and armed groups"
+  ],
+  [
+   "BOL",
+   "CHL",
+   40,
+   "Sea access claim"
+  ],
+  [
+   "PER",
+   "ECU",
+   25,
+   "Border history"
+  ],
+  [
+   "NIC",
+   "COL",
+   25,
+   "Maritime boundary"
+  ],
+  [
+   "ARG",
+   "CHL",
+   20,
+   "Antarctic and Patagonian ice-field"
+  ],
+  [
+   "CHN",
+   "KOR",
+   20,
+   "Security alignments"
+  ],
+  [
+   "GAB",
+   "GNQ",
+   30,
+   "Islands dispute"
+  ],
+  [
+   "NGA",
+   "CMR",
+   25,
+   "Bakassi legacy"
+  ],
+  [
+   "SSD",
+   "UGA",
+   30,
+   "Border and refugees"
+  ],
+  [
+   "MLI",
+   "DZA",
+   30,
+   "Northern Mali"
+  ],
+  [
+   "LBY",
+   "TCD",
+   25,
+   "Southern border"
+  ]
+ ],
+ "claims": [
+  {
+   "by": "CHN",
+   "lat": 24.0,
+   "lon": 121.0,
+   "label": "Taiwan"
+  },
+  {
+   "by": "RUS",
+   "lat": 45.0,
+   "lon": 34.0,
+   "label": "Crimea"
+  },
+  {
+   "by": "RUS",
+   "lat": 48.0,
+   "lon": 38.0,
+   "label": "Donbas"
+  },
+  {
+   "by": "UKR",
+   "lat": 45.0,
+   "lon": 34.0,
+   "label": "Crimea"
+  },
+  {
+   "by": "UKR",
+   "lat": 48.0,
+   "lon": 38.0,
+   "label": "Donbas"
+  },
+  {
+   "by": "ARG",
+   "lat": -51.7,
+   "lon": -59.0,
+   "label": "Falkland Islands"
+  },
+  {
+   "by": "VEN",
+   "lat": 6.0,
+   "lon": -60.0,
+   "label": "Essequibo"
+  },
+  {
+   "by": "PRK",
+   "lat": 37.5,
+   "lon": 127.0,
+   "label": "Korean Peninsula"
+  },
+  {
+   "by": "KOR",
+   "lat": 39.0,
+   "lon": 126.0,
+   "label": "Korean Peninsula"
+  },
+  {
+   "by": "IND",
+   "lat": 34.5,
+   "lon": 74.5,
+   "label": "Kashmir"
+  },
+  {
+   "by": "PAK",
+   "lat": 34.5,
+   "lon": 74.5,
+   "label": "Kashmir"
+  },
+  {
+   "by": "SRB",
+   "lat": 42.7,
+   "lon": 21.2,
+   "label": "Kosovo"
+  },
+  {
+   "by": "MAR",
+   "lat": 24.5,
+   "lon": -13.0,
+   "label": "Western Sahara"
+  },
+  {
+   "by": "GRC",
+   "lat": 35.2,
+   "lon": 33.4,
+   "label": "Cyprus (union)"
+  },
+  {
+   "by": "TUR",
+   "lat": 35.3,
+   "lon": 33.5,
+   "label": "Northern Cyprus"
+  },
+  {
+   "by": "ISR",
+   "lat": 33.0,
+   "lon": 35.8,
+   "label": "Golan"
+  },
+  {
+   "by": "SYR",
+   "lat": 33.0,
+   "lon": 35.8,
+   "label": "Golan"
+  },
+  {
+   "by": "ARM",
+   "lat": 40.0,
+   "lon": 46.5,
+   "label": "Karabakh"
+  },
+  {
+   "by": "AZE",
+   "lat": 40.0,
+   "lon": 46.5,
+   "label": "Karabakh"
+  }
+ ]
+}

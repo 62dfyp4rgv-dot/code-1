@@ -1,0 +1,22 @@
+{
+  "orgs": [
+    {"id":"nato","name":"NATO","type":"alliance","desc":"Collective defence alliance (Art. 5-style).","members":["USA","CAN","GBR","FRA","DEU","ITA","ESP","PRT","NLD","BEL","LUX","NOR","DNK","ISL","POL","CZE","SVK","HUN","ROU","BGR","HRV","SVN","ALB","MKD","MNE","GRC","TUR","EST","LVA","LTU","FIN","SWE"]},
+    {"id":"csto","name":"CSTO","type":"alliance","desc":"Collective security treaty of post-Soviet states.","members":["RUS","BLR","KAZ","KGZ","TJK","ARM"]},
+    {"id":"eu","name":"European Union","type":"trade_bloc","desc":"Single market with common external tariff and political coordination.","members":["AUT","BEL","BGR","HRV","CYP","CZE","DNK","EST","FIN","FRA","DEU","GRC","HUN","IRL","ITA","LVA","LTU","LUX","NLD","POL","PRT","ROU","SVK","SVN","ESP","SWE"]},
+    {"id":"usmca","name":"North American Trade Pact","type":"trade_bloc","desc":"USMCA-style free trade area.","members":["USA","CAN","MEX"]},
+    {"id":"rcep","name":"Pacific Economic Partnership","type":"trade_bloc","desc":"ASEAN+5 style regional trade area.","members":["IDN","THA","VNM","PHL","MYS","MMR","KHM","LAO","BRN","CHN","JPN","KOR","AUS","NZL"]},
+    {"id":"mercosur","name":"Southern Common Market","type":"trade_bloc","desc":"Customs union of the Southern Cone.","members":["BRA","ARG","PRY","URY","BOL"]},
+    {"id":"afcfta","name":"African Continental Trade Area","type":"trade_bloc","desc":"Continental free trade area.","members":["@north_africa","@west_africa","@central_africa","@east_africa","@southern_africa"]},
+    {"id":"eaeu","name":"Eurasian Economic Union","type":"trade_bloc","desc":"Customs union around Russia.","members":["RUS","BLR","KAZ","KGZ","ARM"]},
+    {"id":"gcc","name":"Gulf Cooperation Council","type":"trade_bloc","desc":"Gulf monarchies' economic and security grouping.","members":["SAU","ARE","QAT","KWT","OMN"]},
+    {"id":"brics","name":"BRICS+","type":"forum","desc":"Emerging-economy forum.","members":["BRA","RUS","IND","CHN","ZAF","EGY","ETH","IRN","ARE","IDN"]},
+    {"id":"sco","name":"Shanghai Cooperation Forum","type":"forum","desc":"Eurasian security and economic forum.","members":["CHN","RUS","IND","PAK","KAZ","KGZ","TJK","UZB","IRN","BLR"]},
+    {"id":"g7","name":"G7","type":"forum","desc":"Advanced-economy coordination forum.","members":["USA","GBR","FRA","DEU","ITA","JPN","CAN"]},
+    {"id":"opec","name":"Oil Producers' Cartel (OPEC+)","type":"cartel","desc":"Coordinated oil output quotas.","members":["SAU","RUS","IRQ","IRN","ARE","KWT","NGA","DZA","LBY","VEN","AGO","GAB","GNQ","COG","KAZ","OMN","AZE","MYS"]},
+    {"id":"un","name":"Global Assembly (UN-style)","type":"assembly","desc":"Universal membership body; Security Council with five permanent seats and veto.","members":["*"],"permanent":["USA","GBR","FRA","RUS","CHN"],"rotating":10}
+  ],
+  "guarantees": [["USA","TWN"],["USA","UKR"],["GBR","UKR"],["POL","UKR"],["GRC","CYP"],["GBR","CYP"],["USA","XKX"],["USA","GUY"],["GBR","GUY"],["FRA","GEO"],["USA","GEO"]],
+  "defensePacts": [
+    ["USA","JPN"],["USA","KOR"],["USA","PHL"],["USA","AUS"],["AUS","NZL"],["RUS","PRK"],["CHN","PRK"],["FRA","GRC"],["TUR","AZE"],["USA","ISR"],["SAU","PAK"],["GBR","AUS"]
+  ]
+}

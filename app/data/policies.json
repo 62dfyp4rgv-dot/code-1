@@ -1,0 +1,26 @@
+{
+  "levers": [
+    {"key":"taxRate","label":"Tax revenue (% of GDP)","group":"Fiscal","min":0.08,"max":0.5,"step":0.01,"fmt":"pct","cost":30,"lag":0.25,"help":"Central government revenue target. Higher taxes fund services but depress investment, approval and growth; evasion rises with corruption."},
+    {"key":"spendRate","label":"Spending (% of GDP)","group":"Fiscal","min":0.1,"max":0.62,"step":0.01,"fmt":"pct","cost":30,"lag":0.25,"help":"Total budget outside interest. Spending above revenue runs a deficit financed by debt."},
+    {"key":"tariff","label":"Average tariff","group":"Trade","min":0,"max":0.35,"step":0.01,"fmt":"pct","cost":20,"lag":0.3,"help":"Protects industry and raises revenue but raises import prices and invites retaliation."},
+    {"key":"policyRate","label":"Central bank rate","group":"Money","min":0,"max":0.25,"step":0.0025,"fmt":"pct2","cost":10,"lag":0.5,"help":"Higher rates cool inflation and borrowing; lower rates support growth and weaken the currency."},
+    {"key":"regulation","label":"Market regulation","group":"Economy","min":0,"max":1,"step":0.05,"fmt":"idx","cost":25,"lag":0.15,"help":"Raises consumer/worker protection and reduces inequality; too much slows productivity."},
+    {"key":"envRegulation","label":"Environmental regulation","group":"Economy","min":0,"max":1,"step":0.05,"fmt":"idx","cost":25,"lag":0.15,"help":"Cuts emissions and pollution; costs industry output in the short run."},
+    {"key":"cleanPriority","label":"Clean-energy priority","group":"Economy","min":0,"max":1,"step":0.05,"fmt":"idx","cost":15,"lag":0.2,"help":"Steers utility investment towards low-carbon generation; reduces fossil import dependence over years."},
+    {"key":"immigration","label":"Immigration openness","group":"Society","min":0,"max":1,"step":0.05,"fmt":"idx","cost":20,"lag":0.2,"help":"More workers and growth versus social tension, depending on public opinion."},
+    {"key":"pressFreedom","label":"Press freedom","group":"Society","min":0,"max":1,"step":0.05,"fmt":"idx","cost":30,"lag":0.2,"help":"Free media improves accountability and resilience to disinformation, but exposes the government."},
+    {"key":"surveillance","label":"Security apparatus","group":"Society","min":0,"max":1,"step":0.05,"fmt":"idx","cost":25,"lag":0.2,"help":"Raises counter-intelligence and capacity to repress unrest; erodes legitimacy long-term in open societies."},
+    {"key":"conscription","label":"Conscription level","group":"Military","min":0,"max":3,"step":1,"fmt":"level","labels":["Volunteer","Selective","Universal","Total mobilisation"],"cost":25,"lag":1,"help":"Larger manpower pool and reserves at economic and political cost."}
+  ],
+  "budgetCategories": [
+    {"key":"defense","label":"Defence","help":"Personnel, maintenance, procurement and readiness."},
+    {"key":"health","label":"Healthcare","help":"Raises health index and epidemic resilience."},
+    {"key":"education","label":"Education","help":"Raises skills, research capacity and long-run productivity."},
+    {"key":"infrastructure","label":"Infrastructure","help":"Builds public capital: roads, rail, ports, grid; also supply capacity in war."},
+    {"key":"welfare","label":"Welfare","help":"Reduces poverty and inequality; supports consumption and stability."},
+    {"key":"research","label":"Research","help":"Generates research points for technology."},
+    {"key":"admin","label":"Administration & diplomacy","help":"State capacity: tax collection, corruption control, political capital, diplomacy and intelligence."},
+    {"key":"subsidies","label":"Energy & food subsidies","help":"Shields households from price spikes; costly and distorts markets."}
+  ],
+  "industrialFocus": ["none","agri","industry","oil","gas","mining","utilities","services","tech"]
+}

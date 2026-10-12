@@ -1,0 +1,7 @@
+node_modules/
+.DS_Store
+*.log
+artifacts/
+ios/build/
+ios/ModernAge.xcodeproj/
+ios/ModernAge/www/

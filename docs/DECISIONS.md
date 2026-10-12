@@ -1,0 +1,61 @@
+# Technical decisions log
+
+## D-001 Environment audit (2026-10-11)
+Linux x86_64 container. Available: Node 22, Python 3.13, clang/gcc, Rust, Go, Java, Chromium + Playwright 1.56.
+**Not available: Swift toolchain, Xcode, iOS Simulator, any Apple device** (swift.org download returns 403 via proxy).
+Consequence: a native iOS binary can NOT be built or run here. Anything that needs Xcode is documented as UNVERIFIED.
+
+## D-002 Stack evaluation
+| Option | Perf / map | Sim testability here | iOS build verifiable here | Maintainability | Verdict |
+|---|---|---|---|---|---|
+| Swift + SpriteKit (native) | Excellent | Core could be a Swift package but needs a Swift toolchain (absent) | No | Good, but zero ability to run anything | Rejected: nothing could be tested in this environment |
+| Godot 4 iOS export | Good | Needs Godot binary (absent); GDScript sims slow | No (needs Xcode) | OK | Rejected: no engine binary, slow headless tests |
+| Unity | Good | Needs Unity editor + license | No | Heavy | Rejected: licensing + overhead for a 2D UI-heavy sim |
+| **JS (ES modules) simulation core + HTML5 canvas/DOM UI, shipped as installable PWA and wrapped in a WKWebView iOS shell** | Good for 2D map (raster+vector, 60fps feasible) | **Fully testable here (node:test, Playwright at iPhone viewports)** | Shell only; Xcode build unverified | Good: one language, data-driven | **Chosen** |
+
+Trade-offs accepted: WebKit (iOS) JS performance is lower than native; no Metal; App Store requires the wrapper. Playwright here drives Chromium (emulating iPhone viewports/touch), NOT iOS Safari - this is a documented verification gap.
+
+## D-003 Architecture
+- `app/js/sim/*` pure simulation (no DOM, no Math.random). Seeded PRNG (sfc32) with state in the save.
+- All player *and* AI actions go through one command layer (`commands.js`): same validation and costs; AI receives only a `Perception` (noisy, intel-limited) - it never reads other countries' private state.
+- Base tick = 1 day. Subsystems run at declared frequencies (daily / monthly / yearly); see `docs/SUBSYSTEMS.md`.
+- Data-driven: CSV/JSON in `app/data/` (countries, resources, orgs, techs, events, scenarios, policies). Loader takes an injected reader so Node (fs) and browser (fetch) share it.
+- Geography: Natural Earth (public domain) via `world-atlas` -> 0.5 deg raster of strategic regions (k-means per country) + sea zones (flood-fill from named seeds) + adjacency graphs. Terrain is hand-authored approximation.
+- Saves: versioned JSON (`saveVersion`), typed matrices base64-encoded, migration table, IndexedDB with localStorage fallback, double-buffered slots for crash safety.
+- Determinism: reproducible per JS engine given seed + command log. Cross-engine bit-identity of Math.exp/pow is NOT guaranteed; saves store full state so load is exact everywhere.
+
+## D-004 Scope control
+175 map entities (Natural Earth 110m). Everything is simulated by the same rules; ~40 countries get hand-authored detail (resources, alliances, rivalries), the rest are derived from population/GDP/regime with seeded variation and flagged `derived`.
+Nuclear weapons are modelled as deterrence rating only (no nuclear exchange mechanic).
+
+## D-005 Balance-driven design changes (2026-10-11, from `tools/balance.mjs`)
+- **Security guarantees** (`orgs.json: guarantees`): implicit third-party commitments (e.g. US→Taiwan) are seeded as `guarantee` treaties. They are not alliances (no obligation to fight) but the AI counts a guarantor's strength at 0.7 weight when judging an attack. Chosen over adding fake alliances; values are gameplay judgement (see DATA_SOURCES.md).
+- **Amphibious assaults**: landing across a strait now has a much larger penalty, and the AI needs ≥ 2.5:1 power for non-neighbour targets. Chosen because balance runs produced a China–Taiwan war in most decades lasting weeks.
+- **Neutral-by-construction policy rate**: each country's Taylor-rule neutral rate (`rStar`) is set so the rule outputs the starting policy rate at t0; optional `rate0`/`homeBias` profile fields model low-rate, domestically financed debtors (Japan). Chosen because a global initial monetary-tightening transient pushed Japan into a deflation/debt spiral and regime collapse in most runs.
+- **Downward price rigidity** and a flatter Phillips curve in slack, to prevent deflation spirals.
+- Nuclear exchange remains unmodelled beyond a single-use strike (see D-008).
+
+## D-006 Changes after the first independent review (2026-10-11)
+- **Offers, not impositions**: AI peace proposals to the human become answerable offers (`answerOffer`). Chosen over auto-accept because the review showed it removed player agency.
+- **Client states** replace the stub `puppet` term: tribute 1.5 % GDP, shared side in wars, no independent war declarations, revolt hazard that rises when the overlord is exhausted/unstable. Tiny non-player states whose capital falls become clients, so conquest has lasting consequences.
+- **Economy recalibration**: capital/output ratios ×1.25, a global-frontier TFP term, smaller catch-up and research terms, investment shares of investment-heavy economies drift down with income, AI governments spend available fiscal space (stops debt ratios deflating), tariff pass-through to prices, output shocks raise unemployment, manual rate setting disables the independent central bank. Result: world growth ≈ 3.2–3.8 %, USA ≈ 1.8 %, China ≈ 5.5–6 % instead of 0.4 % / 7 %.
+- **Save safety**: `App.snapshot()` finishes the in-flight day before serialising; perception is stateless.
+- **Formatting**: Prettier (140 cols) applied to all JS/CSS; long one-line modules are now reviewable (≈ 12 k lines).
+
+## D-007 Changes after the second independent review (2026-10-11)
+Ceasefires freeze the lines (occupation persists, truce forbids new fighting); raw `serialize` refuses mid-day; AI-perceived opinion is noisy; touch targets ≥ 44 px; central-bank output gap measured against the model's norm (0.99). The AI spends more time near zero rates before; now median inflation ≈ 2.5 %.
+
+## D-008 Depth additions after round 2 (2026-10-11)
+- **National projects** (`projects.json`): 16 multi-year investments with permanent modifiers; AI uses them too.
+- **Three more scenarios** (Strait Crisis 2027, The Long Drought 2025, Debt Reckoning 2026) using new scenario fields: `rivalries`, `relations`, regional/national/global timed `mods`, `debtShift`, `rateShift`.
+- **More rivalries** (33 added) for more varied spontaneous wars (~1.8 per decade in balance runs); map regions ×1.3 (681) for finer fronts; offensives concentrate on one main thrust; per-war casualty ledger and territory/stock readouts in the war panel.
+- **Nuclear strike**: single-use escalation with heavy global consequences (D-004 amended); AI very rarely uses it.
+
+## D-009 Changes after the third independent review (2026-10-12)
+In-app confirmation dialog instead of native `confirm()` (WKWebView-safe, testable; the nuclear confirmation cannot be disabled in settings); nuclear strike expends one arsenal point and has a 180-day cooldown; when a ceasefire expires the land one side still holds becomes its own (capitals excepted); belligerents under pressure receive outside aid from allies, guarantors and aligned democracies (keeps besieged states solvent; Ukraine's inflation loop disappeared); declared wars with no fighting for 15 months lapse into ceasefires (AI-only); client states for targets with ≤ 3 regions; AI territorial peace demands up to 4 regions when clearly winning; Projects tab layout fixed; touch targets 44 px.
+
+## D-010 More replay and clarity (2026-10-12)
+Advisor (read-only guidance on top of the existing systems), world-variation levels at new game (seeded, off by default), civil conflict as an internal-war mechanic with three events, alliance strain (pacts lapse after a year of mutual hostility), terrain shading on the map, a yearly review modal (pauses each January; optional), generative ambient music (off by default) and map alert rings. Chosen because the reviewers found replay variety and new-player understanding the weakest points.
+
+## D-011 Mandates (2026-10-12)
+Rolling short-term goals for the player (`sim/mandates.js`, `data/mandates.json`). They sit on top of existing systems: a goal reads a stat the player can already move, so nothing in the economy or AI changed. Issued only to the player, picked by a stateless hash (no RNG stream use), stored on the player country so saves carry them. Missing a goal is free by design: the aim is guidance between crises, not another way to lose.
