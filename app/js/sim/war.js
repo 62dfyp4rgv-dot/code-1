@@ -947,13 +947,7 @@ export function relocateStranded(sim) {
   const geo = sim.geo;
   for (const f of sim.state.forces) {
     if (f.branch === 'sea' || f.branch === 'air') continue;
-    const friendly = alliedSet(sim, f.owner);
-    if (friendly.has(reg.ctrl[f.loc]) || !sim.atWar(f.owner)) {
-      if (!friendly.has(reg.ctrl[f.loc]) && !sim.atWar(f.owner)) {
-        /* foreign region in peace: send home */
-      } else continue;
-    }
-    if (friendly.has(reg.ctrl[f.loc])) continue;
+    if (alliedSet(sim, f.owner).has(reg.ctrl[f.loc])) continue; // standing on friendly ground
     // nearest friendly region
     let best = -1,
       bd = Infinity;
@@ -1021,7 +1015,7 @@ function capitulate(sim, w, i, side, why) {
   }
   const subjugate =
     i !== st.playerId &&
-    geo.cRegions[i].length <= 2 &&
+    geo.cRegions[i].length <= 3 &&
     (why === 'fall of the capital' || why === 'total occupation') &&
     st.countries[winners[0]].dip.vassalOf == null;
   applyTerms(sim, w, winners[0], i, [
@@ -1034,12 +1028,76 @@ function capitulate(sim, w, i, side, why) {
 }
 
 // ---------------------------------------------------------------------------------------------------- monthly: scores, exhaustion
+// Outside support for belligerents under pressure: allies, guaranteed partners and friendly democracies that are rivals of the
+// opponent send money and equipment (financed by their own borrowing). This is what keeps a besieged country solvent.
+function warAid(sim) {
+  const st = sim.state;
+  const N = sim.geo.N;
+  const cs = st.countries;
+  const inWar = new Set();
+  for (const w of st.wars) if (w.active) for (const x of [...w.attackers, ...w.defenders]) inWar.add(x);
+  const guarantors = new Map();
+  for (const t of st.treaties)
+    if (t.active && t.type === 'guarantee') {
+      if (!guarantors.has(t.parties[1])) guarantors.set(t.parties[1], []);
+      guarantors.get(t.parties[1]).push(t.parties[0]);
+    }
+  for (const w of st.wars) {
+    if (!w.active) continue;
+    for (const [members, foes] of [
+      [w.attackers, w.defenders],
+      [w.defenders, w.attackers],
+    ]) {
+      for (const b of members) {
+        const c = cs[b];
+        const pressed = sim.occupiedShare(b) > 0 || c.econ.warLoss > 0.04 || c.mil.exhaustion > 0.3;
+        if (!pressed) continue;
+        let given = 0;
+        const need = 0.3 * c.econ.gdp; // yearly cap: outside money covers at most a third of GDP
+        const aggressor = foes[0];
+        for (let x = 0; x < N; x++) {
+          if (x === b || inWar.has(x)) continue;
+          const d = cs[x];
+          if (d.econ.gdp < 5 || d.econ.debt > 1.6 * d.econ.gdp) continue;
+          const friend = sim.alliesOf(b).has(x) || (guarantors.get(b) || []).includes(x);
+          const op = st.rel.op[x * N + b];
+          const aligned = op > 35 && d.gov.dem > 55 && d.dev0 > 0.5 && st.rel.rivalry[x * N + aggressor] > 35;
+          if (!friend && !aligned) continue;
+          const amt = (0.0012 * d.econ.gdp * (0.5 + Math.max(0, op) / 100)) / 12;
+          if (given * 12 + amt * 12 > need) break;
+          given += amt;
+          d.econ.debt += amt;
+          c.econ.debt -= 0.5 * amt;
+          c.econ.reserves += 0.5 * amt;
+        }
+      }
+    }
+  }
+}
+// A declared war in which nobody has fought for over a year (no casualties, no occupation) lapses into a ceasefire.
+function endDormantWars(sim, day) {
+  const st = sim.state;
+  for (const w of st.wars) {
+    if (!w.active || day - w.start < 450) continue;
+    const members = [...w.attackers, ...w.defenders];
+    if (members.includes(st.playerId)) continue; // the player decides for themselves
+    const cas = members.reduce((a, i) => a + (w.cas[i] || 0), 0);
+    if (cas > 2) continue;
+    let held = false;
+    for (let r = 0; r < st.reg.owner.length && !held; r++)
+      held = st.reg.ctrl[r] !== st.reg.owner[r] && members.includes(st.reg.owner[r]) && members.includes(st.reg.ctrl[r]);
+    if (held) continue;
+    proposePeace(sim, w, w.leaders[0], w.leaders[1], [{ kind: 'ceasefire' }], { force: true });
+  }
+}
 export function monthlyWar(sim, day) {
   const st = sim.state,
     geo = sim.geo,
     reg = st.reg;
   pruneOffers(sim, day);
   if (!st.wars.some((w) => w.active)) return;
+  warAid(sim);
+  endDormantWars(sim, day);
   for (const w of st.wars) {
     if (!w.active) continue;
     for (const [side, members, foes] of [

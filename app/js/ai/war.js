@@ -146,7 +146,7 @@ export function manageWar(sim, c, view) {
         held.sort((x, y) => sim.geo.regions[y].popW - sim.geo.regions[x].popW);
         for (const r of held.slice(0, adv > 45 ? 4 : adv > 30 ? 3 : 2)) terms.push({ kind: 'cede', region: r, to: c.idx });
         if (adv > 40) terms.push({ kind: 'reparations', pct: 0.005, years: 3 });
-        if (adv > 60 && sim.geo.cRegions[f].length <= 2 && c.dip.vassalOf == null && !view.byIdx(f)?.vassal) terms.push({ kind: 'puppet' });
+        if (adv > 60 && sim.geo.cRegions[f].length <= 3 && c.dip.vassalOf == null && !view.byIdx(f)?.vassal) terms.push({ kind: 'puppet' });
       }
       if (!terms.length) terms.push({ kind: 'ceasefire' });
       let r = sim.exec({ type: 'proposePeace', actor: c.idx, war: w.id, target: f, terms });

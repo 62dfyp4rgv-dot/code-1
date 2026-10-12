@@ -4,8 +4,6 @@ import { sideOf, atWar, endWarFor, relocateStranded } from './war.js';
 
 // ---------------------------------------------------------------------------------------------------- peace
 const REGION_COST = (sim, w, ri) => {
-  const c = sim.state.countries[sim.state.reg.owner[ri]];
-  const total = sim.geo.cRegions[sim.state.reg.owner[ri]].length;
   return 12 + 70 * sim.geo.regions[ri].popW * (ri === sim.geo.capitalRegion[sim.state.reg.owner[ri]] ? 2 : 1);
 };
 export function termCost(sim, w, term) {
@@ -69,9 +67,6 @@ export function proposePeace(sim, w, proposer, target, terms, opts = {}) {
   if (target === sim.state.playerId && proposer !== sim.state.playerId && !opts.force && !sim.state.countries[target].autoAI)
     return offerPeaceToPlayer(sim, w, proposer, target, terms, ev);
   applyTerms(sim, w, proposer, target, terms);
-  for (const side of [proposer, target]) {
-    /* per-pair peace */
-  }
   // both leave the war with each other: if the pair are the leaders end the war for everyone
   const leadersPair = w.leaders.includes(proposer) && w.leaders.includes(target);
   if (leadersPair) {
@@ -87,9 +82,6 @@ export function proposePeace(sim, w, proposer, target, terms, opts = {}) {
     }
   } else {
     endWarFor(sim, w, target, 'separate peace');
-    if (!w.attackers.includes(proposer) && !w.defenders.includes(proposer)) {
-      /* ended */
-    }
   }
   for (const pp of [proposer, target])
     if (pp === sim.state.playerId) {

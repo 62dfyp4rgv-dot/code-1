@@ -27,10 +27,13 @@ export function nuclearStrike(sim, actor, enemy, region) {
   const c = st.countries[actor];
   const victim = st.countries[enemy];
   if (!(c.mil.nukes > 0)) return { ok: false, reason: 'no nuclear weapons' };
+  if (st.day - (c.mil.nukeLast ?? -9999) < 180) return { ok: false, reason: 'the arsenal needs months to prepare another strike' };
   if (!enemiesOf(sim, actor).has(enemy)) return { ok: false, reason: 'not at war with that country' };
   const opts = nuclearOptions(sim, actor, enemy);
   const r = region !== undefined && region !== null ? region : opts.sort((a, b) => geo.regions[b].popW - geo.regions[a].popW)[0];
   if (r === undefined || !opts.includes(r)) return { ok: false, reason: 'no valid target region' };
+  c.mil.nukeLast = st.day;
+  c.mil.nukes = Math.max(0, c.mil.nukes - 1); // the weapon is expended: one fewer rating point of deterrent
   const share = geo.regions[r].popW;
   reg.dev[r] = clamp(reg.dev[r] + 0.7, 0, 0.95);
   const deaths = victim.pop.total * Math.min(0.12, 0.02 + 0.1 * share);

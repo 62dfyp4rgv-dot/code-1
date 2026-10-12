@@ -123,7 +123,7 @@ export const nation = {
       h +=
         sec('Industrial focus') +
         `<div class="seg" style="flex-wrap:wrap">${sim.data.policies.industrialFocus.map((s) => `<button data-act="focus" data-s="${s}" class="${c.target.focus === s ? 'on' : ''}">${s}</button>`).join('')}</div><div class="hint">Directs private investment towards one sector (12 PC).</div>`;
-    } else {
+    } else if (tab === 'society') {
       const coh = c.pop.coh;
       const tot = coh[0] + coh[1] + coh[2];
       h += `<div class="grid3">${stat('Population', people(c.pop.total), pctS(c.pop.growth, 2) + '/yr', '', 'people')}${stat('Median-age proxy', pct(c.pop.elder, 0), '65+ share', c.pop.elder > 0.2 ? 'wn' : '')}${stat('Fertility', c.pop.fertility.toFixed(2), 'children/woman', c.pop.fertility < 1.5 ? 'dn' : '')}</div>`;

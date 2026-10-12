@@ -268,5 +268,24 @@ test('nuclear escalation: needs weapons and a war; devastates, kills, and makes 
   assert.ok(opinionOf(sim.geo.idOf.FRA) < o0 - 10, 'the world turns against the user');
   assert.ok(A.dip.credibility < 40);
   assert.equal(sim.state.world.nuclearUse, 1);
+  assert.equal(sim.exec({ type: 'nuclearStrike', actor: a, target: d }).ok, false, 'no immediate second strike (cooldown, expended stock)');
   assert.equal(sim.exec({ type: 'nuclearStrike', actor: sim.geo.idOf.BRA, target: sim.geo.idOf.ARG }).ok, false, 'not at war');
+});
+test('when a ceasefire expires, land the other side still holds becomes theirs (frozen fronts resolve)', async () => {
+  const { sim, a, d } = await duel('RUS', 'POL');
+  const rd = sim.geo.cRegions[d].find((r) => r !== sim.geo.capitalRegion[d]);
+  assert.ok(rd !== undefined, 'target has a non-capital region');
+  const w = declareWar(sim, a, d, { noAllies: true }).war;
+  sim.state.reg.ctrl[rd] = a;
+  sim.rebuildOwnedRegions();
+  w.score.a = 70;
+  sim.country('POL').mil.exhaustion = 0.9;
+  assert.equal(proposePeace(sim, w, a, d, [{ kind: 'ceasefire' }], { force: true }).ok, true);
+  assert.equal(sim.state.reg.owner[rd], d);
+  sim.advance(365 * 4 + 40);
+  assert.equal(
+    sim.state.reg.owner[rd] === a || rd === sim.geo.capitalRegion[d],
+    true,
+    'the occupied region changes hands (capitals excepted)',
+  );
 });

@@ -218,7 +218,7 @@ function warCard(app, w) {
         '',
       )}</div><div class="hint">Objective: ${po.objective >= 0 ? esc(regionLabel(sim, po.objective)) : 'none — forces pick targets by value and odds'}</div><div class="btnrow">${btn(icon('target', '', 16) + ' Set objective on map', `data-act="objective" data-e="${e}"`, 'small')}${btn('Negotiate peace', `data-act="peace" data-w="${w.id}" data-e="${e}"`, 'small primary')}</div>${
       sim.player.mil.nukes > 0
-        ? `<div class="btnrow">${btn('Use a nuclear weapon', `data-cmd="${esc(JSON.stringify({ type: 'nuclearStrike', target: e }))}" data-confirm="Use a nuclear weapon against ${esc(st.countries[e].name)}? It devastates a region and kills many people. The world will turn against you and investors will flee. This cannot be undone."`, 'small danger')}</div>`
+        ? `<div class="btnrow">${btn('Use a nuclear weapon', `data-cmd="${esc(JSON.stringify({ type: 'nuclearStrike', target: e }))}" data-confirm-force="1" data-confirm="Use a nuclear weapon against ${esc(st.countries[e].name)}? It devastates a region and kills many people. The world will turn against you and investors will flee. This cannot be undone."`, 'small danger')}</div>`
         : ''
     }</div>`;
   }

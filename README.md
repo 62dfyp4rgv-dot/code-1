@@ -24,7 +24,7 @@ Requirements: Node ≥ 20 (22 recommended). The game itself has **no runtime dep
 ```bash
 npm install            # only needed for the map build tool + dev tooling
 npm run serve          # http://localhost:8080  — open on a phone browser on the same network, or use devtools device mode
-npm test               # 59 unit tests + 18 UI tests (UI tests need Playwright + Chromium)
+npm test               # 68 unit tests + 20 UI tests (UI tests need Playwright + Chromium)
 npm run validate:data  # content integrity
 npm run bench          # simulation benchmark (desktop numbers, not iPhone)
 npm run balance        # multi-scenario long-run validation -> docs/BALANCE_REPORT.md

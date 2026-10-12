@@ -8,8 +8,8 @@ A single-player modern-era grand-strategy game: 168 playable countries, 6 scenar
 ## Verified (evidence in the repo; reproducible with the commands shown)
 | Claim | How verified |
 |---|---|
-| Simulation, AI, saves, data: 61 unit/integration tests pass | `npm run test:fast` |
-| UI flows work in Chromium with iPhone viewports/touch: 18 tests pass | `npm run ui:test` |
+| Simulation, AI, saves, data: 68 unit/integration tests pass | `npm run test:fast` |
+| UI flows work in Chromium with iPhone viewports/touch: 20 tests pass | `npm run ui:test` |
 | Data integrity (roster↔map, tech DAG, event validity, modifier keys consumed) | `npm run validate:data` |
 | Save → load → continue is bit-identical (several seeds/scenarios/load points) | `tests/unit/determinism_save.test.js`, UI snapshot test |
 | 9 ten-year balance runs: 0 exceptions, 0 non-finite values; world growth ≈ 3.3 %, median inflation ≈ 2.5 %, collapses ≈ 1.1 per decade | `npm run balance` → `docs/BALANCE_REPORT.md` |

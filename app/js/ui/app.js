@@ -408,7 +408,7 @@ export class App {
     if (!force && this._sheetKey === key + out.title) return;
     this._sheetKey = key + out.title;
     this.$('#sheetHead').innerHTML =
-      `<h2>${esc(out.title)}${out.sub ? `<div class="sub">${out.sub}</div>` : ''}</h2>${out.headExtra || ''}<button class="iconbtn" data-act="closeSheet" aria-label="Close" style="width:38px;height:38px">${icon('x', '', 18)}</button>`;
+      `<h2>${esc(out.title)}${out.sub ? `<div class="sub">${out.sub}</div>` : ''}</h2>${out.headExtra || ''}<button class="iconbtn" data-act="closeSheet" aria-label="Close" style="width:44px;height:44px">${icon('x', '', 18)}</button>`;
     const tabsEl = this.$('#sheetTabs');
     tabsEl.style.display = out.tabs ? '' : 'none';
     tabsEl.innerHTML = out.tabs
@@ -691,9 +691,26 @@ export class App {
     this.renderHud(true);
     return r;
   }
+  askConfirm(message, onYes) {
+    this.openOverlay(
+      `<div class="modal center"><h2>Are you sure?</h2><p>${esc(message)}</p><div class="btnrow"><button class="btn danger" data-cf="1">Yes, do it</button><button class="btn primary" data-cf="0">Cancel</button></div></div>`,
+    );
+    const ov = this.$('#overlay');
+    ov.dataset.lock = '1';
+    ov.onclick = (e) => {
+      const b = e.target.closest('[data-cf]');
+      if (!b) return;
+      this.closeOverlay();
+      if (b.dataset.cf === '1') onYes();
+    };
+  }
   runCmdAttr(el) {
     const c = JSON.parse(el.dataset.cmd.replace(/&quot;/g, '"'));
-    if (el.dataset.confirm && this.settings.confirmDestructive && !confirm(el.dataset.confirm)) return;
+    if (el.dataset.confirm && (this.settings.confirmDestructive || el.dataset.confirmForce)) {
+      // in-app dialog (native confirm() is unreliable inside WKWebView and cannot be tested headlessly)
+      this.askConfirm(el.dataset.confirm, () => this.cmd(c));
+      return;
+    }
     this.cmd(c);
   }
   // ------------------------------------------------------------------------------------------------ toasts / overlay

@@ -747,6 +747,7 @@ export function monthlyStep(sim, day) {
   for (const t of st.treaties)
     if (t.active && t.end !== null && t.end <= day) {
       t.active = false;
+      if (t.type === 'ceasefire') settleFrozenFront(sim, t.parties[0], t.parties[1]);
     }
   // sanctions: drift effects on trade access
   const world = cs.reduce((s, c) => s + c.econ.gdp, 0);
@@ -875,4 +876,30 @@ export function unResolution(sim, from, kind, target, preview = false) {
     );
   }
   return { ok: true, passed: v.passes, vote: v };
+}
+
+// When a ceasefire runs out, land one side still holds from the other is recognised as its own (the frozen front becomes a border),
+// unless the two are at war again. Capitals are never transferred.
+function settleFrozenFront(sim, a, b) {
+  const st = sim.state;
+  if (sim.atWarWith(a, b)) return;
+  const reg = st.reg;
+  const moved = [];
+  for (let r = 0; r < reg.owner.length; r++) {
+    const o = reg.owner[r];
+    const k = reg.ctrl[r];
+    if (o === k || !((o === a && k === b) || (o === b && k === a))) continue;
+    if (r === sim.geo.capitalRegion[o]) continue;
+    reg.owner[r] = k;
+    moved.push(r);
+  }
+  if (!moved.length) return;
+  sim.rebuildOwnedRegions();
+  sim.log(
+    a,
+    'peace',
+    `${st.countries[a].name} and ${st.countries[b].name}: the ceasefire line becomes the border (${moved.length} region(s) change hands)`,
+    { moved },
+    'high',
+  );
 }

@@ -1,7 +1,7 @@
 # Roles and how they were exercised
 
 The brief names 13 specialist roles (A–M). This project was produced by **a single AI coding agent session** that worked through the
-roles sequentially; no human team existed, and two independent reviewer sub-agents (one per round, each with fresh context) evaluated it (see SCORECARD.md).
+roles sequentially; no human team existed, and three independent reviewer sub-agents (one per round, each with fresh context) evaluated it (see SCORECARD.md).
 Role responsibilities were therefore emulated as work phases with distinct artefacts and gates — not as independent parties.
 Scores given by the same agent that wrote the code are *self-assessments*; only the independent review is weighted as external evidence.
 

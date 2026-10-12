@@ -605,6 +605,7 @@ test('national projects: the Projects tab lists them, starting one spends politi
   assert.ok((await page.evaluate(() => window.__app.sim.player.gov.pc)) < pc0, 'political capital spent');
   assert.equal(await page.evaluate(() => window.__app.sim.player.projects.active.length), 1);
   assert.match(await page.locator('#sheetBody').innerText(), /Progress/);
+  assert.doesNotMatch(await page.locator('#sheetBody').innerText(), /Fertility|Median-age/, 'the Projects tab shows only projects');
   assert.deepEqual(page.errors, []);
   await page.context().close();
 });

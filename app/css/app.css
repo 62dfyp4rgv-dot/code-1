@@ -183,15 +183,15 @@ button {
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 999px;
-  height: 44px;
-  padding: 0 4px;
+  height: 48px;
+  padding: 0 2px;
   flex: none;
 }
 .speedbox button {
   background: none;
   border: 0;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   display: grid;
   place-items: center;
@@ -240,7 +240,7 @@ button {
   padding: 5px 10px;
   font-size: 0.78rem;
   font-weight: 600;
-  min-height: 40px;
+  min-height: 44px;
   color: var(--text);
 }
 .pill .k {
