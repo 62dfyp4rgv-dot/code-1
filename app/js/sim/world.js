@@ -24,6 +24,7 @@ import * as DIP from './diplomacy.js';
 import * as INT from './intel.js';
 import * as EVT from './events.js';
 import * as PRJ from './projects.js';
+import * as MAN from './mandates.js';
 import * as CIV from './civil.js';
 import * as AI from '../ai/ai.js';
 import * as CMD from './commands.js';
@@ -608,6 +609,7 @@ export class Sim {
     yield;
     EVT.monthlyStep(this, day);
     PRJ.monthlyStep(this, day);
+    MAN.monthlyStep(this, day);
     yield;
     const ta = performance.now();
     yield* AI.monthlyGen(this, day);

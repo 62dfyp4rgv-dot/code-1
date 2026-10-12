@@ -1,9 +1,10 @@
 import { esc, money, pct, idx100, GOV_LABEL } from '../fmt.js';
 import { icon } from '../icons.js';
-import { stat, kv, sec, tag, btn, li, note, swatch } from './util.js';
+import { stat, kv, sec, tag, btn, cmdBtn, li, note, swatch } from './util.js';
 import { gauge, bars, lineChart, spark } from '../charts.js';
 import { gradeOf } from '../../sim/victory.js';
 import { ACHIEVEMENTS } from '../../sim/achievements.js';
+import { progress as mandateProgress, MAX_ACTIVE as MAX_MANDATES } from '../../sim/mandates.js';
 
 export const stats = {
   render(app, p) {
@@ -135,20 +136,54 @@ export const stats = {
     },
   },
 };
+const fmtVal = (u, v) =>
+  u === 'pct'
+    ? (v * 100).toFixed(1) + '%'
+    : u === 'dec'
+      ? v.toFixed(2)
+      : u === 'mo'
+        ? v.toFixed(1) + ' mo'
+        : u === 'bool'
+          ? v
+            ? 'at war'
+            : 'at peace'
+          : v.toFixed(0);
+function mandatesHtml(sim, c) {
+  const m = c.mandates || { active: [], done: 0, failed: 0 };
+  let h = note(
+    'Mandates are short-term goals your government sets itself. Meet them before the deadline for political capital and a small approval bump; missing one costs nothing. A new one appears every couple of months.',
+  );
+  h += `<div class="grid3">${stat('Achieved', String(m.done), 'mandates', m.done ? 'up' : '', 'star')}${stat('Missed', String(m.failed), 'mandates')}${stat('Active', m.active.length + '/' + MAX_MANDATES, 'at once')}</div>`;
+  if (!m.active.length) h += '<div class="empty">No mandate right now. The next one is on its way.</div>';
+  for (const a of m.active) {
+    const t = sim.data.mandates.find((x) => x.id === a.id);
+    if (!t) continue;
+    const pr = mandateProgress(sim, c, a);
+    const left = Math.max(0, Math.ceil((a.deadline - sim.state.day) / 30.4));
+    const detail =
+      t.kind === 'hold'
+        ? `${a.streak} of ${t.hold} months so far · now ${fmtVal(t.unit, pr.value)}`
+        : `${fmtVal(t.unit, a.from)} → ${fmtVal(t.unit, a.goal)} · now ${fmtVal(t.unit, pr.value)}`;
+    h += `<div class="card"><div class="row sp"><b>${esc(t.name)}</b>${tag(left + ' mo left', left <= 3 ? 'warn' : '')}</div><div class="hint">${esc(t.text)}</div>${gauge('Progress', pr.frac, { text: detail, cls: 'good' })}<div class="row sp"><span class="mu">Reward: ${t.reward.pc} political capital${t.reward.approval ? ' · +' + Math.round(t.reward.approval * 100) + ' approval' : ''}</span>${cmdBtn('Dismiss', { type: 'dismissMandate', mandate: a.id }, 'small')}</div></div>`;
+  }
+  return h;
+}
 export const objectives = {
   render(app, p) {
     const sim = app.sim,
       st = sim.state,
       V = st.victory,
       c = sim.player;
-    const tab = p.tab || 'paths';
+    const tab = p.tab || 'mandates';
     const tabs = [
+      { id: 'mandates', label: 'Mandates' },
       { id: 'paths', label: 'Victory paths' },
       { id: 'ach', label: 'Achievements' },
     ];
     const yrsLeft = Math.max(0, (V.endDay - st.day) / 365);
     let h = '';
-    if (tab === 'paths') {
+    if (tab === 'mandates') h = mandatesHtml(sim, c);
+    else if (tab === 'paths') {
       h += `<div class="grid3">${stat('Standing', V.standing + '/100', 'vs all nations', '', 'star')}${stat('Paths won', V.counts + '/6', gradeOf(V), V.counts >= 2 ? 'up' : '')}${stat('Time left', yrsLeft.toFixed(1) + ' yr', sim.calendar.format(V.endDay))}</div>`;
       h += `<div class="note">There is no single way to win. Complete victory paths through prosperity, economic weight, diplomacy, science, stability or security — conquest is optional. The scenario ends on ${sim.calendar.format(V.endDay)}; two paths is a success, four is a triumph.</div>`;
       h += Object.values(V.paths)

@@ -40,7 +40,7 @@ function parseTechs(text) {
 }
 export async function loadData(readText) {
   const json = async (n) => JSON.parse(await readText(n));
-  const [countries, resources, cities, map, econ, orgs, geo, choke, policies, scen, techs, events, projects] = await Promise.all([
+  const [countries, resources, cities, map, econ, orgs, geo, choke, policies, scen, techs, events, projects, mandates] = await Promise.all([
     readText('countries.csv'),
     readText('resources.csv'),
     readText('cities.csv'),
@@ -54,6 +54,7 @@ export async function loadData(readText) {
     readText('techs.psv'),
     json('events.json'),
     json('projects.json'),
+    json('mandates.json'),
   ]);
   const data = {
     countries: parseCSV(countries),
@@ -74,6 +75,7 @@ export async function loadData(readText) {
     events: events.events,
     eventMeta: events.meta || {},
     projects: projects.projects,
+    mandates: mandates.mandates,
   };
   data.techById = Object.fromEntries(data.techs.map((t) => [t.id, t]));
   data.scenarioById = Object.fromEntries(data.scenarios.map((s) => [s.id, s]));

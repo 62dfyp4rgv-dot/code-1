@@ -73,7 +73,7 @@ All file names are under `app/js/sim/` unless noted. Quantities are in model uni
 - **Constraints**: acts only through `commands.js`; sees only `perception.js`. **Failure modes**: reactive rather than planning for multi-year campaigns (see KNOWN_ISSUES).
 
 ## 13. Victory, achievements, statistics (`victory.js`, `achievements.js`, `stats.js`)
-- 6 victory paths (prosperity, economic, diplomatic, scientific, stability & welfare, security), a standing index (percentile blend), grade (Triumph / Success / Qualified success / Muddled through) at the scenario end or on collapse; 20 achievements persisted in saves; monthly/yearly series for charts.
+- 6 victory paths (prosperity, economic, diplomatic, scientific, stability & welfare, security), a standing index (percentile blend), grade (Triumph / Success / Qualified success / Muddled through) at the scenario end or on collapse; 22 achievements persisted in saves; monthly/yearly series for charts.
 
 ## 14. Save/load (`save.js`) — see ARCHITECTURE.md §4. **Tests**: `determinism_save.test.js`.
 

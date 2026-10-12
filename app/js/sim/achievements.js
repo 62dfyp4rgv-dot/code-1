@@ -1,5 +1,7 @@
 // Achievements and optional challenges. Checked monthly against simulation state; counters are bumped by commands and modules.
 export const ACHIEVEMENTS = [
+  { id: 'goal_getter', name: 'Goal Getter', desc: 'Achieve 3 mandates.', test: (s) => s.counters.mandates >= 3 },
+  { id: 'statesman_of_record', name: 'Statesman of Record', desc: 'Achieve 10 mandates.', test: (s) => s.counters.mandates >= 10 },
   { id: 'first_policy', name: 'First Steps', desc: 'Enact a policy change.', test: (s) => s.counters.policy >= 1 },
   {
     id: 'balanced_books',

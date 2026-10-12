@@ -24,7 +24,7 @@ Requirements: Node ≥ 20 (22 recommended). The game itself has **no runtime dep
 ```bash
 npm install            # only needed for the map build tool + dev tooling
 npm run serve          # http://localhost:8080  — open on a phone browser on the same network, or use devtools device mode
-npm test               # 73 unit tests + 22 UI tests (UI tests need Playwright + Chromium)
+npm test               # 77 unit tests + 23 UI tests (UI tests need Playwright + Chromium)
 npm run validate:data  # content integrity
 npm run bench          # simulation benchmark (desktop numbers, not iPhone)
 npm run balance        # multi-scenario long-run validation -> docs/BALANCE_REPORT.md
@@ -52,7 +52,7 @@ Install as a PWA (Safari → Share → Add to Home Screen) or build the native s
 - Launch national projects (rail, healthcare, nuclear, space, cyber command, …): multi-year investments that cost GDP share and grant permanent bonuses; the AI does too.
 - Respond to ~80 authored events and world events (crises, pandemics, disasters, scandals) with branching decisions.
 - Play 6 scenarios (incl. Strait Crisis, The Long Drought, Debt Reckoning) and pursue 6 victory paths (prosperity, economic, diplomatic, scientific, stability/welfare, security) — conquest is
-  never required — plus 20 achievements.
+  never required — plus 22 achievements and rolling mandates (short-term goals with rewards).
 - Autosave (double-buffered, IndexedDB with localStorage fallback), manual slots, export/import, recovery of an
   interrupted session.
 

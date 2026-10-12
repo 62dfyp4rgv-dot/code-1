@@ -22,6 +22,9 @@ Larger moves cost more PC, so plan which levers matter.
 ## Year in review
 Each January the game pauses on a short summary of the year just ended: GDP, inflation, unemployment, debt, approval and stability with the change since last January, your world economy rank, notable events, and the advisor's top three suggestions. Tap Continue to resume or Open advisor to act. It can be switched off in More → Settings (Yearly review). Ambient music (also a setting, off by default) follows the mood of the world: calm, tense or at war. Red rings on the map mark countries in civil conflict.
 
+## Mandates
+Objectives → Mandates lists up to three short-term goals your government sets itself, drawn from 22 templates and chosen to fit your situation (high inflation → *Tame inflation*, weak approval → *Win back voters*, and so on). *Reach* goals move a number by a set amount before a deadline; *hold* goals keep it in range for a number of months. Meeting one pays political capital and a small approval bump; missing one costs nothing, and you can dismiss any goal. A new one is offered every couple of months, and none repeats within four years.
+
 ## Advisor
 The ★ pill at the top (or More → Advisor) turns your numbers into a short list: urgent decisions, peace offers, war exhaustion, inflation, reserves, stability, elections, civil conflict, ideas for growth. Items are sorted by urgency and open the right screen when tapped. It only reads the game; it never acts for you.
 
@@ -64,7 +67,7 @@ cyber, technology acquisition, support for opposition, counter-intelligence. Fai
 ## Winning
 Six paths: **Prosperity** (+35 % GDP per head, poverty −20 %, development up), **Economic leadership**, **Diplomatic influence**,
 **Scientific advancement**, **Stability & welfare**, **Security & strength**. Grade: Triumph (≥4 paths), Success (≥2), Qualified success (1), Muddled through (0).
-Sandbox continuation is available after the end screen. Twenty achievements track optional challenges.
+Sandbox continuation is available after the end screen. Twenty-two achievements track optional challenges.
 
 ## Tips
 Start in the Objectives tab; fix inflation before elections; diversify energy imports; don't fight on two fronts; spend PC on

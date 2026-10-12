@@ -245,6 +245,21 @@ export function advise(sim) {
       );
   }
 
+  // --- mandates close to their deadline
+  for (const a of (c.mandates && c.mandates.active) || []) {
+    const left = Math.ceil((a.deadline - st.day) / 30.4);
+    const t = sim.data.mandates.find((x) => x.id === a.id);
+    if (t && left <= 3 && left >= 0)
+      add(
+        'mandate_' + a.id,
+        'info',
+        `Mandate running out: ${t.name}`,
+        `About ${left} month${left === 1 ? '' : 's'} left. Reward: ${t.reward.pc} political capital.`,
+        'objectives',
+        'mandates',
+      );
+  }
+
   if (!out.some((a) => a.sev === 'bad' || a.sev === 'warn'))
     add('ok', 'good', 'Nothing urgent', 'Your numbers look sound. A good moment to invest in the long term.', 'objectives');
   out.sort((a, b) => SEV[a.sev] - SEV[b.sev]);

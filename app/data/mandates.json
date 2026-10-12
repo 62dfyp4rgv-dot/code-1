@@ -1,0 +1,486 @@
+{
+ "meta": {
+  "note": "Mandates: rolling short-term goals for the player. 'reach' goals move a stat by delta (clamped by target) within months; 'hold' goals keep the 'when' condition true for 'hold' months. Reward: political capital and a one-off approval bump."
+ },
+ "mandates": [
+  {
+   "id": "tame_inflation",
+   "name": "Tame inflation",
+   "text": "Bring inflation down by 2 points.",
+   "stat": "econ.infl",
+   "kind": "reach",
+   "when": [
+    [
+     "econ.infl",
+     ">",
+     0.045
+    ]
+   ],
+   "months": 18,
+   "reward": {
+    "pc": 8,
+    "approval": 0.02
+   },
+   "delta": -0.02,
+   "target": 0.025,
+   "unit": "pct"
+  },
+  {
+   "id": "jobs_drive",
+   "name": "Jobs drive",
+   "text": "Cut unemployment by 1.5 points.",
+   "stat": "econ.unemp",
+   "kind": "reach",
+   "when": [
+    [
+     "econ.unemp",
+     ">",
+     0.065
+    ]
+   ],
+   "months": 24,
+   "reward": {
+    "pc": 8,
+    "approval": 0.02
+   },
+   "delta": -0.015,
+   "target": 0.045,
+   "unit": "pct"
+  },
+  {
+   "id": "debt_diet",
+   "name": "Debt diet",
+   "text": "Reduce public debt by 6 points of GDP.",
+   "stat": "econ.debtRatio",
+   "kind": "reach",
+   "when": [
+    [
+     "econ.debtRatio",
+     ">",
+     0.65
+    ]
+   ],
+   "months": 36,
+   "reward": {
+    "pc": 10,
+    "approval": 0.0
+   },
+   "delta": -0.06,
+   "target": 0.5,
+   "unit": "pct"
+  },
+  {
+   "id": "close_deficit",
+   "name": "Close the gap",
+   "text": "Cut the deficit by 1.5 points of GDP.",
+   "stat": "econ.deficit",
+   "kind": "reach",
+   "when": [
+    [
+     "econ.deficit",
+     ">",
+     0.035
+    ]
+   ],
+   "months": 24,
+   "reward": {
+    "pc": 8,
+    "approval": 0.0
+   },
+   "delta": -0.015,
+   "target": 0.015,
+   "unit": "pct"
+  },
+  {
+   "id": "rainy_day",
+   "name": "Rainy-day fund",
+   "text": "Build reserves to cover 4 months of imports.",
+   "stat": "econ.reservesMonths",
+   "kind": "reach",
+   "when": [
+    [
+     "econ.reservesMonths",
+     "<",
+     3
+    ]
+   ],
+   "months": 24,
+   "reward": {
+    "pc": 8,
+    "approval": 0.0
+   },
+   "delta": 1.5,
+   "target": 4,
+   "unit": "mo"
+  },
+  {
+   "id": "growth_spurt",
+   "name": "Growth spurt",
+   "text": "Lift annual growth by 1.5 points.",
+   "stat": "gdp.growth",
+   "kind": "reach",
+   "when": [
+    [
+     "gdp.growth",
+     "<",
+     0.025
+    ]
+   ],
+   "months": 24,
+   "reward": {
+    "pc": 10,
+    "approval": 0.02
+   },
+   "delta": 0.015,
+   "target": 0.04,
+   "unit": "pct"
+  },
+  {
+   "id": "win_back_voters",
+   "name": "Win back voters",
+   "text": "Raise approval by 8 points.",
+   "stat": "gov.approval",
+   "kind": "reach",
+   "when": [
+    [
+     "gov.approval",
+     "<",
+     0.5
+    ]
+   ],
+   "months": 18,
+   "reward": {
+    "pc": 6,
+    "approval": 0.0
+   },
+   "delta": 0.08,
+   "target": 0.65,
+   "unit": "pct"
+  },
+  {
+   "id": "steady_ship",
+   "name": "Steady the ship",
+   "text": "Raise stability by 10 points.",
+   "stat": "gov.stability",
+   "kind": "reach",
+   "when": [
+    [
+     "gov.stability",
+     "<",
+     0.55
+    ]
+   ],
+   "months": 24,
+   "reward": {
+    "pc": 8,
+    "approval": 0.0
+   },
+   "delta": 0.1,
+   "target": 0.75,
+   "unit": "pct"
+  },
+  {
+   "id": "clean_hands",
+   "name": "Clean hands",
+   "text": "Cut corruption by 6 points.",
+   "stat": "gov.corruption",
+   "kind": "reach",
+   "when": [
+    [
+     "gov.corruption",
+     ">",
+     0.4
+    ]
+   ],
+   "months": 36,
+   "reward": {
+    "pc": 10,
+    "approval": 0.02
+   },
+   "delta": -0.06,
+   "target": 0.25,
+   "unit": "pct"
+  },
+  {
+   "id": "lift_out_of_poverty",
+   "name": "Lift people out of poverty",
+   "text": "Cut the poverty rate by 3 points.",
+   "stat": "econ.poverty",
+   "kind": "reach",
+   "when": [
+    [
+     "econ.poverty",
+     ">",
+     0.12
+    ]
+   ],
+   "months": 36,
+   "reward": {
+    "pc": 10,
+    "approval": 0.03
+   },
+   "delta": -0.03,
+   "target": 0.05,
+   "unit": "pct"
+  },
+  {
+   "id": "fairer_society",
+   "name": "A fairer society",
+   "text": "Reduce inequality (Gini) by 0.03.",
+   "stat": "econ.gini",
+   "kind": "reach",
+   "when": [
+    [
+     "econ.gini",
+     ">",
+     0.38
+    ]
+   ],
+   "months": 36,
+   "reward": {
+    "pc": 8,
+    "approval": 0.0
+   },
+   "delta": -0.03,
+   "target": 0.3,
+   "unit": "dec"
+  },
+  {
+   "id": "schools_first",
+   "name": "Schools first",
+   "text": "Raise the education index by 3 points.",
+   "stat": "pop.edu",
+   "kind": "reach",
+   "when": [
+    [
+     "pop.edu",
+     "<",
+     0.8
+    ]
+   ],
+   "months": 36,
+   "reward": {
+    "pc": 8,
+    "approval": 0.0
+   },
+   "delta": 0.03,
+   "target": 0.9,
+   "unit": "pct"
+  },
+  {
+   "id": "healthier_nation",
+   "name": "A healthier nation",
+   "text": "Raise the health index by 4 points.",
+   "stat": "pop.health",
+   "kind": "reach",
+   "when": [
+    [
+     "pop.health",
+     "<",
+     0.8
+    ]
+   ],
+   "months": 36,
+   "reward": {
+    "pc": 8,
+    "approval": 0.0
+   },
+   "delta": 0.04,
+   "target": 0.9,
+   "unit": "pct"
+  },
+  {
+   "id": "go_green",
+   "name": "Go green",
+   "text": "Raise the clean share of energy by 6 points.",
+   "stat": "econ.clean",
+   "kind": "reach",
+   "when": [
+    [
+     "econ.clean",
+     "<",
+     0.7
+    ]
+   ],
+   "months": 36,
+   "reward": {
+    "pc": 10,
+    "approval": 0.0
+   },
+   "delta": 0.06,
+   "target": 0.9,
+   "unit": "pct"
+  },
+  {
+   "id": "ready_force",
+   "name": "Ready force",
+   "text": "Raise military readiness by 12 points.",
+   "stat": "mil.readiness",
+   "kind": "reach",
+   "when": [
+    [
+     "mil.readiness",
+     "<",
+     0.65
+    ]
+   ],
+   "months": 18,
+   "reward": {
+    "pc": 6,
+    "approval": 0.0
+   },
+   "delta": 0.12,
+   "target": 0.8,
+   "unit": "pct"
+  },
+  {
+   "id": "war_weariness",
+   "name": "Ease war weariness",
+   "text": "Lower war exhaustion by 15 points.",
+   "stat": "mil.exhaustion",
+   "kind": "reach",
+   "when": [
+    [
+     "mil.exhaustion",
+     ">",
+     0.35
+    ]
+   ],
+   "months": 12,
+   "reward": {
+    "pc": 8,
+    "approval": 0.02
+   },
+   "delta": -0.15,
+   "target": 0.2,
+   "unit": "pct"
+  },
+  {
+   "id": "build_influence",
+   "name": "Build influence",
+   "text": "Raise diplomatic influence by 8.",
+   "stat": "dip.influence",
+   "kind": "reach",
+   "when": [
+    [
+     "dip.influence",
+     "<",
+     45
+    ]
+   ],
+   "months": 24,
+   "reward": {
+    "pc": 8,
+    "approval": 0.0
+   },
+   "delta": 8,
+   "target": 80,
+   "unit": "num"
+  },
+  {
+   "id": "quiet_streak",
+   "name": "Peace and quiet",
+   "text": "Stay out of war for 24 months.",
+   "stat": "mil.atWar",
+   "kind": "hold",
+   "when": [
+    [
+     "mil.atWar",
+     "==",
+     0
+    ]
+   ],
+   "months": 30,
+   "reward": {
+    "pc": 8,
+    "approval": 0.02
+   },
+   "hold": 24,
+   "unit": "bool"
+  },
+  {
+   "id": "calm_prices",
+   "name": "Calm prices",
+   "text": "Keep inflation under 3.5% for 12 months.",
+   "stat": "econ.infl",
+   "kind": "hold",
+   "when": [
+    [
+     "econ.infl",
+     "<",
+     0.035
+    ]
+   ],
+   "months": 18,
+   "reward": {
+    "pc": 6,
+    "approval": 0.0
+   },
+   "hold": 12,
+   "unit": "pct"
+  },
+  {
+   "id": "steady_growth",
+   "name": "Steady growth",
+   "text": "Keep growth above 2% for 12 months.",
+   "stat": "gdp.growth",
+   "kind": "hold",
+   "when": [
+    [
+     "gdp.growth",
+     ">",
+     0.02
+    ]
+   ],
+   "months": 18,
+   "reward": {
+    "pc": 8,
+    "approval": 0.02
+   },
+   "hold": 12,
+   "unit": "pct"
+  },
+  {
+   "id": "full_employment",
+   "name": "Full employment",
+   "text": "Keep unemployment under 5% for 12 months.",
+   "stat": "econ.unemp",
+   "kind": "hold",
+   "when": [
+    [
+     "econ.unemp",
+     "<",
+     0.05
+    ]
+   ],
+   "months": 18,
+   "reward": {
+    "pc": 8,
+    "approval": 0.0
+   },
+   "hold": 12,
+   "unit": "pct"
+  },
+  {
+   "id": "order_at_home",
+   "name": "Order at home",
+   "text": "Keep unrest below 35% for 12 months.",
+   "stat": "gov.unrest",
+   "kind": "hold",
+   "when": [
+    [
+     "gov.unrest",
+     "<",
+     0.35
+    ]
+   ],
+   "months": 18,
+   "reward": {
+    "pc": 6,
+    "approval": 0.0
+   },
+   "hold": 12,
+   "unit": "pct"
+  }
+ ]
+}

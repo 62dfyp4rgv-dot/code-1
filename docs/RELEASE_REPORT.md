@@ -3,12 +3,12 @@
 **Verdict: a playable, tested web-tech build with an unverified iOS shell. The quality gates in the brief (every category ≥ 8.0, weighted ≥ 8.5) are NOT met** — see SCORECARD.md (independent score 5.7 / 10 in round 1; later rounds are logged there). It should be treated as a late alpha / early beta, not an App Store candidate.
 
 ## What exists
-A single-player modern-era grand-strategy game: 168 playable countries, 6 scenarios, 681 strategic regions, ~1 270 military formations, 8-sector economy with 4 traded commodities and chokepoints, politics/elections, society and climate, 67 technologies, diplomacy (treaties, 14 organisations, UN-style resolutions, sanctions, guarantees, client states), intelligence and cyber, ~80 authored events plus pandemics, 6 victory paths and 20 achievements, versioned saves with double-buffered autosave, installable PWA, and a WKWebView shell for iOS.
+A single-player modern-era grand-strategy game: 168 playable countries, 6 scenarios, 681 strategic regions, ~1 270 military formations, 8-sector economy with 4 traded commodities and chokepoints, politics/elections, society and climate, 67 technologies, diplomacy (treaties, 14 organisations, UN-style resolutions, sanctions, guarantees, client states), intelligence and cyber, ~80 authored events plus pandemics, 6 victory paths, rolling mandates and 22 achievements, versioned saves with double-buffered autosave, installable PWA, and a WKWebView shell for iOS.
 
 ## Verified (evidence in the repo; reproducible with the commands shown)
 | Claim | How verified |
 |---|---|
-| Simulation, AI, saves, data: 73 unit/integration tests pass | `npm run test:fast` |
+| Simulation, AI, saves, data: 77 unit/integration tests pass | `npm run test:fast` |
 | UI flows work in Chromium with iPhone viewports/touch: 20 tests pass | `npm run ui:test` |
 | Data integrity (roster↔map, tech DAG, event validity, modifier keys consumed) | `npm run validate:data` |
 | Save → load → continue is bit-identical (several seeds/scenarios/load points) | `tests/unit/determinism_save.test.js`, UI snapshot test |

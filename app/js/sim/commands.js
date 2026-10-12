@@ -6,6 +6,7 @@ import * as DIP from './diplomacy.js';
 import * as INT from './intel.js';
 import * as EVT from './events.js';
 import * as PRJ from './projects.js';
+import * as MAN from './mandates.js';
 import { UNIT_TYPES } from './military.js';
 import { bump } from './achievements.js';
 import { techAvailable, canAdopt, adoptionCost, completeTech } from './research.js';
@@ -248,6 +249,9 @@ const HANDLERS = {
   cancelProject(sim, a, cmd) {
     return PRJ.cancelProject(sim, a, cmd.project);
   },
+  dismissMandate(sim, a, cmd) {
+    return MAN.dismiss(sim, a, cmd.mandate);
+  },
   nuclearStrike(sim, a, cmd) {
     if (cmd.preview) return ok({ options: WAR.nuclearOptions(sim, a, cmd.target) });
     const r = WAR.nuclearStrike(sim, a, cmd.target, cmd.region);
@@ -322,6 +326,7 @@ const REQUIRED = {
   startProject: ['project'],
   nuclearStrike: ['target'],
   cancelProject: ['project'],
+  dismissMandate: ['mandate'],
   answerOffer: ['id'],
   respondCall: ['war'],
   intelOp: ['op', 'target'],

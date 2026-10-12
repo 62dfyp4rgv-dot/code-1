@@ -660,3 +660,29 @@ test("year in review: opens each January with the player's figures, Continue clo
   assert.deepEqual(page.errors, []);
   await page.context().close();
 });
+
+test('mandates: the Objectives screen lists active goals with progress, and a goal can be dismissed', async () => {
+  const page = await newPage(browser);
+  await startGame(page, { scenario: 'quiet_decade', country: 'FRA' });
+  await page.evaluate(() => {
+    const a = window.__app;
+    a.pause();
+    a.sim.advanceMonths(3);
+    a.renderHud(true);
+  });
+  assert.ok((await page.evaluate(() => window.__app.sim.player.mandates.active.length)) >= 1, 'a mandate was issued');
+  await page.evaluate(() => window.__app.openSheet('objectives'));
+  await page.waitForSelector('#sheet.open', { timeout: 3000 });
+  const txt = await page.locator('#sheetBody').innerText();
+  assert.match(txt, /Mandates are short-term goals/);
+  assert.match(txt, /political capital/);
+  const n0 = await page.evaluate(() => window.__app.sim.player.mandates.active.length);
+  await page.locator('#sheetBody [data-cmd*="dismissMandate"]').first().tap();
+  await page.waitForTimeout(300);
+  assert.equal(await page.evaluate(() => window.__app.sim.player.mandates.active.length), n0 - 1);
+  await page.locator('#sheet [data-sheettab="paths"]').first().tap();
+  await page.waitForTimeout(200);
+  assert.match(await page.locator('#sheetBody').innerText(), /Victory|victory/);
+  assert.deepEqual(page.errors, []);
+  await page.context().close();
+});

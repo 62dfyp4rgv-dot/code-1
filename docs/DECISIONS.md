@@ -56,3 +56,6 @@ In-app confirmation dialog instead of native `confirm()` (WKWebView-safe, testab
 
 ## D-010 More replay and clarity (2026-10-12)
 Advisor (read-only guidance on top of the existing systems), world-variation levels at new game (seeded, off by default), civil conflict as an internal-war mechanic with three events, alliance strain (pacts lapse after a year of mutual hostility), terrain shading on the map, a yearly review modal (pauses each January; optional), generative ambient music (off by default) and map alert rings. Chosen because the reviewers found replay variety and new-player understanding the weakest points.
+
+## D-011 Mandates (2026-10-12)
+Rolling short-term goals for the player (`sim/mandates.js`, `data/mandates.json`). They sit on top of existing systems: a goal reads a stat the player can already move, so nothing in the economy or AI changed. Issued only to the player, picked by a stateless hash (no RNG stream use), stored on the player country so saves carry them. Missing a goal is free by design: the aim is guidance between crises, not another way to lose.
