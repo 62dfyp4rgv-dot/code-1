@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CareerSim, NATIONS, careerClubs, simulateCareer, type CareerResult } from '../src';
+import { CareerSim, NATIONS, careerClubs, simulateCareer, type CareerResult, type Decision } from '../src';
 
 const run = (i: number, pos: 'ST' | 'CM' | 'CB' | 'GK' | 'AM' | 'LW', talent?: 'wonderkid' | 'journeyman'): CareerResult => simulateCareer({ seed: `t${i}`, name: `Test Player ${i}`, position: pos, talent });
 
@@ -104,32 +104,84 @@ describe('personal awards, Ballon d\'Or, World Cup and chosen transfers', () => 
     expect(clubs.length).toBeGreaterThan(150);
     expect(NATIONS.length).toBeGreaterThan(40);
     const start = 'FC Barcelona';
-    const run = (pick: (offers: string[]) => string | null): CareerResult => {
-      const sim = new CareerSim({ seed: 'choice', name: 'Chooser', position: 'CM', nationality: 'ESP', talent: 'prospect', startClub: start, transfers: 'manual' });
-      for (let g = 0; g < 30 && !sim.finished; g++) {
-        const s = sim.playSeason();
-        if (g === 0) expect(s.club).toBe(start);
-        const w = sim.pendingWindow;
-        if (w) { expect(w.offers.length).toBeGreaterThan(0); expect(new Set(w.offers.map((o) => o.id)).size).toBe(w.offers.length); sim.decide(pick(w.offers.map((o) => o.id))); }
-      }
-      return sim.result();
-    };
-    const stayer = run(() => 'stay');
-    const first = run((ids) => ids[0] ?? null);
-    expect(JSON.stringify(run((ids) => ids[0] ?? null))).toBe(JSON.stringify(first));
-    expect(stayer.clubs.length).toBeLessThan(first.clubs.length + 1);
+    const drive = (pick: (d: Decision) => string | null): CareerResult => simulateCareer({ seed: 'choice', name: 'Chooser', position: 'CM', nationality: 'ESP', talent: 'prospect', startClub: start, transfers: 'manual' }, undefined, pick);
+    const transfers = (d: Decision): string | null => (d.kind === 'transfer' ? (d.options[0]?.id ?? null) : null);
+    const first = drive(transfers);
+    expect(first.seasons[0]!.club).toBe(start);
+    expect(JSON.stringify(drive(transfers))).toBe(JSON.stringify(first));
+    expect(first.decisions.length).toBeGreaterThan(5);
     // after a chosen move the next season is at the chosen club
     const sim = new CareerSim({ seed: 'choice2', name: 'Chooser', position: 'ST', nationality: 'ENG', talent: 'wonderkid', transfers: 'manual' });
-    let verified = false;
-    for (let g = 0; g < 30 && !sim.finished && !verified; g++) {
-      sim.playSeason();
-      const w = sim.pendingWindow;
-      if (!w) continue;
-      const target = w.offers[w.offers.length - 1]!;
-      sim.decide(target.id);
-      if (!sim.finished) { expect(sim.playSeason().club).toBe(target.club); verified = true; }
+    let target = ''; let verified = false;
+    for (let g = 0; g < 4000 && !verified; g++) {
+      const st = sim.step();
+      if (st.kind === 'done') break;
+      if (st.kind === 'season' && target) { expect(st.season.club).toBe(target); verified = true; }
+      if (st.kind === 'decision') {
+        if (st.decision.kind === 'transfer' && !target) { const o = st.decision.options.find((x) => x.offer)!; target = o.label; sim.decide(o.id); } else sim.decide(null);
+      }
     }
     expect(verified).toBe(true);
-    expect(() => { const s2 = new CareerSim({ seed: 'x', name: 'X', position: 'ST', transfers: 'manual' }); for (let i = 0; i < 30 && !s2.finished; i++) { s2.playSeason(); if (s2.pendingWindow) { s2.playSeason(); return; } } throw new Error('no window to test'); }).toThrow(/pending transfer window|no window/);
-  }, 180_000);
+  }, 240_000);
+});
+
+describe('game by game, training, roles and decisions', () => {
+  it('every season has a complete match log consistent with its totals', () => {
+    const c = simulateCareer({ seed: 'log1', name: 'Logger', position: 'ST', nationality: 'ENG', talent: 'prospect' });
+    for (const s of c.seasons) {
+      expect(s.matchLog.length).toBeGreaterThan(30);
+      s.matchLog.forEach((m, i) => expect(m.n).toBe(i + 1));
+      const played = s.matchLog.filter((m) => m.minutes > 0);
+      expect(played.length).toBe(s.apps);
+      expect(played.reduce((a, m) => a + m.goals, 0)).toBe(s.goals);
+      expect(played.reduce((a, m) => a + m.assists, 0)).toBe(s.assists);
+      for (const m of s.matchLog) {
+        expect(m.goalMinutes.length).toBe(m.goals);
+        const shootout = m.pens ? (Number(m.pens.split('-')[0]) > Number(m.pens.split('-')[1]) ? 'W' : 'L') : null;
+        expect(m.result).toBe(m.gf > m.ga ? 'W' : m.gf < m.ga ? 'L' : (shootout ?? 'D'));
+        expect(m.opp.length).toBeGreaterThan(1);
+        if (m.status === 'injured') expect(m.minutes).toBe(0);
+      }
+      const league = s.matchLog.filter((m) => m.comp === s.league);
+      expect(league.length).toBe((s.leagueSize - 1) * 2);
+      expect(new Set(league.map((m) => m.opp)).size).toBe(s.leagueSize - 1);
+      expect(s.wageWeekly).toBeGreaterThan(0);
+      expect(s.earnings).toBe(s.wageWeekly * 52);
+    }
+    expect(c.totals.earnings).toBe(c.seasons.reduce((a, s) => a + s.earnings, 0));
+    expect(c.highlights.length).toBeGreaterThan(0);
+  }, 120_000);
+
+  it('manual mode asks for training, roles and duties; auto mode never asks; both play the same kind of career', () => {
+    const kinds = new Set<string>();
+    simulateCareer({ seed: 'dec1', name: 'Decider', position: 'ST', nationality: 'FRA', talent: 'wonderkid', transfers: 'manual' }, undefined, (d) => { kinds.add(d.kind); expect(d.options.length).toBeGreaterThanOrEqual(2); return null; });
+    for (const k of ['training', 'role', 'duties']) expect(kinds.has(k), k).toBe(true);
+    let asked = 0;
+    const sim = new CareerSim({ seed: 'dec1', name: 'Decider', position: 'ST', nationality: 'FRA', talent: 'wonderkid' });
+    for (let g = 0; g < 4000; g++) { const st = sim.step(); if (st.kind === 'decision') asked++; if (st.kind === 'done') break; }
+    expect(asked).toBe(0);
+    expect(sim.result().decisions).toEqual([]);
+  }, 240_000);
+
+  it('the training focus changes development and the chosen role is recorded', () => {
+    const run = (focus: string): CareerResult => simulateCareer({ seed: 'foc', name: 'Trainer', position: 'CM', nationality: 'ESP', talent: 'prospect', transfers: 'manual' }, undefined, (d) => (d.kind === 'training' ? focus : d.kind === 'role' ? 'boxToBox' : null));
+    const phys = run('physical'); const bal = run('balanced');
+    expect(phys.seasons[0]!.focus).toBe('Physical'); expect(bal.seasons[0]!.focus).toBe('Balanced');
+    expect(phys.seasons[0]!.role).toBe('Box-to-Box Midfielder');
+    expect(JSON.stringify(phys)).not.toBe(JSON.stringify(bal));
+  }, 240_000);
+
+  it('playing through an injury shortens the lay-off, resting does not', () => {
+    // look for a career where an injury decision comes up, then compare the two answers
+    let found: string | null = null;
+    for (let i = 0; i < 12 && !found; i++) {
+      const sim = new CareerSim({ seed: `inj${i}`, name: 'Hurt', position: 'CB', nationality: 'ITA', talent: 'prospect', transfers: 'manual' });
+      for (let g = 0; g < 4000; g++) { const st = sim.step(); if (st.kind === 'done') break; if (st.kind === 'decision') { if (st.decision.kind === 'injury') { found = `inj${i}`; break; } sim.decide(null); } }
+    }
+    expect(found).not.toBeNull();
+    const out = (answer: string): CareerResult => simulateCareer({ seed: found as string, name: 'Hurt', position: 'CB', nationality: 'ITA', talent: 'prospect', transfers: 'manual' }, undefined, (d) => (d.kind === 'injury' ? answer : null));
+    const rest = out('rest'); const rush = out('rush');
+    expect(rest.decisions.some((d) => d.title === 'Injury' && d.choice === 'Full rehab')).toBe(true);
+    expect(rush.decisions.some((d) => d.title === 'Injury' && d.choice === 'Play through the pain')).toBe(true);
+  }, 240_000);
 });

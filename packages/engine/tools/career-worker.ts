@@ -1,8 +1,8 @@
 /**
  * Web Worker entry for the career page. Protocol:
- *   in : { type: 'meta' } | { type: 'start', input } | { type: 'choose', id: string | null }
- *   out: { type: 'meta', clubs, nations } | { type: 'season', season } | { type: 'window', window } | { type: 'done', result } | { type: 'error', message }
- * Seasons are streamed as they are played; in manual-transfer mode the worker stops at each transfer window until it gets `choose`.
+ *   in : { type: 'meta' } | { type: 'start', input } | { type: 'choose', id: string | null } | { type: 'auto' }
+ *   out: { type: 'meta', clubs, nations } | { type: 'matches', label, matches } | { type: 'season', season } | { type: 'decision', decision } | { type: 'done', result } | { type: 'error', message }
+ * Matches and seasons are streamed as they are played; in manual mode the worker stops at every decision until it gets `choose`.
  */
 import { CareerSim, NATIONS, careerClubs, type CareerInput } from '../src/career';
 
@@ -12,13 +12,13 @@ let sim: CareerSim | null = null;
 
 function run(): void {
   if (!sim) return;
-  while (!sim.finished) {
-    const w = sim.pendingWindow;
-    if (w) { scope.postMessage({ type: 'window', window: w }); return; }
-    scope.postMessage({ type: 'season', season: sim.playSeason() });
+  for (;;) {
+    const st = sim.step();
+    if (st.kind === 'decision') { scope.postMessage({ type: 'decision', decision: st.decision }); return; }
+    if (st.kind === 'matches') scope.postMessage({ type: 'matches', label: st.label, matches: st.matches });
+    else if (st.kind === 'season') scope.postMessage({ type: 'season', season: st.season });
+    else { scope.postMessage({ type: 'done', result: st.result }); return; }
   }
-  const w = sim.pendingWindow;
-  if (!w) scope.postMessage({ type: 'done', result: sim.result() });
 }
 
 scope.onmessage = (e) => {
@@ -27,6 +27,7 @@ scope.onmessage = (e) => {
     if (m.type === 'meta') scope.postMessage({ type: 'meta', clubs: careerClubs(), nations: NATIONS.map((n) => ({ code: n.code, name: n.name, level: n.level })) });
     else if (m.type === 'start' && m.input) { sim = new CareerSim(m.input); run(); }
     else if (m.type === 'choose' && sim) { sim.decide(m.id ?? null); run(); }
+    else if (m.type === 'auto' && sim) { sim.autopilot(); sim.decide(null); run(); }
   } catch (err) {
     scope.postMessage({ type: 'error', message: String((err as Error).message ?? err) });
   }

@@ -14,16 +14,16 @@
  */
 import { clamp } from './math';
 import { simulateMatch, type MatchInput } from './match';
-import { generatePlayer, overall, ageOf } from './players';
+import { generatePlayer, overall, ageOf, POSITION_WEIGHTS } from './players';
 import { Rng } from './rng';
-import { defaultTactics } from './tactics';
-import { syntheticMatch, syntheticSheet, toMatchPlayer } from './synth';
-import type { Club, Player, Position } from './types';
+import { defaultRoleFor, defaultTactics, ROLES } from './tactics';
+import { DEFAULT_CONDITIONS, syntheticMatch, syntheticSheet, toMatchPlayer } from './synth';
+import { attrGroup, ATTR_KEYS, type Club, type Player, type Position } from './types';
 import { COMPETITIONS, LEAGUE_BY_ID } from './competition/registry';
 import { REAL_CLUB_NAMES } from './data/realClubNames';
 import { REAL_COMPETITION_NAMES } from './data/realCompetitionNames';
-import { developPlayerWeek, retirementProbability } from './world/development';
-import { marketValue } from './world/valuation';
+import { developPlayerWeek, growthRate, retirementProbability } from './world/development';
+import { baseWageWeekly, marketValue } from './world/valuation';
 
 export type Talent = 'fate' | 'prospect' | 'wonderkid' | 'journeyman';
 
@@ -64,6 +64,7 @@ const CONTINENTAL_CUP: Record<Nation['confed'], string> = {
 export const WORLD_CUP = 'FIFA World Cup';
 export const BALLON_DOR = "Ballon d'Or";
 
+
 export interface CareerInput {
   seed: string;
   name: string;
@@ -78,11 +79,38 @@ export interface CareerInput {
   homeLeague?: string;
   /** Exact first club by name (must be one of `careerClubs()`); overrides `homeLeague`. */
   startClub?: string;
-  /** Who decides transfers: 'auto' (default for `simulateCareer`) or 'manual' (the caller answers each window). */
+  /** Who decides: 'auto' (default) answers every decision with a sensible default, 'manual' asks the caller. */
   transfers?: 'auto' | 'manual';
 }
 
 export interface TournamentResult { name: string; nation: string; result: string; won: boolean; matches: number; goals: number; assists: number; awards: string[] }
+
+/** One game of the career, from the player's point of view. */
+export interface MatchLog {
+  /** Running number within the season. */
+  n: number;
+  comp: string;
+  round: string;
+  opp: string;
+  home: boolean;
+  /** Final score from the player's team's side. */
+  gf: number;
+  ga: number;
+  /** Penalty shoot-out score (own - opp) if the game went to penalties. */
+  pens: string | null;
+  result: 'W' | 'D' | 'L';
+  /** 'start' | 'sub' | 'unused' | 'injured' */
+  status: 'start' | 'sub' | 'unused' | 'injured';
+  minutes: number;
+  goals: number;
+  assists: number;
+  goalMinutes: number[];
+  rating: number;
+  yellow: number;
+  red: number;
+  /** e.g. "Hamstring strain, out ~28 days" when injured in this game. */
+  injury: string | null;
+}
 
 export interface CareerSeason {
   season: number;
@@ -115,6 +143,16 @@ export interface CareerSeason {
   ballonDor: { rank: number | null } | null;
   transferIn: { from: string; fee: number } | null;
   note: string | null;
+  /** Weekly wage (EUR) and the season's earnings. */
+  wageWeekly: number;
+  earnings: number;
+  /** The tactical role and training focus chosen for the season. */
+  role: string;
+  focus: string;
+  /** Plain-language record of the decisions made around this season. */
+  choices: string[];
+  /** Every game of the season in order (league, cup, continental, national team). */
+  matchLog: MatchLog[];
 }
 
 export interface TransferOffer {
@@ -128,8 +166,20 @@ export interface TransferOffer {
   /** Competition the club usually plays in Europe/continentally, if any. */
   continental: string | null;
   fee: number;
-  kind: 'step up' | 'good fit' | 'dream move' | 'new league';
+  /** Estimated weekly wage at the new club. */
+  wageWeekly: number;
+  kind: 'step up' | 'good fit' | 'dream move' | 'new league' | 'free transfer';
 }
+
+export interface DecisionOption { id: string; label: string; detail: string; offer?: TransferOffer }
+export type DecisionKind = 'training' | 'role' | 'duties' | 'captain' | 'injury' | 'playing-time' | 'media' | 'contract' | 'transfer';
+export interface Decision { id: string; kind: DecisionKind; season: number; age: number; title: string; text: string; options: DecisionOption[] }
+
+export type CareerStep =
+  | { kind: 'decision'; decision: Decision }
+  | { kind: 'matches'; label: string; matches: MatchLog[] }
+  | { kind: 'season'; season: CareerSeason }
+  | { kind: 'done'; result: CareerResult };
 
 export interface CareerResult {
   input: CareerInput;
@@ -138,7 +188,7 @@ export interface CareerResult {
   potential: number;
   startOvr: number;
   seasons: CareerSeason[];
-  totals: { seasons: number; apps: number; goals: number; assists: number; cleanSheets: number; caps: number; internationalGoals: number; fees: number };
+  totals: { seasons: number; apps: number; goals: number; assists: number; cleanSheets: number; caps: number; internationalGoals: number; fees: number; earnings: number };
   peak: { ovr: number; age: number; season: number };
   retiredAge: number;
   /** Team honours with counts. */
@@ -148,6 +198,10 @@ export interface CareerResult {
   ballonDor: { wins: number; podiums: number; top10: number; best: number | null; years: { season: number; age: number; rank: number }[] };
   tournaments: TournamentResult[];
   clubs: { name: string; from: number; to: number }[];
+  /** Game-to-game highlights derived from the match logs. */
+  highlights: string[];
+  /** Every decision the player took, in order. */
+  decisions: { season: number; age: number; title: string; choice: string }[];
   headline: string[];
 }
 
@@ -196,13 +250,22 @@ const CANDIDATES: Candidate[] = (() => {
   return out;
 })();
 
-function sheetWithHero(level: number, hero: Player, day: number, asStarter: boolean, tag: string, side: string): ReturnType<typeof syntheticSheet> {
+/** The club whose level is closest to `level` (with some variety among the nearest few). */
+function clubNear(rng: Rng, level: number, exclude?: string): Candidate {
+  const sorted = CANDIDATES.filter((c) => `${c.ref.leagueId}:${c.ref.rank}` !== exclude).sort((a, b) => Math.abs(a.level - level) - Math.abs(b.level - level));
+  return sorted[rng.int(Math.min(4, sorted.length))] as Candidate;
+}
+
+function sheetWithHero(level: number, hero: Player, day: number, asStarter: boolean, tag: string, side: string, role: string | null): ReturnType<typeof syntheticSheet> {
   const formation = hero.primary === 'AM' ? '4-2-3-1' : '4-3-3';
-  const sheet = syntheticSheet({ id: side, quality: level, seed: tag, tactics: defaultTactics(formation), spread: 4 });
+  const tactics = defaultTactics(formation);
+  const sheet = syntheticSheet({ id: side, quality: level, seed: tag, tactics, spread: 4 });
   const mp = { ...toMatchPlayer(hero, day), id: 'HERO', name: hero.name };
   const slot = sheet.players.slice(0, 11).findIndex((p) => p.primary === hero.primary);
-  if (asStarter && slot >= 0) sheet.players[slot] = mp;
-  else {
+  if (asStarter && slot >= 0) {
+    sheet.players[slot] = mp;
+    if (role && ROLES[role]?.positions.includes(hero.primary)) tactics.roles[slot] = role;
+  } else {
     const benchIdx = sheet.players.findIndex((p, i) => i >= 11 && p.primary === hero.primary);
     if (benchIdx >= 0) sheet.players[benchIdx] = mp;
     else sheet.players[sheet.players.length - 1] = mp;
@@ -210,22 +273,30 @@ function sheetWithHero(level: number, hero: Player, day: number, asStarter: bool
   return sheet;
 }
 
-interface MatchOutcome { goalsFor: number; goalsAgainst: number; won: boolean; draw: boolean; minutes: number; goals: number; assists: number; rating: number; started: boolean; cleanSheet: boolean; injury: number }
+interface MatchOutcome {
+  goalsFor: number; goalsAgainst: number; won: boolean; draw: boolean; minutes: number; goals: number; assists: number; rating: number; started: boolean; cleanSheet: boolean;
+  injury: number; injuryLabel: string | null; goalMinutes: number[]; yellow: number; red: number; pens: string | null; home: boolean;
+}
 
-function playMatch(rng: Rng, hero: Player, day: number, ownLevel: number, oppLevel: number, home: boolean, startProb: number, tag: string, knockout: boolean): MatchOutcome {
+const INJURY_LABEL = { 1: ['Minor knock', 9], 2: ['Muscle strain', 28], 3: ['Serious injury', 85], 4: ['Season-ending injury', 230] } as const;
+
+function playMatch(rng: Rng, hero: Player, day: number, ownLevel: number, oppLevel: number, home: boolean, startProb: number, tag: string, knockout: boolean, role: string | null, neutral = false): MatchOutcome {
   const starter = rng.chance(startProb);
-  const mine = sheetWithHero(ownLevel, hero, day, starter, `${tag}o`, 'OWN');
+  const mine = sheetWithHero(ownLevel, hero, day, starter, `${tag}o`, 'OWN', role);
   const theirs = syntheticSheet({ id: 'OPP', quality: oppLevel, seed: `${tag}p`, tactics: defaultTactics('4-3-3'), spread: 4 });
-  const input: MatchInput = syntheticMatch(`${tag}`, `career:${tag}`, home ? mine : theirs, home ? theirs : mine, knockout ? { rules: { mustHaveWinner: true, extraTime: true, maxSubsRegular: 5 } } : undefined);
+  const input: MatchInput = syntheticMatch(`${tag}`, `career:${tag}`, home ? mine : theirs, home ? theirs : mine, { ...(knockout ? { rules: { mustHaveWinner: true, extraTime: true, maxSubsRegular: 5 } } : {}), ...(neutral ? { conditions: { ...DEFAULT_CONDITIONS, neutral: true } } : {}) });
   const res = simulateMatch(input);
   const side = home ? 'home' : 'away';
   const gf = home ? res.score.home : res.score.away;
   const ga = home ? res.score.away : res.score.home;
   const line = res.players.find((p) => p.playerId === 'HERO');
   const inj = res.injuries.find((i) => i.playerId === 'HERO');
+  const goalMinutes = res.events.filter((e) => e.type === 'goal' && (e as { scorerId: string }).scorerId === 'HERO').map((e) => e.minute);
+  const pens = res.penalties ? (home ? `${res.penalties.home}-${res.penalties.away}` : `${res.penalties.away}-${res.penalties.home}`) : null;
   return {
     goalsFor: gf, goalsAgainst: ga, won: res.winner === side, draw: res.winner === 'draw', minutes: line?.minutes ?? 0, goals: line?.goals ?? 0, assists: line?.assists ?? 0,
-    rating: line && line.minutes > 0 ? line.rating : 0, started: line?.started ?? false, cleanSheet: ga === 0 && (line?.minutes ?? 0) >= 60, injury: inj ? ({ 1: 9, 2: 28, 3: 85, 4: 230 } as const)[inj.severity] : 0,
+    rating: line && line.minutes > 0 ? line.rating : 0, started: line?.started ?? false, cleanSheet: ga === 0 && (line?.minutes ?? 0) >= 60, injury: inj ? INJURY_LABEL[inj.severity][1] : 0,
+    injuryLabel: inj ? `${INJURY_LABEL[inj.severity][0]}, out ~${INJURY_LABEL[inj.severity][1]} days` : null, goalMinutes, yellow: line?.yellow ?? 0, red: line?.red ?? 0, pens, home,
   };
 }
 
@@ -270,32 +341,27 @@ function continentalFor(leagueId: string, pos: number): string | null {
   return null;
 }
 
-const ROUND_NAMES = ['Round of 32', 'Round of 16', 'Quarter-final', 'Semi-final', 'Final'];
-
-/** Plays a knockout run; returns the stage reached and whether the trophy was won. */
-function knockoutRun(rng: Rng, hero: Player, day: number, ownLevel: number, startProb: number, oppLevels: number[], tag: string): { result: string; won: boolean; matches: MatchOutcome[] } {
-  const matches: MatchOutcome[] = [];
-  for (let r = 0; r < oppLevels.length; r++) {
-    const m = playMatch(rng, hero, day, ownLevel, oppLevels[r] as number, rng.chance(0.5), startProb, `${tag}k${r}`, true);
-    matches.push(m);
-    if (!m.won) return { result: `Out in the ${ROUND_NAMES[ROUND_NAMES.length - oppLevels.length + r] as string}`, won: false, matches };
-  }
-  return { result: 'Winner', won: true, matches };
-}
+const ROUND_NAMES = ['Round of 64', 'Round of 32', 'Round of 16', 'Quarter-final', 'Semi-final', 'Final'];
+const roundName = (total: number, i: number): string => ROUND_NAMES[ROUND_NAMES.length - total + i] ?? `Round ${i + 1}`;
 
 const isGk = (p: Position): boolean => p === 'GK';
 const isDefender = (p: Position): boolean => p === 'GK' || p === 'CB' || p === 'LB' || p === 'RB';
 
 /** The Ballon d'Or style score: ability, output for the position, team success, form and fitness. */
-function awardScore(rng: Rng, pos: Position, ovr: number, goals: number, assists: number, cleanSheets: number, avgRating: number, injuryDays: number, teamBonus: number): number {
+function awardScore(rng: Rng, pos: Position, ovr: number, goals: number, assists: number, cleanSheets: number, avgRating: number, injuryDays: number, teamBonus: number, image: number): number {
   const output = isGk(pos) ? cleanSheets * 0.28 : pos === 'CB' || pos === 'LB' || pos === 'RB' ? goals * 0.5 + assists * 0.3 + cleanSheets * 0.06 : pos === 'ST' ? goals * 0.2 + assists * 0.25 : goals * 0.3 + assists * 0.3;
-  return ovr + Math.min(4, output * 0.5) + (avgRating > 0 ? (avgRating - 6.8) * 2 : 0) + teamBonus * 0.8 - (injuryDays / 30) * 1.2 + rng.normal(0, 1.4);
+  return ovr + Math.min(4, output * 0.5) + (avgRating > 0 ? (avgRating - 6.8) * 2 : 0) + teamBonus * 0.8 - (injuryDays / 30) * 1.2 + (image - 50) / 25 + rng.normal(0, 1.4);
 }
 
-/** A transfer window decision: the caller picks an offer id (or `stay`). */
-export interface TransferWindow { season: number; age: number; club: string; contractYearsLeft: number; ovr: number; offers: TransferOffer[] }
+const TRAINING: { id: string; label: string; detail: string }[] = [
+  { id: 'balanced', label: 'Balanced', detail: 'No extra emphasis. The safe default.' },
+  { id: 'physical', label: 'Physical', detail: 'Faster, stronger, fitter. Slightly higher injury risk.' },
+  { id: 'technical', label: 'Technical', detail: 'Touch, passing, finishing and set pieces.' },
+  { id: 'mental', label: 'Mental', detail: 'Vision, decisions, composure. Helps older players most.' },
+  { id: 'position', label: 'Position specialist', detail: 'Extra work on the attributes your position relies on most.' },
+];
 
-/** Stepwise career simulation; `simulateCareer` drives it to the end with automatic transfer choices. */
+/** Stepwise career simulation; `simulateCareer` drives it to the end, answering every decision with a default. */
 export class CareerSim {
   readonly input: CareerInput;
   private rng: Rng;
@@ -318,16 +384,41 @@ export class CareerSim {
   private clubsLog: { name: string; from: number; to: number }[] = [];
   private tournaments: TournamentResult[] = [];
   private ballon: { season: number; age: number; rank: number }[] = [];
-  private caps = 0; private intGoals = 0; private fees = 0;
+  private caps = 0; private intGoals = 0; private fees = 0; private earningsTotal = 0;
   private peak: { ovr: number; age: number; season: number };
   private transferIn: CareerSeason['transferIn'] = null;
   private note: string | null = null;
-  private window: TransferWindow | null = null;
   private done = false;
   private lastRetiredAge = 0;
+  // staged season state
+  private phase: 'pre' | 'dev' | 'mid' | 'h2' = 'pre';
+  private queue: Decision[] = [];
+  private outbox: CareerStep[] = [];
+  private pending: Decision | null = null;
+  private handlers = new Map<string, (optionId: string) => void>();
+  private decisionsLog: CareerResult['decisions'] = [];
+  private choicesNow: string[] = [];
+  private focus = 'balanced';
+  private role: string | null = null;
+  private roleClub = '';
+  private dutiesClub = '';
+  private captainClub = '';
+  private image = 50;
+  private wageMult = 1;
+  private requestedMove = false;
+  private freeAgentNext = false;
+  private offerFees = new Map<string, number>();
+  /** Makes every match's random stream unique to this career (same tags would otherwise replay the same games). */
+  private sid: string;
+  private cur: {
+    ref: ClubRef; size: number; lvls: number[]; ownRank: number; ovr: number; startProb: number; points: number; gd: number; unavailable: number; injuryDays: number;
+    apps: number; starts: number; minutes: number; goals: number; assists: number; cleanSheets: number; ratingSum: number; ratedApps: number; leagueGoals: number;
+    fixtures: { j: number; home: boolean }[]; played: number; logs: MatchLog[]; teamBonus: number; honoursNow: string[]; awardsNow: string[]; wage: number; captain: boolean;
+  } | null = null;
 
   constructor(input: CareerInput) {
     this.input = input;
+    this.sid = `${input.seed}:${input.name}:${input.position}:${input.nationality ?? ''}:${input.startAge ?? ''}:${input.talent ?? ''}`;
     const rng = Rng.fromSeed(`career:${input.seed}:${input.name}:${input.position}:${input.nationality ?? ''}`);
     this.rng = rng;
     const startAge = clamp(Math.round(input.startAge ?? 16), 15, 19);
@@ -354,152 +445,390 @@ export class CareerSim {
     this.contractLeft = rng.int(3) + 2;
   }
 
-  get finished(): boolean { return this.done; }
-  /** The pending transfer decision, if the player has to choose before the next season. */
-  get pendingWindow(): TransferWindow | null { return this.window; }
+  get finished(): boolean { return this.done && !this.pending && this.outbox.length === 0; }
   get seasonsPlayed(): number { return this.seasons.length; }
+  /** Switches to automatic answers for every later decision (the pending one is answered with `decide(null)`). */
+  autopilot(): void { (this.input as { transfers?: string }).transfers = 'auto'; }
+  /** The decision waiting for an answer, if any. */
+  get pendingDecision(): Decision | null { return this.pending; }
 
+  private manual(): boolean { return this.input.transfers === 'manual'; }
   private keyOf(c: Candidate): string { return `${c.ref.leagueId}:${c.ref.rank}`; }
+  private bump(map: Map<string, number>, name: string): void { map.set(name, (map.get(name) ?? 0) + 1); }
 
-  private addHonour(map: Map<string, number>, name: string): void { map.set(name, (map.get(name) ?? 0) + 1); }
+  /** Asks the player (manual) or applies `auto` (automatic). The handler gets the chosen option id. */
+  private ask(d: Omit<Decision, 'id' | 'season' | 'age'>, auto: string, apply: (optionId: string) => void): void {
+    if (!this.manual()) { apply(auto); return; }
+    const dec: Decision = { ...d, id: `d${this.decisionsLog.length + this.queue.length + 1}:${this.s}`, season: this.s, age: this.age };
+    this.handlers.set(dec.id, (optId) => {
+      const opt = dec.options.find((o) => o.id === optId) ?? dec.options.find((o) => o.id === auto) ?? (dec.options[0] as DecisionOption);
+      this.decisionsLog.push({ season: dec.season, age: dec.age, title: dec.title, choice: opt.label });
+      this.choicesNow.push(`${dec.title}: ${opt.label}`);
+      apply(opt.id);
+    });
+    this.queue.push(dec);
+  }
 
-  /** Plays the next season (development, league, cup, continental, national team, awards) and returns it. */
-  playSeason(): CareerSeason {
-    if (this.done) throw new Error('career is over');
-    if (this.window) throw new Error('answer the pending transfer window first');
-    const rng = this.rng; const hero = this.hero; const club = this.club;
+  /** Advances to the next thing worth showing: matches, a decision, a finished season, or the end. */
+  step(): CareerStep {
+    for (let guard = 0; guard < 10000; guard++) {
+      if (this.pending) return { kind: 'decision', decision: this.pending };
+      const out = this.outbox.shift();
+      if (out) return out;
+      const q = this.queue.shift();
+      if (q) { this.pending = q; continue; }
+      if (this.done) return { kind: 'done', result: this.result() };
+      this.advance();
+    }
+    throw new Error('career step did not settle');
+  }
+
+  /** Answers the pending decision with an option id. Unknown ids fall back to the default. */
+  decide(optionId: string | null): void {
+    const p = this.pending;
+    if (!p) return;
+    this.pending = null;
+    const h = this.handlers.get(p.id);
+    this.handlers.delete(p.id);
+    h?.(optionId ?? 'default');
+  }
+
+  private advance(): void {
+    if (this.phase === 'pre') this.startSeason();
+    else if (this.phase === 'dev') this.developAndFirstHalf();
+    else if (this.phase === 'mid') this.midSeason();
+    else this.secondHalfAndFinish();
+  }
+
+  // ------------------------------------------------------------------ season start: decisions that shape the season
+  private startSeason(): void {
     this.s++;
-    const s = this.s;
-    const age = this.age;
-    this.lastRetiredAge = age;
+    this.choicesNow = [];
+    const hero = this.hero; const club = this.club;
+    const here = clubName(club.ref);
+    const ovr = Math.round(overall(hero));
+    // training focus
+    this.ask({
+      kind: 'training', title: 'Training focus', text: `Age ${this.age}. How do you want to spend this year's training? Rated ${ovr}, ceiling unknown.`,
+      options: TRAINING.map((t) => ({ id: t.id, label: t.label, detail: t.detail })),
+    }, 'balanced', (id) => { this.focus = id; });
+    // role at the club (when joining, and every 4th season)
+    const roles = Object.values(ROLES).filter((r) => r.positions.includes(hero.primary));
+    if (roles.length > 1 && (this.roleClub !== here || this.s % 4 === 0)) {
+      this.ask({
+        kind: 'role', title: 'Your role', text: `How does the manager at ${here} use you as a ${hero.primary}?`,
+        options: roles.map((r) => ({ id: r.id, label: r.name, detail: `${r.duty === 'attack' ? 'Attacking' : r.duty === 'defend' ? 'Defensive' : 'Balanced'} duty. ${r.shotShare >= 1.4 ? 'Gets plenty of shots.' : r.createShare >= 1.6 ? 'Creates for others.' : r.tackleShare >= 1.3 ? 'Wins the ball back.' : 'Rounded role.'}` })),
+      }, defaultRoleFor(hero.primary), (id) => { this.role = id; this.roleClub = here; });
+    }
+    // set pieces (outfield, when joining a club)
+    if (!isGk(hero.primary) && this.dutiesClub !== here) {
+      this.ask({
+        kind: 'duties', title: 'Set-piece duties', text: `Penalties and free kicks at ${here}: do you put your hand up?`,
+        options: [
+          { id: 'both', label: 'Both', detail: 'More goals from dead balls, more pressure when you miss.' },
+          { id: 'penalties', label: 'Penalties', detail: 'You take them. Goals, and misses, count to you.' },
+          { id: 'freekicks', label: 'Free kicks', detail: 'Add a free-kick specialist trait.' },
+          { id: 'neither', label: 'Leave them to others', detail: 'Fewer chances but a calmer game.' },
+        ],
+      }, 'neither', (id) => {
+        hero.traits = hero.traits.filter((t) => t !== 'penaltyTaker' && t !== 'setPieceSpecialist');
+        if (id === 'both' || id === 'penalties') hero.traits.push('penaltyTaker');
+        if (id === 'both' || id === 'freekicks') hero.traits.push('setPieceSpecialist');
+        this.dutiesClub = here;
+      });
+    }
+    // captaincy
+    if (this.age >= 24 && ovr >= club.level + 1 && this.captainClub !== here && !this.loanFrom) {
+      this.ask({
+        kind: 'captain', title: 'The armband', text: `${here} want you as captain.`,
+        options: [
+          { id: 'accept', label: 'Accept the armband', detail: 'More visibility and a leadership boost. The media will judge you harder.' },
+          { id: 'decline', label: 'Decline', detail: 'Stay a player first. No change.' },
+        ],
+      }, 'decline', (id) => { if (id === 'accept') { this.captainClub = here; if (!hero.traits.includes('leader')) hero.traits.push('leader'); this.image = clamp(this.image + 3, 0, 100); } else this.captainClub = `declined:${here}`; });
+    }
+    this.phase = 'dev';
+  }
 
-    // ---- weekly development through the season
+  private extraGrowth(hero: Player, age: number): void {
+    const f = this.focus;
+    if (f === 'balanced' || f === 'rest') return;
+    const keys = f === 'position' ? ATTR_KEYS.filter((k) => (POSITION_WEIGHTS[hero.primary][k] ?? 0) >= 0.7 * Math.max(...Object.values(POSITION_WEIGHTS[hero.primary]).map((v) => v ?? 0))) : ATTR_KEYS.filter((k) => attrGroup(k) === f);
+    for (const k of keys) {
+      const group = attrGroup(k);
+      const cur = hero.attrs[k];
+      const cap = Math.min(99, cur * (hero.pot > cur ? hero.pot / Math.max(1, overall(hero)) : 1));
+      const delta = Math.max(0, cap - cur) * growthRate(group, age) * hero.devRate * 0.3;
+      if (delta > 0) hero.attrs[k] = Math.round(clamp(cur + delta, 1, 99) * 100) / 100;
+    }
+  }
+
+  private wageNow(ovr: number, club: Candidate): number {
+    const value = marketValue({ ...this.hero, contract: null } as Player, this.day, undefined);
+    const lp = LEAGUE_BY_ID[club.ref.leagueId];
+    const factor = clamp(0.5 + Math.sqrt((lp?.tvPool ?? 3e8) / 1.5e9) * 0.55, 0.5, 1.6) * (club.ref.leagueId === 'SAU1' ? 1.6 : 1);
+    const youth = this.age < 18 ? 0.25 : this.age < 21 ? 0.5 : 1; // academy and early-pro contracts pay a fraction of the market wage
+    return Math.max(900, Math.round((baseWageWeekly(value, ovr) * factor * this.wageMult * youth) / 100) * 100);
+  }
+
+  private developAndFirstHalf(): void {
+    const rng = this.rng; const hero = this.hero; const club = this.club;
     const stub = stubClub(club.level);
     hero.workload = 6 * clamp(this.lastStartProb, 0.1, 1); // workload feeds development for youngsters, as match minutes do in the club game
-    for (let w = 0; w < 52; w++) developPlayerWeek(hero, this.day + w * 7, stub, rng);
+    if (this.focus === 'physical') hero.injuryProneness = clamp(hero.injuryProneness * 1.015, 0.5, 1.9);
+    for (let w = 0; w < 52; w++) { developPlayerWeek(hero, this.day + w * 7, stub, rng); if (w % 2 === 0) this.extraGrowth(hero, ageOf(hero, this.day + w * 7)); }
     this.day += 364;
     const ovr = Math.round(overall(hero));
-    if (ovr > this.peak.ovr) this.peak = { ovr, age, season: s };
-
-    // ---- playing time
+    if (ovr > this.peak.ovr) this.peak = { ovr, age: this.age, season: this.s };
     const gap = ovr - club.level;
     let startProb = clamp(0.55 + gap / 11, 0.03, 0.96);
-    if (age < 18) startProb = Math.min(startProb, 0.12) * (age < 17 ? 0.5 : 1);
+    if (this.age < 18) startProb = Math.min(startProb, 0.12) * (this.age < 17 ? 0.5 : 1);
     this.lastStartProb = startProb;
     const ref = club.ref;
     const size = leagueSize(ref.leagueId);
     const lvls = Array.from({ length: size }, (_, r) => clubLevel(ref.leagueId, r, size));
     const ownRank = Math.min(ref.rank, size - 1);
-
-    // ---- league season: every match is a full engine match
-    let apps = 0; let starts = 0; let minutes = 0; let goals = 0; let assists = 0; let cleanSheets = 0; let ratingSum = 0; let ratedApps = 0;
-    let leagueGoals = 0; let points = 0; let gd = 0; let unavailable = 0; let injuryDays = 0;
-    const count = (m: MatchOutcome, league: boolean): void => {
-      if (m.minutes <= 0) return;
-      apps++; if (m.started) starts++; minutes += m.minutes; goals += m.goals; assists += m.assists; if (league) leagueGoals += m.goals;
-      if (m.cleanSheet && isDefender(hero.primary)) cleanSheets++;
-      if (m.rating > 0) { ratingSum += m.rating; ratedApps++; }
+    // fixtures: every opponent once in each half, venues reversed in the second half
+    const opps: number[] = []; for (let j = 0; j < size; j++) if (j !== ownRank) opps.push(j);
+    for (let i = opps.length - 1; i > 0; i--) { const k = rng.int(i + 1); [opps[i], opps[k]] = [opps[k] as number, opps[i] as number]; }
+    const first = opps.map((j) => ({ j, home: (j + ownRank) % 2 === 0 }));
+    const fixtures = [...first, ...first.map((f) => ({ j: f.j, home: !f.home }))];
+    this.cur = {
+      ref, size, lvls, ownRank, ovr, startProb, points: 0, gd: 0, unavailable: 0, injuryDays: 0, apps: 0, starts: 0, minutes: 0, goals: 0, assists: 0, cleanSheets: 0, ratingSum: 0,
+      ratedApps: 0, leagueGoals: 0, fixtures, played: 0, logs: [], teamBonus: 0, honoursNow: [], awardsNow: [], wage: this.wageNow(ovr, club), captain: this.captainClub === clubName(ref),
     };
-    const order: number[] = [];
-    for (let j = 0; j < size; j++) if (j !== ownRank) { order.push(j); order.push(-j - 1); }
-    for (let m = 0; m < order.length; m++) {
-      const o = order[m] as number;
-      const opp = lvls[o >= 0 ? o : -o - 1] as number;
-      const available = unavailable <= 0; // an injured player is not selected, but the match is still played so team results keep the same scale
-      const r = playMatch(rng, hero, this.day, club.level, opp, o >= 0, available ? startProb : 0, `s${s}m${m}`, false);
-      points += r.won ? 3 : r.draw ? 1 : 0;
-      gd += r.goalsFor - r.goalsAgainst;
-      if (!available) { unavailable -= 7; continue; }
-      count(r, true);
-      if (r.injury > 0) { unavailable = r.injury; injuryDays += r.injury; }
+    const half = Math.floor(fixtures.length / 2);
+    const logs = this.playLeague(half);
+    this.outbox.push({ kind: 'matches', label: `${leagueName(ref.leagueId)} · first half of the season`, matches: logs });
+    this.phase = 'mid';
+  }
+
+  private tally(m: MatchOutcome, league: boolean): void {
+    const c = this.cur as NonNullable<CareerSim['cur']>;
+    if (m.minutes <= 0) return;
+    c.apps++; if (m.started) c.starts++; c.minutes += m.minutes; c.goals += m.goals; c.assists += m.assists; if (league) c.leagueGoals += m.goals;
+    if (m.cleanSheet && isDefender(this.hero.primary)) c.cleanSheets++;
+    if (m.rating > 0) { c.ratingSum += m.rating; c.ratedApps++; }
+  }
+
+  private log(m: MatchOutcome | null, comp: string, round: string, opp: string, home: boolean, status: MatchLog['status'], gfga?: [number, number]): MatchLog {
+    const c = this.cur as NonNullable<CareerSim['cur']>;
+    const gf = m?.goalsFor ?? gfga?.[0] ?? 0; const ga = m?.goalsAgainst ?? gfga?.[1] ?? 0;
+    const entry: MatchLog = {
+      n: c.logs.length + 1, comp, round, opp, home, gf, ga, pens: m?.pens ?? null, result: m ? (m.won ? 'W' : m.draw ? 'D' : 'L') : gf > ga ? 'W' : gf === ga ? 'D' : 'L',
+      status: m ? (m.minutes > 0 ? (m.started ? 'start' : 'sub') : 'unused') : status, minutes: m?.minutes ?? 0, goals: m?.goals ?? 0, assists: m?.assists ?? 0, goalMinutes: m?.goalMinutes ?? [],
+      rating: m && m.minutes > 0 ? m.rating : 0, yellow: m?.yellow ?? 0, red: m?.red ?? 0, injury: m?.injuryLabel ?? null,
+    };
+    c.logs.push(entry);
+    return entry;
+  }
+
+  /** Plays the next `count` league fixtures. */
+  private playLeague(count: number): MatchLog[] {
+    const rng = this.rng; const hero = this.hero; const club = this.club;
+    const c = this.cur as NonNullable<CareerSim['cur']>;
+    const out: MatchLog[] = [];
+    const comp = leagueName(c.ref.leagueId);
+    for (let k = 0; k < count && c.played < c.fixtures.length; k++, c.played++) {
+      const fx = c.fixtures[c.played] as { j: number; home: boolean };
+      const opp = c.lvls[fx.j] as number;
+      const available = c.unavailable <= 0;
+      const r = playMatch(rng, hero, this.day, club.level, opp, fx.home, available ? c.startProb : 0, `${this.sid}|s${this.s}m${c.played}`, false, this.role);
+      c.points += r.won ? 3 : r.draw ? 1 : 0;
+      c.gd += r.goalsFor - r.goalsAgainst;
+      const oppName = clubName({ leagueId: c.ref.leagueId, rank: fx.j });
+      if (!available) { c.unavailable -= 7; out.push(this.log(null, comp, `Matchday ${c.played + 1}`, oppName, fx.home, 'injured', [r.goalsFor, r.goalsAgainst])); continue; }
+      this.tally(r, true);
+      if (r.injury > 0) { c.unavailable = r.injury; c.injuryDays += r.injury; }
+      out.push(this.log(r, comp, `Matchday ${c.played + 1}`, oppName, fx.home, 'start'));
     }
-    const pos = tableRank(rng, ref.leagueId, size, ownRank, points, gd);
-    const honoursNow: string[] = []; const awardsNow: string[] = [];
+    return out;
+  }
+
+  // ------------------------------------------------------------------ mid-season decisions
+  private midSeason(): void {
+    const rng = this.rng; const c = this.cur as NonNullable<CareerSim['cur']>;
+    const here = clubName(c.ref);
+    // injury handling
+    if (c.unavailable >= 28) {
+      const days = Math.round(c.unavailable);
+      this.ask({
+        kind: 'injury', title: 'Injury', text: `You are still out (about ${days} more days). The physio and the manager want your view.`,
+        options: [
+          { id: 'rest', label: 'Full rehab', detail: 'Miss the time, come back fit. No extra risk.' },
+          { id: 'rush', label: 'Play through the pain', detail: `Back in about half the time, but a ~35% chance of a setback that costs 40 more days.` },
+        ],
+      }, 'rest', (id) => {
+        if (id === 'rush') {
+          c.unavailable = Math.round(c.unavailable * 0.5);
+          if (rng.chance(0.35)) { c.unavailable += 40; c.injuryDays += 40; this.choicesNow.push('Setback: the injury flared up again'); } else this.choicesNow.push('Rushed back in time');
+        }
+      });
+    }
+    // playing time
+    if (!this.loanFrom && c.startProb < 0.38 && this.age <= 29 && this.age >= 18) {
+      this.ask({
+        kind: 'playing-time', title: 'Playing time', text: `You are not getting the minutes at ${here}. What do you do?`,
+        options: [
+          { id: 'fight', label: 'Fight for your place', detail: 'Stay and work harder. A small boost to your chances.' },
+          { id: 'loan', label: 'Ask for a loan', detail: 'Finish the season at a club where you will play. Return in the summer.' },
+          { id: 'request', label: 'Hand in a transfer request', detail: 'Leave in the summer. Your image takes a small hit.' },
+        ],
+      }, 'fight', (id) => {
+        if (id === 'fight') c.startProb = clamp(c.startProb + 0.06, 0, 0.96);
+        else if (id === 'loan') {
+          const loanCands = CANDIDATES.filter((x) => Math.abs(x.level - (c.ovr + 2)) < 7 && this.keyOf(x) !== this.keyOf(this.club));
+          if (loanCands.length > 0) {
+            this.loanFrom = this.club; this.loanYears = 1;
+            this.club = pickWeighted(rng, loanCands, (x) => Math.exp(-(((x.level - (c.ovr + 2)) / 4) ** 2)));
+            this.note = `Loaned out from ${clubName(this.loanFrom.ref)}`;
+            c.startProb = clamp(0.55 + (c.ovr - this.club.level) / 11, 0.2, 0.96);
+            c.ref = this.club.ref; // the rest of the season counts at the new club
+          }
+        } else { this.requestedMove = true; this.image = clamp(this.image - 4, 0, 100); }
+      });
+    }
+    // press row
+    if (this.manual() && rng.chance(0.22)) {
+      this.ask({
+        kind: 'media', title: 'Press row', text: 'A story about you is doing the rounds. How do you respond?',
+        options: [
+          { id: 'quiet', label: 'Stay professional', detail: 'No comment. Your image holds steady.' },
+          { id: 'speak', label: 'Speak out', detail: 'High risk, high reward: a big swing to your image either way.' },
+          { id: 'apologise', label: 'Apologise', detail: 'Small, safe gain to your image.' },
+        ],
+      }, 'quiet', (id) => {
+        if (id === 'speak') { const up = rng.chance(0.5); this.image = clamp(this.image + (up ? 8 : -8), 0, 100); this.choicesNow.push(up ? 'The fans loved it' : 'It backfired'); }
+        else if (id === 'apologise') this.image = clamp(this.image + 2, 0, 100);
+      });
+    }
+    this.phase = 'h2';
+  }
+
+  // ------------------------------------------------------------------ second half, cups, continental, national team, awards
+  private secondHalfAndFinish(): void {
+    const rng = this.rng; const hero = this.hero;
+    const c = this.cur as NonNullable<CareerSim['cur']>;
+    const s = this.s; const age = this.age;
+    const ref = c.ref;
+    const club = this.club;
+    const rest = c.fixtures.length - c.played;
     const lname = leagueName(ref.leagueId);
-    let teamBonus = 0;
-    if (pos === 1) { honoursNow.push(lname); teamBonus += 2.5; }
+    this.outbox.push({ kind: 'matches', label: `${lname} · second half of the season`, matches: this.playLeague(rest) });
+    const points = c.points; const gd = c.gd;
+    const pos = tableRank(rng, ref.leagueId, c.size, Math.min(ref.rank, c.size - 1), points, gd);
+    if (pos === 1) { c.honoursNow.push(lname); c.teamBonus += 2.5; }
+    const ovr = c.ovr;
 
     // ---- domestic cup (single legs)
     const cupId = `${ref.leagueId.slice(0, 3)}-CUP`;
     const cupName = REAL_COMPETITION_NAMES[cupId]?.name ?? 'Domestic cup';
-    const cupRounds = clamp(Math.round(Math.log2(size)) + 1, 4, 6);
-    const cupOpp = Array.from({ length: cupRounds }, (_, i) => clamp((lvls[rng.int(size)] as number) + i * 0.8, 40, 90));
-    const cup = knockoutRun(rng, hero, this.day, club.level, startProb * 0.8, cupOpp.map((l, i) => (i < cupRounds - 2 ? l - 2 : l)), `s${s}c`);
-    for (const m of cup.matches) count(m, false);
-    if (cup.won) { honoursNow.push(cupName); teamBonus += 1; }
+    const cupRounds = clamp(Math.round(Math.log2(c.size)) + 1, 4, 6);
+    let cupResult = 'Winner';
+    const cupLogs: MatchLog[] = [];
+    for (let i = 0; i < cupRounds; i++) {
+      const j = rng.int(c.size); const l = clamp((c.lvls[j] as number) + i * 0.8 - (i < cupRounds - 2 ? 2 : 0), 40, 90);
+      const oppName = clubName({ leagueId: ref.leagueId, rank: j });
+      const home = rng.chance(0.5);
+      const m = playMatch(rng, hero, this.day, club.level, l, home, c.startProb * 0.8, `${this.sid}|s${s}c${i}`, true, this.role);
+      this.tally(m, false);
+      cupLogs.push(this.log(m, cupName, roundName(cupRounds, i), oppName, home, 'start'));
+      if (!m.won) { cupResult = `Out in the ${roundName(cupRounds, i)}`; break; }
+    }
+    this.outbox.push({ kind: 'matches', label: cupName, matches: cupLogs });
+    if (cupResult === 'Winner') { c.honoursNow.push(cupName); c.teamBonus += 1; }
 
     // ---- continental club competition
     let continental: CareerSeason['continental'] = null;
     const cc = continentalFor(ref.leagueId, pos);
     if (cc) {
       const lvl = COMP_LEVEL[cc] as number;
-      const stage: MatchOutcome[] = [];
-      let pts = 0;
+      const cname = REAL_COMPETITION_NAMES[cc]?.name ?? cc;
+      const euroLogs: MatchLog[] = [];
       const games = cc === 'UCL' || cc === 'UEL' || cc === 'UECL' ? 8 : 6;
-      for (let g = 0; g < games; g++) { const m = playMatch(rng, hero, this.day, club.level, clamp(rng.normal(lvl, 4), 45, 90), g % 2 === 0, startProb, `s${s}e${g}`, false); stage.push(m); pts += m.won ? 3 : m.draw ? 1 : 0; }
+      let pts = 0;
+      for (let g = 0; g < games; g++) {
+        const opp = clubNear(rng, clamp(rng.normal(lvl, 4), 45, 90), this.keyOf(club));
+        const home = g % 2 === 0;
+        const m = playMatch(rng, hero, this.day, club.level, opp.level, home, c.startProb, `${this.sid}|s${s}e${g}`, false, this.role);
+        this.tally(m, false); pts += m.won ? 3 : m.draw ? 1 : 0;
+        euroLogs.push(this.log(m, cname, games === 8 ? `League phase ${g + 1}` : `Group ${g + 1}`, clubName(opp.ref), home, 'start'));
+      }
       let result: string; let won = false;
       if (pts < (games === 8 ? 7 : 5)) result = 'Out in the league phase';
       else {
-        const run = knockoutRun(rng, hero, this.day, club.level, startProb, [lvl, lvl + 2, lvl + 4, lvl + 5], `s${s}x`);
-        stage.push(...run.matches); result = run.won ? 'Winner' : run.result.replace('Round of 32', 'Round of 16'); won = run.won;
+        result = 'Winner'; won = true;
+        const targets = [lvl, lvl + 2, lvl + 4, lvl + 5];
+        for (let r = 0; r < targets.length; r++) {
+          const opp = clubNear(rng, targets[r] as number, this.keyOf(club));
+          const home = rng.chance(0.5);
+          const m = playMatch(rng, hero, this.day, club.level, opp.level, home, c.startProb, `${this.sid}|s${s}x${r}`, true, this.role);
+          this.tally(m, false);
+          euroLogs.push(this.log(m, cname, roundName(4, r), clubName(opp.ref), home, 'start'));
+          if (!m.won) { result = `Out in the ${roundName(4, r)}`; won = false; break; }
+        }
       }
-      for (const m of stage) count(m, false);
-      continental = { competition: REAL_COMPETITION_NAMES[cc]?.name ?? cc, result };
-      if (won) { honoursNow.push(continental.competition); teamBonus += cc === 'UCL' ? 6 : cc === 'UEL' || cc === 'COPA' || cc === 'ACLE' ? 3 : 1.5; }
-      else if (result.includes('Final')) teamBonus += 1.5;
+      continental = { competition: cname, result };
+      this.outbox.push({ kind: 'matches', label: cname, matches: euroLogs });
+      if (won) { c.honoursNow.push(cname); c.teamBonus += cc === 'UCL' ? 6 : cc === 'UEL' || cc === 'COPA' || cc === 'ACLE' ? 3 : 1.5; }
+      else if (result.includes('Final')) c.teamBonus += 1.5;
     }
-    const avgClub = ratedApps > 0 ? ratingSum / ratedApps : 0;
 
-    // ---- national team: tournaments every second season (World Cup in seasons 4, 8, 12 ...)
+    // ---- national team
     const tournament = this.playTournament(s, age, ovr, rng);
     let tGoals = 0;
     if (tournament) {
-      tGoals = tournament.goals;
-      if (tournament.won) { honoursNow.push(tournament.name); teamBonus += tournament.name === WORLD_CUP ? 8 : 3; }
-      else if (tournament.result.includes('Final') || tournament.result.includes('Semi')) teamBonus += tournament.name === WORLD_CUP ? 2 : 0.8;
-      for (const a of tournament.awards) { awardsNow.push(a); }
+      tGoals = tournament.t.goals;
+      this.outbox.push({ kind: 'matches', label: `${tournament.t.name} · ${tournament.t.nation}`, matches: tournament.logs });
+      if (tournament.t.won) { c.honoursNow.push(tournament.t.name); c.teamBonus += tournament.t.name === WORLD_CUP ? 8 : 3; }
+      else if (tournament.t.result.includes('Final') || tournament.t.result.includes('Semi')) c.teamBonus += tournament.t.name === WORLD_CUP ? 2 : 0.8;
+      for (const a of tournament.t.awards) c.awardsNow.push(a);
     }
-    const avgRating = Math.round(avgClub * 100) / 100;
+    const avgRating = Math.round((c.ratedApps > 0 ? c.ratingSum / c.ratedApps : 0) * 100) / 100;
 
     // ---- individual awards: compare the season with simulated rivals
-    const teamOfYear = avgRating >= 7.15 && apps >= 25;
-    const scorerRival = Math.round(rng.normal(19 + (lvls[0] as number - 70) * 0.3, 3.2));
-    if (!isGk(hero.primary) && leagueGoals > scorerRival && starts >= 22) awardsNow.push(`${lname} Golden Boot`);
-    if (avgRating >= 7.4 + rng.normal(0, 0.12) && apps >= 28 && pos <= Math.ceil(size / 2)) awardsNow.push(`${lname} Player of the Season`);
-    if (age <= 21 && apps >= 18 && avgRating >= 6.95 + rng.normal(0, 0.1)) awardsNow.push(`${lname} Young Player of the Season`);
-    if (isGk(hero.primary) && cleanSheets >= Math.round(size * 0.36) && apps >= 28) awardsNow.push('Golden Glove');
-    if (teamOfYear && avgRating >= 7.3) awardsNow.push(`${lname} Team of the Season`);
-    const score = awardScore(rng, hero.primary, ovr, goals + tGoals, assists, cleanSheets, avgRating, injuryDays, teamBonus);
+    const scorerRival = Math.round(rng.normal(19 + ((c.lvls[0] as number) - 70) * 0.3, 3.2));
+    if (!isGk(hero.primary) && c.leagueGoals > scorerRival && c.starts >= 22) c.awardsNow.push(`${lname} Golden Boot`);
+    if (avgRating >= 7.4 + rng.normal(0, 0.12) && c.apps >= 28 && pos <= Math.ceil(c.size / 2)) c.awardsNow.push(`${lname} Player of the Season`);
+    if (age <= 21 && c.apps >= 18 && avgRating >= 6.95 + rng.normal(0, 0.1)) c.awardsNow.push(`${lname} Young Player of the Season`);
+    if (isGk(hero.primary) && c.cleanSheets >= Math.round(c.size * 0.36) && c.apps >= 28) c.awardsNow.push('Golden Glove');
+    if (avgRating >= 7.3 && c.apps >= 25) c.awardsNow.push(`${lname} Team of the Season`);
+    const score = awardScore(rng, hero.primary, ovr, c.goals + tGoals, c.assists, c.cleanSheets, avgRating, c.injuryDays, c.teamBonus + (c.captain ? 0.5 : 0), this.image);
     let ballonDor: CareerSeason['ballonDor'] = null;
     if (age >= 18 && ovr >= 70) {
       let rank = 1;
       for (let i = 0; i < 30; i++) {
-        const rivalBase = 93 - i * 0.62 + rng.normal(0, 2.6) + (i < 6 && rng.chance(0.16) ? 5 : 0) + (tournament?.won && i < 4 && rng.chance(0.5) ? 5 : 0);
+        const rivalBase = 93 - i * 0.62 + rng.normal(0, 2.6) + (i < 6 && rng.chance(0.16) ? 5 : 0) + (tournament?.t.won && i < 4 && rng.chance(0.5) ? 5 : 0);
         if (rivalBase > score) rank++;
       }
       ballonDor = { rank: rank <= 30 ? rank : null };
-      if (rank === 1) awardsNow.push(BALLON_DOR);
-      else if (rank <= 3) awardsNow.push(`${BALLON_DOR} podium`);
+      if (rank === 1) c.awardsNow.push(BALLON_DOR);
+      else if (rank <= 3) c.awardsNow.push(`${BALLON_DOR} podium`);
       if (rank <= 30) this.ballon.push({ season: s, age, rank });
     }
-    for (const h of honoursNow) this.addHonour(this.honours, h);
-    for (const a of awardsNow) this.addHonour(this.awards, a);
+    for (const h of c.honoursNow) this.bump(this.honours, h);
+    for (const a of c.awardsNow) this.bump(this.awards, a);
+    const earnings = Math.round(c.wage * 52);
+    this.earningsTotal += earnings;
 
     const entry: CareerSeason = {
       season: s, age, ovr, club: clubName(ref), leagueId: ref.leagueId, league: lname, onLoan: this.loanFrom !== null,
-      apps, starts, minutes, goals, assists, cleanSheets, avgRating, injuryDays, leaguePos: pos, leagueSize: size,
-      cup: cupName, cupResult: cup.result, continental, tournament, honours: honoursNow, awards: awardsNow, ballonDor, transferIn: this.transferIn, note: this.note,
+      apps: c.apps, starts: c.starts, minutes: c.minutes, goals: c.goals, assists: c.assists, cleanSheets: c.cleanSheets, avgRating, injuryDays: c.injuryDays, leaguePos: pos, leagueSize: c.size,
+      cup: cupName, cupResult, continental, tournament: tournament?.t ?? null, honours: c.honoursNow, awards: c.awardsNow, ballonDor, transferIn: this.transferIn, note: this.note,
+      wageWeekly: c.wage, earnings, role: this.role ? (ROLES[this.role]?.name ?? this.role) : 'Default', focus: TRAINING.find((t) => t.id === this.focus)?.label ?? 'Balanced', choices: [...this.choicesNow], matchLog: c.logs,
     };
     this.seasons.push(entry);
     const last = this.clubsLog[this.clubsLog.length - 1];
     if (last && last.name === entry.club) last.to = s; else this.clubsLog.push({ name: entry.club, from: s, to: s });
     this.transferIn = null; this.note = null;
-    this.endOfSeason(ovr);
-    return entry;
+    this.outbox.push({ kind: 'season', season: entry });
+    this.cur = null;
+    this.endOfSeason(Math.round(overall(hero)));
+    this.phase = 'pre';
   }
 
   /** Called-up players play the tournament with their national team: groups, then knockouts, all full matches. */
-  private playTournament(s: number, age: number, ovr: number, rng: Rng): TournamentResult | null {
+  private playTournament(s: number, age: number, ovr: number, rng: Rng): { t: TournamentResult; logs: MatchLog[] } | null {
     const wc = s % 4 === 0; const cont = s % 4 === 2;
     if (!wc && !cont) return null;
     const level = this.nation.level;
@@ -509,24 +838,39 @@ export class CareerSim {
     const name = wc ? WORLD_CUP : CONTINENTAL_CUP[this.nation.confed];
     // qualification (World Cup only): strong nations nearly always qualify, weak ones often do not
     if (wc && !rng.chance(clamp(0.35 + (level - 66) / 20, 0.05, 0.99))) return null;
-    // opponents: one group opponent from each of three strength bands of the field, then knockouts of rising absolute strength
     const field = NATIONS.filter((n) => n.code !== this.nation.code && (wc || n.confed === this.nation.confed)).sort((a, b) => b.level - a.level);
-    const band = (from: number, to: number): number => {
+    const band = (from: number, to: number): Nation => {
       const slice = field.slice(Math.floor(field.length * from), Math.max(Math.floor(field.length * from) + 1, Math.floor(field.length * to)));
-      return (slice[rng.int(slice.length)] as Nation).level;
+      return slice[rng.int(slice.length)] as Nation;
     };
-    const groupOpp = [band(0, 0.3), band(0.3, 0.65), band(0.65, 1)];
+    const c = this.cur as NonNullable<CareerSim['cur']>;
+    const logs: MatchLog[] = [];
     const played: MatchOutcome[] = [];
+    const log = (m: MatchOutcome, round: string, opp: string): void => {
+      const e: MatchLog = {
+        n: c.logs.length + 1, comp: name, round, opp, home: false, gf: m.goalsFor, ga: m.goalsAgainst, pens: m.pens, result: m.won ? 'W' : m.draw ? 'D' : 'L', status: m.minutes > 0 ? (m.started ? 'start' : 'sub') : 'unused',
+        minutes: m.minutes, goals: m.goals, assists: m.assists, goalMinutes: m.goalMinutes, rating: m.minutes > 0 ? m.rating : 0, yellow: m.yellow, red: m.red, injury: m.injuryLabel,
+      };
+      c.logs.push(e); logs.push(e);
+    };
     let pts = 0;
-    groupOpp.forEach((l, i) => { const m = playMatch(rng, this.hero, this.day, level, l, false, startProb, `wc${s}g${i}`, false); played.push(m); pts += m.won ? 3 : m.draw ? 1 : 0; });
+    [band(0, 0.3), band(0.3, 0.65), band(0.65, 1)].forEach((o, i) => {
+      const m = playMatch(rng, this.hero, this.day, level, o.level, false, startProb, `${this.sid}|wc${s}g${i}`, false, null, true);
+      played.push(m); pts += m.won ? 3 : m.draw ? 1 : 0; log(m, `Group stage ${i + 1}`, o.name);
+    });
     let result: string; let won = false;
     const advance = pts >= 4 || (pts === 3 && rng.chance(0.5));
     if (!advance) result = 'Out in the group stage';
     else {
       const strong = wc || this.nation.confed === 'UEFA' || this.nation.confed === 'CONMEBOL';
-      const rounds = wc ? [69, 74, 78, 81, 83] : strong ? [72, 76, 80, 83] : [64, 68, 72, 75];
-      const run = knockoutRun(rng, this.hero, this.day, level, startProb, rounds, `wc${s}k`);
-      played.push(...run.matches); result = run.won ? 'Winner' : run.result; won = run.won;
+      const rounds = wc ? [68, 73, 77, 80, 83] : strong ? [72, 76, 80, 83] : [64, 68, 72, 75];
+      result = 'Winner'; won = true;
+      for (let r = 0; r < rounds.length; r++) {
+        const opp = field.reduce((b, n) => (Math.abs(n.level - (rounds[r] as number)) < Math.abs(b.level - (rounds[r] as number)) ? n : b), field[0] as Nation);
+        const m = playMatch(rng, this.hero, this.day, level, rounds[r] as number, false, startProb, `${this.sid}|wc${s}k${r}`, true, null, true);
+        played.push(m); log(m, roundName(rounds.length, r), opp.name);
+        if (!m.won) { result = `Out in the ${roundName(rounds.length, r)}`; won = false; break; }
+      }
     }
     const goals = played.reduce((a, m) => a + m.goals, 0); const assists = played.reduce((a, m) => a + m.assists, 0);
     const matches = played.filter((m) => m.minutes > 0).length;
@@ -542,43 +886,63 @@ export class CareerSim {
     this.intGoals += goals;
     const t: TournamentResult = { name, nation: this.nation.name, result, won, matches, goals, assists, awards };
     this.tournaments.push(t);
-    return t;
+    return { t, logs };
   }
 
-  private buildOffers(ovrNow: number): TransferOffer[] {
+  // ------------------------------------------------------------------ end of season: retirement, loans, contract and transfer decisions
+  private offerFor(c: Candidate, kind: TransferOffer['kind'], ovrNow: number, fee: number): TransferOffer {
+    const rng = this.rng;
+    const gap = ovrNow - c.level;
+    const cont = continentalFor(c.ref.leagueId, Math.max(1, Math.round((c.ref.rank + 1) * 0.8)));
+    const id = `${c.ref.leagueId}:${c.ref.rank}`;
+    this.offerFees.set(id, fee);
+    return {
+      id, club: clubName(c.ref), leagueId: c.ref.leagueId, league: leagueName(c.ref.leagueId), level: Math.round(c.level),
+      role: gap >= 4 ? 'Key player' : gap >= -2 ? 'Starter' : gap >= -6 ? 'Rotation' : 'Bench', continental: cont ? (REAL_COMPETITION_NAMES[cont]?.name ?? null) : null,
+      fee, wageWeekly: Math.round(this.wageNow(ovrNow, c) * rng.float(0.95, 1.2) / 100) * 100, kind,
+    };
+  }
+
+  private buildOffers(ovrNow: number, free: boolean): TransferOffer[] {
     const rng = this.rng; const hero = this.hero; const s = this.s;
     const eligible = CANDIDATES.filter((c) => this.keyOf(c) !== this.keyOf(this.club) && s - (this.leftAt.get(this.keyOf(c)) ?? -99) > 3);
     const taken = new Set<string>();
+    const offers: TransferOffer[] = [];
     const make = (kind: TransferOffer['kind'], target: number, spread: number, sameLeague?: boolean): void => {
       const pool = eligible.filter((c) => !taken.has(this.keyOf(c)) && (sameLeague === undefined || (c.ref.leagueId === this.club.ref.leagueId) === sameLeague));
       if (pool.length === 0) return;
       const c = pickWeighted(rng, pool, (x) => Math.exp(-(((x.level - target) / spread) ** 2)) + 1e-4);
       taken.add(this.keyOf(c));
-      const gap = ovrNow - c.level;
-      const cont = continentalFor(c.ref.leagueId, Math.max(1, Math.round((c.ref.rank + 1) * 0.8)));
-      const fee = Math.round((marketValue({ ...hero, contract: null } as Player, this.day, undefined) * rng.float(0.85, 1.35)) / 1e5) * 1e5;
-      this.offerFees.set(`${c.ref.leagueId}:${c.ref.rank}`, fee);
-      this.offerList.push({
-        id: `${c.ref.leagueId}:${c.ref.rank}`, club: clubName(c.ref), leagueId: c.ref.leagueId, league: leagueName(c.ref.leagueId), level: Math.round(c.level),
-        role: gap >= 4 ? 'Key player' : gap >= -2 ? 'Starter' : gap >= -6 ? 'Rotation' : 'Bench',
-        continental: cont ? (REAL_COMPETITION_NAMES[cont]?.name ?? null) : null,
-        fee, kind,
-      });
+      const fee = free ? 0 : Math.round((marketValue({ ...hero, contract: null } as Player, this.day, undefined) * rng.float(0.85, 1.35)) / 1e5) * 1e5;
+      offers.push(this.offerFor(c, free ? 'free transfer' : kind, ovrNow, fee));
     };
-    this.offerList = [];
     make('good fit', ovrNow + rng.float(-1, 2), 4);
     make('step up', ovrNow + rng.float(4, 8), 4);
     if (ovrNow >= 66) make('dream move', ovrNow + rng.float(8, 14), 5);
     make('new league', ovrNow + rng.float(-2, 5), 6, false);
-    return this.offerList;
+    return offers;
   }
-  private offerList: TransferOffer[] = [];
-  private offerFees = new Map<string, number>();
+
+  private transferDecision(ovrNow: number, auto: boolean): void {
+    const rng = this.rng;
+    const offers = this.buildOffers(ovrNow, this.freeAgentNext);
+    this.freeAgentNext = false;
+    if (offers.length === 0) return;
+    const stay: DecisionOption = { id: 'stay', label: `Stay at ${clubName(this.club.ref)}`, detail: 'Renew and carry on.' };
+    this.ask({
+      kind: 'transfer', title: 'Transfer window', text: `Age ${this.age}, rated ${ovrNow}. You are at ${clubName(this.club.ref)}${this.contractLeft > 0 ? ` with ${this.contractLeft} ${this.contractLeft === 1 ? 'year' : 'years'} left` : ' and your contract has run out'}. Pick an offer or stay.`,
+      options: [...offers.map((o) => ({ id: o.id, label: o.club, detail: `${o.kind} · ${o.league}`, offer: o })), stay],
+    }, auto ? (pickWeighted(rng, offers, (o) => (o.kind === 'good fit' ? 3 : o.kind === 'step up' ? 2 : 1)).id) : 'stay', (id) => {
+      if (id === 'stay' || !offers.some((o) => o.id === id)) { if (this.contractLeft <= 0) this.contractLeft = rng.int(3) + 2; this.requestedMove = false; return; }
+      this.applyOffer(id);
+    });
+  }
 
   private endOfSeason(ovr: number): void {
     const rng = this.rng; const hero = this.hero;
     this.age++;
     const pRet = retirementProbability(this.age, ovr, isGk(hero.primary)) + (this.age >= 40 ? 0.5 : 0);
+    this.lastRetiredAge = this.age - 1;
     if ((this.age >= 33 && rng.chance(Math.min(0.98, pRet))) || this.age > 41) { this.done = true; return; }
     this.contractLeft--;
     if (this.loanFrom) {
@@ -597,26 +961,29 @@ export class CareerSim {
       }
     }
     const surplus = ovrNow - this.club.level;
-    const wantsOut = this.contractLeft <= 0 || surplus > 7 || surplus < -7 || rng.chance(0.07);
-    const manual = this.input.transfers === 'manual';
-    if (!wantsOut && !(manual && rng.chance(0.3))) return; // in manual mode extra offers can arrive any summer
-    const offers = this.buildOffers(ovrNow);
-    if (offers.length === 0) return;
-    if (manual) {
-      this.window = { season: this.s, age: this.age, club: clubName(this.club.ref), contractYearsLeft: Math.max(0, this.contractLeft), ovr: ovrNow, offers };
+    const forced = surplus > 7 || surplus < -7 || this.requestedMove;
+    // contract talks when the deal is about to expire (a transfer decision follows if you want out)
+    if (this.contractLeft <= 0 && !forced) {
+      const value = this.wageNow(ovrNow, this.club);
+      this.ask({
+        kind: 'contract', title: 'Contract talks', text: `Your deal at ${clubName(this.club.ref)} has run out. Current wage: €${(value / 1000).toFixed(0)}k a week.`,
+        options: [
+          { id: 'long', label: 'Sign a long deal (5 years)', detail: `Security. Wage about 8% lower: €${(value * 0.92 / 1000).toFixed(0)}k a week.` },
+          { id: 'standard', label: 'Standard deal (3 years)', detail: `Market wage: €${(value / 1000).toFixed(0)}k a week.` },
+          { id: 'short', label: 'Short deal (2 years)', detail: `Wage about 12% higher: €${(value * 1.12 / 1000).toFixed(0)}k a week.` },
+          { id: 'explore', label: 'Listen to other offers', detail: 'Leave on a free transfer with a bigger wage elsewhere. See who calls.' },
+        ],
+      }, 'standard', (id) => {
+        if (id === 'long') { this.contractLeft = 5; this.wageMult = 0.92; }
+        else if (id === 'standard') { this.contractLeft = this.rng.int(3) + 2; this.wageMult = 1; }
+        else if (id === 'short') { this.contractLeft = 2; this.wageMult = 1.12; }
+        else { this.freeAgentNext = true; this.wageMult = 1.2; this.transferDecision(ovrNow, true); }
+      });
       return;
     }
-    // automatic: a forced move picks a fit-weighted offer; a voluntary one only happens when it is clearly forced
-    if (wantsOut) this.applyOffer(pickWeighted(rng, offers, (o) => (o.kind === 'good fit' ? 3 : o.kind === 'step up' ? 2 : 1)).id);
-  }
-
-  /** Answers the pending transfer window: an offer id, or null/'stay' to remain (renewing the contract). */
-  decide(choice: string | null): void {
-    if (!this.window) return;
-    const w = this.window;
-    this.window = null;
-    if (choice === null || choice === 'stay' || !w.offers.some((o) => o.id === choice)) { if (this.contractLeft <= 0) this.contractLeft = this.rng.int(3) + 2; return; }
-    this.applyOffer(choice);
+    const wantsOut = forced || rng.chance(0.07);
+    if (wantsOut) { this.transferDecision(ovrNow, true); return; }
+    if (this.manual() && rng.chance(0.3)) this.transferDecision(ovrNow, false); // in manual mode extra offers can arrive any summer
   }
 
   private applyOffer(id: string): void {
@@ -627,14 +994,42 @@ export class CareerSim {
     this.transferIn = { from: clubName(this.club.ref), fee };
     this.fees += fee;
     this.club = c;
+    this.requestedMove = false;
     this.contractLeft = this.rng.int(4) + 2;
+    this.wageMult = 1;
+  }
+
+  /** Game-to-game highlights from the match logs. */
+  private highlights(): string[] {
+    const all = this.seasons.flatMap((s) => s.matchLog.map((m) => ({ ...m, season: s.season, age: s.age, club: s.club })));
+    const out: string[] = [];
+    const played = all.filter((m) => m.minutes > 0);
+    const first = played.find((m) => m.goals > 0);
+    if (first) out.push(`First senior goal at ${first.age} against ${first.opp} (${first.comp}).`);
+    const hat = played.filter((m) => m.goals >= 3);
+    if (hat.length) { const b = hat.reduce((x, y) => (y.goals > x.goals ? y : x)); out.push(`${hat.length} hat-trick${hat.length > 1 ? 's' : ''}; best: ${b.goals} goals vs ${b.opp} (${b.comp}, ${b.gf}-${b.ga}).`); }
+    const braces = played.filter((m) => m.goals === 2).length;
+    if (braces > 0) out.push(`${braces} braces.`);
+    let run = 0; let best = 0;
+    for (const m of played) { if (m.goals > 0) { run++; best = Math.max(best, run); } else run = 0; }
+    if (best >= 3) out.push(`Longest scoring run: ${best} games in a row.`);
+    const finals = played.filter((m) => m.round === 'Final');
+    const finalGoals = finals.reduce((a, m) => a + m.goals, 0);
+    if (finals.length) out.push(`${finals.length} finals played, ${finalGoals} goals in them, ${finals.filter((m) => m.result === 'W' || (m.result === 'D' && m.pens && Number(m.pens.split('-')[0]) > Number(m.pens.split('-')[1]))).length} won.`);
+    const rated = played.filter((m) => m.rating > 0 && m.minutes >= 60);
+    if (rated.length) { const b = rated.reduce((x, y) => (y.rating > x.rating ? y : x)); out.push(`Best game: ${b.rating.toFixed(1)} vs ${b.opp} (${b.comp}, age ${b.age}).`); }
+    const reds = played.reduce((a, m) => a + m.red, 0);
+    if (reds > 0) out.push(`${reds} red card${reds > 1 ? 's' : ''}.`);
+    const injured = this.seasons.reduce((a, s) => a + s.injuryDays, 0);
+    if (injured > 0) out.push(`${injured} days lost to injury over the career.`);
+    return out;
   }
 
   result(): CareerResult {
     const toArr = (m: Map<string, number>): { name: string; count: number }[] => [...m.entries()].map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
     const seasons = this.seasons;
     const sum = (f: (s: CareerSeason) => number): number => seasons.reduce((a, s) => a + f(s), 0);
-    const totals = { seasons: seasons.length, apps: sum((x) => x.apps), goals: sum((x) => x.goals), assists: sum((x) => x.assists), cleanSheets: sum((x) => x.cleanSheets), caps: this.caps, internationalGoals: this.intGoals, fees: this.fees };
+    const totals = { seasons: seasons.length, apps: sum((x) => x.apps), goals: sum((x) => x.goals), assists: sum((x) => x.assists), cleanSheets: sum((x) => x.cleanSheets), caps: this.caps, internationalGoals: this.intGoals, fees: this.fees, earnings: this.earningsTotal };
     const wins = this.ballon.filter((b) => b.rank === 1).length;
     const ballonDor = { wins, podiums: this.ballon.filter((b) => b.rank <= 3).length, top10: this.ballon.filter((b) => b.rank <= 10).length, best: this.ballon.length ? Math.min(...this.ballon.map((b) => b.rank)) : null, years: [...this.ballon] };
     const honours = toArr(this.honours);
@@ -646,19 +1041,23 @@ export class CareerSim {
     headline.push(`Peak ${this.peak.ovr} at ${this.peak.age}`);
     return {
       input: this.input, nation: { code: this.nation.code, name: this.nation.name }, potential: Math.round(this.potential), startOvr: Math.round(this.startOvr), seasons, totals,
-      peak: this.peak, retiredAge: this.lastRetiredAge, honours, awards: toArr(this.awards), ballonDor, tournaments: this.tournaments, clubs: this.clubsLog, headline,
+      peak: this.peak, retiredAge: this.lastRetiredAge, honours, awards: toArr(this.awards), ballonDor, tournaments: this.tournaments, clubs: this.clubsLog, highlights: this.highlights(),
+      decisions: this.decisionsLog, headline,
     };
   }
 }
 
-/** Runs a whole career. With `transfers: 'manual'` the optional `choose` callback answers each window (default: stay). */
-export function simulateCareer(input: CareerInput, onSeason?: (s: CareerSeason) => void, choose?: (w: TransferWindow) => string | null): CareerResult {
+/**
+ * Runs a whole career. Every decision is answered by `choose` (given the decision, returns an option id) when the input is
+ * 'manual', otherwise by the automatic default.
+ */
+export function simulateCareer(input: CareerInput, onSeason?: (s: CareerSeason) => void, choose?: (d: Decision) => string | null): CareerResult {
   const sim = new CareerSim(input);
-  for (let guard = 0; guard < 30 && !sim.finished; guard++) {
-    const s = sim.playSeason();
-    onSeason?.(s);
-    const w = sim.pendingWindow;
-    if (w) sim.decide(choose ? choose(w) : null);
+  for (let guard = 0; guard < 100000; guard++) {
+    const st = sim.step();
+    if (st.kind === 'done') return st.result;
+    if (st.kind === 'season') onSeason?.(st.season);
+    else if (st.kind === 'decision') sim.decide(choose ? choose(st.decision) : null);
   }
-  return sim.result();
+  throw new Error('career did not finish');
 }

@@ -20,4 +20,4 @@ export { parseDataPack, applyDataPack, DataPackError, type DataPack, type PackCl
 export { REAL_CLUB_NAMES } from './data/realClubNames';
 export { REAL_CLUBS_WITH_SQUADS } from './data/realSquads';
 export { competitionName, competitionShortName } from './world/compnames';
-export { simulateCareer, CareerSim, careerClubs, NATIONS, WORLD_CUP, BALLON_DOR, clubLevel, type CareerInput, type CareerResult, type CareerSeason, type Talent, type Nation, type TransferOffer, type TransferWindow, type TournamentResult } from './career';
+export { simulateCareer, CareerSim, careerClubs, NATIONS, WORLD_CUP, BALLON_DOR, clubLevel, type CareerInput, type CareerResult, type CareerSeason, type Talent, type Nation, type TransferOffer, type Decision, type DecisionOption, type DecisionKind, type CareerStep, type MatchLog, type TournamentResult } from './career';
