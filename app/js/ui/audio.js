@@ -60,6 +60,69 @@ export const sfx = {
   },
   month: () => tone(300, 0, 0.03, 'sine', 0.25),
 };
+// ---- generative ambient music: slow chords from a mood-dependent scale. Original, no samples; off by default (setting "music").
+const MOODS = {
+  calm: { root: 146.83, scale: [0, 2, 4, 7, 9, 12, 14], tempo: 5200, vol: 0.05 }, // D major pentatonic-ish
+  tense: { root: 146.83, scale: [0, 2, 3, 7, 8, 12, 14], tempo: 4200, vol: 0.055 }, // D minor with a flat sixth
+  war: { root: 110, scale: [0, 1, 3, 7, 8, 12], tempo: 3400, vol: 0.06 }, // low, phrygian
+};
+let musicOn = false;
+let mood = 'calm';
+let musicTimer = null;
+let step = 0;
+function pad(freq, dur, vol) {
+  if (!ctx) return;
+  const t = ctx.currentTime;
+  const o = ctx.createOscillator();
+  const o2 = ctx.createOscillator();
+  const f = ctx.createBiquadFilter();
+  const g = ctx.createGain();
+  o.type = 'triangle';
+  o2.type = 'sine';
+  o.frequency.value = freq;
+  o2.frequency.value = freq * 1.005;
+  f.type = 'lowpass';
+  f.frequency.value = 900;
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.linearRampToValueAtTime(vol, t + dur * 0.35);
+  g.gain.linearRampToValueAtTime(0.0001, t + dur);
+  o.connect(f);
+  o2.connect(f);
+  f.connect(g);
+  g.connect(master);
+  o.start(t);
+  o2.start(t);
+  o.stop(t + dur + 0.1);
+  o2.stop(t + dur + 0.1);
+}
+function musicTick() {
+  if (!ctx || !musicOn || document.hidden) return;
+  const m = MOODS[mood];
+  const deg = (n) => m.root * Math.pow(2, m.scale[n % m.scale.length] / 12);
+  const base = (step * 2) % m.scale.length;
+  const dur = (m.tempo / 1000) * 1.8;
+  pad(deg(base), dur, m.vol);
+  pad(deg(base + 2) * 2, dur, m.vol * 0.7);
+  if (step % 2 === 0) pad(deg(base + 4), dur, m.vol * 0.6);
+  if (mood === 'war' && step % 3 === 0) tone(m.root / 2, 0, 0.9, 'sine', 0.28);
+  step++;
+}
+export function setMusic(v) {
+  musicOn = !!v;
+  if (musicTimer) {
+    clearInterval(musicTimer);
+    musicTimer = null;
+  }
+  if (musicOn) {
+    musicTimer = setInterval(musicTick, MOODS[mood].tempo);
+    musicTick();
+  }
+}
+export function setMood(m) {
+  if (!MOODS[m] || m === mood) return;
+  mood = m;
+  if (musicOn) setMusic(true);
+}
 export function haptic(ms = 10, enabled = true) {
   if (!enabled) return;
   const wk = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.haptic; // iOS shell bridge

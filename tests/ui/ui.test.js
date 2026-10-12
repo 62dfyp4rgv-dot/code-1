@@ -609,3 +609,22 @@ test('national projects: the Projects tab lists them, starting one spends politi
   assert.deepEqual(page.errors, []);
   await page.context().close();
 });
+
+test('advisor: the HUD pill opens the advisor and an item navigates to the right screen', async () => {
+  const page = await newPage(browser);
+  await startGame(page, { scenario: 'quiet_decade', country: 'FRA' });
+  await page.evaluate(() => {
+    const c = window.__app.sim.player;
+    c.econ.infl = 0.11;
+    c.econ.reservesMonths = 0.4;
+    window.__app.renderHud(true);
+  });
+  await page.tap('.pill[data-open="advisor"]');
+  await page.waitForSelector('#sheet.open [data-act="advgo"]', { timeout: 3000 });
+  assert.match(await page.locator('#sheetBody').innerText(), /Inflation/);
+  await page.locator('#sheetBody [data-act="advgo"]').first().tap();
+  await page.waitForTimeout(300);
+  assert.match(await page.locator('#sheet h2').first().innerText(), /Economy|Inbox|Nation|Military|Research|Diplomacy/);
+  assert.deepEqual(page.errors, []);
+  await page.context().close();
+});

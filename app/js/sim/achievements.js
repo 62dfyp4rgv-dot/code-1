@@ -45,6 +45,36 @@ export const ACHIEVEMENTS = [
     test: (s, c) => c.econ.poverty <= s.victory.start.poverty * 0.5,
   },
   {
+    id: 'builder',
+    name: 'Nation Builder',
+    desc: 'Complete three national projects.',
+    test: (s, c) => (c.projects?.done.length || 0) >= 3,
+  },
+  {
+    id: 'grand_builder',
+    name: 'Grand Designer',
+    desc: 'Complete eight national projects.',
+    test: (s, c) => (c.projects?.done.length || 0) >= 8,
+  },
+  {
+    id: 'steady_hand',
+    name: 'Steady Hand',
+    desc: 'End a civil conflict inside your borders.',
+    test: (s) => s.counters.civilEnded >= 1,
+  },
+  {
+    id: 'web_of_friends',
+    name: 'Web of Friends',
+    desc: 'Hold alliances or pacts with four countries at once.',
+    test: (s, c, sim) => sim.alliesOf(sim.state.playerId).size >= 4,
+  },
+  {
+    id: 'closed_ledger',
+    name: 'Closed Ledger',
+    desc: 'Run a budget surplus for twelve months while debt is under 70% of GDP.',
+    test: (s, c) => (c.flags._surplus || 0) >= 12,
+  },
+  {
     id: 'long_peace',
     name: 'Long Peace',
     desc: 'Go 8 years without being at war.',
@@ -61,6 +91,7 @@ export function checkAchievements(sim) {
   st.ach = st.ach || {};
   const e = c.econ;
   c.flags._bb = e.deficit / e.gdp < 0.01 && (e.debtRatio ?? 9) < 0.6 ? (c.flags._bb || 0) + 1 : 0;
+  c.flags._surplus = e.deficit < 0 && (e.debtRatio ?? 9) < 0.7 ? (c.flags._surplus || 0) + 1 : 0;
   c.flags._miracle = e.growth > 0.05 ? (c.flags._miracle || 0) + 1 : Math.max(0, (c.flags._miracle || 0) - 1);
   if (c.gov.stability < 0.25) c.flags._lowStab = true;
   for (const a of ACHIEVEMENTS) {

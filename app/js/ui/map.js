@@ -444,7 +444,22 @@ export class MapView {
       c.putImageData(img, 0, 0);
     };
     const pack = (rgb, a = 255) => (a << 24) | (rgb[2] << 16) | (rgb[1] << 8) | rgb[0];
-    mk(this.layers.owner, (r) => pack(colors[st.reg.owner[r]]));
+    // gentle terrain shading (mountains darker, deserts warmer, ice paler) plus a faint per-region variation so regions read as places
+    const TINT = {
+      plains: [1, 1, 1],
+      forest: [0.9, 1, 0.9],
+      mountain: [0.8, 0.79, 0.82],
+      desert: [1.1, 1.04, 0.88],
+      jungle: [0.84, 1, 0.86],
+      arctic: [1.08, 1.1, 1.16],
+    };
+    const tinted = (r) => {
+      const base = colors[st.reg.owner[r]];
+      const t = TINT[sim.geo.regions[r].terrain] || TINT.plains;
+      const v = 0.965 + (0.07 * (((r * 2654435761) >>> 0) % 1000)) / 1000;
+      return [Math.min(255, base[0] * t[0] * v) | 0, Math.min(255, base[1] * t[1] * v) | 0, Math.min(255, base[2] * t[2] * v) | 0];
+    };
+    mk(this.layers.owner, (r) => pack(tinted(r)));
     const t = (this.occTick = this.occTick || 0);
     mk(this.layers.occ, (r) => {
       const o = st.reg.owner[r],

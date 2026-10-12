@@ -4365,6 +4365,187 @@
      "aiWeight": 0.8
     }
    ]
+  },
+  {
+   "id": "civil_talks",
+   "title": "Armed factions offer talks in {country}",
+   "text": "After months of fighting, intermediaries say several factions would sit down if the government shows flexibility.",
+   "when": [
+    [
+     "flag.civilWar",
+     "==",
+     1
+    ]
+   ],
+   "mtth": 6,
+   "cooldown": 10,
+   "severe": true,
+   "options": [
+    {
+     "text": "Negotiate a power-sharing deal",
+     "hint": "Slower than force, but it can end the fighting",
+     "effects": [
+      {
+       "stat": "gov.stability",
+       "add": 0.07
+      },
+      {
+       "stat": "gov.unrest",
+       "add": -0.06
+      },
+      {
+       "stat": "gov.legitimacy",
+       "add": -0.02
+      }
+     ],
+     "aiWeight": 1.1
+    },
+    {
+     "text": "Press the offensive",
+     "hint": "Risky: costs lives and goodwill",
+     "effects": [
+      {
+       "stat": "gov.unrest",
+       "add": 0.05
+      },
+      {
+       "devastate": 0.05
+      },
+      {
+       "stat": "gov.stability",
+       "add": -0.02
+      },
+      {
+       "mil": {
+        "readiness": -0.03
+       }
+      }
+     ],
+     "aiWeight": 0.8
+    }
+   ]
+  },
+  {
+   "id": "civil_displaced",
+   "title": "Displaced families pour out of fighting zones in {country}",
+   "text": "Camps are overflowing and aid groups warn of disease.",
+   "when": [
+    [
+     "flag.civilWar",
+     "==",
+     1
+    ]
+   ],
+   "mtth": 9,
+   "cooldown": 12,
+   "options": [
+    {
+     "text": "Open humanitarian corridors and accept aid",
+     "effects": [
+      {
+       "treasury": 0.003,
+       "pctGdp": true
+      },
+      {
+       "stat": "pop.health",
+       "add": 0.003
+      },
+      {
+       "stat": "dip.credibility",
+       "add": 2
+      },
+      {
+       "stat": "gov.approval",
+       "add": 0.01
+      }
+     ],
+     "aiWeight": 1
+    },
+    {
+     "text": "Seal the zone",
+     "effects": [
+      {
+       "stat": "pop.health",
+       "add": -0.01
+      },
+      {
+       "stat": "gov.unrest",
+       "add": 0.03
+      },
+      {
+       "stat": "dip.credibility",
+       "add": -3
+      }
+     ],
+     "aiWeight": 0.7
+    }
+   ]
+  },
+  {
+   "id": "civil_foreign_backers",
+   "title": "Foreign backers arm the rebels in {country}",
+   "text": "Intelligence reports shipments crossing the border.",
+   "when": [
+    [
+     "flag.civilWar",
+     "==",
+     1
+    ]
+   ],
+   "target": "rival",
+   "whenTarget": [
+    [
+     "target.rivalry",
+     ">",
+     35
+    ]
+   ],
+   "mtth": 14,
+   "cooldown": 18,
+   "options": [
+    {
+     "text": "Denounce and tighten the border",
+     "effects": [
+      {
+       "rel": {
+        "with": "target",
+        "op": -8,
+        "trust": -8
+       }
+      },
+      {
+       "stat": "gov.stability",
+       "add": 0.02
+      },
+      {
+       "mil": {
+        "readiness": 0.02
+       }
+      }
+     ],
+     "aiWeight": 1
+    },
+    {
+     "text": "Seek mediation through the Assembly",
+     "effects": [
+      {
+       "stat": "dip.influence",
+       "add": -4
+      },
+      {
+       "stat": "gov.stability",
+       "add": 0.03
+      },
+      {
+       "rel": {
+        "with": "target",
+        "op": 2
+       }
+      }
+     ],
+     "aiWeight": 1
+    }
+   ]
   }
  ]
 }

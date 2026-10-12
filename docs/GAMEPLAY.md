@@ -19,6 +19,15 @@ clean-energy priority, immigration, press freedom, surveillance, conscription. E
 expected effects first, and takes months to act (lags). Budget screen splits spending across categories; industrial focus biases sectors.
 Larger moves cost more PC, so plan which levers matter.
 
+## Advisor
+The ★ pill at the top (or More → Advisor) turns your numbers into a short list: urgent decisions, peace offers, war exhaustion, inflation, reserves, stability, elections, civil conflict, ideas for growth. Items are sorted by urgency and open the right screen when tapped. It only reads the game; it never acts for you.
+
+## World variation
+New game → *World variation*: **Real world** (default) starts from the 2025 snapshot; **Some** and **Wild** shuffle starting strengths, add booms, long slumps and new rivalries between neighbours. The same seed and setting always give the same world.
+
+## Civil conflict and shifting alliances
+A state that is unstable (< 30 %), restless (> 50 %) and strained can slide into a civil conflict: it drains output, devastates regions and pushes refugees into neighbouring countries until a settlement, exhaustion, or regime change ends it. Alliances and defence pacts lapse after a year in which the partners' opinions of each other stay negative.
+
 ## National projects
 Nation → Projects: 16 multi-year investments (high-speed rail, universal healthcare, grid modernisation, civil nuclear, space programme, cyber command, semiconductor fabs, irrigation, education reform, anti-corruption agency, border defence, blue-water navy, industrial zones, pandemic preparedness, carbon capture, digital government). Each needs conditions (development, research, corruption, water stress…), costs political capital to start and a share of GDP per year (borrowed), and grants permanent modifiers when finished. Two at a time; cancelling forfeits what was spent.
 

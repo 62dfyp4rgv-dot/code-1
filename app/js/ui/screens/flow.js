@@ -228,6 +228,15 @@ export function installFlow(App) {
             `<div class="li" data-c="${r.iso3}" style="${r.iso3 === draft.country ? 'background:color-mix(in srgb,var(--accent) 14%,transparent)' : ''}"><div class="grow"><div class="t">${esc(r.name)} ${r.iso3 === draft.country ? '✓' : ''}</div><div class="s">${tier(r)} · ${money(r.gdp_bn)} · ${people(r.pop_m)} · ${traits(r)}</div></div><div class="end" aria-label="difficulty ${rating(r)} of 5">${'●'.repeat(rating(r))}<span class="mu">${'●'.repeat(5 - rating(r))}</span></div></div>`,
         )
         .join('')}</div>
+      <div class="sec">World variation</div><div class="seg">${[
+        [0, 'Real world'],
+        [1, 'Some'],
+        [2, 'Wild'],
+      ]
+        .map(([k, l]) => `<button data-v="${k}" class="${(draft.variation || 0) === k ? 'on' : ''}">${l}</button>`)
+        .join(
+          '',
+        )}</div><div class="hint">Shuffles starting strengths, adds booms, slumps and rivalries. The same seed gives the same world.</div>
       <div class="sec">Difficulty</div><div class="seg">${['easy', 'normal', 'hard'].map((k) => `<button data-d="${k}" class="${draft.difficulty === k ? 'on' : ''}" style="text-transform:capitalize">${k}</button>`).join('')}</div><div class="slider-row"><div class="top"><span>AI aggression</span><b id="nagg">×${(draft.aggression ?? 1).toFixed(1)}</b></div><input class="slider" type="range" id="nagr" min="0.3" max="1.8" step="0.1" value="${draft.aggression ?? 1}" aria-label="AI aggression"></div><div class="hint">Difficulty scales AI aggression, event severity, and your political capital. Starting position difficulty (●) is shown per country.</div>
       <div class="row sp" style="margin-top:8px"><span class="mu">Seed ${draft.seed} (same seed + same choices = same world)</span><button class="btn small ghost" data-n="seed" style="white-space:nowrap;flex:none">Re-roll</button></div>
       <div class="btnrow"><button class="btn primary block" data-n="start" style="min-height:52px;font-size:1.05rem">Begin as ${esc(pick.name)}</button></div></div>`);
@@ -251,7 +260,7 @@ export function installFlow(App) {
       }, 200);
     };
     ov.onclick = (e) => {
-      const b = e.target.closest('[data-sc],[data-c],[data-d],[data-n]');
+      const b = e.target.closest('[data-sc],[data-c],[data-d],[data-v],[data-n]');
       if (!b) return;
       sfx.tap();
       if (b.dataset.sc) {
@@ -262,6 +271,9 @@ export function installFlow(App) {
         this.showNewGame();
       } else if (b.dataset.d) {
         draft.difficulty = b.dataset.d;
+        this.showNewGame();
+      } else if (b.dataset.v !== undefined) {
+        draft.variation = +b.dataset.v;
         this.showNewGame();
       } else if (b.dataset.n === 'seed') {
         draft.seed = Math.floor(Math.random() * 99999);
@@ -284,6 +296,7 @@ export function installFlow(App) {
           scenario: draft.scenario,
           player: draft.country,
           difficulty: draft.difficulty,
+          variation: draft.variation || 0,
           aiMult: draft.aggression ?? 1,
         });
         this.$('#overlay').classList.remove('on');
@@ -347,6 +360,10 @@ export function installFlow(App) {
       [
         'Your levers',
         'Use the tabs below: <b>Nation</b> for policy, <b>Economy</b> for budget and trade, <b>Diplomacy</b> and <b>Military</b>. Changes cost <b>political capital</b> (PC) and take months to bite.',
+      ],
+      [
+        'Ask your advisor',
+        'The <b>★</b> button at the top reads your numbers and lists what to look at next: inflation, reserves, wars, decisions, ideas for growth. Tap an item to jump to the right screen.',
       ],
       [
         'Win by building',

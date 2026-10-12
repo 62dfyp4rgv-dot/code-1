@@ -217,3 +217,65 @@ test('achievements unlock from real play and persist in the save', async () => {
   const back = deserialize(await getData(), serialize(sim));
   assert.ok(back.state.ach.first_policy !== undefined);
 });
+
+test('civil conflict: erupts only under strain, drains the economy, displaces people, and ends', async () => {
+  const { makeSim } = await import('../helpers.js');
+  const CIV = await import('../../app/js/sim/civil.js');
+  const sim = await makeSim({ seed: 4, player: 'FRA' });
+  const c = sim.country('MLI');
+  assert.equal(CIV.isCivilConflict(c), false);
+  for (let m = 0; m < 24; m++) sim.advanceMonths(1);
+  assert.equal(CIV.isCivilConflict(sim.country('NOR')), false, 'a stable rich democracy has no civil conflict');
+  // force the conditions
+  for (let m = 0; m < 30 && !CIV.isCivilConflict(c); m++) {
+    c.gov.stability = 0.15;
+    c.gov.unrest = 0.9;
+    sim.advanceMonths(1);
+  }
+  assert.equal(CIV.isCivilConflict(c), true, 'conflict eruption under strain');
+  assert.ok(c.flags.civilWar > sim.state.day);
+  for (let m = 0; m < 6; m++) {
+    c.gov.stability = Math.min(c.gov.stability, 0.2);
+    sim.advanceMonths(1);
+  }
+  assert.ok(
+    sim.regionsOf[c.idx].some((r) => sim.state.reg.dev[r] > 0.01),
+    'fighting devastates regions',
+  );
+  assert.ok(
+    c.mods.some((m) => m.k === 'gdp.shock' && m.src === 'civil conflict'),
+    'and drags on output',
+  );
+  // restoring calm ends it
+  for (let m = 0; m < 80 && CIV.isCivilConflict(c); m++) {
+    c.gov.stability = 0.8;
+    c.gov.approval = 0.7;
+    c.gov.unrest = 0.1;
+    sim.advanceMonths(1);
+  }
+  assert.equal(CIV.isCivilConflict(c), false, 'it ends once order returns');
+});
+
+test('alliance strain: a pact between partners who stay hostile for a year lapses', async () => {
+  const { makeSim } = await import('../helpers.js');
+  const DIP = await import('../../app/js/sim/diplomacy.js');
+  const sim = await makeSim({ seed: 8, player: 'FRA' });
+  const a = sim.geo.idOf.USA;
+  const b = sim.geo.idOf.JPN;
+  const N = sim.geo.N;
+  const pact = sim.state.treaties.find((t) => t.active && t.type === 'defense_pact' && t.parties.includes(a) && t.parties.includes(b));
+  assert.ok(pact, 'seeded USA-JPN pact');
+  for (let m = 0; m < 11; m++) {
+    sim.state.rel.op[a * N + b] = -20;
+    sim.state.rel.op[b * N + a] = -20;
+    DIP.monthlyStep(sim, sim.state.day);
+  }
+  assert.equal(pact.active, true, 'eleven bad months are survivable');
+  for (let m = 0; m < 3; m++) {
+    sim.state.rel.op[a * N + b] = -20;
+    sim.state.rel.op[b * N + a] = -20;
+    DIP.monthlyStep(sim, sim.state.day);
+  }
+  assert.equal(pact.active, false, 'a year of hostility ends the pact');
+  assert.equal(sim.alliesOf(a).has(b), false);
+});

@@ -97,6 +97,7 @@ export function initGovernment(sim, c, row) {
     termYears: type === 'hybrid' ? 5 : 4,
     nextElection: null,
     collapseTimer: 0,
+    civil: null,
     collapses: 0,
     lastElection: null,
     ruling: 0,
@@ -357,6 +358,10 @@ export function regimeChange(sim, c, day) {
   const w = opts.map((t, i) => (t === 'flawed_dem' ? 0.5 + dev : t === 'military' ? 1.2 - dev : 1));
   const nt = opts[rng.weighted(w)];
   g.type = nt;
+  if (g.civil) {
+    g.civil = null; // the old order's fighting ends with its fall
+    c.flags.civilWar = 0;
+  }
   g.collapses++;
   g.collapseTimer = 0;
   g.stability = 0.5;

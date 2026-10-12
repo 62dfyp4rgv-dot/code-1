@@ -64,3 +64,21 @@ test('AI countries start projects, and saves taken mid-project resume identicall
   const body = (s) => serialize(s, {}).split('\n').slice(2).join('\n');
   assert.equal(body(sim) === body(copy), true);
 });
+
+test('advisor: flags real problems, stays read-only, and points at screens', async () => {
+  const { advise } = await import('../../app/js/sim/advisor.js');
+  const { serialize } = await import('../../app/js/sim/save.js');
+  const sim = await makeSim({ seed: 12, player: 'DEU' });
+  const before = serialize(sim, {});
+  const items = advise(sim);
+  assert.ok(items.length >= 1);
+  assert.equal(serialize(sim, {}), before, 'advise() does not change the simulation');
+  const c = sim.country('DEU');
+  c.econ.infl = 0.12;
+  c.econ.reservesMonths = 0.5;
+  c.gov.stability = 0.2;
+  const ids = advise(sim).map((a) => a.id);
+  for (const want of ['infl', 'reserves', 'stab']) assert.ok(ids.includes(want), want);
+  assert.equal(advise(sim)[0].sev, 'bad', 'urgent items come first');
+  for (const a of advise(sim)) assert.ok(typeof a.open === 'string' && a.title && a.text);
+});

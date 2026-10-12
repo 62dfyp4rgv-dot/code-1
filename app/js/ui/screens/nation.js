@@ -160,7 +160,7 @@ export const nation = {
         );
     }
     if (tab === 'projects') {
-      const ps = PRJ.ensure(c);
+      const ps = c.projects || { active: [], done: [] };
       h += note(
         `National projects take years and cost a share of GDP each year (financed by borrowing). Each grants permanent bonuses when finished. You can run ${PRJ.MAX_ACTIVE} at a time; starting one costs political capital.`,
       );

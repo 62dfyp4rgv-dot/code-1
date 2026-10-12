@@ -8,6 +8,7 @@ export const more = {
   render(app) {
     const sim = app.sim;
     const items = [
+      ['advisor', 'star', 'Advisor', 'What to look at next, based on your numbers'],
       ['research', 'research', 'Research & technology', 'Queue projects and adopt known technology'],
       ['intel', 'intel', 'Intelligence & cyber', 'Networks, covert operations, digital defence'],
       ['inbox', 'inbox', 'Messages & timeline', 'Decisions, events and history'],
@@ -51,6 +52,7 @@ export const settings = {
     h +=
       sec('Feedback') +
       tg('sound', 'Sound effects', 'Synthesised UI sounds.') +
+      tg('music', 'Ambient music', 'Slow generative pads that darken in tense times and wars (needs sound on).') +
       tg('haptics', 'Haptics', 'Vibration on important alerts (where supported).') +
       tg('confirmDestructive', 'Confirm risky actions', 'Ask before declaring war or lifting protections.') +
       tg('tutorial', 'Show tips on new games', '');

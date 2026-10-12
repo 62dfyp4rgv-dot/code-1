@@ -61,6 +61,10 @@ All file names are under `app/js/sim/` unless noted. Quantities are in model uni
 - **Purpose**: ~80 data-driven events + world events. Conditions on stat paths, weighted mean-time-to-happen, options with whitelisted effects (stat, mod, price, rel, treasury, policy, flag, infra, devastate, treaty, newLeader, …), delayed follow-ups, pandemic SIR model.
 - **Invariants**: effects can only write whitelisted stats; AI resolves events with its own utility; player gets decision modals. **Tests**: validity of every event; emergence in stressed economy; pandemic.
 
+## 11a. Civil conflict (`civil.js`) and advisor (`advisor.js`)
+- **Civil conflict**: monthly; starts under strain (stability < 0.3, unrest > 0.5, not at war), intensity follows stability/approval; costs: timed `gdp.shock`, stability, infrastructure, regional devastation, displaced people to a neighbour; ends by calm (4 months), burn-out, 8 years, or regime collapse. Flag `civilWar` feeds three event definitions. Tested.
+- **Advisor**: pure function of the state (never mutates; tested) returning prioritised items with a screen hint; UI in `ui/screens/advisor.js` and the HUD pill.
+
 ## 11b. National projects (`projects.js`, `data/projects.json`)
 - **Purpose**: long-horizon investment choices. Inputs: country stats (conditions), political capital, `startProject`/`cancelProject` commands. Outputs: monthly extra borrowing (`cost × GDP / 12`) and permanent modifiers on completion. Frequency: monthly. Invariants: ≤ 2 active; no work while the market is closed or reserves negative; effects use known modifier keys (tested). AI: `ai/econ.js manageProjects` (needs fiscal space and PC).
 
@@ -69,7 +73,7 @@ All file names are under `app/js/sim/` unless noted. Quantities are in model uni
 - **Constraints**: acts only through `commands.js`; sees only `perception.js`. **Failure modes**: reactive rather than planning for multi-year campaigns (see KNOWN_ISSUES).
 
 ## 13. Victory, achievements, statistics (`victory.js`, `achievements.js`, `stats.js`)
-- 6 victory paths (prosperity, economic, diplomatic, scientific, stability & welfare, security), a standing index (percentile blend), grade (Triumph / Success / Qualified success / Muddled through) at the scenario end or on collapse; 15 achievements persisted in saves; monthly/yearly series for charts.
+- 6 victory paths (prosperity, economic, diplomatic, scientific, stability & welfare, security), a standing index (percentile blend), grade (Triumph / Success / Qualified success / Muddled through) at the scenario end or on collapse; 20 achievements persisted in saves; monthly/yearly series for charts.
 
 ## 14. Save/load (`save.js`) — see ARCHITECTURE.md §4. **Tests**: `determinism_save.test.js`.
 

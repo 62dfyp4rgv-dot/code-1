@@ -13,7 +13,7 @@ export function ensure(c) {
 export const projectById = (sim, id) => sim.data.projects.find((p) => p.id === id);
 
 export function status(sim, c, p) {
-  const st = ensure(c);
+  const st = c.projects || { active: [], done: [] }; // read-only: never creates state
   if (st.done.includes(p.id)) return { state: 'done' };
   const act = st.active.find((a) => a.id === p.id);
   if (act) return { state: 'active', progress: act.months / (p.years * 12), months: act.months };

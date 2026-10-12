@@ -743,6 +743,26 @@ export function monthlyStep(sim, day) {
       op[k] = clamp(Math.round(op[k] + clamp((target - op[k]) * 0.03, -2, 2)), -100, 100);
       tr[k] = clamp(Math.round(tr[k] + clamp((target * 0.6 - tr[k]) * 0.02, -1.5, 1.5)), -100, 100);
     }
+  // alliance strain: partners that stay hostile to each other for a year drift apart and the pact lapses
+  for (const t of st.treaties) {
+    if (!t.active || (t.type !== 'alliance' && t.type !== 'defense_pact')) continue;
+    const [a, b] = t.parties;
+    const lo = Math.min(op[a * N + b], op[b * N + a]);
+    t.strain = lo < 0 ? (t.strain || 0) + 1 : Math.max(0, (t.strain || 0) - 1);
+    if (t.strain >= 12) {
+      t.active = false;
+      rel(sim, a, b, -8, -8);
+      rel(sim, b, a, -8, -8);
+      sim._allyCache?.clear?.();
+      sim.log(
+        a,
+        'diplomacy',
+        `The ${t.type === 'alliance' ? 'alliance' : 'defence pact'} between ${cs[a].name} and ${cs[b].name} lapses after a year of bad blood`,
+        { a, b },
+        'high',
+      );
+    }
+  }
   // treaty expiry
   for (const t of st.treaties)
     if (t.active && t.end !== null && t.end <= day) {

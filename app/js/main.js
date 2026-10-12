@@ -10,6 +10,7 @@ import { intel, intelTarget } from './ui/screens/intel.js';
 import { inbox } from './ui/screens/inbox.js';
 import { stats, objectives } from './ui/screens/stats.js';
 import { more, settings, saves, help } from './ui/screens/more.js';
+import { advisor } from './ui/screens/advisor.js';
 import { sea, installFlow } from './ui/screens/flow.js';
 
 installFlow(App);
@@ -48,6 +49,7 @@ async function boot() {
     settings,
     saves,
     help,
+    advisor,
     sea,
   }))
     app.register(id, s);

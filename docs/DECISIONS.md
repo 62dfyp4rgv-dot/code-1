@@ -53,3 +53,6 @@ Ceasefires freeze the lines (occupation persists, truce forbids new fighting); r
 
 ## D-009 Changes after the third independent review (2026-10-12)
 In-app confirmation dialog instead of native `confirm()` (WKWebView-safe, testable; the nuclear confirmation cannot be disabled in settings); nuclear strike expends one arsenal point and has a 180-day cooldown; when a ceasefire expires the land one side still holds becomes its own (capitals excepted); belligerents under pressure receive outside aid from allies, guarantors and aligned democracies (keeps besieged states solvent; Ukraine's inflation loop disappeared); declared wars with no fighting for 15 months lapse into ceasefires (AI-only); client states for targets with ≤ 3 regions; AI territorial peace demands up to 4 regions when clearly winning; Projects tab layout fixed; touch targets 44 px.
+
+## D-010 More replay and clarity (2026-10-12)
+Advisor (read-only guidance on top of the existing systems), world-variation levels at new game (seeded, off by default), civil conflict as an internal-war mechanic with three events, alliance strain (pacts lapse after a year of mutual hostility), terrain shading on the map. Chosen because the reviewers found replay variety and new-player understanding the weakest points.

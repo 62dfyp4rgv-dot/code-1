@@ -123,3 +123,24 @@ test('every scenario boots, runs a year with finite state, and survives a save/l
     assert.equal(copy.state.day, sim.state.day, sc.id);
   }
 });
+
+test('world variation: deterministic per seed, off by default, and it really changes how the decade plays out', async () => {
+  const { loadDataNode } = await import('../../app/js/sim/data.js');
+  const { Sim } = await import('../../app/js/sim/world.js');
+  const data = await loadDataNode();
+  const make = (variation) => new Sim(data, { seed: 77, scenario: 'quiet_decade', player: 'BRA', variation });
+  const body = (s) => serialize(s, {}).split('\n').slice(2).join('\n');
+  const a = make(2);
+  const b = make(2);
+  assert.equal(body(a), body(b), 'same seed and level give the same world');
+  const base = make(0);
+  assert.notEqual(body(a), body(base));
+  for (const s of [a, base]) s.advanceMonths(60);
+  assert.deepEqual(findNonFinite(a.state), []);
+  const growth = (s) => s.state.countries.map((c) => c.econ.gdp / c.econ.gdp0);
+  const ga = growth(a);
+  const gb = growth(base);
+  let moved = 0;
+  for (let i = 0; i < ga.length; i++) if (Math.abs(ga[i] - gb[i]) > 0.08) moved++;
+  assert.ok(moved >= 40, 'many countries follow a visibly different path: ' + moved);
+});

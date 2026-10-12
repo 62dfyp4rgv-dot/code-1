@@ -48,10 +48,11 @@ Install as a PWA (Safari → Share → Add to Home Screen) or build the native s
   veto, sanctions, call-to-arms, proposals that show *why* a partner accepts or refuses.
 - Run intelligence: networks, 8 covert operations, exposure risk, cyber disruption; the world is seen through
   noisy, delayed perception (fog of war).
+- Ask the **advisor** (★ button) what to look at next; start a game in **Some/Wild world variation** for a different decade each seed; watch civil conflicts, shifting alliances and nuclear brinkmanship unfold.
 - Launch national projects (rail, healthcare, nuclear, space, cyber command, …): multi-year investments that cost GDP share and grant permanent bonuses; the AI does too.
 - Respond to ~80 authored events and world events (crises, pandemics, disasters, scandals) with branching decisions.
 - Play 6 scenarios (incl. Strait Crisis, The Long Drought, Debt Reckoning) and pursue 6 victory paths (prosperity, economic, diplomatic, scientific, stability/welfare, security) — conquest is
-  never required — plus 15 achievements.
+  never required — plus 20 achievements.
 - Autosave (double-buffered, IndexedDB with localStorage fallback), manual slots, export/import, recovery of an
   interrupted session.
 

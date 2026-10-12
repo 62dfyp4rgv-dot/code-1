@@ -24,6 +24,7 @@ import * as DIP from './diplomacy.js';
 import * as INT from './intel.js';
 import * as EVT from './events.js';
 import * as PRJ from './projects.js';
+import * as CIV from './civil.js';
 import * as AI from '../ai/ai.js';
 import * as CMD from './commands.js';
 import * as VIC from './victory.js';
@@ -150,6 +151,7 @@ export class Sim {
     MIL.initForces(this);
     this.lastFlows = [[], [], [], []];
     this.applyScenario(sc);
+    this.applyVariation(this.opts.variation || 0);
     this.initTradeBaseline();
     EVT.initEvents(this);
     AI.initAI(this);
@@ -252,6 +254,46 @@ export class Sim {
       }
     }
     for (const w of sc.wars || []) MIL.startScenarioWar(this, w);
+  }
+  // Optional seeded "what if" perturbation of the starting world (level 1 = some, 2 = wild): different growth paths, a few boom and
+  // trouble stories, and new rivalries between neighbours. Same seed and level give the same world.
+  applyVariation(level) {
+    if (!level) return;
+    const st = this.state;
+    const rng = this.rng;
+    const geo = this.geo;
+    const N = geo.N;
+    const FOREVER = 1e9;
+    const sigma = level === 1 ? 0.05 : 0.12;
+    const keys = ['tfp.agri', 'tfp.industry', 'tfp.services', 'tfp.tech', 'tfp.mining', 'tfp.utilities'];
+    for (const c of st.countries) {
+      // a country-wide level shift plus two sector-specific ones
+      const shift = rng.range(-1, 1) * sigma * 0.6;
+      for (const k of ['tfp.industry', 'tfp.services'])
+        addTimedMod(c, k, shift + rng.range(-1, 1) * sigma * 0.4, FOREVER, 'world variation');
+      addTimedMod(c, keys[rng.int(0, keys.length - 1)], rng.range(-1, 1) * sigma, FOREVER, 'world variation');
+    }
+    const stories = level === 1 ? 3 : 7;
+    for (let k = 0; k < stories; k++) {
+      const boom = st.countries[rng.int(0, N - 1)];
+      addTimedMod(boom, 'tfp.industry', 0.04 * level, st.day + 365 * 8, 'a boom');
+      addTimedMod(boom, 'invest.conf', 0.03, st.day + 365 * 8, 'a boom');
+      const bust = st.countries[rng.int(0, N - 1)];
+      addTimedMod(bust, 'tfp.services', -0.03 * level, st.day + 365 * 6, 'a long slump');
+      addTimedMod(bust, 'unrest.add', 0.01 * level, st.day + 365 * 6, 'a long slump');
+    }
+    let added = 0;
+    for (let tries = 0; tries < 400 && added < 8 * level; tries++) {
+      const i = rng.int(0, N - 1);
+      const nb = [...geo.neighbors[i]];
+      if (!nb.length) continue;
+      const j = nb[rng.int(0, nb.length - 1)];
+      if (st.rel.rivalry[i * N + j] > 0 || this.alliesOf(i).has(j)) continue;
+      const v = rng.range(35, 65);
+      st.rel.rivalry[i * N + j] = v;
+      st.rel.rivalry[j * N + i] = v;
+      added++;
+    }
   }
   initTradeBaseline() {
     const cs = this.state.countries;
@@ -557,6 +599,7 @@ export class Sim {
       researchStep(this, c, day);
     });
     yield* chunked((c) => politicsStep(this, c, day));
+    CIV.monthlyStep(this, day);
     MIL.monthlyStep(this, day);
     yield;
     INT.monthlyStep(this, day);

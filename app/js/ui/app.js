@@ -1,10 +1,11 @@
 // App controller: game loop (budgeted, generator-driven so monthly updates never block a frame), HUD, bottom sheet, toasts,
 // map interaction routing, autosave and screen registry.
 import { MapView, MODES } from './map.js';
+import { advisorCount } from './screens/advisor.js';
 import { icon } from './icons.js';
 import { esc, money, pct, monthYear, people, GOV_LABEL } from './fmt.js';
 import { loadSettings, saveSettings, autosave, store } from './storage.js';
-import { sfx, unlock, setSound, haptic } from './audio.js';
+import { sfx, unlock, setSound, setMusic, setMood, haptic } from './audio.js';
 import { serialize, peek } from '../sim/save.js';
 
 export const SPEEDS = [1, 4, 12, 40]; // simulated days per real second
@@ -91,6 +92,7 @@ export class App {
     r.dataset.reduce = s.reduceMotion ? '1' : '';
     r.style.setProperty('--fs', `${16 * s.textScale}px`);
     setSound(s.sound);
+    setMusic(s.music && s.sound);
     this.map.setTheme(r.dataset.theme);
     this.map.dpr && this.map.resize();
     saveSettings(s);
@@ -294,6 +296,8 @@ export class App {
     const dateStr = `${d.d} ${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][d.m - 1]} ${d.y}`;
     const warn = (v, a, b) => (v < a ? 'bad' : v < b ? 'warn' : 'good');
     const atWar = sim.atWar(st.playerId);
+    const advN = advisorCount(sim);
+    setMood(atWar ? 'war' : advN > 2 ? 'tense' : 'calm');
     const sp = ['×1', '×4', '×12', '×40'][this.speed];
     this.$('#hud').innerHTML = `
       <div class="hud-row">
@@ -305,6 +309,7 @@ export class App {
         <button class="iconbtn" data-act="inbox" aria-label="Messages">${icon('inbox')}${this.unread ? `<span class="badge">${Math.min(99, this.unread)}</span>` : ''}</button>
       </div>
       <div class="pills" role="list">
+        ${advisorPill(advN)}
         <span class="pill ${warn(c.gov.pc, 15, 35)}" role="listitem" title="Political capital">${icon('flag', '', 15)}<span class="k">PC</span> ${c.gov.pc.toFixed(0)}</span>
         <span class="pill" role="listitem" title="Diplomatic influence">${icon('diplomacy', '', 15)}<span class="k">Inf</span> ${c.dip.influence.toFixed(0)}</span>
         <span class="pill ${warn(c.gov.approval, 0.35, 0.5)}" role="listitem">${icon('people', '', 15)}<span class="k">Approval</span> ${(c.gov.approval * 100).toFixed(0)}%</span>
@@ -333,6 +338,7 @@ export class App {
         stats: 'more',
         objectives: 'more',
         settings: 'more',
+        advisor: 'more',
         more: 'more',
         trade: 'economy',
         dipTarget: 'diplomacy',
@@ -740,4 +746,8 @@ export class App {
     delete o.dataset.lock;
     this.refreshSheet(true);
   }
+}
+
+function advisorPill(n) {
+  return `<button class="pill ${n ? 'warn' : 'good'}" role="listitem" data-open="advisor" title="Advisor" aria-label="Advisor: ${n} item${n === 1 ? '' : 's'} need attention">${icon('star', '', 15)} ${n || 'OK'}</button>`;
 }
