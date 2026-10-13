@@ -12,6 +12,7 @@ import { eraForYear } from '../data/eras.js';
 import { summarizeMatch, rateMatch } from '../match/rating.js';
 import { damageFraction } from '../match/state.js';
 import { getMove } from '../match/moves.js';
+import { Universe } from '../universe/universe.js';
 
 export const CAREER_VERSION = 1;
 
@@ -32,6 +33,7 @@ export class Career {
     this.stats = new CareerStats(this.player.id);
     this.achievements = new AchievementEngine(ACHIEVEMENT_DEFS, this.memory, () => this.env());
     this.achievements.listeners.push((rec) => this._applyReward(rec));
+    this.universe = null;         // wrestling universe (roster, titles, AI); owned by the career so it saves with it
     this.activeMatch = null;      // saved MatchEngine state while a match is in progress
     this.pendingMatch = null;     // booking info for the match being played
     this.flags = {};
@@ -249,7 +251,7 @@ export class Career {
       v: this.version, id: this.id, seed: this.seed, rng: this.rng.state, startYear: this.startYear, mode: this.mode, day: this.day, era: this.era,
       player: this.player, memory: this.memory.toJSON(), achievements: this.achievements.toJSON(), activeMatch: this.activeMatch,
       pendingMatch: this.pendingMatch, flags: this.flags, notifications: this.notifications.slice(-30),
-      extra: this.extraToJSON ? this.extraToJSON() : undefined,
+      universe: this.universe ? this.universe.toJSON() : null,
     };
   }
 
@@ -263,7 +265,7 @@ export class Career {
     c.achievements.load(j.achievements);
     c.activeMatch = j.activeMatch || null; c.pendingMatch = j.pendingMatch || null; c.flags = j.flags || {};
     c.notifications = j.notifications || [];
-    c.extraFromJSON?.(j.extra);
+    c.universe = j.universe ? Universe.fromJSON(j.universe) : null;
     return c;
   }
 }

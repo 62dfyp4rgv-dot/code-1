@@ -179,6 +179,15 @@ const RULES = {
     const f = world.factions[ev.data.factionId];
     if (f) f.trust = Math.max(-100, (f.trust ?? 0) - 10);
   },
+  /** generic player decisions carry their world effects declaratively in data.effects */
+  decision(world, ev) {
+    const e = ev.data && ev.data.effects;
+    if (!e) return;
+    for (const r of e.rel || []) adjustRel(world, r.from, r.to, r, ev.id, ev.day);
+    for (const rv of e.rivalry || []) bumpRivalry(world, rv.a, rv.b, { heat: rv.heat, eventId: ev.id, day: ev.day });
+    for (const t of e.tags || []) addTag(world, t.a, t.b, t.tag, ev.id);
+    for (const o of e.obligations || []) addObligation(world, { id: `ob:${ev.id}:${o.kind}:${o.from}`, kind: o.kind, from: o.from, to: o.to, dueDay: ev.day + (o.inDays ?? 7), source: ev.id });
+  },
   obligation_resolved(world, ev) {
     const o = world.obligations.find((x) => x.id === ev.data.obligationId);
     if (o) { o.status = ev.data.how || 'done'; o.resolvedEvent = ev.id; o.resolvedDay = ev.day; }

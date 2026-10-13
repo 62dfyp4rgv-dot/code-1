@@ -166,13 +166,13 @@ export class AchievementEngine {
   _unlock(def, ev, res) {
     if (this.unlocked[def.id]) return null;
     const evidence = res.evidence.length ? res.evidence : [ev.id];
-    const explanation = `${def.desc} Requirement met: ${describeReq(def.req)} (progress ${res.value}/${res.target}).`;
+    const explanation = `${def.desc} Requirement met (${Math.floor(res.value)}/${res.target}).`;
     const { event, duplicate } = this.memory.record({
       key: `ach:${def.id}`, day: ev.day, date: ev.date, category: 'achievement', type: 'achievement_unlocked', participants: [this.memory.playerId],
       storyline: null, summary: `Achievement unlocked: ${def.name}`, refs: [...new Set(evidence)].filter((id) => this.memory.ledger.get(id)), importance: { common: 2, uncommon: 3, rare: 4, epic: 5, legendary: 5 }[def.rarity] || 3,
       data: { achievementId: def.id, name: def.name, rarity: def.rarity, explanation, value: res.value, target: res.target, trigger: ev.id, reward: def.reward || null },
     });
-    const rec = { id: def.id, name: def.name, rarity: def.rarity, day: ev.day, date: ev.date, trigger: ev.id, evidence: event.refs, explanation, event: event.id, reward: def.reward || null, duplicate };
+    const rec = { id: def.id, name: def.name, rarity: def.rarity, day: ev.day, date: ev.date, trigger: ev.id, evidence: event.refs, explanation, requirement: describeReq(def.req), event: event.id, reward: def.reward || null, duplicate };
     this.unlocked[def.id] = rec;
     for (const l of this.listeners) l(rec);
     // unlocking is itself an event (meta achievements)

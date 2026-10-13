@@ -207,7 +207,7 @@ export function listStanceOptions(state, defenderId, attack) {
       const mv = getMove(attack.moveId);
       const { p } = computeConnect(state, A.id, mv, D.id, s);
       o.avoidPct = Math.round((1 - p) * 100);
-      o.hint = `${o.avoidPct}% to stop it`;
+      o.hint = `${o.avoidPct}%`;
     }
     out.push(o);
   }

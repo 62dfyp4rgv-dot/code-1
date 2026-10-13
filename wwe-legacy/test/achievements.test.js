@@ -47,8 +47,8 @@ test('achievements unlock at the correct time (not before the requirement is met
   assert.ok(u, 'third consecutive win unlocks it');
   assert.deepEqual(u.evidence, [e1.event.id, e2.event.id, e3.event.id]);
   assert.equal(u.date, e3.event.date);
-  assert.match(u.explanation, /Requirement met/);
-  assert.match(u.explanation, /3\/3/);
+  assert.match(u.explanation, /Requirement met \(3\/3\)/);
+  assert.match(u.requirement, /consecutive match_result/);
   // unlock is a ledger event referencing the evidence
   const ue = c.memory.ledger.get(u.event);
   assert.equal(ue.type, 'achievement_unlocked');

@@ -1,0 +1,10 @@
+{
+  "name": "WWE Legacy: Ultimate Career RPG",
+  "short_name": "WWE Legacy",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0e1622",
+  "theme_color": "#0e1622",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
