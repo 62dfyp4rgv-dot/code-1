@@ -114,7 +114,7 @@ async function afterTime() {
 const A = {
   tab: ({ id }) => { S.tab = id; S.sub = null; S.sheet = null; render(); },
   openSub: ({ id }) => { S.sub = id; render(); },
-  closeSub: () => { S.sub = S.tab === 'home' && S.sub === 'prep' ? 'booking' : null; S.ui.promoResult = null; render(); },
+  closeSub: () => { S.sub = S.tab === 'home' && S.sub === 'prep' ? 'booking' : null; S.ui.promoResult = null; S.ui.apResult = null; render(); },
   newCareer: () => { S.create = defaultCreate(); S.screen = 'create'; render(); },
   toTitle: async () => { await refreshSlots(); S.screen = 'title'; render(); },
   cset: ({ k, v }) => { syncCreate(); S.create[k] = k === 'startYear' ? +v : v; if (k === 'background') S.create.bonus = {}; render(); },
@@ -245,6 +245,16 @@ const A = {
     } catch (e) { err(e); }
   },
   promoDone: () => { S.ui.promoResult = null; S.sub = null; render(); },
+  apStart: async ({ id }) => { try { S.g.startAppearance(id); await autosave(); render(); } catch (e) { err(e); } },
+  apAnswer: async ({ id }) => {
+    try {
+      const r = S.g.answerAppearance(id);
+      if (r && r.done) { S.ui.apResult = r; checkAchievementToasts(); await autosave(); }
+      render();
+    } catch (e) { err(e); }
+  },
+  apCancel: async () => { S.g.cancelAppearance(); await autosave(); render(); },
+  apDone: () => { S.ui.apResult = null; render(); },
   saveSlot: async ({ id }) => { try { await S.g.save(id); await refreshSlots(); toast(`Saved to ${id === 'auto' ? 'autosave' : 'slot ' + id.slice(-1)}.`); } catch (e) { err(e); } render(); },
   loadSlot: async ({ id }) => {
     try {

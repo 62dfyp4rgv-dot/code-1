@@ -207,13 +207,17 @@ export function bindCast(t, ctx, seedKey) {
 }
 
 // ------------------------------------------------------------------------------------------ text
+/** Capitalise the start of every sentence (slot values and pronoun tokens can land mid-sentence in lower case). */
+export function tidy(text) {
+  return text.replace(/(^|[.!?]["')\]]?\s+)([a-z])/g, (m, pre, ch) => pre + ch.toUpperCase()).replace(/ {2,}/g, ' ').replace(/\s+([,.;!?])/g, '$1');
+}
 export function render(str, bind, slots = {}, extra = {}) {
-  return String(str).replace(/\{([a-zA-Z0-9_]+)(?:\.([a-zA-Z0-9_]+))?\}/g, (m, a, b) => {
+  return tidy(String(str).replace(/\{([a-zA-Z0-9_]+)(?:\.([a-zA-Z0-9_]+))?\}/g, (m, a, b) => {
     if (b) { const o = bind[a]; if (!o || o[b] === undefined) throw new Error(`unresolved token ${m}`); return o[b]; }
     if (slots[a] !== undefined) return slots[a];
     if (extra[a] !== undefined) return extra[a];
     throw new Error(`unresolved token ${m}`);
-  });
+  }));
 }
 
 export function slotCombos(t, cap = 24) {
@@ -365,7 +369,16 @@ export class ScenarioEngine {
     st.n += 1;
     const instId = `${t.id}:${c.day}:${st.n}`;
     const text = (s) => render(s, bind, combo, extrasOf(c, ctx));
-    const memLines = t.memory ? memoryLines(c.memory, c.player.id, bind[t.memory.role].id, bind[t.memory.role].name, { speaker: 'other', max: t.memory.max ?? 2 }) : [];
+    const cooldown = { store: (c.flags.hookUse = c.flags.hookUse || {}), day: c.day, days: 60 };
+    let memLines = t.memory ? memoryLines(c.memory, c.player.id, bind[t.memory.role].id, bind[t.memory.role].name, { speaker: 'other', max: t.memory.max ?? 2, cooldown }) : [];
+    if (!t.memory) {
+      // any scene featuring a wrestler the player shares real history with may cite one remembered event (never invented)
+      for (const [role, who] of Object.entries(bind)) {
+        if (role.startsWith('__') || !who || !who.id || !c.universe.get(who.id)) continue;
+        const ml = memoryLines(c.memory, c.player.id, who.id, who.name, { speaker: 'other', max: 1, cooldown });
+        if (ml.length) { memLines = ml.map((l) => ({ ...l, role })); break; }
+      }
+    }
     const inst = {
       id: instId, templateId: t.id, category: t.category, title: text(t.title), major: !!t.major,
       body: t.body.map(text), memory: memLines, combo, cast: Object.fromEntries(Object.entries(bind).filter(([k]) => !k.startsWith('__')).map(([k, v]) => [k, v])),

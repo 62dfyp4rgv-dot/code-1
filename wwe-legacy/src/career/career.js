@@ -231,6 +231,7 @@ export class Career {
       this.day += 1;
       const p = this.player;
       p.fatigue = clamp(p.fatigue - 4, 0, 100);
+      if (this.day % 30 === 0) this.memory.record({ key: `decay:${this.day}`, day: this.day, category: 'world', type: 'world_decay', scope: 'world', canon: false, participants: [], summary: 'Time passes: old grudges cool and fear fades.', importance: 1, data: { days: 30 } });
       for (const inj of p.injuries) if (inj.daysLeft > 0) {
         inj.daysLeft -= 1;
         if (inj.daysLeft === 0) {

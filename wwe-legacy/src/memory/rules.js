@@ -3,7 +3,7 @@
 // no narration here - past events influence the future only through these rules.
 import { hash53 } from '../core/util.js';
 import {
-  adjustRel, addTag, recordBetrayal, reconcile, bumpRivalry, addPromise, addObligation, getRel, getRivalry, pairKey,
+  adjustRel, addTag, recordBetrayal, reconcile, bumpRivalry, addPromise, addObligation, getRel, getRivalry, pairKey, decayWorld,
 } from './world.js';
 
 const jitter = (ev, lo, hi) => lo + (parseInt(hash53(ev.id), 36) % (hi - lo + 1));
@@ -11,7 +11,8 @@ const jitter = (ev, lo, hi) => lo + (parseInt(hash53(ev.id), 36) % (hi - lo + 1)
 /** Standard promise kinds and how an event resolves them. Returns 'kept' | 'broken' | null */
 const PROMISE_JUDGES = {
   win_match(p, ev, ctx) {
-    if (ev.type !== 'match_result' || !ev.participants.includes(p.target)) return null;
+    // the target must have been an OPPONENT: winning a tag match alongside them proves nothing
+    if (ev.type !== 'match_result' || !(ev.data.opponents || []).includes(p.target)) return null;
     if (p.by !== ctx.playerId) return null;
     return ev.data.result === 'win' ? 'kept' : ev.data.result === 'loss' ? 'broken' : null;
   },
@@ -64,7 +65,8 @@ const RULES = {
       const heat = 6 + (d.titleOnLine ? 8 : 0) + (dirty ? 10 : 0) + (d.rating >= 4 ? 4 : 0);
       const rv = bumpRivalry(world, me, o, { heat, eventId: ev.id, day: ev.day });
       rv.matches += 1;
-      if (win) rv.wins[me] = (rv.wins[me] || 0) + 1; else if (loss) rv.wins[o] = (rv.wins[o] || 0) + 1;
+      // credit only the wrestler who actually won (a triple threat lost to C must not credit A and B alike)
+      if (win) rv.wins[me] = (rv.wins[me] || 0) + 1; else if (loss && d.winner === o) rv.wins[o] = (rv.wins[o] || 0) + 1;
       if (win) {
         adjustRel(world, o, me, { respect: d.clean ? 4 : 1, fear: d.dominant ? 4 : 1 }, ev.id, ev.day);
         // repeated clean defeats: the opponent studies the player and eventually becomes reluctant
@@ -189,6 +191,19 @@ const RULES = {
     for (const o of e.obligations || []) addObligation(world, { id: `ob:${ev.id}:${o.kind}:${o.from}`, kind: o.kind, from: o.from, to: o.to, dueDay: ev.day + (o.inDays ?? 7), source: ev.id });
   },
   scenario_choice(world, ev) { RULES.decision(world, ev); },
+  /** interviews, podcasts and press conferences: declarative effects plus any guarantee made on air */
+  interview(world, ev, ctx) {
+    RULES.decision(world, ev);
+    // owning a broken promise on air settles it: it stops being thrown back at the player
+    for (const pid of ev.data.acknowledged || []) { const pr = world.promises.find((x) => x.id === pid); if (pr) pr.acknowledged = ev.id; }
+    for (const c of ev.data.promises || []) {
+      addPromise(world, { id: `pr:${ev.id}:${c.kind}`, by: ctx.playerId, kind: c.kind, target: c.target || null, params: c.params || {}, text: c.text, madeEvent: ev.id, madeDay: ev.day, deadlineDay: c.deadlineDay ?? null });
+    }
+  },
+  podcast(world, ev, ctx) { RULES.interview(world, ev, ctx); },
+  /** slow decay of non-grudge feelings, recorded as a monthly world event so replay reproduces it exactly */
+  world_decay(world, ev) { decayWorld(world, ev.data.days || 30); },
+  press_conference(world, ev, ctx) { RULES.interview(world, ev, ctx); },
   obligation_resolved(world, ev) {
     const o = world.obligations.find((x) => x.id === ev.data.obligationId);
     if (o) { o.status = ev.data.how || 'done'; o.resolvedEvent = ev.id; o.resolvedDay = ev.day; }

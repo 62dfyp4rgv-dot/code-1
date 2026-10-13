@@ -1,0 +1,14 @@
+{
+  "note": "Reviewers are fresh Claude subagents (same underlying model family as the author, separate contexts, no access to author reasoning). They are independent in context, not in model. Scores are their own, unedited.",
+  "rounds": [
+    {
+      "round": 2,
+      "scores": { "narrativeQuality": 4, "memoryConsistency": 6, "mobileUsability": 6 },
+      "reviewers": [
+        { "area": "narrative", "kind": "agent", "scores": { "narrativeQuality": 4, "variety": 3, "voice": 4.5, "callbacks": 3.5 }, "errorsFound": 24, "summary": "Templated commentary/promos with repeated lines; broken 'you, you' callback grammar; one failed-promise hook reused everywhere." },
+        { "area": "memory", "kind": "agent", "scores": { "memoryConsistency": 6, "invention_risk": 6, "player_visibility": 7 }, "claimsVerified": 54, "claimsFalse": 13, "summary": "Ledger layer solid; dialogue/record-book semantics layered on top had false 'last time was controversial' claims, leaking broken promises, double-resolving promises, h2h disagreement, no world-vs-ledger check on load." },
+        { "area": "mobile", "kind": "agent", "scores": { "mobileUsability": 6, "clarity": 5.5, "hierarchy": 5.5, "matchScreen": 5.5, "visualPolish": 4.5 }, "summary": "Legible thumb-friendly prototype with flat visual identity; toast covers controls; cryptic scoreboard; wall of equal cards on match screen." }
+      ]
+    }
+  ]
+}

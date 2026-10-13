@@ -184,6 +184,18 @@ await shot('16-promo');
 const promoState = await state(() => ({ promos: window.__S.g.career.stats.s.promos, open: window.__S.g.career.memory.world.promises.filter((p) => p.status === 'open').length }));
 check('promo recorded and promise remembered', promoState.promos === 1 && promoState.open >= 1, JSON.stringify(promoState));
 
+// interview through the UI: every answer tap, memory-grounded questions, result recorded
+await click('[data-action=promoDone]');
+await click('[data-action=tab][data-id=more]'); await click('[data-action=openSub][data-id=media]');
+await click('[data-action=apStart][data-id=interview]'); await page.waitForSelector('#appearance');
+await noOverflow('interview question'); await shot('16b-interview');
+let apSteps = 0;
+while (await page.locator('#ap-answers').count() && apSteps++ < 8) { await page.locator('#ap-answers [data-action=apAnswer]').nth(apSteps % 4).click(); await page.waitForTimeout(60); }
+await page.waitForSelector('#appearance-result'); await noOverflow('interview result'); await shot('16c-interview-result');
+const apState = await state(() => ({ interviews: window.__S.g.career.stats.s.interviews, ev: window.__S.g.career.memory.ledger.ofType('interview').length }));
+check('interview played through the UI and recorded', apState.interviews === 1 && apState.ev === 1 && apSteps === 3, JSON.stringify({ ...apState, apSteps }));
+await click('#btn-ap-done');
+
 // Royal Rumble: fast-forward the calendar (test hook), then play it through the real UI
 await page.evaluate(() => {
   const g = window.__S.g; let n = 0;

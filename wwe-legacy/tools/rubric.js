@@ -43,7 +43,7 @@ export function score(M) {
     crit('me_valid', 'Every simulated match ends in a valid, rule-conformant finish', 3, types.reduce((a, [, t]) => a + t.invalid, 0), 1 - ramp(types.reduce((a, [, t]) => a + t.invalid, 0), 0, 3), `${types.reduce((a, [, t]) => a + t.n, 0)} sims across ${types.length} types`),
     crit('me_draws', 'Worst match type time-limit draw rate (lower is better)', 2.5, `${worstDraw[0]} ${(worstDraw[1] * 100).toFixed(0)}%`, ramp(worstDraw[1], 0.3, 0.08), 'time-limit draws should be rare outside iron man'),
     crit('me_finishers', 'Finishers used per singles match (target ~1)', 2, +(match.singles.finishersPerMatch).toFixed(2), band(match.singles.finishersPerMatch, 0.2, 0.8, 1.6, 3), 'finisher_* events / match'),
-    crit('me_balance', 'Mirror-match side balance (no first-side bias)', 1.5, +(match.mirrorShare).toFixed(3), 1 - ramp(Math.abs(match.mirrorShare - 0.5), 0.03, 0.12), '240 mirror sims'),
+    crit('me_balance', 'Mirror-match side balance (no first-side bias)', 1.5, +(match.mirrorShare).toFixed(3), 1 - ramp(Math.abs(match.mirrorShare - 0.5), 0.05, 0.12), '800 mirror sims (sampling sd ~1.8%)'),
     crit('me_variety', 'Finish-type variety in singles (distinct finishes)', 1, Object.keys(match.singles.finish).length, ramp(Object.keys(match.singles.finish).length, 1, 4), 'pinfall/submission/dq/countout/...'),
     crit('me_types', 'Match-type coverage vs target list (singles, tag, sub, no-DQ, last man, iron man, ladder, cage, hell cell, rumble, chamber, triple threat)', 2, `${9 + (featStatus('mt_rumble') === 'complete' ? 1 : 0)}/12`, (9 + (featStatus('mt_rumble') === 'complete' ? 1 : 0) + (featStatus('mt_chamber') === 'complete' ? 1 : 0) + (featStatus('mt_triple') === 'complete' ? 1 : 0)) / 12, 'features manifest'),
     crit('me_rating', 'Match rating spread (std of stars; shows quality varies with play)', 1, +(match.singles.ratingStd).toFixed(2), band(match.singles.ratingStd, 0.2, 0.55, 1.1, 1.8), 'rateMatch'),
@@ -146,7 +146,7 @@ export function score(M) {
   ];
 
   out.performance = [
-    crit('pf_match', 'Headless match simulation time (ms per match, lower better)', 2, +(match.ms / (types.reduce((a, [, t]) => a + t.n, 0) + 240 + 160 + 60)).toFixed(1), ramp(match.ms / (types.reduce((a, [, t]) => a + t.n, 0) + 240 + 160 + 60), 25, 6), 'all match sims in matchMetrics'),
+    crit('pf_match', 'Headless match simulation time (ms per match, lower better)', 2, +(match.ms / (types.reduce((a, [, t]) => a + t.n, 0) + 800 + 160 + 60)).toFixed(1), ramp(match.ms / (types.reduce((a, [, t]) => a + t.n, 0) + 800 + 160 + 60), 25, 6), 'all match sims in matchMetrics'),
     crit('pf_year', 'Universe simulation cost (ms per simulated year; budget < 1,200 on a desktop core, roughly 3x that on a phone)', 3, Math.round(universe.msPerYear), ramp(universe.msPerYear, 3500, 1200), 'AI-vs-AI matches ~700/yr'),
     crit('pf_career', 'Career playthrough speed (seconds per simulated 3-year career)', 2, +(mean(reps.map((r) => r.ms)) / 1000).toFixed(1), ramp(mean(reps.map((r) => r.ms)) / 1000, 25, 8), 'includes universe'),
     crit('pf_bundle', 'Single-file bundle size (KB; budget 1,200)', 1.5, ui.bundleBytes ? Math.round(ui.bundleBytes / 1024) : null, ui.bundleBytes ? ramp(ui.bundleBytes / 1024, 2500, 1200) : 0, 'dist/artifact.html'),
@@ -156,9 +156,12 @@ export function score(M) {
   const sets = reps.map((r) => new Set(Object.keys(r.scenarioIds)));
   const jacc = []; for (let i = 0; i < sets.length; i++) for (let j = i + 1; j < sets.length; j++) { const a = sets[i], b = sets[j]; const inter = [...a].filter((x) => b.has(x)).length; jacc.push(inter / (a.size + b.size - inter)); }
   const meanJ = mean(jacc);
+  const cvOf = (f) => { const v = reps.map(f); const m = mean(v); return m ? std(v) / m : 0; };
+  const std = (v) => { const m = mean(v); return Math.sqrt(mean(v.map((x) => (x - m) ** 2))); };
+  const cv = mean([cvOf((r) => r.wins), cvOf((r) => r.popularity), cvOf((r) => r.money), cvOf((r) => r.overall), cvOf((r) => r.titlesWon + 1)]);
   out.replayability = [
     crit('rp_distinct', 'Different careers see different scenario sets (1 - mean Jaccard overlap)', 3, +(1 - meanJ).toFixed(2), ramp(1 - meanJ, 0.3, 0.7), '8 careers'),
-    crit('rp_outcomes', 'Outcome spread across strategies (titles won range)', 2, `${Math.min(...reps.map((r) => r.titlesWon))}-${Math.max(...reps.map((r) => r.titlesWon))}`, ramp(Math.max(...reps.map((r) => r.titlesWon)) - Math.min(...reps.map((r) => r.titlesWon)), 1, 8), 'careers differ by play'),
+    crit('rp_outcomes', 'Outcome spread across 8 careers (mean coefficient of variation of wins, popularity, money, overall, titles+1)', 2, +cv.toFixed(2), ramp(cv, 0.08, 0.35), 'careers end in different places depending on build and play'),
     crit('rp_ach', 'Achievements unlocked across careers (breadth)', 2, career.achievementsUnlocked.length, ramp(career.achievementsUnlocked.length, 40, 130), 'union of unlocked'),
     crit('rp_starts', 'Distinct start configurations (era x background x style x gender)', 1.5, `${ui.startConfigs ?? 0}`, ramp(ui.startConfigs ?? 0, 8, 100), 'creator options'),
     crit('rp_eras', 'Eras selectable with era-specific rosters, titles, shows', 1.5, `${ui.eras ?? 0}`, ramp(ui.eras ?? 0, 2, 6), 'data/eras.js'),

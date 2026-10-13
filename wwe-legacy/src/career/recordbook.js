@@ -3,6 +3,13 @@
 import { inspectStat } from './stats.js';
 import { getRivalry } from '../memory/world.js';
 
+/** the N consecutive match results that end at `endId` (the whole streak, not just its last match) */
+function streakEvidence(ledger, endId, n) {
+  if (!endId || !n) return [];
+  const end = ledger.get(endId);
+  if (!end) return [];
+  return ledger.query({ types: ['match_result'], scope: 'player', maxSeq: end.seq }).slice(-n).map((e) => e.id);
+}
 const pct = (a, b) => (b ? Math.round((a / b) * 1000) / 10 : 0);
 
 export function buildRecordBook(career, nameOf = (x) => x) {
@@ -45,12 +52,12 @@ export function buildRecordBook(career, nameOf = (x) => x) {
   });
   sections.push({
     id: 'streaks', title: 'Streaks & Rivals', items: [
-      item('Longest winning streak', s.streak.bestWin, s.streak.bestWinEnd ? [s.streak.bestWinEnd] : []),
-      item('Longest losing streak', s.streak.bestLoss, s.streak.bestLossEnd ? [s.streak.bestLossEnd] : []),
+      item('Longest winning streak', s.streak.bestWin, streakEvidence(ledger, s.streak.bestWinEnd, s.streak.bestWin)),
+      item('Longest losing streak', s.streak.bestLoss, streakEvidence(ledger, s.streak.bestLossEnd, s.streak.bestLoss)),
       item('Current streak', s.streak.current > 0 ? `${s.streak.current}W` : s.streak.current < 0 ? `${-s.streak.current}L` : '—', s.streak.current ? ledger.query({ types: ['match_result'], scope: 'player', newestFirst: true, limit: Math.abs(s.streak.current) }).map((e) => e.id) : []),
       item('Most frequent opponent', opp[0] ? `${nameOf(opp[0][0])} (${opp[0][1].matches})` : '—', opp[0] ? ledger.query({ types: ['match_result'], allParticipants: [me, opp[0][0]] }).map((e) => e.id) : []),
       item('Greatest rival', rivals[0] ? `${nameOf(rivals[0].other)} (heat ${Math.round(rivals[0].r.heat)}, ${rivals[0].r.matches} matches)` : '—', rivals[0] ? rivals[0].r.events : []),
-      item('Best tag-team partner', partners[0] ? `${nameOf(partners[0][0])} (${partners[0][1].wins} wins together)` : '—', partners[0] ? ledger.query({ types: ['match_result'], allParticipants: [me, partners[0][0]], where: { 'data.result': 'win' } }).map((e) => e.id) : []),
+      item('Best tag-team partner', partners[0] ? `${nameOf(partners[0][0])} (${partners[0][1].wins} wins together)` : '—', partners[0] ? ledger.query({ types: ['match_result'], allParticipants: [me, partners[0][0]], where: { 'data.result': 'win' } }).filter((e) => (e.data.partners || []).includes(partners[0][0])).map((e) => e.id) : []),
     ],
   });
   sections.push({
@@ -58,7 +65,7 @@ export function buildRecordBook(career, nameOf = (x) => x) {
       item('Highest-rated match', s.bestMatch ? `${s.bestMatch.rating}★ vs ${(s.bestMatch.opponents || []).map(nameOf).join(' & ')}` : '—', s.bestMatch ? [s.bestMatch.id] : []),
       item('Highest-rated promo', s.bestPromo ? `${s.bestPromo.quality}/100` : '—', s.bestPromo ? [s.bestPromo.id] : []),
       item('Highest-rated interview', s.bestInterview ? `${s.bestInterview.quality}/100` : '—', s.bestInterview ? [s.bestInterview.id] : []),
-      item('Best calendar year', years[0] ? `${years[0][0]} (${years[0][1].wins}-${years[0][1].losses})` : '—', years[0] ? ledger.query({ types: ['match_result'], fromDay: 0, scope: 'player' }).filter((e) => e.date.startsWith(years[0][0])).map((e) => e.id).slice(0, 50) : []),
+      item('Best calendar year', years[0] ? `${years[0][0]} (${years[0][1].wins}-${years[0][1].losses})` : '—', years[0] ? ledger.query({ types: ['match_result'], fromDay: 0, scope: 'player' }).filter((e) => e.date.startsWith(years[0][0])).map((e) => e.id) : []),
       item('Most successful PLE', bestPle ? `${bestPle[0]} (${bestPle[1].wins}-${bestPle[1].matches - bestPle[1].wins})` : '—', bestPle ? bestPle[1].ids : []),
     ],
   });

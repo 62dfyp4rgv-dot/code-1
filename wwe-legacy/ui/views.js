@@ -115,7 +115,7 @@ export function home(S) {
   else if (today) action = `<button class="btn primary" data-action="bookTonight" id="btn-book">Book Tonight's Match</button>`;
   const held = g.universe.titlesOf(p.id);
   const timeCard = ph === 'home' && !h.scenario ? `<div class="card"><div class="row spread"><h2>${today ? 'Show day' : 'Before the show'}</h2>${today ? '' : `<span class="pill">${next ? `${next.inDays} day${next.inDays === 1 ? '' : 's'}` : ''}</span>`}</div>
-      ${today ? '<p class="muted">Training is off until after tonight\'s show.</p>' : `<div class="grid2">${Object.entries(TRAINING).map(([id, t]) => `<button class="btn small" data-action="train" data-id="${id}"><span class="t">${esc(t.label)}</span></button>`).join('')}</div>
+      ${today ? '<p class="muted">Training is off until after tonight\'s show.</p>' : `<div class="grid2">${Object.entries(TRAINING).map(([id, t]) => `<button class="btn small" data-action="train" data-id="${id}"><span class="t">${esc(t.label)}<small class="fx">+${cap(t.attr)}</small></span></button>`).join('')}</div>
       <div class="row"><button class="btn grow" data-action="rest" id="btn-rest">Rest a day</button><button class="btn grow" data-action="advance" id="btn-advance">Go to the show</button></div>`}</div>` : '';
   const injuries = h.status.injuries;
   return `<main class="screen">
@@ -175,13 +175,13 @@ function prep(S) {
 // ---------------------------------------------------------------- match
 const POSNAME = { standing: 'Standing', grounded: 'Down', corner: 'Cornered', ropes: 'On ropes', apron: 'Apron', outside: 'Floor', top: 'Top rope' };
 const FAMILY = { strike: 'a STRIKE', grapple: 'a GRAPPLE', power: 'a POWER move', aerial: 'an AERIAL attack', sub: 'a HOLD', special: 'a BIG MOVE' };
-const PARTS = [['head', 'HD'], ['torso', 'TS'], ['arms', 'AR'], ['legs', 'LG']];
+const PARTS = [['head', 'Head'], ['torso', 'Torso'], ['arms', 'Arms'], ['legs', 'Legs']];
 
 function fighterBoard(f, right) {
   return `<div class="fighter ${right ? 'r' : ''}">
-    <div class="meter sta"><span>STA</span>${bar(f.stamina, f.maxStamina)}</div>
-    <div class="meter mom"><span>MOM</span>${bar(f.momentum)}</div>
-    <div class="dmg">${PARTS.map(([k, l]) => `<b title="${cap(k)} damage ${f.dmg[k]}"><i style="width:${f.dmg[k]}%"></i><span>${l}</span></b>`).join('')}</div>
+    <div class="meter sta"><span title="Stamina">STA <span class="val">${Math.round(f.stamina)}</span></span>${bar(f.stamina, f.maxStamina)}</div>
+    <div class="meter mom"><span title="Momentum">MOM <span class="val">${Math.round(f.momentum)}</span></span>${bar(f.momentum)}</div>
+    <div class="dmg" aria-label="Damage by body part">${PARTS.map(([k, l]) => `<b title="${cap(k)} damage ${Math.round(f.dmg[k])}"><i style="width:${Math.max(f.dmg[k] > 0 ? 8 : 0, f.dmg[k])}%"></i><span>${l}</span><em>${Math.round(f.dmg[k])}</em></b>`).join('')}</div>
     <div class="posrow"><span class="pill" style="color:var(--mat-ink)">${POSNAME[f.pos] || f.pos}</span>${f.dazed ? '<span class="pill" style="color:var(--brass-fill)">Dazed</span>' : ''}</div></div>`;
 }
 const feedClass = (l, me) => (/^(finisher_(connected|reversed)|pin_win|submission_win|match_end|knockout|objective)/.test(l.type) ? 'gold' : /^(pin_kickout|dq|warning|finisher|move_reversed|hot_tag|tag|injury)/.test(l.type) ? 'hot' : l.actor === me ? 'me' : '');
@@ -201,6 +201,7 @@ export function match(S) {
     <div class="board" id="board" aria-live="polite">
       <div class="names"><div class="nm">${esc(mv.me.name)}</div><div class="clock num">${mmss(mv.time)}<small>${esc(mv.phase)} · ${mmss(mv.timeLimit)}</small></div><div class="nm r">${esc(mv.opp.name)}</div></div>
       <div class="grid2" style="gap:12px">${fighterBoard(mv.me, false)}${fighterBoard(mv.opp, true)}</div>
+      <div class="legend">STA stamina · MOM momentum · red fill = damage taken</div>
       <div class="heat"><span>Crowd</span>${bar(mv.crowd)}<span>${mv.referee === 'watching' ? 'Ref watching' : mv.referee === 'down' ? 'REF DOWN' : 'Ref distracted'}</span></div>
       ${mv.rules.tag && mv.team ? `<div class="posrow"><span class="eyebrow" style="color:var(--mat-ink)">Legal: ${esc(mv.team.mine.find((x) => x.legal)?.name || '')}</span><span class="eyebrow" style="color:var(--mat-ink)">Legal: ${esc(mv.team.theirs.find((x) => x.legal)?.name || '')}</span></div>` : ''}
       ${mv.rules.ironMan ? `<div class="posrow"><b class="num">Falls ${mv.falls[mv.mySide]}</b><b class="num">Falls ${mv.falls[1 - mv.mySide]}</b></div>` : ''}
@@ -220,7 +221,7 @@ function decisionPanel(S, d, mv) {
     head = `<div class="prompt"><div class="eyebrow">Your move · ${mmss(mv.time)}</div><h2>${mv.me.pos === 'grounded' ? 'You are down' : 'Take control'}</h2></div>`;
     const groups = GROUPS.filter((gr) => all.some((o) => o.group === gr));
     const cur = S.ui.group || 'Top';
-    chips = `<div class="chips" role="tablist">${['Top', ...groups].map((gr) => `<button class="chip ${cur === gr ? 'on' : ''}" data-action="group" data-id="${gr}" role="tab">${gr}</button>`).join('')}</div>`;
+    chips = `<div class="chips wrap" role="tablist">${['Top', ...groups].map((gr) => `<button class="chip ${cur === gr ? 'on' : ''}" data-action="group" data-id="${gr}" role="tab">${gr}</button>`).join('')}</div>`;
     shown = cur === 'Top' ? all.filter((o) => o.featured) : all.filter((o) => o.group === cur);
     if (!shown.length) shown = all.filter((o) => o.featured);
   } else if (d.kind === 'defense') {
@@ -376,7 +377,24 @@ function relationships(S) {
     ${rels.map((r) => { const o = r.a === me ? r.b : r.a; const i = r.a === o ? 0 : 1; return `<div class="card"><div class="row spread"><h3>${esc(S.g.universe.get(o)?.name || o)}</h3>${r.tags.slice(0, 2).map((t) => `<span class="pill ${t === 'betrayal' ? 'bad' : 'brass'}">${cap(t)}</span>`).join('')}</div>${kv('Their trust in you', Math.round(r.trust[i]))}${kv('Their respect for you', Math.round(r.respect[i]))}${kv('Heat', Math.round(r.heat))}<button class="btn small ghost" data-action="profile" data-id="${o}">Memory & profile</button></div>`; }).join('') || '<div class="empty">Nobody knows you yet.</div>'}</main>`;
 }
 
+function appearances(S) {
+  const g = S.g;
+  const res = S.ui.apResult;
+  if (res) return `<main class="screen" id="appearance-result">${header(res.label, `${res.quality}/100${res.viral ? ' · VIRAL' : ''}`, `<button class="btn small ghost" data-action="apDone" id="btn-ap-done">Done</button>`)}
+    ${res.given.map((x) => `<div class="card"><p class="why">${esc(x.question)}</p><p class="line">${esc(x.text)}</p><p class="why">${esc(x.react)} · ${x.quality}/100${x.refs.length ? ` · remembers ${x.refs.length} event${x.refs.length === 1 ? '' : 's'}` : ''}</p></div>`).join('')}
+    ${res.promises.length ? `<div class="card"><span class="pill brass">Promise on record</span> <b>${esc(res.promises[0].text)}</b></div>` : ''}
+    ${res.pay ? `<div class="card">${kv('Appearance fee', '$' + res.pay.toLocaleString())}</div>` : ''}
+    ${res.unlocked.map((u) => `<div class="row"><span class="pill brass">Achievement</span><b>${esc(u.name)}</b></div>`).join('')}</main>`;
+  const v = g.appearanceView();
+  if (v && !v.done) return `<main class="screen" id="appearance">${header(v.label, `Question ${v.step} of ${v.of}`, `<button class="btn small ghost" data-action="apCancel">Walk out</button>`)}
+    <div class="card"><p class="line" id="ap-question">${esc(v.question)}</p>${v.refs.length ? `<span class="why">based on ${v.refs.length} event${v.refs.length === 1 ? '' : 's'} in your history</span>` : ''}</div>
+    <div class="opts col" id="ap-answers">${v.answers.map((a) => `<button class="btn" data-action="apAnswer" data-id="${a.id}"><span class="t"><b>${esc(a.label)}</b><small>${esc(a.desc)}</small></span></button>`).join('')}</div></main>`;
+  return null;
+}
+
 function media(S) {
+  const ap = appearances(S);
+  if (ap) return ap;
   const g = S.g, o = g.promoOptions(), ui = S.ui.promo;
   const targets = g.universe.list((w) => w.brand === g.career.player.brand).slice(0, 40);
   const res = S.ui.promoResult;
@@ -384,8 +402,10 @@ function media(S) {
     <div class="card">${res.lines.map((l) => `<p class="line">${esc(l.text)}${l.refs.length ? `<span class="why">remembers ${l.refs.length} past event${l.refs.length === 1 ? '' : 's'}</span>` : l.promise ? '<span class="why">promise recorded</span>' : ''}</p>`).join('')}${res.reaction ? `<p class="muted">${esc(res.reaction)}</p>` : ''}
     ${res.unlocked.map((u) => `<div class="row"><span class="pill brass">Achievement</span><b>${esc(u.name)}</b></div>`).join('')}</div></main>`;
   const tone = o.tones[ui.tone];
-  return `<main class="screen">${header('Media', 'Cut a promo', back('closeSub'))}
+  return `<main class="screen">${header('Media', 'Promos, interviews and press', back('closeSub'))}
     ${o.pending ? '<p class="line">The crowd is waiting for you to speak.</p>' : ''}
+    <div class="col"><div class="eyebrow">Interviews &amp; press</div>${g.appearanceOptions().map((k) => `<button class="btn" data-action="apStart" data-id="${k.id}" ${k.available ? '' : 'disabled'}><span class="t"><b>${esc(k.label)}</b><small>${esc(k.reason || k.desc)}</small></span><span class="r">${k.questions} Qs</span></button>`).join('')}</div>
+    <div class="eyebrow">Cut a promo</div>
     <div class="col"><div class="eyebrow">Tone</div><div class="chips">${Object.entries(o.tones).map(([id, t]) => `<button class="chip ${ui.tone === id ? 'on' : ''}" data-action="promoSet" data-k="tone" data-v="${id}">${esc(t.label)}</button>`).join('')}</div><p class="muted">${esc(tone.desc)}</p></div>
     ${tone.needsTarget ? `<label class="f">Target<select id="promo-target" data-action-change="promoTarget">${targets.map((w) => `<option value="${w.id}" ${ui.target === w.id ? 'selected' : ''}>${esc(w.name)}</option>`).join('')}</select></label>` : ''}
     <div class="col"><div class="eyebrow">Promise</div><div class="chips">${Object.entries(o.claims).filter(([id, cl]) => !cl.needsTarget || tone.needsTarget).map(([id, cl]) => `<button class="chip ${ui.claim === id ? 'on' : ''}" data-action="promoSet" data-k="claim" data-v="${id}">${esc(cl.label)}</button>`).join('')}</div><p class="muted">Promises are public and remembered. Break one and the media will bring it up.</p></div>

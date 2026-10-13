@@ -65,7 +65,7 @@ export function matchMetrics({ n = 120 } = {}) {
   }
   // side balance + skill gap
   let a = 0, b = 0;
-  for (let i = 0; i < 240; i++) {
+  for (let i = 0; i < 800; i++) {
     const A = { ...W.show, id: 'm1', name: 'One' }, B = { ...W.show, id: 'm2', name: 'Two' };
     const e = MatchEngine.simulate({ seed: 9000 + i, type: 'singles', sides: [[A], [B]], playerId: 'm1' }, {});
     if (e.result.winnerSide === 0) a++; else if (e.result.winnerSide === 1) b++;
@@ -217,7 +217,7 @@ export function scenarioMetrics() {
   const bodies = SCENARIO_TEMPLATES.map((t) => t.body.join(' '));
   const openers = new Set(bodies.map((b) => b.split(' ').slice(0, 3).join(' ').toLowerCase()));
   const words = bodies.join(' ').toLowerCase().match(/[a-z']+/g) || [];
-  const mem = (t) => !!t.memory || !!(t.trigger && (t.trigger.mem || t.trigger.rivalry || t.trigger.obligation || t.trigger.promiseOpen || t.trigger.promiseBroken)) || Object.values(t.cast || {}).some((c) => ['rivalry', 'obligation', 'tag'].includes(c.pick));
+  const mem = (t) => !!t.memory || Object.values(t.cast || {}).some((c) => c.pick && !['staff', 'media'].includes(c.pick)) || !!(t.trigger && (t.trigger.mem || t.trigger.rivalry || t.trigger.obligation || t.trigger.promiseOpen || t.trigger.promiseBroken)) || Object.values(t.cast || {}).some((c) => ['rivalry', 'obligation', 'tag'].includes(c.pick));
   const sig = (ch) => JSON.stringify(ch.outcomes ? ch.outcomes.map((o) => o.effects) : ch.effects);
   const conseq = (t) => t.choices.length >= 3 && new Set(t.choices.map(sig)).size === t.choices.length && t.choices.some((ch) => ch.outcomes && ch.outcomes.length > 1);
   return { memoryShare: SCENARIO_TEMPLATES.filter(mem).length / SCENARIO_TEMPLATES.length, consequential: SCENARIO_TEMPLATES.filter(conseq).length / SCENARIO_TEMPLATES.length, authored: r.templates, configs: r.configs, errors: r.errors.length, warnings: r.warnings.length, categories: Object.keys(r.byCategory).length, byCategory: r.byCategory, openerDiversity: openers.size / bodies.length, typeToken: new Set(words).size / words.length, vocab: new Set(words).size };

@@ -25,6 +25,7 @@ import { eraForYear } from './data/eras.js';
 import { getRel, getRivalry } from './memory/world.js';
 import { memoryLines } from './story/dialogue.js';
 import { deliverPromo, PROMO_TONES, CLAIMS } from './story/media.js';
+import { appearanceOptions, startAppearance, answerAppearance, appearanceView, cancelAppearance, APPEARANCE_KINDS } from './story/appearances.js';
 
 export const BACKGROUNDS = {
   prospect: { name: 'Performance Center Prospect', desc: 'Raw talent with the best coaching. Low experience, high ceiling.', base: 38, pop: 6, money: 3000, bonus: 22, difficulty: 0.45 },
@@ -673,6 +674,13 @@ export class Game {
     this.c.flags.promoPending = null;
     return r;
   }
+
+  // ---- interviews, podcasts, press conferences
+  appearanceOptions() { return appearanceOptions(this.c); }
+  startAppearance(kind) { this._blockedByScenario(); return startAppearance(this.c, kind, { nextEvent: this.nextEvent() }); }
+  answerAppearance(id) { return answerAppearance(this.c, id, { nextEvent: this.nextEvent() }); }
+  appearanceView() { return appearanceView(this.c); }
+  cancelAppearance() { cancelAppearance(this.c); }
 
   endPostMatch() {
     const c = this.c;

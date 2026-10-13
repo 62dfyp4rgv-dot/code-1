@@ -95,7 +95,8 @@ p { margin: 0; }
 /* sheet / modal */
 .scrim { position: fixed; inset: 0; background: color-mix(in srgb, #000 55%, transparent); z-index: 40; display: flex; align-items: flex-end; justify-content: center; }
 .sheet { background: var(--surface); width: 100%; max-width: 640px; max-height: 88%; overflow-y: auto; border-radius: 16px 16px 0 0; padding: 16px var(--gutter) calc(18px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 12px; }
-.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(var(--tab-h) + 14px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 999px; z-index: 60; max-width: calc(100% - 32px); font-weight: 600; box-shadow: 0 6px 20px color-mix(in srgb, #000 30%, transparent); }
+/* toasts sit at the top, never over the controls, and never intercept taps */
+.toast { position: fixed; left: 50%; transform: translateX(-50%); top: calc(env(safe-area-inset-top, 0px) + 8px); pointer-events: none; font-size: .9rem; line-height: 1.25; text-align: center; background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 999px; z-index: 60; max-width: calc(100% - 32px); font-weight: 600; box-shadow: 0 6px 20px color-mix(in srgb, #000 30%, transparent); }
 .toast.ach { background: var(--brass-fill); color: #1b1303; }
 
 /* match */
@@ -146,3 +147,13 @@ label.f { display: flex; flex-direction: column; gap: 6px; font-weight: 600; fon
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 @media (max-width: 360px) { .stat { grid-template-columns: 78px 1fr 36px; } .grid3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* second-pass fixes from the independent mobile review */
+.hint { white-space: nowrap; }
+.chips.wrap { flex-wrap: wrap; overflow: visible; }
+.meter { grid-template-columns: 58px 1fr; }
+.legend { font-family: var(--font-data); font-size: .66rem; letter-spacing: .06em; text-transform: uppercase; opacity: .6; text-align: center; }
+.meter .val { font-variant-numeric: tabular-nums; opacity: .8; }
+.dmg b { height: 26px; font-size: .72rem; justify-content: space-between; padding: 0 6px; }
+.dmg b em { font-style: normal; position: relative; z-index: 1; opacity: .9; font-variant-numeric: tabular-nums; }
+.btn .t small.fx { color: var(--muted); }

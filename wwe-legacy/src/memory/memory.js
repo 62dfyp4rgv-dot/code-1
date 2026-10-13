@@ -48,7 +48,10 @@ export class Memory {
   static fromJSON(j) {
     const m = new Memory(j.playerId);
     m.ledger = Ledger.fromJSON(j.ledger);
-    m.world = j.world;
+    // the ledger is authoritative: a stored world that disagrees with its replay is rebuilt from the ledger
+    const replay = m.replayWorld();
+    if (j.world && JSON.stringify(j.world) === JSON.stringify(replay)) m.world = j.world;
+    else { m.world = replay; m.repaired = true; }
     return m;
   }
 }

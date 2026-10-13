@@ -104,6 +104,9 @@ export function bumpRivalry(world, a, b, { heat = 0, eventId, day = 0, origin = 
 // ---- promises (public claims that can later be judged)
 export function addPromise(world, p) {
   if (world.promises.some((x) => x.id === p.id)) return;
+  // the same public claim made twice is still one promise (one win must not be paid out twice)
+  const same = (x) => x.status === 'open' && x.by === p.by && x.kind === p.kind && (x.target || null) === (p.target || null) && JSON.stringify(x.params || {}) === JSON.stringify(p.params || {});
+  if (world.promises.some(same)) return;
   world.promises.push({ status: 'open', ...p });
 }
 export function openPromises(world, who) { return world.promises.filter((p) => p.status === 'open' && (!who || p.by === who)); }
