@@ -1,6 +1,7 @@
 // Promos and media segments. Quality is computed from stats and choices (never from text);
 // the words are composed afterwards, and every historical reference comes from dialogue.hooks().
 import { clamp } from '../core/util.js';
+import PACK from './promo_pack.js';
 import { hash53 } from '../core/util.js';
 import { gainPop } from '../career/pace.js';
 import { hooks } from './dialogue.js';
@@ -78,9 +79,9 @@ export function deliverPromo(career, { tone, targetId = null, claim = 'none', co
   const tl = tn ? tn.split(' ').slice(-1)[0] : '';
   const gen = target && target.gender === 'F' ? { their: 'her', they: 'she', them: 'her' } : target && target.gender === 'M' ? { their: 'his', they: 'he', them: 'him' } : { their: 'their', they: 'they', them: 'them' };
   const fill = (str, who) => str.replace(/\{t\}/g, who).replace(/\{their\}/g, gen.their).replace(/\{they\}/g, gen.they).replace(/\{them\}/g, gen.them);
-  lines.push({ text: fill(pick(OPEN[tone], seed), tn), role: 'open', refs: [] });
+  lines.push({ text: fill(pick([...PACK.open[tone], ...OPEN[tone]], seed), tn), role: 'open', refs: [] });
   // the tone's own body line: an insult has to insult, a tribute has to honour
-  if (BODY[tone]) lines.push({ text: fill(pick(BODY[tone], seed + 'b'), tl || 'everyone'), role: 'body', refs: [] });
+  if (BODY[tone]) lines.push({ text: fill(pick([...PACK.body[tone][['face', 'heel'].includes(p.alignment) ? p.alignment : 'tweener'], ...BODY[tone]], seed + 'b'), tl || 'everyone'), role: 'body', refs: [] });
   if (target) {
     const order = ['broken_promise', 'old_insult', 'you_betrayed_me', 'i_betrayed_you', 'controversial_finish', 'controversial_finish_old', 'clean_dominance', 'i_beat_you', 'you_beat_me'];
     const record = new Set(['clean_dominance', 'i_beat_you', 'you_beat_me']); // one head-to-head line is enough
@@ -122,7 +123,7 @@ export function deliverPromo(career, { tone, targetId = null, claim = 'none', co
   if (claimDef === 'win_streak') addPromiseClaim({ kind: 'win_streak', params: { n: 5 }, text: 'I will win five in a row', deadlineDay: career.day + 120 }, { text: 'Five wins in a row, starting now. Mark my words.', refs: [], promise: true });
   if (claimDef === 'win_rumble') { const y = year || career.year + (career.day % 365 > 40 ? 1 : 0); addPromiseClaim({ kind: 'win_rumble', params: { year: y }, text: `I will win the ${y} Royal Rumble`, deadlineDay: career.day + 420 }, { text: `I guarantee I will win the ${y} Royal Rumble.`, refs: [], promise: true }); }
   if (claimDef === 'win_title') addPromiseClaim({ kind: 'win_title', text: 'I will win a championship', deadlineDay: career.day + 365 }, { text: 'I will be champion. Nothing will stop me.', refs: [], promise: true });
-  lines.push({ text: pick(promises.length ? CLOSE_PROMISE : CLOSE, seed + 'c'), refs: [] });
+  lines.push({ text: pick(promises.length ? [...PACK.closePromise, ...CLOSE_PROMISE] : [...PACK.close, ...CLOSE], seed + 'c'), refs: [] });
   const out = career.record({
     key, category: 'promo', type: 'promo_delivered', participants: [p.id, ...(targetId ? [targetId] : [])],
     refs: [...new Set(lines.flatMap((l) => l.refs))].filter((id) => career.memory.ledger.get(id)),

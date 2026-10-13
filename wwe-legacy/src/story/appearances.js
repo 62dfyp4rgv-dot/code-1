@@ -3,6 +3,7 @@
 // championships, upcoming shows) and each question lists the event ids it relies on. Answer quality is
 // computed from stats, stance fit and context; the prose is composed afterwards and never decides anything.
 import { clamp, hash53 } from '../core/util.js';
+import ANSWER_PACK from './answers_pack.js';
 import { gainPop } from '../career/pace.js';
 import { hooks } from './dialogue.js';
 import { getRivalry, openPromises, brokenPromises, hasOpenPromise } from '../memory/world.js';
@@ -226,6 +227,12 @@ const REACT_STANCE = {
 };
 const tier = (q) => (q >= 78 ? 'great' : q >= 62 ? 'good' : q >= 46 ? 'mid' : 'poor');
 
+const FINISH_PHRASE = { pinfall: 'a pinfall', submission: 'a submission', dq: 'a disqualification', countout: 'a count-out', count_out: 'a count-out', ten_count: 'a ten count', objective: 'a clean grab of the prize', falls: 'a decisive fall', finish: 'a finish' };
+function fillAnswer(line, f, subj) {
+  const their = subj && subj.gender === 'F' ? 'her' : subj && subj.gender === 'M' ? 'his' : 'their';
+  const vals = { opp: f.opp, they: f.they, their, event: f.event, finish: FINISH_PHRASE[f.finish] || `a ${f.finish}`, movePhrase: f.move ? `the ${f.move}` : 'the finish' };
+  return line.replace(/\{(\w+)\}/g, (_, k) => (vals[k] === undefined ? '' : vals[k]));
+}
 export function answerAppearance(c, answerId, extras = {}) {
   const s = c.flags.appearance;
   if (!s) throw new Error('no appearance in progress');
@@ -241,7 +248,12 @@ export function answerAppearance(c, answerId, extras = {}) {
   const subj = q.subject ? U(c).get(q.subject) : null;
   const they = subj && subj.gender === 'F' ? 'she' : subj && subj.gender === 'M' ? 'he' : 'they';
   const nxt = extras.nextEvent;
-  const text = (SAY[answerId][q.id] || (() => 'No comment.'))({ opp, they, finish: q.fx ? q.fx.finish : 'finish', move: q.fx ? q.fx.move : null, event: nxt ? (nxt.displayName || nxt.name) : 'the next show' });
+  const facts = { opp, they, finish: q.fx ? q.fx.finish : 'finish', move: q.fx ? q.fx.move : null, event: nxt ? (nxt.displayName || nxt.name) : 'the next show' };
+  const legacy = (SAY[answerId][q.id] || (() => 'No comment.'))(facts);
+  // authored variants (src/story/answers_pack.js) share the pool with the fact-specific line above, picked by a seeded hash
+  const pack = ((ANSWER_PACK[answerId] || {})[q.id] || []).map((l) => fillAnswer(l, facts, subj));
+  const pool = [...pack, legacy];
+  const text = pool[parseInt(hash53(`${s.seed}:${q.id}:${answerId}:say`), 36) % pool.length];
   const sr = REACT_STANCE[answerId] ? REACT_STANCE[answerId][tier(quality)] : REACT[tier(quality)];
   const react = sr[parseInt(hash53(`${s.seed}:${q.id}r`), 36) % sr.length];
   s.given.push({ q: q.id, promiseId: q.promiseId || null, ctx: q.ctx, answer: answerId, quality, text, react, subject: q.subject || null, refs: q.refs, question: q.text });

@@ -9,6 +9,7 @@ const PRON = { M: ['he', 'him', 'his', 'himself'], F: ['she', 'her', 'her', 'her
 const pron = (state, id) => PRON[state.fighters[id] && state.fighters[id].gender] || ['they', 'them', 'their', 'themselves'];
 const CONNECT_KEY = { strike_light: 'connected_strike', strike_heavy: 'connected_strike', grapple: 'connected_grapple', power: 'connected_power', aerial: 'connected_aerial',
   technical: 'connected_technical', combo: 'connected_combo', corner: 'connected_corner', environmental: 'connected_weapon', illegal: 'connected_dirty' };
+const PLURAL_VERB = { pays: 'pay', takes: 'take', is: 'are', was: 'were', has: 'have', goes: 'go', feels: 'feel', gives: 'give', hurts: 'hurt', buckles: 'buckle', bears: 'bear' };
 const ord = (n) => ['', 'first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth', 'tenth'][n] || `${n}th`;
 
 // verbs by move category: how the move "lands"
@@ -58,7 +59,9 @@ function narrateRaw(state, ev, bump = 0) {
   const late = state.timeLimit ? (ev.t || 0) / state.timeLimit > 0.7 : false;
   // authored prose pack (src/match/commentary_pack.js): lines use {a} {aL} {t} {tL} {mv} {part} {adj} {pos} {self} {tpos} {tself}
   const ctx = { a, aL, t, tL, mv: myMv, part: ev.part || 'body', adj: ev.quality === 'devastating' ? 'devastating' : ev.quality === 'clean' ? 'clean' : 'solid', pos: posA, self: selfA, tpos: pron(state, ev.target)[2], tself: pron(state, ev.target)[3] };
-  const fill = (line) => line.replace(/\{(\w+)\}/g, (_, k) => (ctx[k] === undefined ? '' : ctx[k]));
+  const fill = (line) => line.replace(/\{(\w+)\}/g, (_, k) => (ctx[k] === undefined ? '' : ctx[k]))
+    .replace(/\b(legs|arms) (pays|takes|is|was|has|goes|feels|gives|hurts|buckles|bears)\b/g, (_, n, v) => `${n} ${PLURAL_VERB[v]}`) // body parts: 'legs' and 'arms' are plural
+    .replace(/(^|[.!?]["']?\s+)([a-z])/g, (_, pre, ch) => pre + ch.toUpperCase()); // "the Big Boot" opening a sentence
   const packLines = (key) => (PACK[key] || []).map(fill);
   /** choose among pack lines for `key` (falling back to the built-in lines); `rotate` cycles so a repeat never lands twice in a row */
   const say = (key, legacy, salt, rotate = false) => {
@@ -113,7 +116,7 @@ function narrateRaw(state, ev, bump = 0) {
     case 'pin_attempt': return ev.surprise ? pick([`${a} rolls ${t} up for a quick cover!`, `Roll-up! ${aL} steals a cover on ${tL}!`], q, 13) : say('pin_attempt', [
       `${a} hooks the leg and covers ${t}!`, `${aL} goes for the cover!`, `Cover! ${aL} hooks the leg - the ref is down for the count!`, `${aL} drapes an arm over ${tL} and the ref slides in.`,
     ], 14, true);
-    case 'pin_count': return pick([`${ev.count}...`, `${ev.count}!`], q, 15);
+    case 'pin_count': return H(q - ev.count, 15) % 2 ? `${ev.count}...` : `${ev.count}!`; // one style per pin
     case 'pin_kickout': return ev.nearFall ? say('kickout_near', [
       `KICK OUT at two! ${a} just got a shoulder up - that was close!`, `TWO! ${aL} gets the shoulder up at the last instant!`, `Only two! ${aL} somehow survives!`,
     ], 16, true) : say('kickout', [`${a} kicks out at two.`, `${aL} powers out at two.`, `Out at two! ${aL} is not done.`], 17, true);
@@ -155,7 +158,7 @@ function narrateRaw(state, ev, bump = 0) {
     case 'hype': return say('hype', [`${a} fires up the crowd.`, `${aL} raises both arms and the arena answers.`], 31, true);
     case 'signal_finisher': return pick([`${a} signals for the end!`, `${aL} points to the sky - the finish is coming!`], q, 32);
     case 'mind_games': return ev.success ? pick([`${a} gets in ${t}'s head.`, `${aL} makes ${tL} doubt for a split second.`], q, 33) : `${a}'s mind games backfire.`;
-    case 'bait_set': return `${a} lowers their guard... it looks like a trap.`;
+    case 'bait_set': return `${a} lowers ${posA} guard. It looks like a trap.`;
     case 'respect_shown': return `${a} shows respect to ${t}.`;
     case 'respect_betrayed': return `${t} slaps away the handshake and cheap-shots ${a}!`;
     case 'distract_ref': return ev.success ? `${a} distracts the referee.` : `The referee ignores ${a}.`;
@@ -175,11 +178,11 @@ function narrateRaw(state, ev, bump = 0) {
     case 'tag_cut_off': return `${t} cuts off the tag!`;
     case 'crawl_stopped': return `${a} is dragged back from the corner.`;
     case 'interference': return `${a} interferes from the apron and hits ${t}!`;
-    case 'apron': return { encourage: `${a} urges their partner on.`, ready: `${a} stretches out a hand for the tag.`, cheer: `${a} rallies the crowd.`, rest: `${a} catches a breather on the apron.`, coach_aggro: `${a} yells for aggression.`, coach_safe: `${a} calls for caution.`, coach_tag: `${a} screams for the tag.` }[ev.what] || `${a} works the apron.`;
+    case 'apron': return { encourage: `${a} urges ${posA} partner on.`, ready: `${a} stretches out a hand for the tag.`, cheer: `${a} rallies the crowd.`, rest: `${a} catches a breather on the apron.`, coach_aggro: `${a} yells for aggression.`, coach_safe: `${a} calls for caution.`, coach_tag: `${a} screams for the tag.` }[ev.what] || `${a} works the apron.`;
     case 'save_failed': return `${a} is too late to break it up!`;
     case 'knockdown': return say('knockdown', [`${t} is down! The ref starts the ten count.`, `${tL} hits the mat hard - the count begins!`], 40, true);
     case 'ten_count': return say('ten_count', [`${a} is still down... ${ev.n}.`, `${ev.n}... ${aL} stirs but cannot rise.`], 41, true);
-    case 'rise': return say('rise', [`${a} drags themselves to their feet!`, `${aL} beats the count - somehow!`], 42, true);
+    case 'rise': return say('rise', [`${a} drags ${selfA} to ${posA} feet!`, `${aL} beats the count - somehow!`], 42, true);
     case 'knockout': return `Ten! ${a} can't get up - it's over!`;
     case 'climb': return ev.rung >= ev.steps ? `${a} reaches the top - hands on the prize!` : say('climb', [`${a} climbs another rung - ${ev.steps - ev.rung} to go.`, `${aL} reaches for the next rung. ${ev.steps - ev.rung} left to climb.`, `Up goes ${aL}, ${ev.steps - ev.rung} ${ev.steps - ev.rung === 1 ? 'rung' : 'rungs'} from the top.`], 43, true);
     case 'slip': return say('slip', [`${a} slips and tumbles down!`, `${aL}'s footing goes - down ${pron(state, ev.actor)[0] === 'they' ? 'they' : pron(state, ev.actor)[0]} comes!`, `Disaster! ${aL} loses ${posA} balance on the ladder!`, `${aL} slides off the rung and crashes to the mat!`], 44, true);
