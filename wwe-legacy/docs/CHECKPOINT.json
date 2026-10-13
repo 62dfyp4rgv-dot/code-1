@@ -1,22 +1,37 @@
 {
- "updated": "2026-10-13T16:23:03.371Z",
- "lastRound": 5,
- "mean": 9.2,
+ "updated": "2026-10-13T16:37:20.362Z",
+ "lastRound": 6,
+ "mean": 8.94,
  "scores": {
   "matchEngine": 9.8,
   "playerAgency": 9.59,
-  "memoryConsistency": 8.74,
+  "memoryConsistency": 7.67,
   "achievementIntegrity": 9.86,
   "scenarioDiversity": 7.59,
-  "narrativeQuality": 8.74,
+  "narrativeQuality": 7.71,
   "universeSimulation": 8.32,
   "careerProgression": 9.33,
-  "mobileUsability": 9.45,
+  "mobileUsability": 8.4,
   "technicalReliability": 10,
-  "performance": 9.39,
+  "performance": 9.46,
   "replayability": 9.56
  },
  "nextFocus": [
+  {
+   "category": "narrativeQuality",
+   "criterion": "Independent reviewer score",
+   "value": 4.5
+  },
+  {
+   "category": "memoryConsistency",
+   "criterion": "Independent reviewer score",
+   "value": 5.5
+  },
+  {
+   "category": "mobileUsability",
+   "criterion": "Independent reviewer score",
+   "value": 6
+  },
   {
    "category": "scenarioDiversity",
    "criterion": "Authored, validated templates (target 2,000 would be complete)",
@@ -26,28 +41,13 @@
    "category": "universeSimulation",
    "criterion": "Verified historical data",
    "value": "partial"
-  },
-  {
-   "category": "narrativeQuality",
-   "criterion": "Independent reviewer score",
-   "value": 4.5
-  },
-  {
-   "category": "memoryConsistency",
-   "criterion": "Share of scenario templates that read ledger memory (mem trigger / memory block / rivalry / obligation)",
-   "value": 0.42
-  },
-  {
-   "category": "mobileUsability",
-   "criterion": "Independent reviewer score",
-   "value": 6
   }
  ],
  "resume": [
   "cd wwe-legacy",
   "npm install",
   "npm test",
-  "node tools/gauntlet.js --round 6 --targets \"<what you will improve>\" --changes \"<what you changed>\""
+  "node tools/gauntlet.js --round 7 --targets \"<what you will improve>\" --changes \"<what you changed>\""
  ],
  "features": {
   "complete": 22,

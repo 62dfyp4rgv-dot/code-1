@@ -51,3 +51,13 @@ One entry per Gauntlet round: what was targeted, what changed, what was measured
 - Largest losses: Authored, validated templates (target 2,000 would be complete) (589); Verified historical data (partial); Independent reviewer score (4.5); Share of scenario templates that read ledger memory (mem trigger / memory block / rivalry / obligation) (0.42)
 - Regressions: careerProgression -0.17, performance -0.19
 - Report: docs/gauntlet/round-05.md
+
+## Round 6
+
+- Target: Narrative quality & memory visibility (reviewer findings from round 4): authored prose packs (commentary 44 keys, interview answers 6 stances x 9 topics, promos 9 tones x 3 alignments), commentary-team colour events, Story-so-far view
+- Changes: Added commentary_pack/answers_pack/promo_pack (validated by tools/packcheck.js), colour events in resolve.finalizeRound (no RNG), Story-so-far card on Career, casing/agreement fixes, pin count style per pin, pronoun fixes. Rubric: reviewer criteria now weigh 40%.
+- Mean 8.94 | min 7.59 | >=9: 7/12 | tests 135/135
+- Weakest: Scenario diversity 7.59, Memory consistency 7.67, Narrative quality 7.71
+- Largest losses: Independent reviewer score (4.5); Independent reviewer score (5.5); Independent reviewer score (6); Authored, validated templates (target 2,000 would be complete) (589)
+- Regressions: memoryConsistency -1.07, narrativeQuality -1.03, mobileUsability -1.05
+- Report: docs/gauntlet/round-06.md
