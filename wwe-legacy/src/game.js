@@ -9,7 +9,8 @@ import { MatchEngine } from './match/engine.js';
 import { narrate } from './match/commentary.js';
 import { getRuleset, MATCH_TYPE_IDS } from './match/rules.js';
 import { STYLES, SIGNATURE_TEMPLATES, FINISHER_TEMPLATES, getMove } from './match/moves.js';
-import { Universe } from './universe/universe.js';
+import { Universe, CLASS_LABEL } from './universe/universe.js';
+import { UniverseSim } from './universe/sim.js';
 import { generateRoster, TIERS, SIG_NAMES, FIN_NAMES } from './data/generator.js';
 import { nextEvent, eventsOn, formatDate, brandsInYear, weekdayOf } from './universe/calendar.js';
 import { eraForYear } from './data/eras.js';
@@ -110,12 +111,11 @@ export class Game {
     });
     career.player.difficulty = bg.difficulty;
     this.career = career;
-    career.universe = new Universe({ seed, mode: career.mode });
-    // universe members play on the player's brand mostly; spread across brands
-    const brandList = brands.length ? brands : ['Raw'];
-    let i = 0;
-    for (const w of Object.values(this.universe.roster)) { w.brand = w.tier <= 1 && brandList.includes(brand) ? brand : brandList[i++ % brandList.length]; }
+    career.universe = Universe.create({ seed, mode: spec.mode === 'custom' ? 'custom' : career.mode, year: startYear });
+    career.universe._mainBrand = brands.includes('WWF') ? 'WWF' : brands[0];
+    career.universe._syncBrandNames();
     career.record({ key: 'debut', category: 'career', type: 'debut', summary: `${career.player.name} makes their professional debut${brand ? ` on ${brand}` : ''}.`, importance: 4, data: { brand, show: brand, background: spec.background || 'prospect', era: career.era } });
+    career.player.contract = { endDay: career.day + 730, salary: Math.round(bg.money * 4), brand };
     career.record({ key: 'contract:initial', category: 'career', type: 'contract_signed', summary: `${career.player.name} signs a ${bg.name.toLowerCase()} contract.`, importance: 2, data: { years: 2, brand } });
     career.flags.phase = 'home';
     return career;
@@ -168,7 +168,7 @@ export class Game {
     if (c.flags.phase !== 'home') throw new Error('finish the current match first');
     p.fatigue = clamp(p.fatigue - 22, 0, 100);
     for (const i of p.injuries) i.daysLeft = Math.max(0, i.daysLeft - 1);
-    c.advanceDays(1);
+    c.advanceDays(1); this._universeTick();
     return { fatigue: Math.round(p.fatigue), message: 'You rested and recovered.' };
   }
 
@@ -194,7 +194,7 @@ export class Game {
       injuryText = `Overtraining: you strained your ${part}.`;
     }
     c.checkMilestones();
-    c.advanceDays(1);
+    c.advanceDays(1); this._universeTick();
     return { ok: true, gain: round1(gain), message: `${t.label}: +${round1(gain)} ${t.attr}.${injuryText ? ' ' + injuryText : ''}`, fatigue: Math.round(p.fatigue) };
   }
 
@@ -204,19 +204,59 @@ export class Game {
     const ev = this.nextEvent();
     if (!ev) throw new Error('no upcoming event');
     const n = ev.day - c.day;
-    if (n > 0) { c.advanceDays(n); this._universeTick(n); }
+    if (n > 0) { c.advanceDays(n); this._universeTick(); }
     return { day: c.day, event: ev };
   }
-  _universeTick(days) { /* AI universe simulation hooks in here (Stage 8) */ }
+  _universeTick() {
+    const c = this.c;
+    const sim = new UniverseSim(c);
+    sim.advanceTo(c.day);
+    c.flags.simStats = sim.stats;
+  }
 
   // ------------------------------------------------------------------ booking / scouting
   suggestOpponents() {
-    const c = this.c, me = c.player;
-    const pool = this.universe.list((w) => w.id !== me.id && w.brand === me.brand);
+    const c = this.c, me = c.player, u = this.universe;
     const ovr = c.overall();
     const rng = new Rng(`opp:${c.seed}:${c.day}`);
-    const scored = pool.map((w) => ({ w, d: Math.abs(this._overall(w) - ovr) + rng.next() * 6 })).sort((a, b) => a.d - b.d).slice(0, 5);
-    return scored.map(({ w }) => this.opponentCard(w));
+    const pool = u.available(c.day, (w) => w.id !== me.id && u.sameBrand(w, me.brand) && (w.gender === me.gender || rng.chance(0.15)));
+    const cards = [];
+    const seen = new Set();
+    const add = (w, extra = {}) => { if (!w || seen.has(w.id)) return; seen.add(w.id); cards.push({ ...this.opponentCard(w), ...extra }); };
+    // 1. matches scripted by scenarios (forced booking) come first
+    const forced = c.flags.forcedMatch;
+    if (forced && u.get(forced.who)) add(u.get(forced.who), { forced: true, type: forced.type, stakes: forced.stakes });
+    // 2. championship opportunities (as challenger or as champion)
+    for (const t of u.titlesList()) {
+      if (!this._titleApplies(t)) continue;
+      if (t.holder === me.id) {
+        if (c.day - t.lastDefenseDay >= 21) {
+          const ch = pool.filter((w) => w.gender === t.gender && w.tier >= (t.cls === 'world' ? 2 : t.cls === 'secondary' ? 1 : 0)).sort((a, b) => b.momentum + b.popularity / 3 - (a.momentum + a.popularity / 3))[0];
+          if (ch) add(ch, { title: this._titleInfo(t), stakes: 'title', defense: true });
+        }
+      } else if (t.holder && this._shotEligible(t)) add(u.get(t.holder), { title: this._titleInfo(t), stakes: 'title' });
+    }
+    // 3. ordinary opponents near your level
+    const scored = pool.map((w) => ({ w, d: Math.abs(this._overall(w) - ovr) + rng.next() * 6 })).sort((a, b) => a.d - b.d);
+    for (const { w } of scored) { if (cards.length >= 5) break; add(w); }
+    return cards;
+  }
+  _titleApplies(t) {
+    const me = this.c.player, u = this.universe;
+    if (t.gender !== me.gender && t.cls === 'womens') return false;
+    if (t.cls === 'womens' && me.gender !== 'F') return false;
+    if (t.cls !== 'womens' && me.gender === 'F' && t.gender === 'M') return false;
+    return t.scope === u.keyOfShow(me.brand) || (t.scope === 'main' && u.keyOfShow(me.brand) === 'main');
+  }
+  _titleInfo(t) { return { id: t.id, name: t.name, cls: t.cls, label: CLASS_LABEL[t.cls], holder: t.holder }; }
+  _shotEligible(t) {
+    const c = this.c, me = c.player;
+    const last = c.flags.lastTitleShot ?? -999;
+    if (c.day - last < 28) return false;
+    const recent = c.memory.ledger.query({ types: ['match_result'], scope: 'player', newestFirst: true, limit: 5 });
+    const wins = recent.filter((e) => e.data.result === 'win').length;
+    const champ = this.universe.get(t.holder);
+    return me.popularity >= t.minPop && wins >= 3 && champ && c.overall() >= this._overall(champ) - 14 && c.stats.s.matches >= 5;
   }
   _overall(w) { const v = Object.values(w.attrs); return v.reduce((a, b) => a + b, 0) / v.length; }
   opponentCard(w) {
@@ -224,9 +264,9 @@ export class Game {
     const rel = getRel(c.memory.world, me, w.id), rv = getRivalry(c.memory.world, me, w.id);
     const st = c.stats.s.opponents[w.id];
     return {
-      id: w.id, name: w.name, style: w.style, alignment: w.alignment, overall: Math.round(this._overall(w)), popularity: w.popularity, tier: w.tier,
+      id: w.id, name: w.name, style: w.style, alignment: w.alignment, overall: Math.round(this._overall(w)), popularity: Math.round(w.popularity), tier: w.tier,
       record: st ? `${st.wins}-${st.losses}${st.draws ? `-${st.draws}` : ''}` : 'first meeting', rivalry: rv ? { heat: Math.round(rv.heat), status: rv.status } : null,
-      tags: rel.tags, finisher: w.finisher?.name,
+      tags: rel.tags, finisher: w.finisher?.name, titles: this.universe.titlesOf(w.id).map((t) => t.name),
     };
   }
   scout(opponentId) {
@@ -252,7 +292,7 @@ export class Game {
   }
 
   /** Book the match for the next event. Returns a booking summary. */
-  prepareMatch({ opponentId, type = 'singles', plan = 'balanced', entrance } = {}) {
+  prepareMatch({ opponentId, type = 'singles', plan = 'balanced', entrance, stakes = null } = {}) {
     const c = this.c;
     if (c.flags.phase !== 'home') throw new Error('a match is already in progress');
     const ev = this.nextEvent();
@@ -260,15 +300,25 @@ export class Game {
     const w = this.universe.get(opponentId);
     if (!w) throw new Error('unknown opponent');
     const stips = this.availableStipulations(opponentId);
-    if (type !== 'singles' && !stips.find((s) => s.id === type)?.unlocked) throw new Error(`${type} is not unlocked against this opponent yet`);
+    const forced = c.flags.forcedMatch && c.flags.forcedMatch.who === opponentId ? c.flags.forcedMatch : null;
+    if (forced) { type = forced.type || type; stakes = forced.stakes || stakes; }
+    if (type !== 'singles' && !forced && !stips.find((s) => s.id === type)?.unlocked) throw new Error(`${type} is not unlocked against this opponent yet`);
+    let title = null;
+    if (stakes === 'title') {
+      title = this.universe.titlesList().find((t) => this._titleApplies(t) && (t.holder === opponentId || (t.holder === c.player.id && (this.suggestOpponents().some((o) => o.id === opponentId && o.defense) || forced))));
+      if (!title) throw new Error('no championship is available against this opponent');
+      title = this._titleInfo(title);
+    }
     if (!PLANS[plan]) throw new Error('unknown plan');
     const ent = entrance || c.player.entrance.style;
     const booking = makeBooking(c, [w], {
       type, show: ev.displayName || ev.name, ppv: ev.kind === 'ple' ? ev.displayName : null, ppvTier: ev.kind === 'ple' ? ev.tier : 0,
-      mainEvent: ev.kind === 'ple' || c.player.popularity > 70, label: `${PLANS[plan].label} / ${ENTRANCES[ent].label}`, storyline: this._storylineWith(w.id),
+      mainEvent: ev.kind === 'ple' || c.player.popularity > 70, title, label: `${PLANS[plan].label} / ${ENTRANCES[ent].label}`, storyline: this._storylineWith(w.id),
     });
     booking.plan = plan; booking.entrance = ent;
     c.pendingMatch = booking;
+    c.flags.bookedToday = { day: c.day, ids: [opponentId] };
+    if (title) c.flags.lastTitleShot = c.day;
     c.flags.phase = 'prematch';
     return booking;
   }
@@ -337,6 +387,8 @@ export class Game {
       summary: out.event.summary, opponents: booking.opponents.map((o) => o.name), matchId: booking.matchId, finishMove: out.event.data.finishMoveName,
       stats: out.event.data.stats, injuries: st.fighters[c.player.id].injuriesNew,
     };
+    result.titleOutcome = this._titleOutcome(booking, out);
+    if (c.flags.forcedMatch && c.flags.forcedMatch.who === booking.opponents[0].id) c.flags.forcedMatch = null;
     c.flags.postMatch = { matchId: booking.matchId, result: out.result, opponentId: booking.opponents[0].id, done: [], eventId: out.event.id };
     c.flags.lastResult = { result: out.result, summary: out.event.summary };
     c.flags.phase = 'postmatch';
@@ -361,6 +413,33 @@ export class Game {
     const unlocked = c.memory.ledger.query({ types: ['achievement_unlocked'], where: { 'data.trigger': pm.eventId } }).map((e) => ({ id: e.data.achievementId, name: e.data.name, explanation: e.data.explanation }));
     const injuries = c.memory.ledger.query({ types: ['injury'] }).filter((e) => e.refs.includes(pm.eventId)).map((e) => ({ part: e.data.part, severity: e.data.severity }));
     return { result: d.result, finish: d.finish, rating: { stars: d.rating, breakdown: d.ratingBreakdown }, durationSec: d.durationSec, event: ev, unlocked, summary: ev.summary, opponents: names, matchId: d.matchId, stats: d.stats, injuries };
+  }
+
+  /** championship consequences of a finished match (single place where titles change hands) */
+  _titleOutcome(booking, out) {
+    const c = this.c, u = this.universe, me = c.player.id;
+    if (!booking.title) return null;
+    const t = u.titles[booking.title.id];
+    const ev = out.event, d = ev.data;
+    const decisive = ['pinfall', 'submission', 'objective', 'ten_count', 'falls'].includes(d.finish);
+    const mk = (type, data, summary) => c.record({ key: `${ev.key}:${type}`, category: 'career', type, refs: [ev.id], participants: [me, ...d.opponents], summary, importance: 4, data: { titleId: t.id, titleName: t.name, titleClass: t.cls, era: c.era, ppvTier: d.ppvTier, ...data } });
+    if (t.holder === me) {
+      if (d.result === 'loss' && decisive) {
+        u.setChampion(t.id, d.opponents[0], c.day, { by: me });
+        mk('title_loss', { to: d.opponents[0] }, `${c.player.name} lost the ${t.name} to ${booking.opponents[0].name}.`);
+        return 'lost';
+      }
+      const success = d.result !== 'loss' || !decisive;
+      u.recordDefense(t.id, c.day);
+      mk('title_defense', { success: true, defenseNumber: t.defenses, opponent: d.opponents[0], retainedBy: d.finish }, `${c.player.name} retained the ${t.name} (defense #${t.defenses}).`);
+      return 'retained';
+    }
+    if (d.result === 'win' && decisive) {
+      u.setChampion(t.id, me, c.day, { by: d.opponents[0] });
+      mk('title_win', { from: d.opponents[0], wmWin: d.ppvTier >= 2 }, `${c.player.name} won the ${t.name} from ${booking.opponents[0].name}!`);
+      return 'won';
+    }
+    return 'no-change';
   }
 
   // ------------------------------------------------------------------ post-match decisions
@@ -455,7 +534,7 @@ export class Game {
   endPostMatch() {
     const c = this.c;
     c.flags.postMatch = null; c.flags.phase = 'home';
-    c.advanceDays(1); this._universeTick(1);
+    c.advanceDays(1); this._universeTick();
     return this.home();
   }
 }

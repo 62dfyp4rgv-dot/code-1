@@ -188,6 +188,7 @@ const RULES = {
     for (const t of e.tags || []) addTag(world, t.a, t.b, t.tag, ev.id);
     for (const o of e.obligations || []) addObligation(world, { id: `ob:${ev.id}:${o.kind}:${o.from}`, kind: o.kind, from: o.from, to: o.to, dueDay: ev.day + (o.inDays ?? 7), source: ev.id });
   },
+  scenario_choice(world, ev) { RULES.decision(world, ev); },
   obligation_resolved(world, ev) {
     const o = world.obligations.find((x) => x.id === ev.data.obligationId);
     if (o) { o.status = ev.data.how || 'done'; o.resolvedEvent = ev.id; o.resolvedDay = ev.day; }

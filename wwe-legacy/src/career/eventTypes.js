@@ -24,5 +24,7 @@ export const EVENT_TYPES = {
   milestone: { category: 'career', emitter: 'career/career.checkMilestones' }, training: { category: 'personal', emitter: 'career/training' },
   achievement_unlocked: { category: 'achievement', emitter: 'achievements/engine' }, scenario_choice: { category: 'story', emitter: 'story/scenarios' },
   decision: { category: 'personal', emitter: 'story/scenarios' }, goal_set: { category: 'personal', emitter: 'career/game' },
-  world_match: { category: 'world', emitter: 'universe/sim' }, world_title_change: { category: 'world', emitter: 'universe/sim' },
+  world_match: { category: 'world', emitter: 'universe/sim' }, world_title_change: { category: 'world', emitter: 'universe/sim' }, world_alliance: { category: 'world', emitter: 'universe/sim' },
+  world_betrayal: { category: 'world', emitter: 'universe/sim' }, world_retirement: { category: 'world', emitter: 'universe/sim' }, world_era: { category: 'world', emitter: 'universe/sim' }, world_return: { category: 'world', emitter: 'universe/sim' },
+  record_lost: { category: 'career', emitter: 'universe/records' }, scenario_choice: { category: 'story', emitter: 'story/scenarios' },
 };
