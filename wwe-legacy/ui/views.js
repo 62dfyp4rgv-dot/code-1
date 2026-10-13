@@ -106,11 +106,15 @@ export function home(S) {
   const next = h.next;
   const today = next && next.inDays === 0;
   let action = '';
-  if (ph === 'match') action = `<button class="btn primary" data-action="resumeMatch" id="btn-resume">Resume Match</button>`;
+  if (h.scenario) action = `<button class="btn primary" data-action="openScenario" id="btn-scenario">Something is happening: handle it</button>`;
+  else if (ph === 'rumble') action = `<button class="btn primary" data-action="resumeRumble" id="btn-resume-rumble">Resume the Royal Rumble</button>`;
+  else if (ph === 'match') action = `<button class="btn primary" data-action="resumeMatch" id="btn-resume">Resume Match</button>`;
   else if (ph === 'postmatch') action = `<button class="btn primary" data-action="toResult">Post-Match Decisions</button>`;
   else if (ph === 'prematch') action = `<button class="btn primary" data-action="toPrep">Back to Match Preparation</button>`;
+  else if (today && h.rumbleToday) action = `<button class="btn primary" data-action="startRumble" id="btn-rumble">Enter the Royal Rumble</button>`;
   else if (today) action = `<button class="btn primary" data-action="bookTonight" id="btn-book">Book Tonight's Match</button>`;
-  const timeCard = ph === 'home' ? `<div class="card"><div class="row spread"><h2>${today ? 'Show day' : 'Before the show'}</h2>${today ? '' : `<span class="pill">${next ? `${next.inDays} day${next.inDays === 1 ? '' : 's'}` : ''}</span>`}</div>
+  const held = g.universe.titlesOf(p.id);
+  const timeCard = ph === 'home' && !h.scenario ? `<div class="card"><div class="row spread"><h2>${today ? 'Show day' : 'Before the show'}</h2>${today ? '' : `<span class="pill">${next ? `${next.inDays} day${next.inDays === 1 ? '' : 's'}` : ''}</span>`}</div>
       ${today ? '<p class="muted">Training is off until after tonight\'s show.</p>' : `<div class="grid2">${Object.entries(TRAINING).map(([id, t]) => `<button class="btn small" data-action="train" data-id="${id}"><span class="t">${esc(t.label)}</span></button>`).join('')}</div>
       <div class="row"><button class="btn grow" data-action="rest" id="btn-rest">Rest a day</button><button class="btn grow" data-action="advance" id="btn-advance">Go to the show</button></div>`}</div>` : '';
   const injuries = h.status.injuries;
@@ -123,6 +127,8 @@ export function home(S) {
     </div>
     ${next ? `<div class="card"><div class="eyebrow">Next event</div><div class="row spread"><h2>${esc(next.displayName || next.name)}</h2>${next.kind === 'ple' ? '<span class="pill brass">PLE</span>' : ''}</div><div class="muted">${esc(next.dateText)} · ${today ? 'tonight' : `in ${next.inDays} day${next.inDays === 1 ? '' : 's'}`}</div></div>` : ''}
     ${action}
+    ${held.length ? `<div class="card" style="border-color:var(--brass-fill)"><div class="eyebrow">Champion</div>${held.map((t) => `<div class="row spread"><h3>${esc(t.name)}</h3><span class="pill brass">${c.day - t.since} days · ${t.defenses} def.</span></div>`).join('')}</div>` : ''}
+    ${h.lastScenario && c.day - h.lastScenario.day < 3 ? `<div class="card plain"><div class="eyebrow">${esc(h.lastScenario.title)}</div><p>${esc(h.lastScenario.text)}</p></div>` : ''}
     <div class="card">
       <div class="stat"><span>Fatigue</span>${bar(h.status.fatigue, 100, h.status.fatigue > 70 ? 'rope' : '')}<span class="num">${h.status.fatigue}</span></div>
       <div class="stat"><span>Popularity</span>${bar(h.status.popularity, 100, 'brass')}<span class="num">${h.status.popularity}</span></div>
@@ -135,10 +141,11 @@ export function home(S) {
   </main>`;
 }
 
-const oppCard = (o, sel) => `<div class="card" style="${sel ? 'border-color:var(--rope)' : ''}">
+const oppCard = (o, sel) => `<div class="card" style="${sel || o.title || o.forced ? 'border-color:var(--rope)' : ''}">
+  ${o.title ? `<div class="row"><span class="pill brass">${o.defense ? 'Title defense' : 'Title match'}</span><b>${esc(o.title.name)}</b></div>` : ''}${o.forced && !o.title ? '<div class="row"><span class="pill rope">Scripted match</span></div>' : ''}${o.rumbleShot ? '<div class="row"><span class="pill brass">Rumble winner\'s shot</span></div>' : ''}
   <div class="row spread"><h3>${esc(o.name)}</h3><span class="pill ${o.alignment === 'heel' ? 'rope' : o.alignment === 'face' ? 'good' : ''}">${cap(o.alignment)}</span></div>
   <div class="row wrap"><span class="pill">${cap(o.style)}</span><span class="pill">OVR ${o.overall}</span><span class="pill">Pop ${o.popularity}</span><span class="pill">${esc(o.record)}</span>${o.rivalry ? `<span class="pill rope">Rivalry ${o.rivalry.heat}</span>` : ''}${o.tags.slice(0, 2).map((t) => `<span class="pill warn">${cap(t)}</span>`).join('')}</div>
-  <div class="row"><button class="btn small grow" data-action="scout" data-id="${o.id}">Scout</button><button class="btn small primary grow" data-action="pickOpp" data-id="${o.id}">Face ${esc(o.name.split(' ')[0])}</button></div></div>`;
+  <div class="row"><button class="btn small grow" data-action="scout" data-id="${o.id}">Scout</button><button class="btn small primary grow" data-action="pickOpp" data-id="${o.id}" data-stakes="${o.stakes || ''}" data-type="${o.type || ''}">Face ${esc(o.name.split(' ')[0])}</button></div></div>`;
 
 function book(S) {
   const opps = S.g.suggestOpponents();
@@ -153,7 +160,9 @@ function prep(S) {
   const scout = S.ui.scout && S.ui.scout.id === o.id ? S.ui.scout : null;
   const stips = g.availableStipulations(o.id);
   const sel = S.ui.prep;
+  const stake = S.ui.stakes ? g.suggestOpponents().find((x) => x.id === o.id && x.stakes === S.ui.stakes) : null;
   return `<main class="screen">${header(`vs ${o.name}`, 'Match preparation', back('closeSub'))}
+    ${stake && stake.title ? `<div class="card" style="border-color:var(--brass-fill)"><span class="pill brass">${stake.defense ? 'Title defense' : 'Title match'}</span><h3>${esc(stake.title.name)}</h3></div>` : ''}
     ${oppCard(card, false).replace(/<div class="row"><button class="btn small grow" data-action="scout"[\s\S]*?<\/div><\/div>$/, '</div>')}
     ${scout ? `<div class="card"><h3>Scouting report</h3><p>Favours ${esc(scout.favours)}.</p>${kv('Strengths', esc(scout.strong.map(cap).join(', ')))}${kv('Weaknesses', esc(scout.weak.map(cap).join(', ')))}${kv('Finisher', esc(scout.finisher || '—'))}${scout.tips.map((t) => `<p class="line">${esc(t)}</p>`).join('')}${scout.history.map((l) => `<p class="line">${esc(l.text)}<span class="why">memory · ${l.refs.length} event${l.refs.length === 1 ? '' : 's'}</span></p>`).join('')}</div>`
       : `<button class="btn" data-action="scout" data-id="${o.id}">Scout ${esc(o.name.split(' ')[0])}</button>`}
@@ -259,13 +268,14 @@ export function result(S) {
 
 // ---------------------------------------------------------------- career
 export function career(S) {
-  const c = S.g.career, p = c.player;
+  const g = S.g, c = g.career, p = c.player;
   if (S.sub === 'recordbook') return recordBook(S);
   const tl = c.timeline({ minImportance: S.ui.tlMin || 2, limit: 40 });
   const attrs = Object.entries(p.attrs);
   return `<main class="screen">${header(p.name, p.nickname || `${cap(p.style)} · ${cap(p.alignment)}`, `<span class="pill brass">OVR ${c.overall()}</span>`)}
     <div class="card"><h3>Attributes</h3>${attrs.map(([k, v]) => `<div class="stat"><span>${cap(k)}</span>${bar(v)}<span class="num">${Math.round(v)}</span></div>`).join('')}
       <div class="stat"><span>Mic skills</span>${bar(p.mic, 100, 'good')}<span class="num">${Math.round(p.mic)}</span></div><div class="stat"><span>Charisma</span>${bar(p.charisma, 100, 'good')}<span class="num">${Math.round(p.charisma)}</span></div></div>
+    ${g.universe.titlesOf(p.id).length || c.stats.s.titles.won ? `<div class="card"><h3>Championships</h3>${c.stats.s.titles.reigns.map((r) => `<div class="kv"><span>${esc(r.name)}</span><span class="v">${r.endDay == null ? 'Current' : ''} ${(r.endDay ?? c.day) - r.startDay}d · ${r.defenses} def.</span></div>`).join('')}</div>` : ''}
     <div class="card"><h3>Moves</h3>${kv('Finisher', esc(p.finisher?.name || 'Style default'))}${kv('Signatures', esc((p.signatures || []).map((s) => s.name).join(', ') || 'Style defaults'))}${kv('Entrance', esc(ENTRANCES[p.entrance.style]?.label || p.entrance.style))}${p.goals.length ? kv('Goal', esc(p.goals[0])) : ''}</div>
     <button class="btn" data-action="openSub" data-id="recordbook"><span class="t"><b>Career Record Book</b><small>Every number opens to its evidence</small></span><span class="r">Open</span></button>
     <div class="card"><div class="row spread"><h3>Timeline</h3><div class="chips" style="max-width:60%">${[[1, 'All'], [2, 'Notable'], [4, 'Major']].map(([n, l]) => `<button class="chip ${(S.ui.tlMin || 2) === n ? 'on' : ''}" data-action="tlmin" data-id="${n}">${l}</button>`).join('')}</div></div>
@@ -423,4 +433,54 @@ export function evidenceSheet(S, sec, i) {
   const evs = it.evidence.map((id) => c.memory.ledger.get(id)).filter(Boolean).slice(-60).reverse();
   return `<div class="row spread"><h2>${esc(it.label)}</h2><button class="btn small ghost" data-action="closeSheet">Close</button></div><p class="muted">${esc(it.value)} · ${it.evidence.length} event(s) produced this number.</p>
     ${evs.map((e) => `<button class="item" data-action="inspect" data-id="${e.id}" style="background:none;border:0;border-bottom:1px solid var(--line);text-align:left;color:inherit;font:inherit;cursor:pointer"><span class="dot ${e.data.result === 'win' ? 'win' : e.data.result === 'loss' ? 'loss' : ''}"></span><span class="col" style="gap:0"><span class="eyebrow">${esc(e.date)}</span><span>${esc(e.summary)}</span></span></button>`).join('')}`;
+}
+
+// ---------------------------------------------------------------- scenario
+export function scenario(S) {
+  const g = S.g, inst = g.pendingScenario(), res = S.ui.scnResult;
+  if (res) {
+    return `<main class="screen noTab" id="scenario-result"><div class="banner"><div class="eyebrow">${esc(res.title)}</div><h1>Outcome</h1></div>
+      <div class="card"><p>${esc(res.text)}</p>${res.notes.map((n) => `<p class="line">${esc(n)}</p>`).join('')}${res.events.slice(1).map((e) => `<div class="row"><span class="pill brass">${esc(cap(e.type))}</span><span class="muted">${esc(e.summary)}</span></div>`).join('')}</div>
+      <button class="btn primary" data-action="scnDone" id="btn-scn-done">Continue</button></main>`;
+  }
+  if (!inst) return `<main class="screen noTab"><div class="empty">Nothing is happening right now.</div><button class="btn primary" data-action="scnDone">Back</button></main>`;
+  return `<main class="screen noTab" id="scenario">
+    <div class="banner"><div class="eyebrow">${esc(cap(inst.category))}</div><h1>${esc(inst.title)}</h1></div>
+    <div class="card">${inst.body.map((b) => `<p>${esc(b)}</p>`).join('')}${inst.memory.map((l) => `<p class="line">${esc(l.text)}<span class="why">memory · ${l.refs.length} event${l.refs.length === 1 ? '' : 's'}</span></p>`).join('')}</div>
+    <div class="col"><div class="eyebrow">What do you do?</div>${inst.choices.map((ch) => `<button class="btn" ${ch.enabled ? '' : 'disabled'} data-action="scnChoose" data-id="${esc(ch.id)}"><span class="t"><b>${esc(ch.label)}</b>${ch.hint ? `<small>${esc(ch.hint)}</small>` : ''}${!ch.enabled ? '<small>Not available right now.</small>' : ''}</span>${ch.risk ? `<span class="hint ${ch.risk === 'low' ? 'Good' : ch.risk === 'med' ? 'Fair' : 'Risky'}">${esc(ch.risk)} risk</span>` : ''}</button>`).join('')}</div></main>`;
+}
+
+// ---------------------------------------------------------------- Royal Rumble
+export function rumble(S) {
+  const g = S.g, v = g.rumbleView(), d = g.rumble.getDecision();
+  const e = g.rumble;
+  let panel = '';
+  if (e.over) {
+    const win = e.result.winner === g.career.player.id;
+    panel = `<div class="card"><h2>${win ? 'You won the Royal Rumble!' : v.out ? 'You are eliminated' : `${esc(e.result.winnerName)} wins`}</h2><button class="btn primary" data-action="finishRumble" id="btn-finish-rumble">See the result</button></div>`;
+  } else if (d) {
+    const head = d.kind === 'danger' ? `<div class="prompt"><div class="eyebrow">Danger</div><h2>${esc(e.state.fighters[d.attacker].name)} is trying to eliminate you!</h2></div>`
+      : d.kind === 'team' ? '<div class="prompt"><div class="eyebrow">Alliance</div><h2>Who do you team up with?</h2></div>' : `<div class="prompt"><div class="eyebrow">Your move · ${Math.floor(v.t / 60)} min</div><h2>Survive and eliminate</h2></div>`;
+    const opts = d.options.filter((o) => o.enabled !== false);
+    panel = `<div class="col" id="decision" data-kind="${d.kind}">${head}<div class="opts">${opts.map((o) => `<button class="btn" data-action="rchoose" data-id="${esc(o.id)}"><span class="t"><b>${esc(o.label)}</b>${o.desc ? `<small>${esc(o.desc)}</small>` : ''}</span>${o.p != null ? `<span class="hint ${o.p >= 0.65 ? 'Good' : o.p >= 0.45 ? 'Fair' : 'Risky'}">${Math.round(o.p * 100)}%</span>` : ''}</button>`).join('')}</div></div>`;
+  }
+  const lines = S.feed.slice(-40);
+  return `<div class="match" id="rumble">
+    <div class="board" aria-live="polite">
+      <div class="names"><div class="nm">Royal Rumble ${v.year}</div><div class="clock num">${Math.floor(v.t / 60)}:${String(v.t % 60).padStart(2, '0')}<small>${v.entered}/30 entered</small></div><div class="nm r">${v.out ? 'Eliminated' : `Entry #${v.entry}`}</div></div>
+      <div class="meter sta"><span>STA</span>${bar(v.me.stamina, v.me.max)}</div><div class="meter mom"><span>MOM</span>${bar(v.me.momentum)}</div>
+      <div class="posrow"><span class="eyebrow" style="color:var(--mat-ink)">In the ring: ${v.ringCount}</span><span class="eyebrow" style="color:var(--mat-ink)">Your eliminations: ${v.elims}${v.me.ally ? ` · ally ${esc(v.me.ally)}` : ''}</span></div>
+      <div class="chips">${v.ring.slice(0, 14).map((r) => `<span class="pill" style="color:var(--mat-ink);${r.isMe ? 'border-color:var(--brass-fill)' : r.rival ? 'border-color:var(--rope)' : ''}">${esc(r.name.split(' ').slice(-1)[0])} ${r.stamina}%</span>`).join('')}${v.ring.length > 14 ? `<span class="pill" style="color:var(--mat-ink)">+${v.ring.length - 14}</span>` : ''}</div>
+    </div>
+    <div class="feed" id="feed" role="log">${lines.length ? lines.map((l) => `<p class="${/elimination|end/.test(l.type) ? 'gold' : /danger|attempt/.test(l.type) ? 'hot' : ''}">${esc(l.text)}</p>`).join('') : '<p>The countdown begins...</p>'}</div>
+    ${panel}</div>`;
+}
+
+export function rumbleResult(S) {
+  const r = S.ui.rumbleResult;
+  return `<main class="screen noTab"><div class="banner"><div class="eyebrow">Royal Rumble ${r.year}</div><h1>${r.won ? 'Winner!' : 'Eliminated'}</h1><p style="opacity:.85">${esc(r.summary)}</p></div>
+    <div class="card"><h3>Your Rumble</h3>${kv('Entry number', r.entryNumber)}${kv('Eliminations', r.eliminations)}${kv('Time in the ring', `${Math.floor(r.survivalSec / 60)}m ${r.survivalSec % 60}s`)}${kv('Final two', r.finalTwo ? 'Yes' : 'No')}${kv('Winner', esc(r.winnerName))}</div>
+    ${r.unlocked.length ? `<div class="card" style="border-color:var(--brass-fill)"><h3>Achievements unlocked</h3>${r.unlocked.map((u) => `<div class="item"><span class="dot gold"></span><div class="col" style="gap:2px"><b>${esc(u.name)}</b><span class="muted" style="font-size:.85rem">${esc(u.explanation)}</span></div></div>`).join('')}</div>` : ''}
+    ${r.won ? '<p class="line">As the Rumble winner you have earned a championship match at WrestleMania.</p>' : ''}
+    <button class="btn primary" data-action="rumbleDone" id="btn-rumble-done">Back to the locker room</button></main>`;
 }

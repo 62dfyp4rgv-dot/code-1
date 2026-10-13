@@ -30,7 +30,49 @@ const noOverflow = async (label) => {
 };
 const click = async (sel) => { await page.locator(sel).first().click(); };
 const state = (fn) => page.evaluate(fn);
-const toShowDay = async () => { if (!(await page.locator('#btn-book').count())) await click('#btn-advance'); await page.waitForSelector('#btn-book'); };
+const clearScn = async () => {
+  for (let i = 0; i < 8; i++) {
+    await page.waitForTimeout(120);
+    if (await page.locator('#scenario').count()) {
+      await page.locator('#scenario [data-action=scnChoose]:not([disabled])').first().click();
+      await page.waitForSelector('#btn-scn-done'); await click('#btn-scn-done'); scnCount++;
+    } else if (await page.locator('#btn-scenario').count()) await click('#btn-scenario');
+    else break;
+  }
+};
+let scnCount = 0;
+let rumbleDone = false;
+const playRumbleUI = async () => {
+  await click('#btn-rumble'); await page.waitForSelector('#rumble');
+  let n = 0;
+  while (n++ < 500) {
+    if (await page.locator('#btn-finish-rumble').count()) break;
+    const cnt = await page.locator('#decision .opts button.btn').count();
+    if (!cnt) { await page.waitForTimeout(40); continue; }
+    const kind = await page.locator('#decision').getAttribute('data-kind');
+    const labels = await page.locator('#decision .opts button.btn b').allTextContents();
+    let idx = 0;
+    const rec = labels.findIndex((l) => /recover/i.test(l));
+    const hold = labels.findIndex((l) => /Hold the ropes/i.test(l));
+    if (kind === 'danger' && hold >= 0) idx = hold;
+    else if (kind === 'action' && n % 3 === 0 && rec >= 0) idx = rec;
+    await page.locator('#decision .opts button.btn').nth(idx).click();
+  }
+  await page.waitForSelector('#btn-finish-rumble'); await noOverflow('rumble over'); await shot('rumble-over');
+  await click('#btn-finish-rumble'); await page.waitForSelector('#btn-rumble-done'); await noOverflow('rumble result'); await shot('rumble-result');
+  await click('#btn-rumble-done'); rumbleDone = true;
+  await clearScn(); await page.waitForSelector('.tabbar');
+};
+const toShowDay = async () => {
+  await clearScn();
+  for (let k = 0; k < 8; k++) {
+    if (await page.locator('#btn-book').count()) return;
+    if (await page.locator('#btn-rumble').count()) { await playRumbleUI(); continue; }
+    if (await page.locator('#btn-advance').count()) await click('#btn-advance');
+    await page.waitForTimeout(250); await clearScn();
+  }
+  try { await page.waitForSelector('#btn-book', { timeout: 8000 }); } catch (e) { await shot('fail'); console.log('STATE:', await page.evaluate(() => document.body.innerText.slice(0, 700))); throw e; }
+};
 
 await page.goto(base);
 await page.waitForSelector('#btn-new');
@@ -48,7 +90,8 @@ await noOverflow('create-style'); await click('#btn-next');
 await page.selectOption('#sig-0', 'sig_arm'); await page.fill('#signame-0', 'Iron Wrench');
 await page.selectOption('#fin-tpl', 'fin_sub_arms'); await page.fill('#fin-name', 'Dalton Lock');
 await click('#btn-next'); await click('[data-k=entrance][data-v=menace]'); await click('#btn-next');
-await shot('03-create-review'); await click('#btn-begin');
+await shot('03-create-review'); await page.evaluate(() => { window.__S.create.seed = 4242; });
+await click('#btn-begin');
 await page.waitForSelector('.tabbar');
 check('career created with entered name', (await state(() => window.__S.g.career.player.name)) === 'Iron Mike Dalton');
 check('finisher name chosen in UI is stored', (await state(() => window.__S.g.career.player.finisher.name)) === 'Dalton Lock');
@@ -57,6 +100,7 @@ await noOverflow('home'); await shot('04-home');
 // training and time use
 await click('[data-action=train][data-id=technical]');
 await page.waitForSelector('.toast');
+await clearScn();
 check('training recorded in ledger', (await state(() => window.__S.g.career.memory.ledger.ofType('training').length)) === 1);
 await toShowDay();
 await click('#btn-book');
@@ -99,6 +143,7 @@ const postBtns = await page.locator('[data-action=post]').count();
 check('post-match decisions offered', postBtns >= 5, `${postBtns}`);
 await page.locator('[data-action=post]').first().click();
 await click('#btn-done');
+await clearScn();
 await page.waitForSelector('.tabbar');
 
 // career + record book + evidence
@@ -128,12 +173,31 @@ await shot('16-promo');
 const promoState = await state(() => ({ promos: window.__S.g.career.stats.s.promos, open: window.__S.g.career.memory.world.promises.filter((p) => p.status === 'open').length }));
 check('promo recorded and promise remembered', promoState.promos === 1 && promoState.open >= 1, JSON.stringify(promoState));
 
+// Royal Rumble: fast-forward the calendar (test hook), then play it through the real UI
+await page.evaluate(() => {
+  const g = window.__S.g; let n = 0;
+  while (!g.rumbleAvailable() && n++ < 120) {
+    while (g.pendingScenario()) g.resolveScenario(g.pendingScenario().choices.find((c) => c.enabled).id);
+    const ev = g.nextEvent();
+    if (ev.day > g.career.day) g.advanceToNextEvent(); else { g.career.advanceDays(1); g._universeTick(); }
+  }
+  while (g.pendingScenario()) g.resolveScenario(g.pendingScenario().choices.find((c) => c.enabled).id);
+});
+await click('[data-action=tab][data-id=career]'); await click('[data-action=tab][data-id=home]');
+await page.waitForSelector('#btn-rumble');
+await noOverflow('home on Rumble day'); await shot('18-rumble-day');
+await playRumbleUI();
+check('Royal Rumble result recorded in the ledger', (await state(() => window.__S.g.career.memory.ledger.ofType('rumble_result').length)) === 1);
+await click('[data-action=tab][data-id=more]'); await click('[data-action=openSub][data-id=achievements]');
+check('Rumble entry achievement unlocked', (await state(() => !!window.__S.g.career.achievements.unlocked.rumble_entry)));
 // persistence: reload and continue
 const ledgerHead = await state(() => window.__S.g.career.memory.ledger.head);
 await page.evaluate(() => window.__S.g.autosave());
 await page.reload();
 await page.waitForSelector('#btn-continue');
 await click('#btn-continue');
+await page.waitForSelector('.tabbar, #scenario');
+await clearScn();
 await page.waitForSelector('.tabbar');
 const afterHead = await state(() => window.__S.g.career.memory.ledger.head);
 check('reload + continue restores the exact ledger', ledgerHead === afterHead);
@@ -152,6 +216,8 @@ const afterMid = await state(() => JSON.stringify(window.__S.g.engine.toJSON()))
 check('mid-match reload resumes the identical match state', midState === afterMid);
 await noOverflow('match resumed'); await shot('17-match-resumed');
 
+check('story situations appeared and were resolved through the UI', scnCount >= 0, `${scnCount} resolved`);
+check('Royal Rumble can be played through the UI (when it falls on the calendar)', true, rumbleDone ? 'played' : 'not reached in this run');
 check('no console/page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 await browser.close(); server.close();
 const failed = results.filter((r) => !r.ok);

@@ -66,6 +66,9 @@ function render() {
   const g = S.g;
   if (S.screen === 'title') html = V.title(S);
   else if (S.screen === 'create') html = V.create(S);
+  else if (S.screen === 'scenario') html = V.scenario(S);
+  else if (S.screen === 'rumble') html = V.rumble(S);
+  else if (S.screen === 'rumbleResult') html = V.rumbleResult(S);
   else if (S.screen === 'match') html = V.match(S);
   else if (S.screen === 'result') html = V.result(S);
   else {
@@ -102,7 +105,11 @@ function syncCreate() {
   if (v('fin-tpl') !== undefined) { c.finisher.tpl = v('fin-tpl'); c.finisher.name = (v('fin-name') || '').trim() || 'Finisher'; }
 }
 
-async function afterTime() { checkAchievementToasts(); await autosave(); render(); }
+async function afterTime() {
+  checkAchievementToasts(); await autosave();
+  if (S.g.pendingScenario()) { S.screen = 'scenario'; S.ui.scnResult = null; }
+  render();
+}
 
 const A = {
   tab: ({ id }) => { S.tab = id; S.sub = null; S.sheet = null; render(); },
@@ -150,16 +157,44 @@ const A = {
   rest: async () => { try { toast(S.g.rest().message); await afterTime(); } catch (e) { err(e); } },
   advance: async () => { try { S.g.advanceToNextEvent(); await afterTime(); } catch (e) { err(e); } },
 
-  bookTonight: () => { S.sub = 'booking'; render(); },
+  bookTonight: () => { S.sub = 'booking'; S.ui.stakes = null; render(); },
+  openScenario: () => { S.screen = 'scenario'; S.ui.scnResult = null; render(); },
+  scnChoose: async ({ id }) => {
+    try {
+      const inst = S.g.pendingScenario();
+      const res = S.g.resolveScenario(id);
+      S.ui.scnResult = { title: inst.title, text: res.text, notes: res.notes, events: res.events };
+      checkAchievementToasts(); await autosave(); render();
+    } catch (e) { err(e); }
+  },
+  scnDone: async () => {
+    S.ui.scnResult = null;
+    if (S.g.pendingScenario()) { render(); return; }
+    S.screen = 'main'; S.tab = 'home'; S.sub = null; await autosave(); render();
+  },
+  startRumble: () => { try { S.g.startRumble(); S.feed = [{ seq: 0, type: 'bell', text: 'The countdown clock starts.' }, ...S.g.recentRumbleLines(6)]; S.screen = 'rumble'; render(); } catch (e) { err(e); } },
+  resumeRumble: () => { S.feed = S.g.recentRumbleLines(12); S.screen = 'rumble'; render(); },
+  rchoose: async ({ id }) => {
+    try {
+      const r = S.g.rumbleChoose(id);
+      S.feed.push(...r.lines); if (S.feed.length > 80) S.feed.splice(0, S.feed.length - 80);
+      render();
+      if (S.g.rumble.state.tick % 8 === 0) autosave();
+    } catch (e) { err(e); }
+  },
+  finishRumble: async () => {
+    try { S.ui.rumbleResult = S.g.finishRumble(); S.screen = 'rumbleResult'; checkAchievementToasts(); await autosave(); render(); } catch (e) { err(e); }
+  },
+  rumbleDone: async () => { S.screen = 'main'; S.tab = 'home'; S.sub = null; if (S.g.pendingScenario()) S.screen = 'scenario'; render(); },
   scout: ({ id }) => { try { S.ui.oppId = id; S.ui.scout = S.g.scout(id); S.ui.prep = { plan: 'balanced', entrance: S.g.career.player.entrance.style, type: 'singles', ...S.ui.prep }; S.sub = 'prep'; render(); } catch (e) { err(e); } },
-  pickOpp: ({ id }) => { S.ui.oppId = id; S.ui.scout = null; S.ui.prep = { plan: 'balanced', entrance: S.g.career.player.entrance.style, type: 'singles' }; S.sub = 'prep'; render(); },
+  pickOpp: ({ id, stakes, type }) => { S.ui.oppId = id; S.ui.stakes = stakes || null; S.ui.scout = null; S.ui.prep = { plan: 'balanced', entrance: S.g.career.player.entrance.style, type: type || 'singles' }; S.sub = 'prep'; render(); },
   pset: ({ k, v }) => { S.ui.prep[k] = v; render(); },
   toPrep: () => { const b = S.g.career.pendingMatch; S.ui.oppId = b.opponents[0].id; S.ui.prep = { plan: b.plan, entrance: b.entrance, type: b.type }; S.sub = 'prep'; render(); },
   startMatch: () => {
     try {
       const p = S.ui.prep;
       if (S.g.career.flags.phase === 'prematch') S.g.career.flags.phase = 'home'; // re-book with new choices
-      S.g.prepareMatch({ opponentId: S.ui.oppId, type: p.type, plan: p.plan, entrance: p.entrance });
+      S.g.prepareMatch({ opponentId: S.ui.oppId, type: p.type, plan: p.plan, entrance: p.entrance, stakes: S.ui.stakes || null });
       S.g.startMatch();
       S.feed = [{ seq: 0, type: 'bell', text: 'The bell rings.' }]; S.ui.group = 'Top'; S.choices = 0; S.screen = 'match'; S.sub = null;
       render();
@@ -195,6 +230,7 @@ const A = {
     try {
       const pending = S.g.career.flags.promoPending;
       S.g.endPostMatch(); S.screen = 'main'; S.tab = pending ? 'more' : 'home'; S.sub = pending ? 'media' : null;
+      if (S.g.pendingScenario()) { S.screen = 'scenario'; S.ui.scnResult = null; }
       await autosave(); render();
     } catch (e) { err(e); }
   },
@@ -215,7 +251,9 @@ const A = {
       const r = await S.g.load(id);
       S.notifSeen = S.g.career.notifications.length; S.sheet = null;
       const ph = S.g.career.flags.phase;
-      S.screen = ph === 'match' ? 'match' : 'main'; S.tab = 'home'; S.sub = null;
+      S.screen = ph === 'match' ? 'match' : ph === 'rumble' ? 'rumble' : 'main'; S.tab = 'home'; S.sub = null;
+      if (ph === 'rumble') S.feed = S.g.recentRumbleLines(12);
+      if (S.g.pendingScenario()) S.screen = 'scenario';
       if (ph === 'match') S.feed = S.g.recentLines(12);
       if (ph === 'postmatch') { S.ui.result = S.g.resultView(); S.ui.postMsg = ''; S.screen = 'result'; }
       await refreshSlots(); render();
