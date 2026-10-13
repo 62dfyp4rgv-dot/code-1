@@ -244,6 +244,10 @@ const A = {
       checkAchievementToasts(); await autosave(); render();
     } catch (e) { err(e); }
   },
+  openLegacy: () => { S.tab = 'career'; S.sub = 'legacy'; render(); },
+  retireAsk: () => { S.ui.confirmRetire = true; render(); },
+  retireCancel: () => { S.ui.confirmRetire = false; render(); },
+  retireGo: async () => { try { S.g.retire('choice'); S.ui.confirmRetire = false; checkAchievementToasts(); await autosave(); render(); } catch (e) { err(e); } },
   promoDone: () => { S.ui.promoResult = null; S.sub = null; render(); },
   apStart: async ({ id }) => { try { S.g.startAppearance(id); await autosave(); render(); } catch (e) { err(e); } },
   apAnswer: async ({ id }) => {

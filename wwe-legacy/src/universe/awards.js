@@ -47,6 +47,7 @@ export function processYearEnd(game, year) {
   if (myBest) give('match_of_the_year', 'Match of the Year', myBest.data.rating, aiBest ? aiBest.rating : 0, aiBest?.names);
   c.flags.yearStartPop = { ...(c.flags.yearStartPop || {}), [year + 1]: me.popularity };
   for (const w of u.list()) w.yr = { y: year + 1, w: 0, l: 0 };
+  inductAIHall(c, year);
   c.flags.lastAwardYear = year;
   return results;
 }
@@ -59,4 +60,23 @@ export function maybeYearEnd(game) {
   const out = [];
   while (c.flags.lastAwardYear < year - 1) out.push(...processYearEnd(game, c.flags.lastAwardYear + 1));
   return out;
+}
+
+/** Retired wrestlers with a big enough career are inducted a year or more after they leave. */
+export function aiLegacyPoints(w) {
+  const wins = w.record ? w.record.w : 0;
+  return Math.round(((w.reigns || 0) * 8 + (w.titleDays || 0) / 60 + wins * 0.12 + (w.peakTier ?? w.tier ?? 0) * 7) * 10) / 10;
+}
+export function inductAIHall(c, year) {
+  const u = c.universe;
+  u.hof = u.hof || [];
+  for (const w of Object.values(u.roster)) {
+    if (w.status !== 'retired' || w.release || u.hof.some((h) => h.id === w.id)) continue;
+    if (w.retiredDay == null || c.day - w.retiredDay < 365) continue;
+    const pts = aiLegacyPoints(w);
+    if (pts >= 40) {
+      u.hof.push({ id: w.id, name: w.name, year: year + 1, points: pts });
+      u.note(c.day, 'hall_of_fame', `${w.name} was announced for the Hall of Fame Class of ${year + 1}.`, [w.id]);
+    }
+  }
 }

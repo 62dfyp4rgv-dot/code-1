@@ -196,6 +196,13 @@ const apState = await state(() => ({ interviews: window.__S.g.career.stats.s.int
 check('interview played through the UI and recorded', apState.interviews === 1 && apState.ev === 1 && apSteps === 3, JSON.stringify({ ...apState, apSteps }));
 await click('#btn-ap-done');
 
+// legacy / Hall of Fame view (read-only here; retiring is covered by unit tests)
+await click('[data-action=tab][data-id=career]'); await click('#btn-legacy'); await page.waitForSelector('#legacy');
+await noOverflow('legacy'); await shot('16d-legacy');
+const lgInfo = { details: await page.locator('#legacy details').count(), h1: await page.locator('#legacy .banner h1').innerText() };
+check('legacy view shows a verdict and an evidence-backed breakdown', lgInfo.h1.length > 3 && (await page.locator('#legacy .card h3').first().innerText()).length > 3, JSON.stringify(lgInfo));
+await click('[data-action=closeSub]');
+
 // Royal Rumble: fast-forward the calendar (test hook), then play it through the real UI
 await page.evaluate(() => {
   const g = window.__S.g; let n = 0;

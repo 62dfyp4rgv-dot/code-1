@@ -22,7 +22,7 @@ export const FEATURES = [
   { id: 'c_progress', area: 'career', label: 'Progression: training, fatigue, injuries, popularity, contract/money', status: 'complete', probe: () => has('src/game.js', /train\(/) },
   { id: 'c_finance', area: 'career', label: 'Finance depth (merch, endorsements, expenses, taxes, investments)', status: 'partial', note: 'Salary + bonuses + scenario costs only.' },
   { id: 'c_personal', area: 'career', label: 'Personal life (family, health, hobbies) beyond scenario choices', status: 'partial', note: 'Scenario-driven only; no standalone systems.' },
-  { id: 'c_retire', area: 'career', label: 'Retirement, Hall of Fame induction and legacy summary', status: 'partial', note: 'Retirement flag + scenario; HoF pipeline added in gauntlet rounds if marked complete.' },
+  { id: 'c_retire', area: 'career', label: 'Retirement, Hall of Fame induction and evidence-backed legacy verdict', status: 'complete', probe: () => has('src/career/legacy.js', /retirePlayer/), note: 'HoF induction is recorded at retirement for the Class of the following year (no post-retirement time simulation).' },
   // Calendar / universe
   { id: 'u_calendar', area: 'universe', label: 'Weekly shows + PLE calendar by era (brand split, NXT)', status: 'complete', probe: () => has('src/universe/calendar.js', /PLE_DEFS/) },
   { id: 'u_ai', area: 'universe', label: 'Independent AI universe (AI-vs-AI matches, feuds, alliances, betrayals, injuries, title reigns)', status: 'complete', probe: () => has('src/universe/sim.js', /class UniverseSim/) },

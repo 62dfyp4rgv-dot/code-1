@@ -5,6 +5,7 @@ import { Rng } from './core/rng.js';
 import { clamp, round1 } from './core/util.js';
 import { Career } from './career/career.js';
 import { gainPop } from './career/pace.js';
+import { legacyScore, retirePlayer } from './career/legacy.js';
 import { makeBooking, createEngine } from './career/booking.js';
 import { MatchEngine } from './match/engine.js';
 import { narrate } from './match/commentary.js';
@@ -174,7 +175,10 @@ export class Game {
   }
 
   // ------------------------------------------------------------------ time use
-  _blockedByScenario() { if (this.c.flags.scenario) throw new Error('resolve the pending situation first'); }
+  _blockedByScenario() {
+    if (this.c.flags.scenario) throw new Error('resolve the pending situation first');
+    if (this.c.flags.retired && this.c.flags.phase !== 'retired' && typeof this.c.flags.retired === 'object') this.c.flags.phase = 'retired';
+  }
 
   /** chance that something story-worthy happens while time passes; due obligations always surface */
   _rollScenario(days, contexts = ['weekly']) {
@@ -674,6 +678,18 @@ export class Game {
     this.c.flags.promoPending = null;
     return r;
   }
+
+  // ---- legacy, retirement, Hall of Fame
+  legacyPreview() { return legacyScore(this.c); }
+  retire(reason = 'choice') {
+    if (this.c.flags.retired && typeof this.c.flags.retired === 'object') throw new Error('already retired');
+    this._blockedByScenario();
+    if (this.c.flags.phase !== 'home') throw new Error('finish the current match first');
+    const r = retirePlayer(this.c, reason);
+    this.c.flags.phase = 'retired';
+    return r;
+  }
+  get retired() { return !!this.c.flags.retired; }
 
   // ---- interviews, podcasts, press conferences
   appearanceOptions() { return appearanceOptions(this.c); }

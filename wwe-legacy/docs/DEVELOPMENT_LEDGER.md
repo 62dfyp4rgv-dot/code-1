@@ -21,3 +21,13 @@ One entry per Gauntlet round: what was targeted, what changed, what was measured
 - Largest losses: Independent reviewer score (none); Authored, validated templates (target 2,000 would be complete) (327); Share of scenario templates that read ledger memory (mem trigger / memory block / rivalry / obligation) (0.2); Verified historical data (partial)
 - Regressions: playerAgency -0.18, replayability -0.89
 - Report: docs/gauntlet/round-02.md
+
+## Round 3
+
+- Target: Act on the first independent reviews (narrative 4, memory 6, mobile 6): fix false/stale memory callbacks, promise double-resolution, h2h disagreement, world-vs-ledger check on load, commentary grammar/variety, toast and scoreboard UX; add interviews/podcasts/press
+- Changes: Dialogue: 'last time' only if the latest meeting was controversial; broken promises only quoted by their target; callback cooldowns + phrase variants + vocative fix; promise de-dup and opponent-only win_match judging; rivalry wins credit only the winner; world rebuilt from ledger on load if it disagrees; monthly world_decay events; record-book streak/partner evidence fixed; new interview/podcast/press flows built from ledger facts; commentary rewritten with pronouns, owner-aware move names, cycling variants; sentence-case tidy for scenario text; toast moved to top, scoreboard labels/values; promo tone-specific bodies
+- Mean 8.97 | min 7.51 | >=9: 6/12 | tests 107/107
+- Weakest: WWE universe simulation 7.51, Scenario diversity 7.58, Replayability 8.25
+- Largest losses: Authored, validated templates (target 2,000 would be complete) (327); Verified historical data (partial); Independent reviewer score (4); Share of scenario templates that read ledger memory (mem trigger / memory block / rivalry / obligation) (0.45)
+- Regressions: careerProgression -0.17
+- Report: docs/gauntlet/round-03.md

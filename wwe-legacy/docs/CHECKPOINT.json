@@ -1,36 +1,26 @@
 {
- "updated": "2026-10-13T11:31:06.016Z",
- "lastRound": 2,
- "mean": 8.38,
+ "updated": "2026-10-13T11:50:28.740Z",
+ "lastRound": 3,
+ "mean": 8.97,
  "scores": {
-  "matchEngine": 9.02,
-  "playerAgency": 9.63,
-  "memoryConsistency": 6.89,
-  "achievementIntegrity": 9.79,
-  "scenarioDiversity": 7.59,
-  "narrativeQuality": 5.4,
+  "matchEngine": 9.61,
+  "playerAgency": 9.66,
+  "memoryConsistency": 8.89,
+  "achievementIntegrity": 9.83,
+  "scenarioDiversity": 7.58,
+  "narrativeQuality": 8.27,
   "universeSimulation": 7.51,
-  "careerProgression": 8.75,
-  "mobileUsability": 8.62,
+  "careerProgression": 8.58,
+  "mobileUsability": 9.45,
   "technicalReliability": 10,
-  "performance": 10,
-  "replayability": 7.39
+  "performance": 9.99,
+  "replayability": 8.25
  },
  "nextFocus": [
-  {
-   "category": "narrativeQuality",
-   "criterion": "Independent reviewer score",
-   "value": "none"
-  },
   {
    "category": "scenarioDiversity",
    "criterion": "Authored, validated templates (target 2,000 would be complete)",
    "value": 327
-  },
-  {
-   "category": "memoryConsistency",
-   "criterion": "Share of scenario templates that read ledger memory (mem trigger / memory block / rivalry / obligation)",
-   "value": 0.2
   },
   {
    "category": "universeSimulation",
@@ -38,21 +28,31 @@
    "value": "partial"
   },
   {
-   "category": "mobileUsability",
+   "category": "narrativeQuality",
    "criterion": "Independent reviewer score",
-   "value": "none"
+   "value": 4
+  },
+  {
+   "category": "memoryConsistency",
+   "criterion": "Share of scenario templates that read ledger memory (mem trigger / memory block / rivalry / obligation)",
+   "value": 0.45
+  },
+  {
+   "category": "universeSimulation",
+   "criterion": "Tag-team championships",
+   "value": "unimplemented"
   }
  ],
  "resume": [
   "cd wwe-legacy",
   "npm install",
   "npm test",
-  "node tools/gauntlet.js --round 3 --targets \"<what you will improve>\" --changes \"<what you changed>\""
+  "node tools/gauntlet.js --round 4 --targets \"<what you will improve>\" --changes \"<what you changed>\""
  ],
  "features": {
-  "complete": 13,
+  "complete": 14,
   "partial": 9,
-  "unimplemented": 6
+  "unimplemented": 5
  },
  "files": {
   "ledger": "docs/DEVELOPMENT_LEDGER.md",

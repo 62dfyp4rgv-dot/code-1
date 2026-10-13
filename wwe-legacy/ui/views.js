@@ -106,7 +106,8 @@ export function home(S) {
   const next = h.next;
   const today = next && next.inDays === 0;
   let action = '';
-  if (h.scenario) action = `<button class="btn primary" data-action="openScenario" id="btn-scenario">Something is happening: handle it</button>`;
+  if (c.flags.retired) action = `<button class="btn primary" data-action="openLegacy" id="btn-open-legacy">View your legacy</button>`;
+  else if (h.scenario) action = `<button class="btn primary" data-action="openScenario" id="btn-scenario">Something is happening: handle it</button>`;
   else if (ph === 'rumble') action = `<button class="btn primary" data-action="resumeRumble" id="btn-resume-rumble">Resume the Royal Rumble</button>`;
   else if (ph === 'match') action = `<button class="btn primary" data-action="resumeMatch" id="btn-resume">Resume Match</button>`;
   else if (ph === 'postmatch') action = `<button class="btn primary" data-action="toResult">Post-Match Decisions</button>`;
@@ -114,7 +115,7 @@ export function home(S) {
   else if (today && h.rumbleToday) action = `<button class="btn primary" data-action="startRumble" id="btn-rumble">Enter the Royal Rumble</button>`;
   else if (today) action = `<button class="btn primary" data-action="bookTonight" id="btn-book">Book Tonight's Match</button>`;
   const held = g.universe.titlesOf(p.id);
-  const timeCard = ph === 'home' && !h.scenario ? `<div class="card"><div class="row spread"><h2>${today ? 'Show day' : 'Before the show'}</h2>${today ? '' : `<span class="pill">${next ? `${next.inDays} day${next.inDays === 1 ? '' : 's'}` : ''}</span>`}</div>
+  const timeCard = ph === 'home' && !h.scenario && !c.flags.retired ? `<div class="card"><div class="row spread"><h2>${today ? 'Show day' : 'Before the show'}</h2>${today ? '' : `<span class="pill">${next ? `${next.inDays} day${next.inDays === 1 ? '' : 's'}` : ''}</span>`}</div>
       ${today ? '<p class="muted">Training is off until after tonight\'s show.</p>' : `<div class="grid2">${Object.entries(TRAINING).map(([id, t]) => `<button class="btn small" data-action="train" data-id="${id}"><span class="t">${esc(t.label)}<small class="fx">+${cap(t.attr)}</small></span></button>`).join('')}</div>
       <div class="row"><button class="btn grow" data-action="rest" id="btn-rest">Rest a day</button><button class="btn grow" data-action="advance" id="btn-advance">Go to the show</button></div>`}</div>` : '';
   const injuries = h.status.injuries;
@@ -271,6 +272,7 @@ export function result(S) {
 export function career(S) {
   const g = S.g, c = g.career, p = c.player;
   if (S.sub === 'recordbook') return recordBook(S);
+  if (S.sub === 'legacy') return legacy(S);
   const tl = c.timeline({ minImportance: S.ui.tlMin || 2, limit: 40 });
   const attrs = Object.entries(p.attrs);
   return `<main class="screen">${header(p.name, p.nickname || `${cap(p.style)} · ${cap(p.alignment)}`, `<span class="pill brass">OVR ${c.overall()}</span>`)}
@@ -278,9 +280,31 @@ export function career(S) {
       <div class="stat"><span>Mic skills</span>${bar(p.mic, 100, 'good')}<span class="num">${Math.round(p.mic)}</span></div><div class="stat"><span>Charisma</span>${bar(p.charisma, 100, 'good')}<span class="num">${Math.round(p.charisma)}</span></div></div>
     ${g.universe.titlesOf(p.id).length || c.stats.s.titles.won ? `<div class="card"><h3>Championships</h3>${c.stats.s.titles.reigns.map((r) => `<div class="kv"><span>${esc(r.name)}</span><span class="v">${r.endDay == null ? 'Current' : ''} ${(r.endDay ?? c.day) - r.startDay}d · ${r.defenses} def.</span></div>`).join('')}</div>` : ''}
     <div class="card"><h3>Moves</h3>${kv('Finisher', esc(p.finisher?.name || 'Style default'))}${kv('Signatures', esc((p.signatures || []).map((s) => s.name).join(', ') || 'Style defaults'))}${kv('Entrance', esc(ENTRANCES[p.entrance.style]?.label || p.entrance.style))}${p.goals.length ? kv('Goal', esc(p.goals[0])) : ''}</div>
+    ${legacyCard(S)}
     <button class="btn" data-action="openSub" data-id="recordbook"><span class="t"><b>Career Record Book</b><small>Every number opens to its evidence</small></span><span class="r">Open</span></button>
     <div class="card"><div class="row spread"><h3>Timeline</h3><div class="chips" style="max-width:60%">${[[1, 'All'], [2, 'Notable'], [4, 'Major']].map(([n, l]) => `<button class="chip ${(S.ui.tlMin || 2) === n ? 'on' : ''}" data-action="tlmin" data-id="${n}">${l}</button>`).join('')}</div></div>
       <div class="list">${tl.map((e) => `<button class="item" data-action="inspect" data-id="${e.id}" style="background:none;border:0;border-bottom:1px solid var(--line);text-align:left;width:100%;color:inherit;font:inherit;cursor:pointer"><span class="dot ${e.data.result === 'win' ? 'win' : e.data.result === 'loss' ? 'loss' : e.type === 'achievement_unlocked' || e.type === 'title_win' ? 'gold' : ''}"></span><span class="col" style="gap:1px"><span class="eyebrow">${esc(e.date)} · ${esc(cap(e.type))}</span><span>${esc(e.summary)}</span></span></button>`).join('') || '<div class="empty">Your story begins with the first bell.</div>'}</div></div>
+  </main>`;
+}
+
+function legacyCard(S) {
+  const g = S.g, lg = g.legacyPreview();
+  const done = g.career.flags.retired;
+  return `<button class="btn" data-action="openSub" data-id="legacy" id="btn-legacy"><span class="t"><b>${done ? 'Your Legacy' : 'Legacy & Hall of Fame'}</b><small>${esc(lg.tier.label)} · ${lg.total} points${lg.inducted ? ' · Hall of Fame level' : ` · ${lg.pointsToHof} to the Hall of Fame`}</small></span><span class="r">Open</span></button>`;
+}
+
+function legacy(S) {
+  const g = S.g, c = g.career, lg = g.legacyPreview();
+  const r = c.flags.retired && typeof c.flags.retired === 'object' ? c.flags.retired : null;
+  const confirm = S.ui.confirmRetire;
+  return `<main class="screen" id="legacy">${header('Legacy', r ? 'Career complete' : 'Where your career stands', back('closeSub'))}
+    <div class="banner"><div class="eyebrow">${r ? 'Final verdict' : 'Current standing'}</div><h1>${esc(lg.tier.label)}</h1><p style="opacity:.85">${esc(lg.tier.blurb)}</p>
+      <div class="row spread"><span>Legacy points <b class="num">${lg.total}</b></span><span>Hall of Fame at <b class="num">${lg.hofThreshold}</b></span></div>${bar(Math.min(lg.total, lg.hofThreshold), lg.hofThreshold, lg.inducted ? 'brass' : '')}
+      ${lg.inducted ? `<p><b>${r ? (r.inducted ? 'Inducted into the Hall of Fame.' : 'Hall of Fame level.') : 'On course for the Hall of Fame.'}</b></p>` : ''}</div>
+    <div class="card"><h3>How the score is built</h3>${lg.parts.filter((p) => p.points > 0 || p.count > 0).map((p) => `<details><summary class="kv"><span>${esc(p.label)}</span><span class="v">${p.points}${p.points >= p.cap ? ' (cap)' : ''}</span></summary><p class="muted" style="font-size:.85rem">${p.count} × ${p.per} per, capped at ${p.cap}. ${p.sample ? 'Showing the latest 40 events. ' : ''}</p><div class="list">${p.evidence.slice(-12).reverse().map((id) => `<button class="item" data-action="inspect" data-id="${id}" style="background:none;border:0;border-bottom:1px solid var(--line);text-align:left;width:100%;color:inherit;font:inherit;cursor:pointer">${esc(c.memory.ledger.get(id).summary)}</button>`).join('') || '<span class="muted">Nothing yet.</span>'}</div></details>`).join('')}</div>
+    ${r ? `<div class="card"><p>You retired on ${esc(c.memory.ledger.ofType('retirement').slice(-1)[0].date)}. Your Record Book and achievements remain open for viewing.</p><button class="btn primary" data-action="newCareer" id="btn-new-career">Start a new career</button></div>`
+      : confirm ? `<div class="card" style="border-color:var(--rope)"><h3>Retire for good?</h3><p>This ends the career. Your legacy will be judged as it stands: <b>${esc(lg.tier.label)}</b>, ${lg.total} points.</p><div class="row"><button class="btn grow" data-action="retireCancel">Keep wrestling</button><button class="btn primary grow" data-action="retireGo" id="btn-retire-go">Retire</button></div></div>`
+      : `<button class="btn" data-action="retireAsk" id="btn-retire"><span class="t"><b>Retire</b><small>End your career and receive a final verdict</small></span></button>`}
   </main>`;
 }
 

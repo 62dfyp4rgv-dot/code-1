@@ -199,11 +199,11 @@ export class Universe {
   note(day, type, text, ids = []) { this.log.push({ day, type, text, ids }); if (this.log.length > 600) this.log.splice(0, 100); }
 
   toJSON() {
-    return { v: 2, seed: this.seed, mode: this.mode, startYear: this.startYear, rng: this.rng.state, roster: this.roster, titles: this.titles, feuds: this.feuds, alliances: this.alliances, factions: this.factions, log: this.log, records: this.records, yearBest: this.yearBest, split: this.split, lastSimDay: this.lastSimDay, counters: this.counters, mainBrand: this._mainBrand };
+    return { v: 2, seed: this.seed, mode: this.mode, startYear: this.startYear, rng: this.rng.state, roster: this.roster, titles: this.titles, feuds: this.feuds, alliances: this.alliances, factions: this.factions, log: this.log, records: this.records, yearBest: this.yearBest, split: this.split, lastSimDay: this.lastSimDay, counters: this.counters, mainBrand: this._mainBrand, hof: this.hof || [] };
   }
   static fromJSON(j) {
     const u = new Universe({ seed: j.seed, mode: j.mode, year: j.startYear });
-    Object.assign(u, { roster: j.roster, titles: j.titles || {}, feuds: j.feuds || {}, alliances: j.alliances || {}, factions: j.factions || {}, log: j.log || [], records: j.records || {}, yearBest: j.yearBest || {}, split: !!j.split, lastSimDay: j.lastSimDay || 0, counters: j.counters || { wrestlers: 0 }, _mainBrand: j.mainBrand });
+    Object.assign(u, { roster: j.roster, titles: j.titles || {}, feuds: j.feuds || {}, alliances: j.alliances || {}, factions: j.factions || {}, log: j.log || [], records: j.records || {}, yearBest: j.yearBest || {}, split: !!j.split, lastSimDay: j.lastSimDay || 0, counters: j.counters || { wrestlers: 0 }, _mainBrand: j.mainBrand, hof: j.hof || [] });
     u.rng.state = j.rng;
     return u;
   }
