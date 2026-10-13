@@ -41,3 +41,13 @@ One entry per Gauntlet round: what was targeted, what changed, what was measured
 - Largest losses: Authored, validated templates (target 2,000 would be complete) (589); Verified historical data (partial); Independent reviewer score (4); Share of scenario templates that read ledger memory (mem trigger / memory block / rivalry / obligation) (0.42)
 - Regressions: performance -0.41
 - Report: docs/gauntlet/round-04.md
+
+## Round 5
+
+- Target: Act on round-4 independent reviews (narrative 4.5, memory 5.5, mobile 6.0): commentary/promo/interview prose, dialogue perspective, promise judging and visibility, sha256 ledger chain, legacy purity, UI declutter; elimination matches, factions, tag titles
+- Changes: Commentary: pin count/kickout roles fixed, article/positioning/hold phrasing, no repeats of previous line; promos: tone body always, one H2H line, grammar, last-name mentions; interviews: answers cite finish/move, reaction by stance; dialogue: perspective swap for clean wins/losses, opponent-only H2H, reconciliation, narrator-voice callbacks; promises: scope gating, streak from creation, duplicate skip, mentorship direction; ledger chain now sha256; legacy as-of-ledger; UI: compact toast cleared on navigation, HUD declutter, hint percentages, home CTA, record book hides empty rows, result sticky CTA, promises card; elimination match + chamber
+- Mean 9.20 | min 7.59 | >=9: 8/12 | tests 132/132
+- Weakest: Scenario diversity 7.59, WWE universe simulation 8.32, Memory consistency 8.74
+- Largest losses: Authored, validated templates (target 2,000 would be complete) (589); Verified historical data (partial); Independent reviewer score (4.5); Share of scenario templates that read ledger memory (mem trigger / memory block / rivalry / obligation) (0.42)
+- Regressions: careerProgression -0.17, performance -0.19
+- Report: docs/gauntlet/round-05.md

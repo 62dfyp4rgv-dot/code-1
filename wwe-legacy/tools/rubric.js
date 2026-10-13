@@ -168,6 +168,12 @@ export function score(M) {
     crit('rp_modes', 'Game modes (historical, modern, alternate, custom)', 1.5, `${featStatus('u_modes')}/${featStatus('u_custom')}`, (featScore('u_modes') + featScore('u_custom')) / 2, 'features manifest'),
   ];
 
+  // Independent reviewers are the closest thing to a playthrough this project has, so where a category has a reviewer
+  // score it carries 40% of the category (the rest is measured proxies). Before round 6 it carried only ~15-20%.
+  for (const cat of CATEGORIES) {
+    const rv = out[cat].find((k) => k.id.endsWith('_review'));
+    if (rv) { const others = out[cat].filter((k) => k !== rv).reduce((a, k) => a + k.weight, 0); rv.weight = +(others * (0.4 / 0.6)).toFixed(2); }
+  }
   const result = {};
   for (const cat of CATEGORIES) {
     const list = out[cat];

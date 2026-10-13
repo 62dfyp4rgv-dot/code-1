@@ -1,20 +1,20 @@
 {
- "updated": "2026-10-13T16:04:36.994Z",
- "lastRound": 4,
- "mean": 9.22,
+ "updated": "2026-10-13T16:23:03.371Z",
+ "lastRound": 5,
+ "mean": 9.2,
  "scores": {
   "matchEngine": 9.8,
-  "playerAgency": 9.56,
-  "memoryConsistency": 8.83,
-  "achievementIntegrity": 9.85,
-  "scenarioDiversity": 7.6,
-  "narrativeQuality": 8.64,
+  "playerAgency": 9.59,
+  "memoryConsistency": 8.74,
+  "achievementIntegrity": 9.86,
+  "scenarioDiversity": 7.59,
+  "narrativeQuality": 8.74,
   "universeSimulation": 8.32,
-  "careerProgression": 9.5,
+  "careerProgression": 9.33,
   "mobileUsability": 9.45,
   "technicalReliability": 10,
-  "performance": 9.58,
-  "replayability": 9.54
+  "performance": 9.39,
+  "replayability": 9.56
  },
  "nextFocus": [
   {
@@ -30,7 +30,7 @@
   {
    "category": "narrativeQuality",
    "criterion": "Independent reviewer score",
-   "value": 4
+   "value": 4.5
   },
   {
    "category": "memoryConsistency",
@@ -47,10 +47,10 @@
   "cd wwe-legacy",
   "npm install",
   "npm test",
-  "node tools/gauntlet.js --round 5 --targets \"<what you will improve>\" --changes \"<what you changed>\""
+  "node tools/gauntlet.js --round 6 --targets \"<what you will improve>\" --changes \"<what you changed>\""
  ],
  "features": {
-  "complete": 21,
+  "complete": 22,
   "partial": 4,
   "unimplemented": 3
  },
