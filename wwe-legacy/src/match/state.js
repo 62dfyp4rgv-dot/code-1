@@ -5,7 +5,7 @@ import { clamp } from '../core/util.js';
 import {
   COMMON_MOVES, STYLE_MOVES, STYLE_SIGNATURES, STYLE_FINISHERS, registerMove, hasMove, getMove,
 } from './moves.js';
-import { getRuleset, other, OBJECTIVE } from './rules.js';
+import { getRuleset, other, OBJECTIVE, waysOf } from './rules.js';
 
 export const ATTR_KEYS = ['power', 'striking', 'grappling', 'technical', 'agility', 'endurance', 'toughness', 'psychology'];
 
@@ -78,7 +78,7 @@ export function createMatchState(cfg) {
   if (cfg.rulesOverride) Object.assign(rules, cfg.rulesOverride);
   const rng = new Rng(cfg.seed ?? 1);
   const fighters = {};
-  const teams = [[], []];
+  const teams = cfg.sides.map(() => []);
   cfg.sides.forEach((team, side) => {
     team.forEach((profile, idx) => {
       const f = createFighter(profile, side, { isPlayer: profile.id === cfg.playerId, difficulty: cfg.difficulty });
@@ -91,15 +91,17 @@ export function createMatchState(cfg) {
     });
   });
   const ids = Object.keys(fighters);
-  if (new Set(ids).size !== teams[0].length + teams[1].length) throw new Error('duplicate wrestler ids in match');
-  if (rules.teamSize && (teams[0].length !== rules.teamSize || teams[1].length !== rules.teamSize)) {
+  if (new Set(ids).size !== teams.reduce((a, t) => a + t.length, 0)) throw new Error('duplicate wrestler ids in match');
+  if (teams.length !== waysOf(rules)) throw new Error(`${rules.name} needs ${waysOf(rules)} sides, got ${teams.length}`);
+  if (rules.teamSize && teams.some((t) => t.length !== rules.teamSize)) {
     throw new Error(`${rules.name} requires ${rules.teamSize} per side`);
   }
   const firstLegal = teams.map((t) => t[0]);
   // slight edge to the higher-psychology wrestler for opening initiative (lock-up), decided by seeded roll
-  const pA = fighters[firstLegal[0]].attrs.psychology + fighters[firstLegal[0]].attrs.grappling;
-  const pB = fighters[firstLegal[1]].attrs.psychology + fighters[firstLegal[1]].attrs.grappling;
-  const initiative = rng.chance(0.5 + (pA - pB) / 600) ? firstLegal[0] : firstLegal[1];
+  const lead = (id) => fighters[id].attrs.psychology + fighters[id].attrs.grappling;
+  const initiative = firstLegal.length === 2
+    ? (rng.chance(0.5 + (lead(firstLegal[0]) - lead(firstLegal[1])) / 600) ? firstLegal[0] : firstLegal[1])
+    : [...firstLegal].map((id) => ({ id, s: lead(id) + rng.range(0, 60) })).sort((a, b) => b.s - a.s)[0].id; // multi-way: highest lock-up score with a seeded wobble
   const tl = Math.round((rules.timeLimit || 15) * 60);
   const state = {
     v: 1, id: cfg.id || `m_${(cfg.seed ?? 1).toString(36)}`, seed: cfg.seed ?? 1, rng: rng.state, aiRng: new Rng(`${cfg.seed ?? 1}:ai`).state,
@@ -109,7 +111,7 @@ export function createMatchState(cfg) {
     crowd: { heat: clamp(cfg.context?.crowdBase ?? 30, 0, 100) },
     referee: { state: 'watching', turns: 0 },
     warnings: {}, outsideTicks: {}, events: [], seq: 0, result: null, log: [],
-    falls: { 0: 0, 1: 0 }, fallLog: [], objective: rules.objective ? { steps: OBJECTIVE[rules.objective].steps } : null,
+    falls: Object.fromEntries(teams.map((_, i) => [i, 0])), fallLog: [], focus: {}, objective: rules.objective ? { steps: OBJECTIVE[rules.objective].steps } : null,
     lastAction: null, history: [], difficulty: cfg.difficulty ?? 0.5,
   };
   return state;
@@ -121,7 +123,19 @@ export const sideOf = (state, id) => state.fighters[id].side;
 export const opposingTeam = (state, id) => state.teams[other(state.fighters[id].side)];
 export const partnerOf = (state, id) => state.teams[state.fighters[id].side].find((x) => x !== id) || null;
 export const legalOf = (state, side) => state.teams[side].find((id) => state.fighters[id].legal) || null;
-export const opponentOf = (state, id) => legalOf(state, other(state.fighters[id].side));
+export const liveFoes = (state, id) => state.teams.flatMap((t, i) => (i === state.fighters[id].side ? [] : [t.find((x) => state.fighters[x].legal) || t[0]])).filter(Boolean);
+/** The wrestler `id` is currently working against. In multi-way matches this is the "focus" target, chosen by the player or
+ *  (by default) the most damaged foe; being attacked turns your attention to the attacker (see beginAttack). */
+export const opponentOf = (state, id) => {
+  if (waysOf(state.rules) <= 2) return legalOf(state, other(state.fighters[id].side));
+  const foes = liveFoes(state, id);
+  const cur = state.focus && state.focus[id];
+  if (cur && foes.includes(cur)) return cur;
+  // most damaged foe; ties go to the next seat around the ring so no seat is a default punching bag
+  const me = state.fighters[id].side, n = waysOf(state.rules);
+  const seat = (x) => (state.fighters[x].side - me + n) % n;
+  return [...foes].sort((a, b) => damageFraction(state.fighters[b]) - damageFraction(state.fighters[a]) || seat(a) - seat(b))[0];
+};
 export const totalDamage = (f) => f.dmg.head + f.dmg.torso + f.dmg.arms + f.dmg.legs;
 export const damageFraction = (f) => clamp((f.dmg.head * 1.3 + f.dmg.torso * 1.2 + f.dmg.arms * 0.7 + f.dmg.legs * 0.8) / (4 * 100), 0, 1);
 export const staminaFrac = (f) => clamp(f.stamina / f.maxStamina, 0, 1);

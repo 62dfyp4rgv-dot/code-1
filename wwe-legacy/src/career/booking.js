@@ -1,6 +1,7 @@
 // Booking helpers: build a match (engine config) from the career + opponents, and record it.
 import { MatchEngine } from '../match/engine.js';
 import { getRel } from '../memory/world.js';
+import { getRuleset, waysOf } from '../match/rules.js';
 
 let counter = 0;
 export function nextMatchId(career) {
@@ -21,9 +22,10 @@ export function engineConfig(career, booking) {
   const me = career.fighterProfile();
   const mine = [me, ...booking.partners];
   const theirs = [...booking.opponents, ...(booking.opponentPartners || [])];
+  const multi = waysOf(getRuleset(booking.type)) > 2;
   const seed = career.rng.int(1, 2147483646);
   const cfg = {
-    seed, type: booking.type, sides: [mine, theirs], playerId: me.id, difficulty: career.player.difficulty,
+    seed, type: booking.type, sides: multi ? [mine, ...booking.opponents.map((o) => [o])] : [mine, theirs], playerId: me.id, difficulty: career.player.difficulty,
     context: { show: booking.show, crowdBase: booking.crowdBase }, id: booking.matchId.replace(/[^a-z0-9]/gi, '_'),
   };
   if (booking.timeLimit) cfg.timeLimit = booking.timeLimit;

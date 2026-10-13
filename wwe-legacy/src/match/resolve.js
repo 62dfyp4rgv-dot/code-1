@@ -7,7 +7,7 @@ import { getMove, familyOf } from './moves.js';
 import { STANCES } from './stances.js';
 import { computeConnect, calcDamage, kickoutChance, holdEscapeChance, submitChance } from './calc.js';
 import { F, opponentOf, partnerOf, legalOf, damageFraction, staminaFrac, phaseOf, crowdBias } from './state.js';
-import { other } from './rules.js';
+import { other, waysOf } from './rules.js';
 import { FREE_ACTIONS, TEMPO } from './actions.js';
 
 const MAX_ROUNDS = 700;
@@ -46,7 +46,7 @@ function hurt(state, f, part, amount, source) {
 export function finishMatch(state, winnerSide, finish, extra = {}) {
   if (state.result) return;
   const winners = winnerSide === null ? [] : state.teams[winnerSide];
-  const losers = winnerSide === null ? [] : state.teams[other(winnerSide)];
+  const losers = winnerSide === null ? [] : state.teams.flatMap((t, i) => (i === winnerSide ? [] : t));
   const winnerId = winnerSide === null ? null : (extra.winnerId || legalOf(state, winnerSide) || winners[0]);
   state.result = {
     winnerSide, winnerId, winners, losers, finish, durationSec: Math.round(state.time), rounds: state.round,
@@ -156,6 +156,17 @@ export function finalizeRound(state, R, spent) {
     }
   }
   if (!state.result && state.round >= MAX_ROUNDS) finishMatch(state, null, 'stalemate');
+  // multi-way: a wrestler who has been left out of the action for a while jumps back in
+  if (!state.result && !state.pending && !state.pin && !state.hold && waysOf(state.rules) > 2) {
+    state.lastActive = state.lastActive || {};
+    const idle = Object.values(state.fighters).filter((f) => f.legal && state.round - (state.lastActive[f.id] ?? 0) >= 6 && f.id !== state.initiative)
+      .sort((a, b) => (state.lastActive[a.id] ?? 0) - (state.lastActive[b.id] ?? 0))[0];
+    if (idle && staminaFrac(idle) > 0.2) {
+      state.initiative = idle.id; state.lastActive[idle.id] = state.round;
+      delete state.focus[idle.id];
+      emit(state, 'jump_in', { actor: idle.id });
+    }
+  }
 }
 
 // ------------------------------------------------------------------------------------------
@@ -164,6 +175,14 @@ export function finalizeRound(state, R, spent) {
 export function resolveTempo(state, actorId, tempoId) {
   const R = rngOf(state);
   const A = F(state, actorId);
+  if (tempoId.startsWith('focus:')) {
+    // multi-way: pick who to go after. Free (no time passes, initiative unchanged), limited to once every other round.
+    const target = tempoId.slice(6);
+    if (waysOf(state.rules) <= 2 || !state.fighters[target] || target === actorId || state.fighters[target].side === A.side) throw new Error(`illegal focus ${target}`);
+    state.focus[actorId] = target; A.tactics.lastFocus = state.round;
+    emit(state, 'focus', { actor: actorId, target });
+    return;
+  }
   const D = F(state, opponentOf(state, actorId));
   const t = TEMPO[tempoId];
   if (!t || t.check(state, A, D) !== null) throw new Error(`illegal tempo action ${tempoId}`);
@@ -322,6 +341,7 @@ export function beginAttack(state, actorId, moveId) {
   const A = F(state, actorId);
   const D = F(state, opponentOf(state, actorId));
   const move = getMove(moveId);
+  if (waysOf(state.rules) > 2) { state.focus[actorId] = D.id; state.focus[D.id] = actorId; state.lastActive = state.lastActive || {}; state.lastActive[actorId] = state.round; state.lastActive[D.id] = state.round; } // being attacked turns your attention to the attacker
   state.pending = { kind: 'defense', actor: D.id, attack: { attackerId: actorId, moveId, cat: move.cat, family: familyOf(move.cat), round: state.round } };
   state.lastAction = { actor: actorId, moveId };
   return state.pending;
@@ -601,6 +621,20 @@ export function resolvePinChoice(state, choiceId) {
         emit(state, 'pin_save', { actor: partnerId, target: A.id, saved: D.id });
         hurt(state, A, 'torso', 4, 'save');
         state.pin = null; state.initiative = D.id; addHeat(state, 8);
+        finalizeRound(state, R, spent); return state.events;
+      }
+    }
+  }
+  // multi-way: a bystander dives in to break up the cover (they want the pin for themselves)
+  if (waysOf(state.rules) > 2) {
+    for (const w of Object.values(state.fighters)) {
+      if (w.id === A.id || w.id === D.id || w.pos === 'grounded' || staminaFrac(w) < 0.12) continue;
+      const p = (0.2 + (pin.lastCat === 'finisher' ? 0.22 : pin.lastCat === 'signature' ? 0.08 : 0) + (w.attrs.agility - 50) / 400) * 0.75 ** (w.saves || 0);
+      if (R.next() < p) {
+        w.saves = (w.saves || 0) + 1;
+        emit(state, 'pin_save', { actor: w.id, target: A.id, saved: D.id, bystander: true });
+        hurt(state, A, 'torso', 4, 'save'); addHeat(state, 8);
+        state.pin = null; state.initiative = w.id; state.focus[w.id] = A.id; D.pos = 'grounded';
         finalizeRound(state, R, spent); return state.events;
       }
     }

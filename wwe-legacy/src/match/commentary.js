@@ -130,6 +130,8 @@ export function narrate(state, ev) {
     case 'count': return pick([`The referee counts ${a} on the floor: ${ev.n}.`, `${ev.n}! ${aL} is still outside!`], q, 28);
     case 'countout': return `${a} fails to beat the count!`;
     case 'tactic': return ev.tactic.startsWith('target_') ? pick([`${a} starts working on the ${ev.tactic.slice(7)}.`, `${aL} has picked a target: the ${ev.tactic.slice(7)}.`], q, 29) : ev.tactic.startsWith('pace_') ? `${a} changes the pace.` : `${a} studies ${nm(ev.target) === 'Someone' ? 'the opponent' : t}.`;
+    case 'focus': return pick([`${a} turns on ${t}.`, `${aL} switches targets and goes after ${tL}.`, `${aL} spots ${tL} and changes direction.`], q, 45);
+    case 'jump_in': return pick([`${a} charges back into the thick of it!`, `${aL} has seen enough waiting - back into the fray!`, `${aL} slides in and takes control of the chaos.`], q, 46);
     case 'taunt': return pick([`${a} taunts ${t}.`, `${aL} soaks in the boos and mocks ${tL}.`, `${aL} stands over ${tL} and waits.`], q, 30);
     case 'hype': return pick([`${a} fires up the crowd.`, `${aL} raises both arms and the arena answers.`], q, 31);
     case 'signal_finisher': return pick([`${a} signals for the end!`, `${aL} points to the sky - the finish is coming!`], q, 32);

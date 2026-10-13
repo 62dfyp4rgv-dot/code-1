@@ -191,3 +191,6 @@ label.f { display: flex; flex-direction: column; gap: 6px; font-weight: 600; fon
 
 .btn > .col { flex: none; max-width: 40%; }
 .btn > .t { flex: 1 1 auto; }
+
+.others { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.others .pill { font-size: .72rem; }

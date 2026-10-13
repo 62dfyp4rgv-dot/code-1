@@ -10,7 +10,8 @@ import { LIFESTYLES, merchIncome } from './career/finance.js';
 import { makeBooking, createEngine } from './career/booking.js';
 import { MatchEngine } from './match/engine.js';
 import { narrate } from './match/commentary.js';
-import { getRuleset, MATCH_TYPE_IDS } from './match/rules.js';
+import { getRuleset, MATCH_TYPE_IDS, waysOf } from './match/rules.js';
+import { opponentOf as engineOpponentOf, liveFoes } from './match/state.js';
 import { STYLES, SIGNATURE_TEMPLATES, FINISHER_TEMPLATES, getMove } from './match/moves.js';
 import { Universe, CLASS_LABEL } from './universe/universe.js';
 import { UniverseSim } from './universe/sim.js';
@@ -61,7 +62,7 @@ export const ENTRANCES = {
   menace: { label: 'Menacing', desc: 'Make them hate you (heels).', heat: 9, momentum: 4, heel: true },
 };
 
-export const STIPULATION_HEAT = { singles: 0, tag: 0, no_dq: 40, submission: 30, iron_man: 55, last_man: 60, ladder: 65, cage: 65, hell_cell: 85 };
+export const STIPULATION_HEAT = { singles: 0, tag: 0, triple_threat: 15, fatal_four: 30, no_dq: 40, submission: 30, iron_man: 55, last_man: 60, ladder: 65, cage: 65, hell_cell: 85 };
 
 const POST_WIN = ['celebrate', 'show_respect', 'cut_promo', 'attack_rival', 'call_out', 'talk_management', 'seek_treatment', 'help_up'];
 const POST_LOSS = ['show_respect', 'vow_revenge', 'request_rematch', 'argue_result', 'talk_management', 'seek_treatment', 'walk_away'];
@@ -377,6 +378,7 @@ export class Game {
     const w = this.universe.get(opponentId);
     if (!w) throw new Error('unknown opponent');
     const stips = this.availableStipulations(opponentId);
+    const u2 = this.universe;
     const forced = c.flags.forcedMatch && c.flags.forcedMatch.who === opponentId ? c.flags.forcedMatch : null;
     if (forced) { type = forced.type || type; stakes = forced.stakes || stakes; }
     let title = null;
@@ -396,14 +398,24 @@ export class Game {
     const ent = entrance || c.player.entrance.style;
     let partners = [], oppPartners = [];
     if (type === 'tag') ({ partners, oppPartners } = this._tagPartners(w, title && title.cls === 'tag' ? this.universe.titles[title.id] : null));
-    const booking = makeBooking(c, [w], {
+    // multi-way matches: the office adds the other competitors (similar level, same brand)
+    let fieldOpps = [w];
+    const ways = waysOf(getRuleset(type));
+    if (ways > 2) {
+      if (stakes === 'title') throw new Error('multi-way matches cannot be booked for a championship yet');
+      const rest = u2.available(c.day, (x) => x.id !== c.player.id && x.id !== w.id && u2.sameBrand(x, c.player.brand) && x.gender === w.gender)
+        .sort((a, b) => Math.abs(this._overall(a) - this._overall(w)) - Math.abs(this._overall(b) - this._overall(w)));
+      if (rest.length < ways - 2) throw new Error('not enough wrestlers are available for that match');
+      fieldOpps = [w, ...rest.slice(0, ways - 2)];
+    }
+    const booking = makeBooking(c, fieldOpps, {
       partners, opponentPartners: oppPartners,
       type, show: ev.displayName || ev.name, ppv: ev.kind === 'ple' ? ev.displayName : null, ppvTier: ev.kind === 'ple' ? ev.tier : 0,
       mainEvent: ev.kind === 'ple' || c.player.popularity > 70, title, label: `${PLANS[plan].label} / ${ENTRANCES[ent].label}`, storyline: this._storylineWith(w.id),
     });
     booking.plan = plan; booking.entrance = ent;
     c.pendingMatch = booking;
-    c.flags.bookedToday = { day: c.day, ids: [opponentId, ...booking.partners.map((p) => p.id), ...booking.opponentPartners.map((p) => p.id)] };
+    c.flags.bookedToday = { day: c.day, ids: [...booking.opponents.map((o) => o.id), ...booking.partners.map((p) => p.id), ...booking.opponentPartners.map((p) => p.id)] };
     if (title) c.flags.lastTitleShot = c.day;
     c.flags.phase = 'prematch';
     return booking;
@@ -549,11 +561,13 @@ export class Game {
     const e = this.engine; if (!e) return null;
     const s = e.state, me = s.fighters[this.c.player.id];
     const opp = s.fighters[s.teams[1 - me.side][0]];
-    const legalOpp = s.fighters[Object.values(s.fighters).find((f) => f.side !== me.side && f.legal)?.id] || opp;
+    const multi = waysOf(s.rules) > 2;
+    const legalOpp = multi ? s.fighters[engineOpponentOf(s, me.id)] : (s.fighters[Object.values(s.fighters).find((f) => f.side !== me.side && f.legal)?.id] || opp);
     const view = (f) => ({ id: f.id, name: f.name, stamina: Math.round(f.stamina), maxStamina: f.maxStamina, momentum: Math.round(f.momentum), confidence: Math.round(f.confidence), dmg: Object.fromEntries(Object.entries(f.dmg).map(([k, v]) => [k, Math.round(v)])), pos: f.pos, legal: f.legal, alignment: f.alignment, dazed: f.dazed > 0, tactics: f.tactics, style: f.style });
     return {
       type: s.type, rules: s.rules, time: Math.round(s.time), timeLimit: s.timeLimit, phase: s.phase, round: s.round, crowd: Math.round(s.crowd.heat),
       referee: s.referee.state, me: view(me), opp: view(legalOpp), team: s.rules.tag ? { mine: s.teams[me.side].map((id) => view(s.fighters[id])), theirs: s.teams[1 - me.side].map((id) => view(s.fighters[id])) } : null,
+      others: multi ? liveFoes(s, me.id).filter((id) => id !== legalOpp.id).map((id) => view(s.fighters[id])) : [], ways: waysOf(s.rules),
       falls: s.falls, mySide: me.side, warnings: s.warnings, objective: s.objective, climb: { me: me.climb, opp: legalOpp.climb },
     };
   }
@@ -573,7 +587,8 @@ export class Game {
     result.titleOutcome = this._titleOutcome(booking, out);
     checkRecords(c);
     if (c.flags.forcedMatch && c.flags.forcedMatch.who === booking.opponents[0].id) c.flags.forcedMatch = null;
-    c.flags.postMatch = { matchId: booking.matchId, result: out.result, opponentId: booking.opponents[0].id, done: [], eventId: out.event.id };
+    const winnerOpp = booking.opponents.find((o) => o.id === out.event.data.winner);
+    c.flags.postMatch = { matchId: booking.matchId, result: out.result, opponentId: (winnerOpp || booking.opponents[0]).id, done: [], eventId: out.event.id };
     c.flags.lastResult = { result: out.result, summary: out.event.summary };
     c.flags.phase = 'postmatch';
     c.pendingMatch = null; c.activeMatch = null; this.lastEngine = this.engine; this.engine = null;

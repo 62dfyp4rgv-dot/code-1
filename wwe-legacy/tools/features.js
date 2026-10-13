@@ -16,7 +16,7 @@ export const FEATURES = [
   { id: 'mt_basic', area: 'match', label: 'Singles, tag, submission, no-DQ, last man standing, iron man, ladder, cage, hell cell', status: 'complete', probe: () => has('src/match/rules.js', /hell_cell/) },
   { id: 'mt_rumble', area: 'match', label: 'Royal Rumble (30 entrants, timed entries, decisions)', status: 'complete', probe: () => has('src/match/rumble.js', /class RumbleEngine/) },
   { id: 'mt_chamber', area: 'match', label: 'Elimination Chamber / TLC / Money in the Bank / battle royal / handicap', status: 'unimplemented' },
-  { id: 'mt_triple', area: 'match', label: 'Triple threat / fatal four-way (3+ side matches)', status: 'unimplemented' },
+  { id: 'mt_triple', area: 'match', label: 'Triple threat and fatal four-way (3-4 sides, bystander pin break-ups, focus targeting)', status: 'complete', probe: () => has('src/match/rules.js', /fatal_four/) },
   // Career
   { id: 'c_create', area: 'career', label: 'Character creation (5-step wizard, styles, backgrounds, gimmick, finisher, signatures)', status: 'complete', probe: () => has('ui/views.js', /createView|wizard/i) },
   { id: 'c_progress', area: 'career', label: 'Progression: training, fatigue, injuries, popularity, contract/money', status: 'complete', probe: () => has('src/game.js', /train\(/) },

@@ -6,7 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { MatchEngine } from '../src/match/engine.js';
 import { SAMPLE_WRESTLERS as W } from '../src/match/samples.js';
-import { MATCH_TYPE_IDS } from '../src/match/rules.js';
+import { MATCH_TYPE_IDS, waysOf, getRuleset } from '../src/match/rules.js';
 import { rateMatch } from '../src/match/rating.js';
 import { narrate } from '../src/match/commentary.js';
 import { playCareer } from './careersim.js';
@@ -25,6 +25,15 @@ import { validateLines } from '../src/story/dialogue.js';
 import { featureReport } from './features.js';
 import { Game, PLANS, ENTRANCES, TRAINING, STIPULATION_HEAT } from '../src/game.js';
 import { ERAS } from '../src/data/eras.js';
+
+/** build the sides a match type needs from three or four sample wrestlers */
+const sidesFor = (type, a, b, c3 = W.power, c4 = W.flyer, pa = W.partnerA, pb = W.partnerB) => {
+  if (type === 'tag') return [[a, pa], [b, pb]];
+  const n = waysOf(getRuleset(type));
+  if (n === 2) return [[a], [b]];
+  const extra = (w, id) => ({ ...w, id, name: `${w.name} II` });
+  return [[a], [b], [extra(c3, 'x3')], ...(n > 3 ? [[extra(c4, 'x4')]] : [])];
+};
 
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const mean = (a) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0);
@@ -51,7 +60,7 @@ export function matchMetrics({ n = 120 } = {}) {
     for (let i = 0; i < n; i++) {
       const a = names[i % names.length], b = names[(i * 5 + 1 + (i % 2)) % names.length];
       if (a === b) continue;
-      const sides = type === 'tag' ? [[W[a], W.partnerA], [W[b], W.partnerB]] : [[W[a]], [W[b]]];
+      const sides = sidesFor(type, W[a], W[b]);
       const e = MatchEngine.simulate({ seed: 7000 + i, type, sides, playerId: W[a].id }, {});
       const r = e.state.result;
       t.n++;
@@ -104,7 +113,7 @@ export function matchMetrics({ n = 120 } = {}) {
   const nameRe = new RegExp(Object.values(W).map((w) => w.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'g');
   for (let i = 0; i < 60; i++) {
     const type = MATCH_TYPE_IDS[i % MATCH_TYPE_IDS.length];
-    const sides = type === 'tag' ? [[W.show, W.partnerA], [W.sub, W.partnerB]] : [[W.show], [W.sub]];
+    const sides = sidesFor(type, W.show, W.sub);
     const e = MatchEngine.simulate({ seed: 300 + i, type, sides, playerId: 'show' }, {});
     for (const ev of e.state.events) {
       seen.add(ev.type);

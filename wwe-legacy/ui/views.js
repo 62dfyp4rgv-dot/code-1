@@ -216,6 +216,7 @@ export function match(S) {
     <div class="board" id="board" aria-live="polite">
       <div class="names"><div class="nm">${esc(mv.me.name)}</div><div class="clock num">${mmss(mv.time)}<small>${esc(mv.phase)} · ${mmss(mv.timeLimit)}</small></div><div class="nm r">${esc(mv.opp.name)}</div></div>
       <div class="grid2" style="gap:12px">${fighterBoard(mv.me, false)}${fighterBoard(mv.opp, true)}</div>
+      ${mv.ways > 2 ? `<div class="others"><span class="eyebrow" style="color:var(--mat-ink)">Also in the ring</span>${mv.others.map((o) => `<span class="pill" style="color:var(--mat-ink)">${esc(o.name)} · STA ${o.stamina} · MOM ${o.momentum}</span>`).join('')}</div>` : ''}
       <div class="legend">STA stamina · MOM momentum · red fill = damage taken</div>
       <div class="heat"><span>Crowd</span>${bar(mv.crowd)}<span>${mv.referee === 'watching' ? 'Ref watching' : mv.referee === 'down' ? 'REF DOWN' : 'Ref distracted'}</span></div>
       ${mv.rules.tag && mv.team ? `<div class="posrow"><span class="eyebrow" style="color:var(--mat-ink)">Legal: ${esc(mv.team.mine.find((x) => x.legal)?.name || '')}</span><span class="eyebrow" style="color:var(--mat-ink)">Legal: ${esc(mv.team.theirs.find((x) => x.legal)?.name || '')}</span></div>` : ''}

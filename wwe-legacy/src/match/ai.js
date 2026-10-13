@@ -111,6 +111,7 @@ export function chooseAction(state, id, options, override) {
       case 'pace_slow': return staminaFrac(A) < 0.5 ? 12 : 1;
       case 'pace_normal': return 2;
       default:
+        if (o.tempoId?.startsWith('focus:')) { const foe = F(state, o.tempoId.slice(6)); return damageFraction(foe) > dfrac + 0.18 && damageFraction(foe) > damageFraction(D) + 0.15 ? 26 : -6; }
         if (o.tempoId?.startsWith('target_')) {
           const part = o.tempoId.slice(7);
           return D.dmg[part] >= Math.max(...Object.values(D.dmg)) - 1 ? 9 : 1;

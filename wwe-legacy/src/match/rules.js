@@ -34,6 +34,14 @@ export const RULESETS = {
     id: 'cage', name: 'Steel Cage Match', teamSize: 1, pinfall: true, submission: true, dq: false, countout: false,
     weapons: false, outside: false, ropeBreaks: false, objective: 'cage', escape: true, timeLimit: 30, desc: 'Win by pinfall, submission, or by escaping the cage.',
   },
+  triple_threat: {
+    id: 'triple_threat', name: 'Triple Threat Match', teamSize: 1, ways: 3, pinfall: true, submission: true, dq: false, countout: false,
+    weapons: false, outside: true, ropeBreaks: true, timeLimit: 22, desc: 'Three wrestlers, one winner. Any pinfall or submission ends it, so a third man can always break up a cover.',
+  },
+  fatal_four: {
+    id: 'fatal_four', name: 'Fatal Four-Way', teamSize: 1, ways: 4, pinfall: true, submission: true, dq: false, countout: false,
+    weapons: false, outside: true, ropeBreaks: true, timeLimit: 26, desc: 'Four wrestlers, one fall. Everyone is a target and everyone is a threat to steal the pin.',
+  },
   hell_cell: {
     id: 'hell_cell', name: 'Hell in a Cell', teamSize: 1, pinfall: true, submission: true, dq: false, countout: false,
     weapons: true, outside: true, ropeBreaks: false, cell: true, timeLimit: 30, desc: 'A towering cell. No DQ, no count-out, brutal bumps. Pinfall or submission only.',
@@ -47,6 +55,8 @@ export function getRuleset(id) {
 }
 
 export const MATCH_TYPE_IDS = Object.keys(RULESETS);
+/** number of sides in a match (3 and 4 for multi-way matches) */
+export const waysOf = (rules) => rules.ways || 2;
 
 /** Opposite-side helper for team indexes. */
 export const other = (side) => (side === 0 ? 1 : 0);

@@ -7,7 +7,7 @@ import { computeConnect, kickoutChance, limbPenalty, fatiguePenalty } from '../s
 import { STANCES } from '../src/match/stances.js';
 import { opponentOf, damageFraction } from '../src/match/state.js';
 import { summarizeMatch } from '../src/match/rating.js';
-import { MATCH_TYPE_IDS } from '../src/match/rules.js';
+import { MATCH_TYPE_IDS, waysOf, getRuleset } from '../src/match/rules.js';
 import { canPin } from '../src/match/resolve.js';
 
 const rand = (d, opts, i = 0) => opts[(d.round * 7 + i * 3 + opts.length) % opts.length].id;
@@ -432,9 +432,9 @@ test('every match type terminates with a coherent result across builds and strat
       const a = builds[(i * 3 + type.length) % builds.length], b = builds[(i * 5 + 1) % builds.length];
       if (a === b) continue;
       const overrides = { [W[a].id]: profs[i % profs.length], [W[b].id]: profs[(i + 2) % profs.length] };
-      const m = MatchEngine.simulate({
-        seed: 1000 + i, type, sides: type === 'tag' ? [[W[a], W.partnerA], [W[b], W.partnerB]] : [[W[a]], [W[b]]], playerId: W[a].id,
-      }, overrides);
+      const extra = (k) => ({ ...W[builds[(i + k * 2 + 1) % builds.length]], id: `extra${k}`, name: `Extra ${k}` });
+      const sides = type === 'tag' ? [[W[a], W.partnerA], [W[b], W.partnerB]] : waysOf(getRuleset(type)) > 2 ? [[W[a]], [W[b]], [extra(1)], ...(waysOf(getRuleset(type)) > 3 ? [[extra(2)]] : [])] : [[W[a]], [W[b]]];
+      const m = MatchEngine.simulate({ seed: 1000 + i, type, sides, playerId: W[a].id }, overrides);
       const r = m.result;
       assert.ok(r, `${type} produced no result`);
       assert.ok(r.rounds <= 700);
@@ -511,4 +511,62 @@ test('commentary only describes recorded events (no invented outcomes)', async (
   for (const l of lines) assert.ok(types.has(l.type));
   const win = lines.find((l) => l.type === 'match_end');
   assert.ok(win.text.includes(m.state.fighters[m.result.winnerId]?.name || 'draw') || m.result.winnerId === null);
+});
+
+// ------------------------------------------------------------------ multi-way matches
+const multiSides = (n) => Array.from({ length: n }, (_, k) => [{ ...Object.values(W).filter((x) => !String(x.id).startsWith('partner'))[k % 5], id: `mw${k}`, name: `Wrestler ${k}` }]);
+
+test('triple threat and fatal four-way: one winner, everyone else loses, valid finishes, no seat bias', () => {
+  for (const [type, n] of [['triple_threat', 3], ['fatal_four', 4]]) {
+    const wins = Array(n).fill(0);
+    for (let i = 0; i < 80; i++) {
+      const m = MatchEngine.simulate({ seed: 4000 + i, type, sides: multiSides(n), playerId: 'mw0' }, {});
+      const r = m.result;
+      assert.ok(r && r.rounds <= 700);
+      if (r.winnerSide === null) { assert.equal(r.finish, 'time_limit_draw'); continue; }
+      wins[r.winnerSide]++;
+      assert.ok(['pinfall', 'submission'].includes(r.finish), r.finish);
+      assert.equal(r.winners.length, 1);
+      assert.equal(r.losers.length, n - 1);
+      assert.ok(!r.losers.includes(r.winnerId));
+      assert.equal(m.state.events.filter((x) => x.type === 'match_end').length, 1);
+    }
+    for (const w of wins) assert.ok(w > 80 / n * 0.4, `every seat wins sometimes: ${wins}`);
+  }
+});
+
+test('multi-way: bystanders break up covers and the match needs exactly the right number of sides', () => {
+  let saves = 0;
+  for (let i = 0; i < 40; i++) saves += MatchEngine.simulate({ seed: 6000 + i, type: 'fatal_four', sides: multiSides(4), playerId: 'mw0' }, {}).state.events.filter((e) => e.type === 'pin_save' && e.bystander).length;
+  assert.ok(saves > 5, `bystander saves: ${saves}`);
+  assert.throws(() => MatchEngine.simulate({ seed: 1, type: 'triple_threat', sides: multiSides(2), playerId: 'mw0' }, {}), /needs 3 sides/);
+  assert.throws(() => MatchEngine.simulate({ seed: 1, type: 'singles', sides: multiSides(3), playerId: 'mw0' }, {}), /./);
+});
+
+test('multi-way: a human can choose who to go after, and a saved match resumes identically', () => {
+  const e = new MatchEngine({ seed: 77, type: 'triple_threat', sides: multiSides(3), playerId: 'mw0' }, { human: ['mw0'] });
+  let d = e.getDecision(), guard = 0, switched = false;
+  while (d && !e.over && guard++ < 60) {
+    if (d.isHuman && d.kind === 'action') {
+      const focus = d.options.find((o) => o.id.startsWith('t:focus:'));
+      if (focus && !switched) {
+        const before = e.state.focus.mw0 ?? null;
+        e.choose(focus.id);
+        assert.equal(e.state.focus.mw0, focus.id.slice('t:focus:'.length));
+        assert.notEqual(e.state.focus.mw0, before);
+        switched = true;
+        d = e.getDecision();
+        continue;
+      }
+      const mv = d.options.find((o) => o.kind === 'move' && o.enabled !== false);
+      e.choose(mv.id);
+    } else e.choose(d.options.filter((o) => o.enabled !== false)[0].id);
+    d = e.getDecision();
+  }
+  assert.ok(switched, 'the focus option was offered');
+  const mid = JSON.stringify(e.toJSON());
+  const copy = MatchEngine.fromJSON(mid, { human: ['mw0'] });
+  assert.equal(JSON.stringify(copy.toJSON()), mid);
+  const sa = MatchEngine.simulate({ seed: 5, type: 'fatal_four', sides: multiSides(4), playerId: 'mw0' }, {}), sb = MatchEngine.simulate({ seed: 5, type: 'fatal_four', sides: multiSides(4), playerId: 'mw0' }, {});
+  assert.equal(JSON.stringify(sa.state), JSON.stringify(sb.state), 'same seed, same match');
 });

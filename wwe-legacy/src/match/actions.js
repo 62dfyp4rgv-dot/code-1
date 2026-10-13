@@ -3,7 +3,8 @@
 import { getMove, familyOf } from './moves.js';
 import { availableStances, STANCES } from './stances.js';
 import { computeConnect, hintLabel, kickoutChance, holdEscapeChance } from './calc.js';
-import { F, opponentOf, partnerOf, damageFraction, staminaFrac, phaseOf } from './state.js';
+import { F, opponentOf, partnerOf, liveFoes, damageFraction, staminaFrac, phaseOf } from './state.js';
+import { waysOf } from './rules.js';
 
 const GROUP_OF_CAT = {
   strike_light: 'Strikes', strike_heavy: 'Strikes', combo: 'Strikes', grapple: 'Grapples', technical: 'Technical',
@@ -128,6 +129,14 @@ export function listActions(state, actorId) {
       cost: 0,
     });
   }
+  // multi-way: choose who to go after (free action, at most once every other round)
+  if (waysOf(state.rules) > 2 && state.round - (A.tactics.lastFocus ?? -99) >= 2) {
+    for (const fid of liveFoes(state, actorId)) {
+      if (fid === D.id) continue;
+      const foe = F(state, fid);
+      opts.push({ id: `t:focus:${fid}`, kind: 'tempo', tempoId: `focus:${fid}`, label: `Go after ${foe.name}`, group: 'Tactics', desc: `Turn on ${foe.name} instead of ${D.name}. Free action.`, enabled: true, free: true, cost: 0 });
+    }
+  }
   return rank(state, A, D, opts);
 }
 
@@ -156,6 +165,8 @@ function rank(state, A, D, opts) {
       s += staminaFrac(A) < 0.4 ? 50 : 6;
     } else if (o.tempoId === 'make_tag') {
       s += 30 + damageFraction(A) * 40;
+    } else if (o.tempoId && o.tempoId.startsWith('focus:')) {
+      s += 24 + damageFraction(F(state, o.tempoId.slice(6))) * 30;
     } else if (o.tempoId === 'obj_climb') {
       s += 35;
     } else if (o.tempoId === 'taunt' || o.tempoId === 'hype' || o.tempoId === 'signal') {
