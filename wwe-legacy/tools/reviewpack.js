@@ -47,7 +47,7 @@ const captureScenario = () => {
 };
 let matches = 0;
 let guard = 0;
-while (c.day < 330 && matches < 60 && guard++ < 2000) {
+while (c.day < 560 && matches < 100 && guard++ < 4000) {
   captureScenario();
   const ev = g.nextEvent();
   if (!ev) break;
@@ -65,10 +65,13 @@ while (c.day < 330 && matches < 60 && guard++ < 2000) {
 }
 captureScenario();
 
-const L = ['# Scenario prose samples', '', `These ${Math.min(scn.length, 14)} situations were shown to a simulated player during a played career (day ${c.day}). Choices were picked at random. \`Memory\` lines are generated from ledger events the character can actually cite.`, ''];
+const L = ['# Scenario prose samples', '', `A representative sample of the ${scn.length} situations shown to a simulated player during a played career (day ${c.day}, ${matches} matches): up to 8 that cited remembered history, then others in order. Choices were picked at random. \`Memory\` lines are generated from ledger events the character can actually cite.`, ''];
 const seenT = new Set();
-for (const x of scn) {
-  if (seenT.has(x.inst.templateId) || seenT.size >= 14) continue;
+const ordered = [...scn.filter((x) => x.inst.memory && x.inst.memory.length), ...scn.filter((x) => !(x.inst.memory && x.inst.memory.length))];
+let memShown = 0;
+for (const x of ordered) {
+  if (seenT.has(x.inst.templateId) || seenT.size >= 16) continue;
+  if (x.inst.memory && x.inst.memory.length) { if (memShown >= 8) continue; memShown++; }
   seenT.add(x.inst.templateId);
   L.push(`## ${x.inst.title}  _(day ${x.day}, ${x.inst.category})_`, '', ...x.inst.body.map((p) => `> ${p}`), '');
   if (x.inst.memory && x.inst.memory.length) L.push('Memory callbacks shown: ' + x.inst.memory.map((m) => `"${m.text}"`).join(' / '), '');

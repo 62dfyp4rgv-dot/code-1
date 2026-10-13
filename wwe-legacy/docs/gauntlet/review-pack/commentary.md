@@ -6,7 +6,7 @@ Each line was produced by `narrate()` from a structured engine event. The engine
 
 Result: pinfall, 5 min, 2.5 stars.
 
-- Adrian Vale works toward the irish whip to corner.
+- Vale sets up the next spot: Irish Whip to Corner.
 - Rex Hammer blocks the Forearm Smash.
 - Adrian Vale goes for the Tree of Woe Stomps but Hammer shuts it down.
 - Adrian Vale starts working on the head.
@@ -18,7 +18,7 @@ Result: pinfall, 5 min, 2.5 stars.
 - Rex Hammer reverses his Arm Attack and turns it around!
 - Chinlock. Vale feels that one in the head.
 - Rex Hammer peppers Adrian Vale with a clean Ground & Pound.
-- Hammer changes position: climb to the top rope.
+- Hammer moves into position: Climb to the Top Rope.
 - Hammer goes for the cover!
 - 1...
 - 2...
@@ -141,7 +141,7 @@ Result: objective, 29 min, 3.0 stars.
 Result: submission, 9 min, 2.3 stars.
 
 - Spotlight takes a clean Headlock Takeover from Sable.
-- Sable sets up the climb to the top rope.
+- Dmitri Sable changes position - Climb to the Top Rope.
 - Sable has picked a target: the head.
 - Dmitri Sable rolls out of the ring to recover.
 - 2! Sable is still outside!
@@ -164,7 +164,7 @@ Result: submission, 9 min, 2.3 stars.
 - Johnny Spotlight starts working on the head.
 - Dmitri Sable reverses the Dragon Screw and turns it around!
 - Blocked! Spotlight was ready for the Guillotine Choke.
-- Dmitri Sable applies the sleeper hold to Spotlight's head.
+- Dmitri Sable applies the Sleeper Hold to Spotlight's head.
 - Sleeper Hold! Sable has it cinched on Spotlight's head!
 - The pressure builds on Johnny Spotlight's head.
 - Spotlight's face tells the story - that head is in agony.

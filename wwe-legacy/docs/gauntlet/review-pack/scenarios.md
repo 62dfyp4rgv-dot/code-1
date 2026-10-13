@@ -1,6 +1,94 @@
 # Scenario prose samples
 
-These 14 situations were shown to a simulated player during a played career (day 330). Choices were picked at random. `Memory` lines are generated from ledger events the character can actually cite.
+A representative sample of the 80 situations shown to a simulated player during a played career (day 560, 96 matches): up to 8 that cited remembered history, then others in order. Choices were picked at random. `Memory` lines are generated from ledger events the character can actually cite.
+
+## A Fan in Ivan Ember's Shirt Wants Your Name on It  _(day 115, fans)_
+
+> Riley Duarte (The Squared Circle), a stern grandmother, reaches the front of the autograph line in a shirt printed with Ivan Ember's face. The request is clear and polite: sign the space beside the logo.
+> The people behind them are watching your hand. If you scribble, you are rude; if you smile, you are suspicious; and either way, Ivan will hear about it.
+
+Memory callbacks shown: "You beat me clean 4 times. No excuses."
+
+Choices offered: [Sign it kindly and say the fan has good taste] [Sign it with a barb about its owner] [Refuse to sign it, politely but firmly] [Offer to swap the shirt for one of yours]
+
+Chosen: **Sign it with a barb about its owner** → The fan does not get the joke, and neither does the mother standing behind. The shirt is ruined, and your name is on it in the wrong way.
+
+## A Kind Word from the Wrong Person  _(day 135, media)_
+
+> Devon Kapoor (Heel Turn Radio) slides a printed page across the table. In a trade magazine, Ivan Ember said you made the crowd care about the whole show, with no hook and no sarcasm that you can find.
+> You have spent weeks bracing for the other kind of quote. The interviewer watches your face like a poker player, waiting to see what a surprise does to you.
+
+Memory callbacks shown: "4 losses to you. Tonight I fix that."
+
+Choices offered: [Return the compliment sincerely, on the record] [Suspect a trick and say so] [Use the quote to sell the next match] [Fold the page and keep it to yourself]
+
+Chosen: **Return the compliment sincerely, on the record** → You say the kind thing back, plainly. By evening Ivan has heard it and found you in the hall, and something between you quietly loosens.
+
+## A Confidence on the Road  _(day 144, alliance)_
+
+> During a bus ride through a thunderstorm, Pierce Wolfe goes quiet, then tells you about doubts about whether to keep wrestling at all. It is not the sort of thing people say out loud in this business.
+> You are the only person who has heard it. How you respond will decide whether it is the beginning of a friendship or a slip of the tongue.
+
+Memory callbacks shown: "2 clean losses to you, and I remember every one."
+
+Choices offered: [Listen all night and say little] [Offer blunt, practical advice] [Joke it off and change the subject] [File it away for later use]
+
+Chosen: **Joke it off and change the subject** → The mood lifts and the confession is quietly buried. Neither of you mentions it again.
+
+## The Podcast Wants to Talk About Viktor Ember  _(day 187, podcast)_
+
+> You are two hours into a comedy podcast and Taylor Brennan (Pinfall Podcast) finally gets to the question everyone listening wants answered: who needs whom more. Taylor leans into the microphone and lets you speak first.
+> Viktor Ember is sure to hear the episode, probably before the weekend. A single good sentence could trend; a bad one will be quoted at you for months.
+
+Memory callbacks shown: "You beat me clean 6 times. No excuses."
+
+Choices offered: [Take Viktor apart with a sharp critique] [Give Viktor credit and keep it professional] [Hint at a match you want to see happen] [Dodge the question with a joke]
+
+Chosen: **Give Viktor credit and keep it professional** → You name what Viktor does well, then explain why you still plan to win. The rival hears it as honest respect, and the fans are split on whether it is gutless.
+
+## Winning Against Viktor Ember Gets Lonely  _(day 196, rivalry)_
+
+> The wins over Viktor Ember keep stacking up, and tonight they stop feeling like a victory lap. Viktor shadowboxes in an empty hallway on the ride to the next town, and the numbers on your side of the ledger start to look like a debt.
+> A feud only works while the loser still has somewhere to go. Viktor looks like somebody running out of road, and you are the reason.
+
+Memory callbacks shown: "6 losses to you. Tonight I fix that." / "6 matches. Neither of us has learned to walk away."
+
+Choices offered: [Pitch a finish where Viktor goes over] [Rub it in on the microphone] [Sit down with a coffee and say nothing about it] [Keep your distance and keep winning]
+
+Chosen: **Sit down with a coffee and say nothing about it** → You slide a cup across the table and talk about anything else. It is a small thing, and Viktor takes it as exactly that.
+
+## Bryce Black Pitches a Tag Team  _(day 238, alliance)_
+
+> In a late-night diner, Bryce Black slides over with a proposal: join forces as a tag team. He already has a two-man army built on speed sketched out on a napkin.
+> The napkin is not bad. The question is whether you want your career attached to someone else's.
+
+Memory callbacks shown: "One win over you already. I can count higher."
+
+Choices offered: [Say yes and shake on it] [Agree to a trial match first] [Accept, but hold the better spots] [Decline and stay a solo act]
+
+Chosen: **Accept, but hold the better spots** → Bryce balks and walks away. The idea was good, but your price was not.
+
+## Your Plans Were Leaked  _(day 242, betrayal)_
+
+> Pierce Drake ruined the surprise you have been saving for the title match, and he did it too neatly to be luck. A suspiciously identical countermove during rehearsal points toward Jade Cargill, who has been seen chatting with Pierce lately.
+> You have no proof. All you have is a bad feeling and a long list of people who knew.
+
+Memory callbacks shown: "You beat me clean 7 times. No excuses."
+
+Choices offered: [Accuse Jade to their face] [Feed Jade a fake plan] [Report the leak to the agent] [Stop trusting anyone and change everything]
+
+Chosen: **Feed Jade a fake plan** → The fake plan reaches Pierce within a day. On the night, you do something entirely different and look like a genius.
+
+## Pierce Drake Is Building a Crew  _(day 253, faction)_
+
+> Pierce Drake has been recruiting. Bryce Black turned up at the arena in a synchronised pose on the ramp yesterday, and the whisper is that the crowd is already chanting for them.
+> A rival with a crew can shut doors you did not know you were standing in front of. Building one of your own would take months, and sounds a lot like an arms race.
+
+Memory callbacks shown: "Every one of those 2 wins over you was clean. Nobody can argue that." / "2 wins over you already. I can count higher."
+
+Choices offered: [Poach Bryce before it is official] [Start building your own crew] [Ignore it: crews fall apart on their own] [Offer Pierce a truce before it escalates]
+
+Chosen: **Start building your own crew** → You make three calls and go to dinner twice. It is slow, and by the end of the month you have the start of a group and a fresh set of obligations.
 
 ## The Agent Wants a Name  _(day 3, betrayal)_
 
@@ -11,7 +99,7 @@ Choices offered: [Give the agent the name] [Cover for them and say you saw nothi
 
 Chosen: **Cover for them and say you saw nothing** → Nobody talks and everyone takes the fine. Nova owes you one.
 
-## Tryout at a former bowling alley  _(day 15, debut)_
+## Tryout at a Former Bowling Alley  _(day 15, debut)_
 
 > The tryout is held in a former bowling alley, and the ring has clearly been assembled that morning. Samira Okoye sits at the edge of the apron with forty other hopefuls behind their shoulder.
 > You get ninety seconds of ring time and a promise that someone will call. Most people in the room will never hear from anyone.
@@ -22,7 +110,7 @@ Chosen: **Run the basics with perfect execution** → Every bump, every lock-up,
 
 ## A Training Partner Worth Keeping  _(day 32, alliance)_
 
-> Viktor Ember suggests training together, with a focus on heavy conditioning blocks. The deal comes with a standing 6 a.m. Slot.
+> Viktor Ember suggests training together, with a focus on heavy conditioning blocks. The deal comes with a standing 6 a.m. slot.
 > Every trainer on the card says the same thing: you improve fastest next to someone better than you. You are not sure which of you that is.
 
 Choices offered: [Commit to a full training block] [Agree to one session a week] [Swap training secrets instead] [Pass: you work better alone]
@@ -38,7 +126,7 @@ Choices offered: [Double your conditioning work for the next month] [Change your
 
 Chosen: **Hire the coach to build a proper plan** → Walter drafts a plan that includes sleep, food and a schedule that actually accounts for travel. The price is steep and the plan is realistic, and the first week is a revelation.
 
-## A Training Block on a lakeside track  _(day 42, training)_
+## A Training Block on a Lakeside Track  _(day 42, training)_
 
 > You have two free weeks and a plan for a lakeside track: a block built around speed. The program sits on the fridge door in blue marker.
 > Training blocks reward consistency and punish overreach. What you work on shapes who you will be in the ring next month.
@@ -65,7 +153,7 @@ Choices offered: [Pitch in until the ring is built] [Ask the chief to teach you 
 
 Chosen: **Ask the chief to teach you how a ring goes together** → He shows you why the pads get checked twice and where this particular ring wobbles. You leave knowing things most wrestlers never bother to learn.
 
-## A sit-down interview About Your Legacy  _(day 55, legacy)_
+## A Sit-Down Interview About Your Legacy  _(day 55, legacy)_
 
 > Taylor Brennan (Pinfall Podcast) sets up for a sit-down interview, and the first question is a hard one: the toughest night of your career. You can feel the weight of years behind the question.
 > Everything you say will be quoted. How you want to be remembered is partly up to you, and partly a matter of how you speak tonight.
@@ -73,57 +161,3 @@ Chosen: **Ask the chief to teach you how a ring goes together** → He shows you
 Choices offered: [Answer honestly, including the failures] [Tell the polished version of the story] [Spend the interview crediting the people who helped] [Politely decline to talk about the past]
 
 Chosen: **Tell the polished version of the story** → The story is warm and well-shaped. It is not the whole truth, but nobody objects.
-
-## The Belt Feels Different at Night  _(day 56, championship)_
-
-> Somewhere in the last few days the celebration ended and the job began. Tonight, your name on the plate looks like it belongs to somebody else, and a contender with a grudge is watching how you carry it.
-> Nadia Petrova finds you alone with the case and sits down on an upturned bucket. No champion in history has felt ready, and the veterans tell the story as if it were a punchline.
-
-Choices offered: [Tell Nadia you are afraid of losing it] [Act like a champion until it feels like one] [Work harder than ever to earn the belt twice] [Take a few friends out for a quiet dinner]
-
-Chosen: **Take a few friends out for a quiet dinner** → The belt sits on a spare chair like a guest, and nobody mentions the business for two hours. You leave feeling like a person again, and a little silly for needing it.
-
-## A Story from the Old Days  _(day 71, mentor)_
-
-> During a quiet stretch in the hotel bar, CM Punk starts telling a story about the night the arena lost power and the match went on in the dark. It's not a lesson at first, just a story, but by the end you realise it was meant for you.
-> The veteran watches you the whole time, curious to see what you take from it.
-
-Choices offered: [Listen closely and take it in] [Ask the hard question underneath it] [Offer a story of your own in return] [Make an excuse and slip away]
-
-Chosen: **Make an excuse and slip away** → You leave to prepare for your match. The legend pretends not to mind.
-
-## A Rule Nobody Wrote Down  _(day 72, backstage)_
-
-> Randy Orton stops you outside the showers and speaks quietly, which is always worse than shouting. You broke an unwritten rule today, namely answering the fans' questions about a finish, and he says so beside a vending machine that hums.
-> There is no malice in the voice, and no mercy either. Whatever you say next will tell the room what kind of person you are when you are corrected.
-
-Choices offered: [Apologise properly and thank Randy for saying so] [Ask for the rest of the rules while you have the chance] [Push back and ask who made that rule] [Laugh it off and change the subject]
-
-Chosen: **Ask for the rest of the rules while you have the chance** → Randy laughs, counts a dozen on his fingers, and ends with the one that matters: never lie to the person you work with. It is the best ten minutes of advice you have had all year.
-
-## Where Your Memorabilia Goes  _(day 84, legacy)_
-
-> An auction house has come asking about your worn jacket. The offer is real, the story it carries is valuable, and you have to decide where it belongs.
-> Once it is gone, it is gone. Memories tend to attach themselves to objects, and so do their prices.
-
-Choices offered: [Sell to the highest bidder] [Donate it to a museum exhibit] [Give it to a fan who truly wants it] [Keep it for yourself and your family]
-
-Chosen: **Donate it to a museum exhibit** → It goes on public display with a small plaque. The press is kind and your accountant is not.
-
-## The Morning After a Hot Streak  _(day 89, breakout)_
-
-> At a gas-station parking lot, you wake up to a headline with your name in it. The streak has lifted you above the pack, and the cheerful noise is already attracting attention you did not have a month ago.
-> The question is what to do with it. Streaks end, and what you build while it lasts decides how much of it you keep.
-
-Choices offered: [Double down on training while the iron is hot] [Take the crew out and celebrate] [Pitch yourself for a bigger spot while it counts] [Keep a low profile and stay humble]
-
-Chosen: **Take the crew out and celebrate** → The night turns into a bonding event with the locker room. You come home with new friends and a lighter wallet.
-
-## The Commentary Booth Takes Aim  _(day 111, media)_
-
-> Jordan Pruitt (Ringside Report) has criticised your in-ring work in a viral clip, naming overselling specifically. It is the kind of critique that stings because it is half right.
-> Your trainer has not mentioned it. The silence from the production truck is louder.
-
-Choices offered: [Take the note and drill it in the ring] [Confront Jordan face to face] [Fire back with a line on social or air] [Shrug it off as the price of attention]
-
-Chosen: **Confront Jordan face to face** → It becomes an argument within the first minute. Someone in the corridor records the last fifteen seconds.

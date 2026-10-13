@@ -386,7 +386,7 @@ export class ScenarioEngine {
       // any scene featuring a wrestler the player shares real history with may cite one remembered event (never invented)
       for (const [role, who] of Object.entries(bind)) {
         if (role.startsWith('__') || !who || !who.id || !c.universe.get(who.id)) continue;
-        const ml = memoryLines(c.memory, c.player.id, who.id, who.name, { speaker: 'other', max: 1, cooldown });
+        const ml = memoryLines(c.memory, c.player.id, who.id, who.name, { speaker: 'narrator', max: 1, cooldown });
         if (ml.length) { memLines = ml.map((l) => ({ ...l, role })); break; }
       }
     }

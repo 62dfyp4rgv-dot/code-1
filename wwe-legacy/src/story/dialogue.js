@@ -114,13 +114,42 @@ const LINES = {
 };
 const variant = (list, h) => list[parseInt(hash53(`${h.kind}:${(h.refs || []).join(',')}`), 36) % list.length];
 
-/** speaker: 'player' | 'other'. `cooldown` ({ store, day, days }) stops the same callback being repeated every scene. */
+// Narrator voice: what the player remembers, stated as fact (used when a scene mentions someone who is not necessarily speaking)
+const times2 = (n) => (n === 1 ? 'once' : n === 2 ? 'twice' : `${n} times`);
+const NARR = {
+  i_beat_you: (h, n) => `You have beaten ${n} ${times2(h.n)}.`,
+  you_beat_me: (h, n) => `${n} has beaten you ${times2(h.n)}.`,
+  clean_dominance: (h, n) => `${h.n} of your wins over ${n} were clean.`,
+  clean_losses: (h, n) => `${n} has beaten you clean ${times2(h.n)}.`,
+  controversial_finish: (h, n) => `Your last match with ${n} ended in controversy.`,
+  controversial_finish_old: (h, n) => `Not every finish between you and ${n} was clean.`,
+  you_betrayed_me: (h, n) => `${n} betrayed you, and you have not forgotten.`,
+  i_betrayed_you: (h, n) => `You turned on ${n} once, and ${n} knows it.`,
+  old_insult: (h, n) => (h.quote ? `You once said of ${n}: "${String(h.quote).replace(/[.!?]+$/, '')}".` : `You have insulted ${n} in public before.`),
+  broken_promise: (h) => `You once promised "${h.text}", and it did not happen.`,
+  respect: (h, n) => `You and ${n} have shown each other respect before.`,
+  long_rivalry: (h, n) => `You and ${n} have shared the ring ${h.n} times.`,
+  reconciled: (h, n) => `You and ${n} settled things after the trouble between you.`,
+  open_promise: (h) => `You promised "${h.text}", and that promise is still open.`,
+};
+
+/** speaker: 'player' | 'other' | 'narrator'. `cooldown` ({ store, day, days }) stops the same callback being repeated every scene. */
 export function memoryLines(memory, me, other, otherName, { speaker = 'other', max = 3, allow, cooldown } = {}) {
   const hs = hooks(memory, me, other).filter((h) => !allow || allow.includes(h.kind));
   const priority = ['you_betrayed_me', 'i_betrayed_you', 'broken_promise', 'old_insult', 'controversial_finish', 'clean_dominance', 'clean_losses', 'you_beat_me', 'i_beat_you', 'controversial_finish_old', 'long_rivalry', 'reconciled', 'respect', 'open_promise'];
   hs.sort((a, b) => priority.indexOf(a.kind) - priority.indexOf(b.kind));
   const lines = [];
   for (const h of hs) {
+    if (speaker === 'narrator') {
+      const fn = NARR[h.kind];
+      if (!fn) continue;
+      const key = `${other}:${h.kind}:${(h.refs || []).slice(-1)[0] || ''}`;
+      if (cooldown && cooldown.store[key] !== undefined && cooldown.day - cooldown.store[key] < (cooldown.days ?? 45)) continue;
+      lines.push({ text: fn(h, otherName), refs: h.refs.filter(Boolean), kind: h.kind, key, narrator: true });
+      if (cooldown) cooldown.store[key] = cooldown.day;
+      if (lines.length >= max) break;
+      continue;
+    }
     // perspective: when the *other* speaks, "I beat you" / "you beat me" swap
     let hh = h;
     if (speaker === 'other') {

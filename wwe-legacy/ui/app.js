@@ -276,7 +276,7 @@ const A = {
       if (ph === 'match') S.feed = S.g.recentLines(12);
       if (ph === 'postmatch') { S.ui.result = S.g.resultView(); S.ui.postMsg = ''; S.screen = 'result'; }
       await refreshSlots(); render();
-      toast(r.recovered ? `Recovered from backup (${r.error}).` : 'Career loaded.');
+      toast(r.recovered ? `Recovered from backup (${r.error}).` : S.g.career.memory.repaired ? 'Career loaded; relationships were rebuilt from the ledger.' : 'Career loaded.');
     } catch (e) { err(e); }
   },
   delSlot: async ({ id }) => { await saves.delete(id); await refreshSlots(); render(); },
