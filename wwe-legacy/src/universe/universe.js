@@ -166,6 +166,11 @@ export class Universe {
   pickTagTeam(brandKey, gender, exclude = []) {
     const free = (w) => w.gender === gender && w.brandKey === brandKey && !this._holdsTitle(w.id) && !exclude.includes(w.id);
     const pool = this.list(free);
+    for (const f of Object.values(this.factions)) {
+      if (f.status !== 'active') continue;
+      const mates = f.members.map((id) => this.roster[id]).filter((w) => w && w.status === 'active' && free(w));
+      if (mates.length >= 2) return [mates[0], mates[1]];
+    }
     for (const al of Object.values(this.alliances)) {
       const a = this.roster[al.a], b = this.roster[al.b];
       if (a && b && a.status === 'active' && b.status === 'active' && free(a) && free(b)) return [a, b];

@@ -361,7 +361,7 @@ export function profileSheet(S, id) {
   return `<div class="row spread"><div class="row">${avatar(w, 52)}<h2>${esc(w.name)}</h2></div><button class="btn small ghost" data-action="closeSheet">Close</button></div>
     <div class="row wrap"><span class="pill">${cap(w.style)}</span><span class="pill">${cap(w.alignment)}</span><span class="pill">${esc(w.brand)}</span><span class="pill brass">OVR ${card.overall}</span></div>
     ${Object.entries(w.attrs).map(([k, v]) => `<div class="stat"><span>${cap(k)}</span>${bar(v)}<span class="num">${v}</span></div>`).join('')}
-    ${kv('Finisher', esc(w.finisher?.name || '—'))}${kv('Your record', esc(card.record))}${kv('Relationship', rel.tags.length ? esc(rel.tags.map(cap).join(', ')) : 'Neutral')}
+    ${kv('Finisher', esc(w.finisher?.name || '—'))}${card.faction ? kv('Faction', esc(card.faction)) : ''}${kv('Your record', esc(card.record))}${kv('Relationship', rel.tags.length ? esc(rel.tags.map(cap).join(', ')) : 'Neutral')}
     ${lines.map((l) => `<p class="line">${esc(l.text)}<span class="why">memory · ${l.refs.length} event${l.refs.length === 1 ? '' : 's'}</span></p>`).join('')}`;
 }
 
@@ -374,7 +374,8 @@ export function more(S) {
   if (s === 'media') return media(S);
   if (s === 'matches') return matches(S);
   if (s === 'settings') return settingsView(S);
-  const items = [['matches', 'Matches', 'Every match you have wrestled'], ['rivalries', 'Rivalries', 'Heat, history, grudges'], ['media', 'Media', 'Cut promos and make promises'], ['achievements', 'Achievements', 'Earned, in progress and secret'], ['relationships', 'Relationships', 'Allies, enemies and trust'], ['settings', 'Settings & Saves', 'Text size, theme, save slots']];
+  if (s === 'finances') return finances(S);
+  const items = [['matches', 'Matches', 'Every match you have wrestled'], ['rivalries', 'Rivalries', 'Heat, history, grudges'], ['media', 'Media', 'Cut promos and make promises'], ['achievements', 'Achievements', 'Earned, in progress and secret'], ['relationships', 'Relationships', 'Allies, enemies and trust'], ['finances', 'Finances', 'Contract, merchandise, lifestyle'], ['settings', 'Settings & Saves', 'Text size, theme, save slots']];
   return `<main class="screen">${header('More')}${items.map(([id, l, d]) => `<button class="btn" data-action="openSub" data-id="${id}"><span class="t"><b>${l}</b><small>${d}</small></span><span class="r">›</span></button>`).join('')}</main>`;
 }
 
@@ -411,8 +412,21 @@ function rivalries(S) {
 function relationships(S) {
   const c = S.g.career, me = c.player.id;
   const rels = Object.values(c.memory.world.relationships).filter((r) => r.a === me || r.b === me).sort((a, b) => b.events.length - a.events.length);
+  const fx = S.g.myFaction();
   return `<main class="screen">${header('Relationships', `${rels.length} known`, back('closeSub'))}
+    ${fx ? `<div class="card" style="border-color:var(--brass-fill)"><div class="eyebrow">Your faction</div><h3>${esc(fx.name)}</h3><div class="row wrap">${fx.members.map((id) => `<span class="row" style="gap:6px">${avatar(S.g.universe.get(id), 28)}<span>${esc(S.g.universe.get(id)?.name || id)}</span></span>`).join('')}</div>${kv('Leader', esc(fx.leader === S.g.career.player.id ? 'You' : S.g.universe.get(fx.leader)?.name || fx.leader))}${kv('Trust', fx.trust)}</div>` : ''}
     ${rels.map((r) => { const o = r.a === me ? r.b : r.a; const i = r.a === o ? 0 : 1; return `<div class="card"><div class="row spread"><h3>${esc(S.g.universe.get(o)?.name || o)}</h3>${r.tags.slice(0, 2).map((t) => `<span class="pill ${t === 'betrayal' ? 'bad' : 'brass'}">${cap(t)}</span>`).join('')}</div>${kv('Their trust in you', Math.round(r.trust[i]))}${kv('Their respect for you', Math.round(r.respect[i]))}${kv('Heat', Math.round(r.heat))}<button class="btn small ghost" data-action="profile" data-id="${o}">Memory & profile</button></div>`; }).join('') || '<div class="empty">Nobody knows you yet.</div>'}</main>`;
+}
+
+function finances(S) {
+  const f = S.g.financeView();
+  const m = (n) => `${n < 0 ? '-' : ''}$${Math.abs(n).toLocaleString()}`;
+  return `<main class="screen" id="finances">${header('Finances', 'Money in, money out', back('closeSub'))}
+    <div class="banner"><div class="eyebrow">Balance</div><h1 class="num" style="color:${f.balance < 0 ? 'var(--rope)' : 'inherit'}">${m(f.balance)}</h1>
+      ${f.contract ? `<div class="row spread"><span>Contract $${f.contract.salary.toLocaleString()}/yr</span><span>${f.contract.daysLeft > 0 ? `${f.contract.daysLeft} days left` : 'Expired'}</span></div>` : ''}<div>Merchandise ≈ ${m(f.merchMonthly)}/month at your popularity</div></div>
+    <div class="col"><div class="eyebrow">Lifestyle</div>${Object.entries(f.lifestyles).map(([id, l]) => `<button class="btn" data-action="lifestyle" data-id="${id}" style="${f.lifestyle === id ? 'border-color:var(--rope)' : ''}"><span class="t"><b>${esc(l.label)}${f.lifestyle === id ? ' · current' : ''}</b><small>${esc(l.desc)}</small></span><span class="r">${m(l.cost)}/mo</span></button>`).join('')}</div>
+    <div class="card"><h3>Recent statements</h3>${f.months.length ? f.months.map((e) => `<button class="item" data-action="inspect" data-id="${e.id}" style="background:none;border:0;border-bottom:1px solid var(--line);text-align:left;width:100%;color:inherit;font:inherit;cursor:pointer"><span class="col grow" style="gap:0"><b>${esc(e.date)}</b><span class="muted" style="font-size:.85rem">${esc(e.summary)}</span></span></button>`).join('') : '<p class="muted">The first statement arrives at the end of the month.</p>'}</div>
+    <div class="card">${kv('Lifetime match payouts', m(f.earnings.matches))}${kv('Lifetime salary', m(f.earnings.salary))}${kv('Lifetime merchandise', m(f.earnings.merch))}${kv('Lifetime spending', m(f.earnings.spent))}</div></main>`;
 }
 
 function appearances(S) {

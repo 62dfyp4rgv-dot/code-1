@@ -14,6 +14,7 @@ import { damageFraction } from '../match/state.js';
 import { getMove } from '../match/moves.js';
 import { Universe } from '../universe/universe.js';
 import { gainPop } from './pace.js';
+import { settleMonth, maybeRenewContract, matchPay } from './finance.js';
 
 export const CAREER_VERSION = 1;
 
@@ -208,7 +209,7 @@ export class Career {
     gainPop(p, (base + (rating.stars - 2.5) * 0.25 + (d.upset ? 1.0 : 0)) * tierMul);
     p.confidence = clamp(p.confidence + (result === 'win' ? 3 : result === 'loss' ? -4 : 0), 0, 100);
     p.fatigue = clamp(p.fatigue + 8 + d.durationSec / 120 + d.damageTaken / 40, 0, 100);
-    p.money += Math.round(800 * tierMul + (result === 'win' ? 200 : 0));
+    p.money += matchPay(d);
     // milestones
     this.checkMilestones();
   }
@@ -231,6 +232,7 @@ export class Career {
       this.day += 1;
       const p = this.player;
       p.fatigue = clamp(p.fatigue - 4, 0, 100);
+      if (this.day % 30 === 0 && !this.flags.retired) { maybeRenewContract(this); settleMonth(this); }
       if (this.day % 30 === 0) this.memory.record({ key: `decay:${this.day}`, day: this.day, category: 'world', type: 'world_decay', scope: 'world', canon: false, participants: [], summary: 'Time passes: old grudges cool and fear fades.', importance: 1, data: { days: 30 } });
       for (const inj of p.injuries) if (inj.daysLeft > 0) {
         inj.daysLeft -= 1;

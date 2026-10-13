@@ -20,7 +20,7 @@ export const FEATURES = [
   // Career
   { id: 'c_create', area: 'career', label: 'Character creation (5-step wizard, styles, backgrounds, gimmick, finisher, signatures)', status: 'complete', probe: () => has('ui/views.js', /createView|wizard/i) },
   { id: 'c_progress', area: 'career', label: 'Progression: training, fatigue, injuries, popularity, contract/money', status: 'complete', probe: () => has('src/game.js', /train\(/) },
-  { id: 'c_finance', area: 'career', label: 'Finance depth (merch, endorsements, expenses, taxes, investments)', status: 'partial', note: 'Salary + bonuses + scenario costs only.' },
+  { id: 'c_finance', area: 'career', label: 'Finances: match pay, salary, merchandise, lifestyle costs, debt, contract renewal, statements in the ledger', status: 'complete', probe: () => has('src/career/finance.js', /settleMonth/), note: 'No investments, property or taxes beyond a flat withholding.' },
   { id: 'c_personal', area: 'career', label: 'Personal life (family, health, hobbies) beyond scenario choices', status: 'partial', note: 'Scenario-driven only; no standalone systems.' },
   { id: 'c_retire', area: 'career', label: 'Retirement, Hall of Fame induction and evidence-backed legacy verdict', status: 'complete', probe: () => has('src/career/legacy.js', /retirePlayer/), note: 'HoF induction is recorded at retirement for the Class of the following year (no post-retirement time simulation).' },
   // Calendar / universe
@@ -28,7 +28,7 @@ export const FEATURES = [
   { id: 'u_ai', area: 'universe', label: 'Independent AI universe (AI-vs-AI matches, feuds, alliances, betrayals, injuries, title reigns)', status: 'complete', probe: () => has('src/universe/sim.js', /class UniverseSim/) },
   { id: 'u_titles', area: 'universe', label: 'Singles/midcard championships with lineage validation', status: 'complete', probe: () => has('src/universe/universe.js', /lineageProblems/) },
   { id: 'u_tagtitles', area: 'universe', label: 'Tag-team championships (AI defenses and changes; player can challenge and defend with a partner)', status: 'complete', probe: () => has('src/universe/sim.js', /_playTagTitle/) },
-  { id: 'u_factions', area: 'universe', label: 'Factions (formation, membership, leader, betrayal mechanics)', status: 'partial', note: 'Alliances and betrayals exist; factions are scenario/memory concepts only.' },
+  { id: 'u_factions', area: 'universe', label: 'Factions: AI factions form/dissolve and tag together; the player joins or founds one through story scenes', status: 'partial', note: 'No faction management screen; recruitment/leadership decisions happen inside scenarios.' },
   { id: 'u_history', area: 'universe', label: 'Verified historical data (real rosters, title lineages, PLE results)', status: 'partial', note: 'Roster/titles are approximate and flagged approx:true; NOT verified against sources.' },
   { id: 'u_modes', area: 'universe', label: 'Historical / modern modes with separation of fictional results', status: 'complete', probe: () => has('src/universe/universe.js', /historical/) },
   { id: 'u_custom', area: 'universe', label: 'Alternate-history and fully custom universe editor', status: 'partial', note: 'Generator supports fictional rosters; no editor UI.' },

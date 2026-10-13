@@ -69,6 +69,15 @@ export function buildRecordBook(career, nameOf = (x) => x) {
       item('Most successful PLE', bestPle ? `${bestPle[0]} (${bestPle[1].wins}-${bestPle[1].matches - bestPle[1].wins})` : '—', bestPle ? bestPle[1].ids : []),
     ],
   });
+  const fin = ledger.ofType('finance_month').map((e) => e.id);
+  sections.push({
+    id: 'finance', title: 'Finances', items: [
+      item('Career earnings', `$${(s.earnings.matches + s.earnings.salary + s.earnings.merch).toLocaleString()}`, [...evidenceOf('matches'), ...fin]),
+      item('Match payouts', `$${s.earnings.matches.toLocaleString()}`, evidenceOf('matches')),
+      item('Salary', `$${s.earnings.salary.toLocaleString()}`, fin), item('Merchandise', `$${s.earnings.merch.toLocaleString()}`, fin),
+      item('Spent (lifestyle, fees, tax)', `$${s.earnings.spent.toLocaleString()}`, fin),
+    ],
+  });
   const r = s.rumble;
   sections.push({
     id: 'rumble', title: 'Royal Rumble', items: [

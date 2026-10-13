@@ -6,6 +6,7 @@ import { clamp, round1 } from './core/util.js';
 import { Career } from './career/career.js';
 import { gainPop } from './career/pace.js';
 import { legacyScore, retirePlayer } from './career/legacy.js';
+import { LIFESTYLES, merchIncome } from './career/finance.js';
 import { makeBooking, createEngine } from './career/booking.js';
 import { MatchEngine } from './match/engine.js';
 import { narrate } from './match/commentary.js';
@@ -126,7 +127,8 @@ export class Game {
     career.universe._mainBrand = brands.includes('WWF') ? 'WWF' : brands[0];
     career.universe._syncBrandNames();
     career.record({ key: 'debut', category: 'career', type: 'debut', summary: `${career.player.name} makes their professional debut${brand ? ` on ${brand}` : ''}.`, importance: 4, data: { brand, show: brand, background: spec.background || 'prospect', era: career.era } });
-    career.player.contract = { endDay: career.day + 730, salary: Math.round(bg.money * 4), brand };
+    career.player.lifestyle = 'comfortable';
+    career.player.contract = { endDay: career.day + 730, salary: { prospect: 60000, indie: 90000, international: 250000, established: 600000 }[spec.background || 'prospect'] ?? 60000, brand };
     career.record({ key: 'contract:initial', category: 'career', type: 'contract_signed', summary: `${career.player.name} signs a ${bg.name.toLowerCase()} contract.`, importance: 2, data: { years: 2, brand } });
     career.flags.phase = 'home';
     return career;
@@ -326,6 +328,12 @@ export class Game {
     return me.popularity >= t.minPop && wins >= 4 && champ && c.overall() >= this._overall(champ) - 14 && c.stats.s.matches >= 5;
   }
   _overall(w) { const v = Object.values(w.attrs); return v.reduce((a, b) => a + b, 0) / v.length; }
+  /** the faction the player belongs to (from the ledger-driven world state), if any */
+  myFaction() {
+    const c = this.c, me = c.player.id;
+    const f = Object.values(c.memory.world.factions).find((x) => x.members.includes(me));
+    return f ? { id: f.id, name: f.name, leader: f.leader, members: f.members.filter((id) => id !== me), trust: f.trust ?? 0, since: f.formedDay } : null;
+  }
   opponentCard(w) {
     const c = this.c, me = c.player.id;
     const rel = getRel(c.memory.world, me, w.id), rv = getRivalry(c.memory.world, me, w.id);
@@ -334,6 +342,7 @@ export class Game {
       id: w.id, name: w.name, style: w.style, alignment: w.alignment, overall: Math.round(this._overall(w)), popularity: Math.round(w.popularity), tier: w.tier,
       record: st ? `${st.wins}-${st.losses}${st.draws ? `-${st.draws}` : ''}` : 'first meeting', rivalry: rv ? { heat: Math.round(rv.heat), status: rv.status } : null,
       tags: rel.tags, finisher: w.finisher?.name, titles: this.universe.titlesOf(w.id).map((t) => t.name),
+      faction: w.faction && this.universe.factions[w.faction] ? this.universe.factions[w.faction].name : null,
     };
   }
   scout(opponentId) {
@@ -406,7 +415,8 @@ export class Game {
     const defendingT = tagTitle && (tagTitle.holder === me.id || tagTitle.holder2 === me.id);
     const otherChampId = tagTitle && !defendingT ? (tagTitle.holder === opp.id ? tagTitle.holder2 : tagTitle.holder) : null;
     const pool = u.available(c.day, (w) => w.id !== me.id && w.id !== opp.id && w.id !== otherChampId && u.sameBrand(w, me.brand));
-    const allies = pool.filter((w) => { const r = getRel(c.memory.world, me.id, w.id); return r.tags.includes('ally') || r.tags.includes('mentor'); });
+    const myF = this.myFaction();
+    const allies = pool.filter((w) => { const r = getRel(c.memory.world, me.id, w.id); return r.tags.includes('ally') || r.tags.includes('mentor') || (myF && myF.members.includes(w.id)); });
     // defending champions team with their title partner; challengers face the champion pair
     const defending = tagTitle && (tagTitle.holder === me.id || tagTitle.holder2 === me.id);
     const mateId = defending ? (tagTitle.holder === me.id ? tagTitle.holder2 : tagTitle.holder) : null;
@@ -706,6 +716,18 @@ export class Game {
     const r = deliverPromo(this.c, o);
     this.c.flags.promoPending = null;
     return r;
+  }
+
+  // ---- money
+  financeView() {
+    const c = this.c, p = c.player;
+    const months = c.memory.ledger.query({ types: ['finance_month'], scope: 'player', newestFirst: true, limit: 6 });
+    return { balance: p.money, lifestyle: p.lifestyle || 'comfortable', lifestyles: LIFESTYLES, contract: p.contract ? { ...p.contract, daysLeft: p.contract.endDay - c.day } : null, merchMonthly: merchIncome(p.popularity), earnings: c.stats.s.earnings, months };
+  }
+  setLifestyle(id) {
+    if (!LIFESTYLES[id]) throw new Error('unknown lifestyle');
+    this.c.player.lifestyle = id;
+    return this.financeView();
   }
 
   // ---- legacy, retirement, Hall of Fame

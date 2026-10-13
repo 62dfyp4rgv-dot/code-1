@@ -38,6 +38,9 @@ export function runAITagMatch(u, teamA, teamB, { seed, ple = false } = {}) {
     injuries: [...teamA, ...teamB].map((w) => ({ id: w.id, inj: e.state.fighters[w.id].injuriesNew })) };
 }
 
+const FACTION_ADJ = ['Iron', 'Crimson', 'Silent', 'Rogue', 'Black', 'Golden', 'Savage', 'Northern', 'Midnight', 'Steel', 'Royal', 'Wildcard'];
+const FACTION_NOUN = ['Order', 'Syndicate', 'Brotherhood', 'Collective', 'Legion', 'Crew', 'Alliance', 'Society', 'Coalition', 'Dynasty'];
+
 const ovr = (w) => { const v = Object.values(w.attrs); return v.reduce((x, y) => x + y, 0) / v.length; };
 
 /** Statistical resolution for low-stakes undercard matches. Full engine matches are reserved for
@@ -156,8 +159,9 @@ export class UniverseSim {
     const target = ple ? 7 : 4;
     while (matches.length < target && rest.length >= 2) {
       const a = rest.shift();
-      let j = rest.findIndex((x) => x.gender === a.gender && Math.abs(x.tier - a.tier) <= 1);
-      if (j < 0) j = rest.findIndex((x) => x.gender === a.gender);
+      const foes = (x) => x.gender === a.gender && !(a.faction && x.faction === a.faction);
+      let j = rest.findIndex((x) => foes(x) && Math.abs(x.tier - a.tier) <= 1);
+      if (j < 0) j = rest.findIndex((x) => foes(x));
       if (j < 0) continue;
       const b = rest.splice(j, 1)[0];
       matches.push({ a, b });
@@ -247,6 +251,49 @@ export class UniverseSim {
     if (!feud && rng.chance(0.18) && winner.tier >= 1) this._startFeud(winner, loser, day);
   }
 
+  _formFaction(day, rng) {
+    const u = this.u;
+    u.counters.factions = u.counters.factions || 0;
+    for (const al of rng.shuffle(Object.values(u.alliances))) {
+      const a = u.get(al.a), b = u.get(al.b);
+      if (!a || !b || a.faction || b.faction || a.status !== 'active' || b.status !== 'active') continue;
+      const c3 = u.list((w) => !w.faction && w.id !== a.id && w.id !== b.id && w.brandKey === a.brandKey && w.alignment === a.alignment && w.gender === a.gender && w.tier >= 1 && w.id !== this.c.player.id)[0];
+      if (!c3) continue;
+      const members = [a, b, c3];
+      const leader = [...members].sort((x, y) => y.popularity - x.popularity)[0];
+      const name = `The ${rng.pick(FACTION_ADJ)} ${rng.pick(FACTION_NOUN)}`;
+      if (Object.values(u.factions).some((f) => f.name === name && f.status === 'active')) continue;
+      const id = `fx${++u.counters.factions}`;
+      u.factions[id] = { id, name, leader: leader.id, members: members.map((m) => m.id), since: day, status: 'active', alignment: a.alignment, brandKey: a.brandKey };
+      for (const m of members) m.faction = id;
+      this.stats.factions = (this.stats.factions || 0) + 1;
+      u.note(day, 'faction', `${name} formed: ${members.map((m) => m.name).join(', ')}.`, members.map((m) => m.id));
+      this._ledgerWorld(day, 'world_faction', `${name} formed around ${leader.name}.`, members.map((m) => m.id), { factionId: id, name, leader: leader.id });
+      return;
+    }
+  }
+  _leaveFaction(w, day, why) {
+    const u = this.u, f = w.faction && u.factions[w.faction];
+    if (!f) return;
+    f.members = f.members.filter((id) => id !== w.id);
+    w.faction = null;
+    u.note(day, 'faction_left', `${w.name} left ${f.name}${why === 'betrayal' ? ' after a betrayal' : ''}.`, [w.id]);
+    if (f.leader === w.id && f.members.length) f.leader = f.members[0];
+    this._factionUpkeep(day);
+  }
+  /** a faction needs two active members; otherwise it disbands */
+  _factionUpkeep(day) {
+    const u = this.u;
+    for (const f of Object.values(u.factions)) {
+      if (f.status !== 'active') continue;
+      f.members = f.members.filter((id) => { const w = u.get(id); return w && w.status === 'active' && w.faction === f.id; });
+      if (f.members.length < 2) {
+        for (const id of f.members) { const w = u.get(id); if (w) w.faction = null; }
+        f.status = 'disbanded'; f.endDay = day; f.members = [];
+        u.note(day, 'faction_end', `${f.name} disbanded.`, []);
+      }
+    }
+  }
   _feudHeat(f, n) { f.heat = clamp(f.heat + n, 0, 100); }
   _startFeud(a, b, day) {
     const u = this.u, id = fid(a.id, b.id);
@@ -270,6 +317,8 @@ export class UniverseSim {
         this._ledgerWorld(day, 'world_alliance', `${a.name} and ${b.name} formed an alliance.`, [a.id, b.id], {});
       }
     }
+    // factions: allies recruit a third member and take a name; they tag together and avoid each other
+    if (rng.chance(0.2)) this._formFaction(day, rng);
     // betrayals: ambitious, low-loyalty partners turn on allies (esp. with a title in the picture)
     for (const al of Object.values(u.alliances)) {
       const a = u.get(al.a), b = u.get(al.b);
@@ -280,6 +329,7 @@ export class UniverseSim {
       if (rng.chance(clamp(pressure * 0.05, 0, 0.12))) {
         delete u.alliances[al.id];
         this.stats.betrayals += 1;
+        this._leaveFaction(traitor, day, 'betrayal');
         traitor.alignment = 'heel'; if (victim.alignment === 'heel') victim.alignment = 'face';
         this.stats.turns += 1;
         this._startFeud(victim, traitor, day);
@@ -347,6 +397,7 @@ export class UniverseSim {
           w.brandKey = key; u._finalize(w, year, u.rng); w.debutYear = year; u.roster[w.id] = w; this.stats.arrivals += 1;
         }
       }
+      this._factionUpkeep(day);
       u._syncBrandNames();
       // vacated titles get a new champion
       u.ensureTitles(year, day);

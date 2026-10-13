@@ -203,6 +203,13 @@ const lgInfo = { details: await page.locator('#legacy details').count(), h1: awa
 check('legacy view shows a verdict and an evidence-backed breakdown', lgInfo.h1.length > 3 && (await page.locator('#legacy .card h3').first().innerText()).length > 3, JSON.stringify(lgInfo));
 await click('[data-action=closeSub]');
 
+// finances screen: lifestyle choice changes the player's lifestyle
+await click('[data-action=tab][data-id=more]'); await click('[data-action=openSub][data-id=finances]'); await page.waitForSelector('#finances');
+await noOverflow('finances'); await shot('16e-finances');
+await click('[data-action=lifestyle][data-id=frugal]');
+check('lifestyle can be changed on the finances screen', (await state(() => window.__S.g.career.player.lifestyle)) === 'frugal');
+await click('[data-action=closeSub]');
+
 // Royal Rumble: fast-forward the calendar (test hook), then play it through the real UI
 await page.evaluate(() => {
   const g = window.__S.g; let n = 0;

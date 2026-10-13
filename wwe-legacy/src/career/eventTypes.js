@@ -26,5 +26,6 @@ export const EVENT_TYPES = {
   decision: { category: 'personal', emitter: 'story/scenarios' }, goal_set: { category: 'personal', emitter: 'career/game' },
   world_match: { category: 'world', emitter: 'universe/sim' }, world_title_change: { category: 'world', emitter: 'universe/sim' }, world_alliance: { category: 'world', emitter: 'universe/sim' },
   world_betrayal: { category: 'world', emitter: 'universe/sim' }, world_retirement: { category: 'world', emitter: 'universe/sim' }, world_era: { category: 'world', emitter: 'universe/sim' }, world_return: { category: 'world', emitter: 'universe/sim' },
+  finance_month: { category: 'personal', emitter: 'career/finance' },
   world_decay: { category: 'world', emitter: 'career/career.advanceDays' }, record_lost: { category: 'career', emitter: 'universe/records' }, scenario_choice: { category: 'story', emitter: 'story/scenarios' },
 };

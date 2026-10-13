@@ -2,6 +2,7 @@
 // be recomputed from the ledger (see recomputeStats), and every headline number has an
 // "evidence" predicate so the UI can list the exact events behind it.
 import { matches } from '../memory/ledger.js';
+import { matchPay } from './finance.js';
 
 const blank = () => ({
   matches: 0, wins: 0, losses: 0, draws: 0,
@@ -15,6 +16,7 @@ const blank = () => ({
   promos: 0, podcasts: 0, pressConferences: 0, interviews: 0, viral: 0, socialPosts: 0,
   injuries: 0, comebacks: 0, upsets: 0, cleanWins: 0, finisherWins: 0, nonFinisherWins: 0,
   totalDurationSec: 0, matchesRated: 0, ratingSum: 0, fiveStar: 0,
+  earnings: { matches: 0, salary: 0, merch: 0, spent: 0 },
   firsts: {}, milestones: [], days: { first: null, last: null },
 });
 
@@ -32,7 +34,7 @@ export class CareerStats {
     const first = (k) => { if (!s.firsts[k]) s.firsts[k] = ev.id; };
     switch (ev.type) {
       case 'match_result': {
-        s.matches++;
+        s.matches++; s.earnings.matches += matchPay(d);
         const y = (s.byYear[year(ev)] ||= { matches: 0, wins: 0, losses: 0, draws: 0, titles: 0, ratingSum: 0, rated: 0, ple: 0 });
         y.matches++;
         s.totalDurationSec += d.durationSec || 0;
@@ -125,6 +127,7 @@ export class CareerStats {
         if (d.viral) { s.viral++; first('viral'); }
         if (!s.bestInterview || d.quality > s.bestInterview.quality) s.bestInterview = { id: ev.id, quality: d.quality };
         break;
+      case 'finance_month': s.earnings.salary += d.salary; s.earnings.merch += d.merch; s.earnings.spent += d.expenses; break;
       case 'social_post': s.socialPosts++; if (d.viral) { s.viral++; first('viral'); } break;
       case 'injury': s.injuries++; break;
       case 'debut': first('debut'); break;

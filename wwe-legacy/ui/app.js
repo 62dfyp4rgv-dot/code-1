@@ -245,6 +245,7 @@ const A = {
       checkAchievementToasts(); await autosave(); render();
     } catch (e) { err(e); }
   },
+  lifestyle: ({ id }) => { try { S.g.setLifestyle(id); render(); } catch (e) { err(e); } },
   openLegacy: () => { S.tab = 'career'; S.sub = 'legacy'; render(); },
   retireAsk: () => { S.ui.confirmRetire = true; render(); },
   retireCancel: () => { S.ui.confirmRetire = false; render(); },
