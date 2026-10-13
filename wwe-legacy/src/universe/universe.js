@@ -65,7 +65,7 @@ export class Universe {
       for (const r of REAL_ROSTER) if (activeIn(r, year)) u._addReal(r, year, rng);
     }
     // fictional supplement fills brand rosters; development brand from 2010
-    const target = { main: year >= 2002 ? 18 : 22, second: year >= 2002 ? 18 : 0, dev: year >= 2010 ? 16 : 0 };
+    const target = { main: year >= 2002 ? 18 : 30, second: year >= 2002 ? 18 : 0, dev: year >= 2010 ? 16 : 0 };
     const have = (brandKey) => Object.values(u.roster).filter((w) => w.brandKey === brandKey).length;
     const addFict = (brandKey, tier, gender) => {
       const w = generateWrestler(rng, { id: `f${++u.counters.wrestlers}`, tier, gender });

@@ -288,7 +288,7 @@ function recordBook(S) {
   const names = (id) => g.universe.get(id)?.name || (id === c.player.id ? c.player.name : id);
   const book = buildRecordBook(c, names);
   return `<main class="screen">${header('Record Book', `${book.player} · as of ${book.asOf}`, back('closeSub'))}
-    ${book.sections.map((s) => `<div class="card"><h3>${esc(s.title)}</h3>${s.items.length ? s.items.map((it, i) => `<div class="kv"><span>${esc(it.label)}</span><span class="v">${esc(it.value)} ${it.evidence && it.evidence.length ? `<button class="chip" style="min-height:26px;padding:1px 8px" data-action="evidence" data-sec="${s.id}" data-i="${i}">${it.evidence.length} ev.</button>` : ''}</span></div>`).join('') : '<div class="empty">Nothing yet.</div>'}</div>`).join('')}</main>`;
+    ${book.sections.map((s) => `<div class="card"><h3>${esc(s.title)}</h3>${s.items.length ? s.items.map((it, i) => `<div class="kv"><span>${esc(it.label)}</span><span class="v">${esc(it.value)} ${it.evidence && it.evidence.length ? `<button class="chip" style="margin:-9px 0;padding:1px 10px" data-action="evidence" data-sec="${s.id}" data-i="${i}">${it.evidence.length} ev.</button>` : ''}</span></div>`).join('') : '<div class="empty">Nothing yet.</div>'}</div>`).join('')}</main>`;
 }
 
 // ---------------------------------------------------------------- calendar

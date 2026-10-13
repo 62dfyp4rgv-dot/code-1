@@ -8,10 +8,18 @@ import { F, damageFraction, staminaFrac, crowdBias, phaseOf } from './state.js';
 export const ACC_BONUS = 0.07;
 export const DAMAGE_SCALE = 1.3;
 
+// weight tables are shared constants, so their key/value arrays are compiled once (hot path)
+const COMPILED = new WeakMap();
+const compile = (weights) => {
+  let c = COMPILED.get(weights);
+  if (!c) { const keys = Object.keys(weights); const vals = keys.map((k) => weights[k]); c = { keys, vals, total: vals.reduce((a, b) => a + b, 0) }; COMPILED.set(weights, c); }
+  return c;
+};
 export const wattr = (attrs, weights) => {
-  let s = 0, w = 0;
-  for (const [k, v] of Object.entries(weights)) { s += (attrs[k] ?? 50) * v; w += v; }
-  return w ? s / w / 100 : 0.5;
+  const { keys, vals, total } = compile(weights);
+  let s = 0;
+  for (let i = 0; i < keys.length; i++) s += (attrs[keys[i]] ?? 50) * vals[i];
+  return total ? s / total / 100 : 0.5;
 };
 
 const LIMB = {
@@ -20,9 +28,11 @@ const LIMB = {
 };
 
 /** 0..~0.3 penalty from the attacker's own damaged body parts */
+const LIMB_LIST = Object.fromEntries(Object.entries(LIMB).map(([k, v]) => [k, Object.entries(v)]));
 export function limbPenalty(f, fam) {
   let d = 0;
-  for (const [part, w] of Object.entries(LIMB[fam])) d += (f.dmg[part] / 100) * w;
+  const list = LIMB_LIST[fam];
+  for (let i = 0; i < list.length; i++) d += (f.dmg[list[i][0]] / 100) * list[i][1];
   return d * 0.28 + (d > 0.6 ? 0.06 : 0);
 }
 
@@ -136,6 +146,7 @@ export function holdEscapeChance(state, hold, response) {
     fan_up: 0.08 + (state.crowd.heat / 100) * 0.18 * Math.max(0, crowdBias(state, V.id) + 0.4), endure: 0.05 }[response] ?? 0.1;
   let p = base - hold.sev / 260 - (H.attrs.technical / 100) * 0.1 - (V.dmg[hold.tgt] / 100) * 0.16 + (fr - 0.5) * 0.14;
   p += ((V.momentum - H.momentum) / 100) * 0.06;
+  p /= state.rules.subWeight ?? 1; // submission matches: holds are the whole game, so they are harder to escape
   return clamp(p, 0.04, 0.85);
 }
 
@@ -144,5 +155,5 @@ export function submitChance(state, hold) {
   const V = F(state, hold.victim);
   if (hold.sev < 50) return 0;
   const p = (hold.sev - 50) / 120 + (V.dmg[hold.tgt] / 100) * 0.22 - V.attrs.toughness / 600 - staminaFrac(V) * 0.12 + (hold.rounds * 0.015);
-  return clamp(p, 0, 0.92);
+  return clamp(p * (state.rules.subWeight ?? 1), 0, 0.92);
 }

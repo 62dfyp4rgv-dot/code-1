@@ -23,11 +23,11 @@ export function buildMoveset(profile) {
   const sigSpecs = profile.signatures && profile.signatures.length ? profile.signatures
     : (STYLE_SIGNATURES[style] || STYLE_SIGNATURES.allrounder).slice(0, 2).map((tpl, i) => ({ id: `${profile.id}_sig${i + 1}`, name: signatureName(profile, tpl, i), tpl }));
   for (const spec of sigSpecs) {
-    if (!hasMove(spec.id)) registerMove(spec);
+    registerMove(spec); // always (re)register: ids can repeat across careers with different content
     sigs.push(spec.id);
   }
   const finSpec = profile.finisher || { id: `${profile.id}_fin`, name: profile.finisherName || 'Finisher', tpl: (STYLE_FINISHERS[style] || STYLE_FINISHERS.allrounder)[0] };
-  if (!hasMove(finSpec.id)) registerMove(finSpec);
+  registerMove(finSpec);
   return { moves: [...ids].filter((id) => hasMove(id)), signatures: sigs, finisher: finSpec.id, customSpecs: [...sigSpecs, finSpec] };
 }
 
@@ -70,6 +70,8 @@ export function blankStats() {
   };
 }
 
+const BASIC_HOLDS = ['armbar', 'ankle_lock', 'sleeper', 'hammerlock'];
+
 export function createMatchState(cfg) {
   const rules = { ...getRuleset(cfg.type || 'singles') };
   if (cfg.timeLimit) rules.timeLimit = cfg.timeLimit;
@@ -80,6 +82,8 @@ export function createMatchState(cfg) {
   cfg.sides.forEach((team, side) => {
     team.forEach((profile, idx) => {
       const f = createFighter(profile, side, { isPlayer: profile.id === cfg.playerId, difficulty: cfg.difficulty });
+      // submission-only rules: everyone has learned the basic holds, whatever their usual style
+      if (!rules.pinfall) for (const id of BASIC_HOLDS) if (!f.moveIds.includes(id)) f.moveIds.push(id);
       f.legal = idx === 0;
       f.pos = idx === 0 ? 'standing' : 'apron';
       fighters[f.id] = f;

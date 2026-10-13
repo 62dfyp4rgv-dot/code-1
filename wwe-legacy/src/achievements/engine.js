@@ -156,7 +156,7 @@ export class AchievementEngine {
         if (!def.watch.includes(ev.type)) continue;
         if (!this.eligible(def, env)) continue;
         const res = this.evaluate(def, maxSeq);
-        this.progress[def.id] = { value: res.value, target: res.target, ratio: Math.min(1, res.value / (res.target || 1)) };
+        this.progress[def.id] = { value: res.value, target: res.target, ratio: Math.min(1, res.value / (res.target || 1)), evidence: (res.evidence || []).slice(0, 25) };
         if (res.done) out.push(this._unlock(def, ev, res));
       }
     } finally { this.depth--; }

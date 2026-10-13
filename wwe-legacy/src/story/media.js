@@ -2,6 +2,7 @@
 // the words are composed afterwards, and every historical reference comes from dialogue.hooks().
 import { clamp } from '../core/util.js';
 import { hash53 } from '../core/util.js';
+import { gainPop } from '../career/pace.js';
 import { hooks } from './dialogue.js';
 
 export const PROMO_TONES = {
@@ -96,7 +97,7 @@ export function deliverPromo(career, { tone, targetId = null, claim = 'none', co
     data: { tone, targets: targetId ? [targetId] : [], quality, viral, context, line: lines[0].text, promises, claim: claimDef, exposedWeakness: memBonus >= 8 && ['insult', 'humiliate'].includes(tone) },
   });
   // popularity effect
-  p.popularity = clamp(p.popularity + (quality - 50) / 120 + (viral ? 1.5 : 0), 0, 100);
+  gainPop(p, (quality - 50) / 120 + (viral ? 1.5 : 0));
   let reaction = null;
   if (target && tdef.needsTarget) {
     const mood = { insult: 'is furious', humiliate: 'is livid and wants revenge', challenge: 'accepts the challenge', threat: 'is rattled but defiant', respect: 'returns the respect', tribute: 'is touched', apology: 'is willing to move on' }[tone];

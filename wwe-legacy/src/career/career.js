@@ -13,6 +13,7 @@ import { summarizeMatch, rateMatch } from '../match/rating.js';
 import { damageFraction } from '../match/state.js';
 import { getMove } from '../match/moves.js';
 import { Universe } from '../universe/universe.js';
+import { gainPop } from './pace.js';
 
 export const CAREER_VERSION = 1;
 
@@ -203,8 +204,8 @@ export class Career {
     p.xp.matches = (p.xp.matches || 0) + 1;
     // popularity / money / fatigue
     const tierMul = 1 + (booking.ppvTier || 0) * 0.6 + (booking.mainEvent ? 0.5 : 0);
-    const base = result === 'win' ? 0.8 : result === 'loss' ? -0.2 : 0.1;
-    p.popularity = clamp(p.popularity + (base + (rating.stars - 2.5) * 0.35 + (d.upset ? 1.2 : 0)) * tierMul * (p.popularity > 70 ? 0.5 : 1), 0, 100);
+    const base = result === 'win' ? 0.5 : result === 'loss' ? -0.35 : 0.05;
+    gainPop(p, (base + (rating.stars - 2.5) * 0.25 + (d.upset ? 1.0 : 0)) * tierMul);
     p.confidence = clamp(p.confidence + (result === 'win' ? 3 : result === 'loss' ? -4 : 0), 0, 100);
     p.fatigue = clamp(p.fatigue + 8 + d.durationSec / 120 + d.damageTaken / 40, 0, 100);
     p.money += Math.round(800 * tierMul + (result === 'win' ? 200 : 0));

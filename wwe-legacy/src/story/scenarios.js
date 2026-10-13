@@ -5,6 +5,7 @@
 // docs/SCENARIO_FORMAT.md for the authoring contract.
 import { hash53, clamp } from '../core/util.js';
 import { Rng } from '../core/rng.js';
+import { gainPop } from '../career/pace.js';
 import { getRel, getRivalry, openPromises, brokenPromises, dueObligations } from '../memory/world.js';
 import { memoryLines } from './dialogue.js';
 import { eventsOn } from '../universe/calendar.js';
@@ -425,7 +426,7 @@ export class ScenarioEngine {
     const p = c.player;
     for (const s of eff.state) {
       switch (s.k) {
-        case 'pop': p.popularity = clamp(p.popularity + s.d, 0, 100); break;
+        case 'pop': gainPop(p, s.d); break;
         case 'conf': p.confidence = clamp(p.confidence + s.d, 0, 100); break;
         case 'fatigue': p.fatigue = clamp(p.fatigue + s.d, 0, 100); break;
         case 'money': p.money = Math.max(-50000, p.money + s.d); break;

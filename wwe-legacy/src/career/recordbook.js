@@ -47,7 +47,7 @@ export function buildRecordBook(career, nameOf = (x) => x) {
     id: 'streaks', title: 'Streaks & Rivals', items: [
       item('Longest winning streak', s.streak.bestWin, s.streak.bestWinEnd ? [s.streak.bestWinEnd] : []),
       item('Longest losing streak', s.streak.bestLoss, s.streak.bestLossEnd ? [s.streak.bestLossEnd] : []),
-      item('Current streak', s.streak.current > 0 ? `${s.streak.current}W` : s.streak.current < 0 ? `${-s.streak.current}L` : '—'),
+      item('Current streak', s.streak.current > 0 ? `${s.streak.current}W` : s.streak.current < 0 ? `${-s.streak.current}L` : '—', s.streak.current ? ledger.query({ types: ['match_result'], scope: 'player', newestFirst: true, limit: Math.abs(s.streak.current) }).map((e) => e.id) : []),
       item('Most frequent opponent', opp[0] ? `${nameOf(opp[0][0])} (${opp[0][1].matches})` : '—', opp[0] ? ledger.query({ types: ['match_result'], allParticipants: [me, opp[0][0]] }).map((e) => e.id) : []),
       item('Greatest rival', rivals[0] ? `${nameOf(rivals[0].other)} (heat ${Math.round(rivals[0].r.heat)}, ${rivals[0].r.matches} matches)` : '—', rivals[0] ? rivals[0].r.events : []),
       item('Best tag-team partner', partners[0] ? `${nameOf(partners[0][0])} (${partners[0][1].wins} wins together)` : '—', partners[0] ? ledger.query({ types: ['match_result'], allParticipants: [me, partners[0][0]], where: { 'data.result': 'win' } }).map((e) => e.id) : []),
@@ -66,8 +66,9 @@ export function buildRecordBook(career, nameOf = (x) => x) {
   sections.push({
     id: 'rumble', title: 'Royal Rumble', items: [
       item('Appearances', r.entries, evidenceOf('rumbles')), item('Wins', r.wins, ledger.query({ types: ['rumble_result'], where: { 'data.won': true } }).map((e) => e.id)),
-      item('Total eliminations', r.eliminations, evidenceOf('rumbles')), item('Most eliminations (one match)', r.bestEliminations),
-      item('Longest survival', r.longestSurvivalSec ? `${Math.floor(r.longestSurvivalSec / 60)}m ${r.longestSurvivalSec % 60}s` : '—'), item('Final-two finishes', r.finalTwo),
+      item('Total eliminations', r.eliminations, evidenceOf('rumbles')), item('Most eliminations (one match)', r.bestEliminations, ledger.query({ types: ['rumble_result'], scope: 'player' }).filter((e) => (e.data.eliminations || 0) === r.bestEliminations).map((e) => e.id)),
+      item('Longest survival', r.longestSurvivalSec ? `${Math.floor(r.longestSurvivalSec / 60)}m ${r.longestSurvivalSec % 60}s` : '—', ledger.query({ types: ['rumble_result'], scope: 'player' }).filter((e) => (e.data.survivalSec || 0) === r.longestSurvivalSec).map((e) => e.id)),
+      item('Final-two finishes', r.finalTwo, ledger.query({ types: ['rumble_result'], scope: 'player', where: { 'data.finalTwo': true } }).map((e) => e.id)),
     ],
   });
   sections.push({
@@ -84,7 +85,7 @@ export function buildRecordBook(career, nameOf = (x) => x) {
   sections.push({
     id: 'achievements', title: 'Achievements', items: [
       item('Unlocked', `${unlocked.length} / ${list.length}`, unlocked.map((a) => a.record.event)),
-      ...inProg.slice(0, 5).map((a) => item(`In progress: ${a.name}`, `${Math.floor(a.progress.value)}/${a.progress.target}`, null, { achievementId: a.id })),
+      ...inProg.slice(0, 5).map((a) => item(`In progress: ${a.name}`, `${Math.floor(a.progress.value)}/${a.progress.target}`, (a.progress.evidence || []).filter((id) => ledger.get(id)), { achievementId: a.id })),
     ],
   });
   const milestones = ledger.query({ types: ['debut', 'title_win', 'rumble_result', 'award', 'hall_of_fame', 'retirement', 'injury', 'return'], scope: 'player' })

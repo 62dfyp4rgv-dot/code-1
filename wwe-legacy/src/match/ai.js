@@ -50,6 +50,9 @@ export function chooseAction(state, id, options, override) {
   const subLean = A.style === 'submission' || A.style === 'technician' || getMove(A.finisherId).hold;
   const countRisk = state.rules.countout && A.pos === 'outside';
   const phaseClosing = state.phase === 'closing';
+  // near the time limit a non-iron-man match turns urgent: a draw helps nobody, so everyone goes for the finish
+  const tfrac = state.time / state.timeLimit;
+  const urgency = state.rules.ironMan ? 0 : clamp((tfrac - 0.5) / 0.4, 0, 1) * (0.6 + prof.aggression * 0.6);
   const pick = softPick(R, opts, (o) => {
     if (o.kind === 'move') {
       const m = getMove(o.moveId);
@@ -57,7 +60,7 @@ export function chooseAction(state, id, options, override) {
       let s = pp * 20 + pp * m.dmg * 3.2 - m.cost * (0.7 - prof.aggression * 0.5) + (m.setup && staminaFrac(A) > 0.4 ? 12 : 0);
       if (m.cat === 'finisher') {
         if (prof.noFinisher) return -999;
-        s += 45 + dfrac * 70 + (staminaFrac(D) < 0.4 ? 18 : 0) + (phaseClosing ? 15 : -6);
+        s += 45 + dfrac * 70 + (staminaFrac(D) < 0.4 ? 18 : 0) + (phaseClosing ? 15 : -6) + urgency * 30;
         if ((o.p ?? 0) < 0.4) s -= 14;
       }
       if (m.cat === 'signature') s += 6 + (A.momentum >= 40 && A.momentum < 55 ? -8 : 0) + (afrac > 0.5 ? -6 : 0);
@@ -75,6 +78,8 @@ export function chooseAction(state, id, options, override) {
       if (m.style.includes(A.style)) s += 5;
       if (m.hold && !state.rules.pinfall) s += 30; // submission match
       if (m.hold && subLean && (D.dmg[m.hold.tgt] || 0) >= 20) s += 18 + (D.dmg[m.hold.tgt] || 0) * 0.2;
+      if (m.hold && !state.rules.pinfall) s += urgency * 16;
+      if (m.id === 'rest_hold') s -= urgency * 30;
       if (m.special === 'topple') s += 40;
       if (m.pinMove) s += (staminaFrac(D) < 0.35 ? 6 : -10);
       return s;
@@ -83,11 +88,11 @@ export function chooseAction(state, id, options, override) {
       case 'cover': case 'cover_outside': {
         const pk = kickoutChance(state, D.id, A.id, { lastCat: state.lastImpact && state.lastImpact.target === D.id ? state.lastImpact.cat : null });
         const recent = state.lastImpact && state.lastImpact.target === D.id && state.round - state.lastImpact.round <= 1 ? 22 : 0;
-        return (1 - pk) * 150 + dfrac * 40 + recent - 8 + (prof.pinHappy ? 22 : 0) - (A.style === 'submission' ? 26 : subLean ? 8 : 0);
+        return (1 - pk) * 150 + dfrac * 40 + recent - 8 + urgency * 18 + (prof.pinHappy ? 22 : 0) - (A.style === 'submission' ? 26 : subLean ? 8 : 0);
       }
       case 'get_up': return 70;
       case 'slide_in': return 62 + (state.rules.countout ? myTicks * 9 : 0);
-      case 'catch_breath': return staminaFrac(A) < 0.35 ? 58 : staminaFrac(A) < 0.55 ? 22 : 0;
+      case 'catch_breath': return Math.max(0, (staminaFrac(A) < 0.35 ? 58 : staminaFrac(A) < 0.55 ? 22 : 0) - urgency * 30);
       case 'taunt': return D.pos === 'grounded' && A.momentum > 40 ? 18 : 4;
       case 'hype': return A.momentum > 45 ? 14 : 2;
       case 'signal': return A.momentum >= 60 ? 30 : 0;
@@ -100,7 +105,7 @@ export function chooseAction(state, id, options, override) {
       case 'climb_down': return 25;
       case 'make_tag': return damageFraction(A) > 0.2 || staminaFrac(A) < 0.4 || A.tactics.seekTag ? 70 : 8;
       case 'crawl_corner': return damageFraction(A) > 0.22 || staminaFrac(A) < 0.4 ? 56 : 4;
-      case 'obj_climb': return 38 + prof.aggression * 8 + (D.pos === 'grounded' ? 22 : -14) - A.dmg.legs * 0.1;
+      case 'obj_climb': return 38 + urgency * 30 + prof.aggression * 8 + (D.pos === 'grounded' ? 22 : -14) - A.dmg.legs * 0.1;
       case 'study': return prof.skill > 0.5 ? 10 : 2;
       case 'pace_fast': return prof.aggression > 0.6 ? 9 : 2;
       case 'pace_slow': return staminaFrac(A) < 0.5 ? 12 : 1;
@@ -202,7 +207,7 @@ export function decideFor(state, decision, override) {
     case 'apron': {
       const R = aiRngOf(state);
       const urgent = options.find((o) => o.id === 'ap:break_pin');
-      if (urgent) return urgent.id;
+      if (urgent && (['finisher', 'signature'].includes(state.pin?.lastCat) || R.chance(0.55))) return urgent.id;
       const pool = options.filter((o) => !o.illegal && o.enabled);
       return R.pick(pool).id;
     }

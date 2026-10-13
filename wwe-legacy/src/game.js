@@ -4,6 +4,7 @@
 import { Rng } from './core/rng.js';
 import { clamp, round1 } from './core/util.js';
 import { Career } from './career/career.js';
+import { gainPop } from './career/pace.js';
 import { makeBooking, createEngine } from './career/booking.js';
 import { MatchEngine } from './match/engine.js';
 import { narrate } from './match/commentary.js';
@@ -297,11 +298,11 @@ export class Game {
   _shotEligible(t) {
     const c = this.c, me = c.player;
     const last = c.flags.lastTitleShot ?? -999;
-    if (c.day - last < 28) return false;
+    if (c.day - last < 84) return false;
     const recent = c.memory.ledger.query({ types: ['match_result'], scope: 'player', newestFirst: true, limit: 5 });
     const wins = recent.filter((e) => e.data.result === 'win').length;
     const champ = this.universe.get(t.holder);
-    return me.popularity >= t.minPop && wins >= 3 && champ && c.overall() >= this._overall(champ) - 14 && c.stats.s.matches >= 5;
+    return me.popularity >= t.minPop && wins >= 4 && champ && c.overall() >= this._overall(champ) - 14 && c.stats.s.matches >= 5;
   }
   _overall(w) { const v = Object.values(w.attrs); return v.reduce((a, b) => a + b, 0) / v.length; }
   opponentCard(w) {
@@ -352,6 +353,9 @@ export class Game {
     let title = null;
     if (stakes === 'title') {
       title = this.universe.titlesList().find((t) => this._titleApplies(t) && (t.holder === opponentId || (t.holder === c.player.id && (this.suggestOpponents().some((o) => o.id === opponentId && o.defense) || forced))));
+      // a Royal Rumble winner may challenge for a title of either brand at WrestleMania
+      const shot = c.flags.maniaShot, shotTitle = shot && ev.id === 'wrestlemania' && shot.year === c.year ? this.universe.titles[shot.titleId] : null;
+      if (!title && shotTitle && shotTitle.holder === opponentId) title = shotTitle;
       if (!title && forced) { stakes = null; /* the scripted title stakes lapsed (title changed hands): book it as a non-title match */ }
       else if (!title) throw new Error('no championship is available against this opponent');
       title = title ? this._titleInfo(title) : null;
@@ -449,7 +453,7 @@ export class Game {
       summary: sum.won ? `${me.name} won the ${c.year} ${me.gender === 'F' ? "Women's " : ''}Royal Rumble!` : `${me.name} entered #${sum.entryNumber} in the ${c.year} Royal Rumble and lasted ${Math.round(sum.survivalSec / 60)} minutes (${sum.eliminations} eliminations). ${winnerName} won.`,
       importance: sum.won ? 5 : 3, data: { ...sum, ppv: 'Royal Rumble', ppvTier: 1, era: c.era },
     });
-    me.popularity = clamp(me.popularity + (sum.won ? 6 : 0.4 * sum.eliminations + (sum.finalTwo ? 2 : 0.3)), 0, 100);
+    gainPop(me, sum.won ? 6 : 0.4 * sum.eliminations + (sum.finalTwo ? 2 : 0.3));
     me.fatigue = clamp(me.fatigue + 35, 0, 100); me.money += 2500 + sum.eliminations * 400 + (sum.won ? 25000 : 0);
     if (sum.won) {
       const t = this.universe.titlesList('world').find((x) => this._titleApplies(x) && x.holder) || this.universe.titlesList().find((x) => this._titleApplies(x) && x.cls !== 'developmental' && x.holder);
@@ -618,14 +622,14 @@ export class Game {
     const rec = (spec) => c.record({ key, refs: ref, participants: [p.id, opp.id], ...spec });
     let text = '';
     switch (id) {
-      case 'celebrate': p.popularity = clamp(p.popularity + 0.6, 0, 100); p.confidence = clamp(p.confidence + 3, 0, 100);
+      case 'celebrate': gainPop(p, 0.6); p.confidence = clamp(p.confidence + 3, 0, 100);
         rec({ category: 'personal', type: 'decision', summary: `${p.name} celebrated with the crowd.`, data: { choice: id } }); text = 'The crowd roars as you celebrate.'; break;
       case 'show_respect': case 'help_up':
         rec({ category: 'relationship', type: 'respect_shown', summary: `${p.name} showed respect to ${opp.name} after the match.`, importance: 2, data: { choice: id, matchId: pm.matchId } });
-        p.popularity = clamp(p.popularity + (p.alignment === 'face' ? 0.4 : 0), 0, 100); text = `${opp.name} nods back. Respect earned.`; break;
+        gainPop(p, p.alignment === 'face' ? 0.4 : 0); text = `${opp.name} nods back. Respect earned.`; break;
       case 'attack_rival': {
         rec({ category: 'story', type: 'decision', summary: `${p.name} attacked ${opp.name} after the bell.`, importance: 3, data: { choice: id, effects: this._heatFx(opp.id, 12, { respect: -3 }) } });
-        p.popularity = clamp(p.popularity + (p.alignment === 'heel' ? 0.5 : -0.8), 0, 100); text = `You blindside ${opp.name}. The arena erupts.`; break;
+        gainPop(p, p.alignment === 'heel' ? 0.5 : -0.8); text = `You blindside ${opp.name}. The arena erupts.`; break;
       }
       case 'cut_promo': text = 'You grab a microphone. (Open Media to deliver the promo.)'; c.flags.promoPending = { target: opp.id, context: 'post_match' }; break;
       case 'call_out': text = 'You call out the champion. (Open Media to make it official.)'; c.flags.promoPending = { target: null, context: 'call_out' }; break;
@@ -633,7 +637,7 @@ export class Game {
         const stars = c.memory.ledger.get(pm.eventId).data.rating;
         const fb = stars >= 4 ? 'Management loved it - expect a bigger spot.' : stars >= 3 ? 'Solid work. Keep it up.' : 'They were underwhelmed. Tighten up your pacing.';
         rec({ category: 'story', type: 'decision', summary: `${p.name} discussed the performance with management: ${fb}`, importance: 2, data: { choice: id, rating: stars } });
-        if (stars >= 4) p.popularity = clamp(p.popularity + 0.5, 0, 100);
+        if (stars >= 4) gainPop(p, 0.5);
         text = fb; break;
       }
       case 'seek_treatment': {

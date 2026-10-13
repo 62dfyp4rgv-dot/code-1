@@ -8,11 +8,11 @@ export const RULESETS = {
   },
   tag: {
     id: 'tag', name: 'Tag Team Match', teamSize: 2, pinfall: true, submission: true, dq: true, countout: true,
-    weapons: false, outside: true, ropeBreaks: true, tag: true, timeLimit: 20, desc: 'Only the legal partner may pin or submit. Make the tag to bring in your partner.',
+    weapons: false, outside: true, ropeBreaks: true, tag: true, timeLimit: 28, desc: 'Only the legal partner may pin or submit. Make the tag to bring in your partner.',
   },
   submission: {
     id: 'submission', name: 'Submission Match', teamSize: 1, pinfall: false, submission: true, dq: false, countout: false,
-    weapons: false, outside: false, ropeBreaks: false, timeLimit: 25, desc: 'Win only by submission. No pinfalls. No rope breaks.',
+    weapons: false, outside: false, ropeBreaks: false, subWeight: 1.2, timeLimit: 25, desc: 'Win only by submission. No pinfalls. No rope breaks.',
   },
   no_dq: {
     id: 'no_dq', name: 'No Disqualification', teamSize: 1, pinfall: true, submission: true, dq: false, countout: false,
@@ -20,7 +20,7 @@ export const RULESETS = {
   },
   last_man: {
     id: 'last_man', name: 'Last Man Standing', teamSize: 1, pinfall: false, submission: false, dq: false, countout: false,
-    weapons: true, outside: true, ropeBreaks: false, tenCount: true, timeLimit: 40, desc: 'Win by keeping your opponent down for a ten count. No pins, no submissions.',
+    weapons: true, outside: true, ropeBreaks: false, tenCount: true, riseWeight: 0.78, timeLimit: 40, desc: 'Win by keeping your opponent down for a ten count. No pins, no submissions.',
   },
   iron_man: {
     id: 'iron_man', name: 'Iron Man Match', teamSize: 1, pinfall: true, submission: true, dq: true, countout: true,

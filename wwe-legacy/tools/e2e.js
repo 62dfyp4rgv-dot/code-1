@@ -24,9 +24,20 @@ const errors = [];
 page.on('console', (m) => { if (m.type() === 'error' && !/fonts\.g|ERR_|Failed to load resource/.test(m.text())) errors.push(m.text()); });
 page.on('pageerror', (e) => errors.push(String(e)));
 const shot = (n) => page.screenshot({ path: path.join(OUT, `${n}.png`) });
+// tap-target audit: every visible control should be at least 44x44 CSS px (Apple HIG)
+const tapSeen = new Map();
+const tapAudit = async (label) => {
+  const rows = await page.evaluate(() => [...document.querySelectorAll('button, select, input, textarea, [role=tab], [role=button], summary')].map((el) => {
+    const r = el.getBoundingClientRect(); const cs = getComputedStyle(el);
+    if (r.width === 0 || r.height === 0 || cs.visibility === 'hidden' || cs.display === 'none') return null;
+    return { key: `${el.tagName.toLowerCase()}.${(el.className || '').toString().split(' ').filter(Boolean).slice(0, 2).join('.')}[${(el.dataset.action || el.id || '').slice(0, 24)}]`, w: Math.round(r.width), h: Math.round(r.height), text: (el.innerText || el.value || '').trim().slice(0, 24) };
+  }).filter(Boolean));
+  for (const r of rows) { const k = `${r.key}`; const prev = tapSeen.get(k); if (!prev) tapSeen.set(k, { ...r, screen: label, small: r.h < 44 || r.w < 44 }); else prev.small = prev.small || r.h < 44 || r.w < 44; }
+};
 const noOverflow = async (label) => {
   const o = await page.evaluate(() => ({ sw: document.documentElement.scrollWidth, iw: window.innerWidth }));
   check(`no horizontal overflow: ${label}`, o.sw <= o.iw + 1, `${o.sw} <= ${o.iw}`);
+  await tapAudit(label);
 };
 const click = async (sel) => { await page.locator(sel).first().click(); };
 const state = (fn) => page.evaluate(fn);
@@ -221,6 +232,9 @@ check('Royal Rumble can be played through the UI (when it falls on the calendar)
 check('no console/page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 await browser.close(); server.close();
 const failed = results.filter((r) => !r.ok);
-fs.writeFileSync(path.join(OUT, 'results.json'), JSON.stringify({ at: new Date().toISOString(), results }, null, 2));
+const tapAll = [...tapSeen.values()];
+const tapSmall = tapAll.filter((t) => t.small);
+console.log(`tap targets: ${tapAll.length - tapSmall.length}/${tapAll.length} meet 44px${tapSmall.length ? '; small: ' + tapSmall.slice(0, 12).map((t) => `${t.key} ${t.w}x${t.h}`).join(', ') : ''}`);
+fs.writeFileSync(path.join(OUT, 'results.json'), JSON.stringify({ at: new Date().toISOString(), results, tapAudit: tapAll.length ? 1 - tapSmall.length / tapAll.length : null, tapTotal: tapAll.length, tapSmall: tapSmall.map((t) => ({ key: t.key, w: t.w, h: t.h, text: t.text, screen: t.screen })) }, null, 2));
 console.log(`\n${results.length - failed.length}/${results.length} e2e checks passed`);
 process.exit(failed.length ? 1 : 0);

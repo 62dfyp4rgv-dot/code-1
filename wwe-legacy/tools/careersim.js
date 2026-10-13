@@ -68,17 +68,20 @@ export function playCareer({ seed = 1, years = 3, strategy = 'smart', startYear 
   const errors = [];
   const rep = { seed, strategy, startYear, matches: 0, scenarios: 0, scenarioIds: {}, rumbles: 0, titleWins: 0, titleDefenses: 0, posts: 0, trained: 0, rested: 0 };
   let steps = 0;
+  rep.snap = [];
+  let nextSnap = 365;
+  const snap = () => { while (c.day >= nextSnap) { rep.snap.push({ day: nextSnap, popularity: Math.round(c.player.popularity), overall: c.overall(), titles: c.stats.s.titles.won, wins: c.stats.s.wins, losses: c.stats.s.losses, money: c.player.money }); nextSnap += 365; } };
   const resolvePending = () => {
     let guard = 0;
     while (c.flags.scenario && guard++ < 20) {
       const inst = c.flags.scenario;
-      rep.scenarios++; rep.scenarioIds[inst.templateId] = (rep.scenarioIds[inst.templateId] || 0) + 1;
+      rep.scenarios++; if (inst.memory && inst.memory.length) rep.recalled = (rep.recalled || 0) + 1; rep.scenarioIds[inst.templateId] = (rep.scenarioIds[inst.templateId] || 0) + 1;
       g.resolveScenario(pickScenarioChoice(inst, strat.scenario, rng));
     }
   };
   try {
     while (c.day < endDay && !c.flags.retired && steps++ < 4000 && rep.matches < maxMatches) {
-      resolvePending();
+      resolvePending(); snap();
       const ev = g.nextEvent();
       if (!ev) break;
       if (ev.day > c.day) {

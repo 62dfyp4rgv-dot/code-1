@@ -109,7 +109,7 @@ export const CUSTOM = {
     const s = ctx.stats.s;
     const rate = s.matches ? s.wins / s.matches : 0;
     const ok = s.matches >= min && rate >= pct;
-    return { value: s.matches >= min ? Math.round(rate * 100) : 0, target: Math.round(pct * 100), done: ok, evidence: ok ? mr(ctx).slice(-5).map((m) => m.id) : [] };
+    return { value: s.matches >= min ? Math.round(rate * 100) : 0, target: Math.round(pct * 100), done: ok, evidence: mr(ctx).filter((m) => m.data.result === 'win').slice(-25).map((m) => m.id) };
   },
   /** won at least 4 distinct classes of title inside one era */
   era_grand_slam(ctx, { classes = 4 } = {}) {

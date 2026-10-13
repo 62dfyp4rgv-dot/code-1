@@ -1,0 +1,62 @@
+{
+ "updated": "2026-10-13T11:10:09.927Z",
+ "lastRound": 1,
+ "mean": 7.63,
+ "scores": {
+  "matchEngine": 7.59,
+  "playerAgency": 9.81,
+  "memoryConsistency": 6.81,
+  "achievementIntegrity": 9.54,
+  "scenarioDiversity": 7.57,
+  "narrativeQuality": 5.45,
+  "universeSimulation": 6.92,
+  "careerProgression": 5.57,
+  "mobileUsability": 7.24,
+  "technicalReliability": 10,
+  "performance": 6.78,
+  "replayability": 8.28
+ },
+ "nextFocus": [
+  {
+   "category": "narrativeQuality",
+   "criterion": "Independent reviewer score",
+   "value": "none"
+  },
+  {
+   "category": "careerProgression",
+   "criterion": "Popularity pacing: mean popularity at end of year 2 for non-random strategies (not saturated)",
+   "value": 100
+  },
+  {
+   "category": "scenarioDiversity",
+   "criterion": "Authored, validated templates (target 2,000 would be complete)",
+   "value": 327
+  },
+  {
+   "category": "matchEngine",
+   "criterion": "Worst match type time-limit draw rate (lower is better)",
+   "value": "last_man 38%"
+  },
+  {
+   "category": "performance",
+   "criterion": "Universe simulation cost (ms per simulated year; budget < 800)",
+   "value": 2463
+  }
+ ],
+ "resume": [
+  "cd wwe-legacy",
+  "npm install",
+  "npm test",
+  "node tools/gauntlet.js --round 2 --targets \"<what you will improve>\" --changes \"<what you changed>\""
+ ],
+ "features": {
+  "complete": 13,
+  "partial": 9,
+  "unimplemented": 6
+ },
+ "files": {
+  "ledger": "docs/DEVELOPMENT_LEDGER.md",
+  "reports": "docs/gauntlet/",
+  "reviews": "docs/gauntlet/reviews.json"
+ }
+}

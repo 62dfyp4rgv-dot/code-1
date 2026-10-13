@@ -21,7 +21,7 @@ export class MatchEngine {
   constructor(stateOrCfg, opts = {}) {
     if (stateOrCfg.v === 1 && stateOrCfg.fighters) {
       this.state = stateOrCfg;
-      for (const f of Object.values(this.state.fighters)) for (const spec of f.customSpecs || []) if (!hasMove(spec.id)) registerMove(spec);
+      for (const f of Object.values(this.state.fighters)) for (const spec of f.customSpecs || []) registerMove(spec);
     } else this.state = createMatchState(stateOrCfg);
     this.human = new Set(opts.human ?? (this.state.playerId ? [this.state.playerId] : []));
     this.overrides = {};

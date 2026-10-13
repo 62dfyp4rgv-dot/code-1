@@ -198,7 +198,7 @@ sig('sig_elbow', 'Signature Elbow', 'strike', 'head', 19, 9, 0.64, { striking: 0
 
 // ---------------------------------------------------------------- finisher templates
 function fin(id, name, cat, tgt, dmg, cost, acc, atk, from, vs, o = {}) {
-  def(id, name, 'finisher', tgt, dmg, cost, acc, atk, from, vs, { minMom: 55, tpl: id, ...o });
+  def(id, name, 'finisher', tgt, dmg, cost, acc, atk, from, vs, { minMom: 42, tpl: id, ...o });
   MOVES[id] = Object.freeze({ ...MOVES[id], baseCat: cat });
 }
 fin('fin_ddt', 'Finisher DDT', 'grapple', 'head', 30, 16, 0.64, { grappling: 0.6, technical: 0.4 }, [S], [S], { toD: G });

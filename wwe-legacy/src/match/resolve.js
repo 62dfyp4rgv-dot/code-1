@@ -594,8 +594,10 @@ export function resolvePinChoice(state, choiceId) {
     const partnerId = partnerOf(state, D.id);
     const partner = partnerId && F(state, partnerId);
     if (partner && partner.pos === 'apron') {
-      let p = key === 'save' ? 0.7 : (!partner.isPlayer && pin.lastCat === 'finisher' ? 0.4 : !partner.isPlayer ? 0.3 : 0);
+      let p = key === 'save' ? 0.7 : (!partner.isPlayer && pin.lastCat === 'finisher' ? 0.4 : !partner.isPlayer ? 0.14 : 0);
+      p *= 0.7 ** (partner.saves || 0); // a partner who keeps diving in is winded: saves get harder
       if (p > 0 && R.next() < p) {
+        partner.saves = (partner.saves || 0) + 1;
         emit(state, 'pin_save', { actor: partnerId, target: A.id, saved: D.id });
         hurt(state, A, 'torso', 4, 'save');
         state.pin = null; state.initiative = D.id; addHeat(state, 8);
@@ -793,7 +795,7 @@ export function resolveRise(state, choiceId) {
   else if (key === 'rest') { bonus = -1; cost = -8; adv = 3; }
   addStamina(D, -cost);
   const p = clamp(0.42 + D.attrs.endurance / 400 + D.attrs.toughness / 500 - damageFraction(D) * 0.45 - (state.count.n / 10) * 0.12
-    + bonus + (staminaFrac(D) - 0.5) * 0.15, 0.05, 0.92);
+    + bonus + (staminaFrac(D) - 0.5) * 0.15, 0.05, 0.92) * (state.rules.riseWeight ?? 1);
   if (key !== 'rest' && R.next() < p) {
     D.pos = 'standing'; state.count = null;
     addMom(D, 6); addHeat(state, 8);
@@ -861,8 +863,9 @@ export function resolveApron(state, actorId, choiceId) {
     case 'break_pin': {
       const pin = state.pin;
       if (!pin) break;
-      const p = clamp(0.68 + (A.attrs.agility - 50) / 300, 0.4, 0.92);
+      const p = clamp(0.68 + (A.attrs.agility - 50) / 300, 0.4, 0.92) * 0.7 ** (A.saves || 0);
       if (R.next() < p) {
+        A.saves = (A.saves || 0) + 1;
         const pinner = F(state, pin.pinner);
         emit(state, 'pin_save', { actor: actorId, target: pin.pinner, saved: pin.pinned });
         hurt(state, pinner, 'torso', 4, 'save');

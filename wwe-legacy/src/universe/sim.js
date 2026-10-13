@@ -29,12 +29,31 @@ export function runAIMatch(u, a, b, { type = 'singles', seed, title = null, ple 
   return { winner, loser: winner ? (winner === a ? b : a) : null, finish: r.finish, durationSec: r.durationSec, rating: rating.stars, injuries: [a, b].map((w) => ({ id: w.id, inj: e.state.fighters[w.id].injuriesNew })), draw: !winner, finisherUsed: e.state.fighters[(winner || a).id].stats.usedFinisher };
 }
 
+const ovr = (w) => { const v = Object.values(w.attrs); return v.reduce((x, y) => x + y, 0) / v.length; };
+
+/** Statistical resolution for low-stakes undercard matches. Full engine matches are reserved for
+ *  titles, premium events and notable names, which keeps a simulated year affordable on a phone. */
+export function quickAIMatch(a, b, { seed }) {
+  const R = new Rng(`quick:${seed}`);
+  const edge = (ovr(a) - ovr(b)) / 14 + (a.momentum - b.momentum) / 120 + (a.tier - b.tier) * 0.15;
+  const pA = 1 / (1 + Math.exp(-edge));
+  const draw = R.chance(0.012);
+  const aWins = R.next() < pA;
+  const winner = draw ? null : aWins ? a : b;
+  const loser = draw ? null : aWins ? b : a;
+  const r = R.next();
+  const finish = draw ? 'time_limit_draw' : r < 0.78 ? 'pinfall' : r < 0.93 ? 'submission' : r < 0.97 ? 'dq' : 'countout';
+  const rating = Math.round(clamp(2.2 + (ovr(a) + ovr(b) - 100) / 60 + R.range(-0.5, 0.7), 0.5, 4.2) * 4) / 4;
+  const injuries = [a, b].map((w) => ({ id: w.id, inj: R.chance(0.11) ? [{ part: R.pick(['head', 'torso', 'arms', 'legs']), severity: R.chance(0.22) ? 2 : 1 }] : [] }));
+  return { winner, loser, finish, durationSec: 420 + R.int(0, 480), rating, injuries, draw, finisherUsed: finish !== 'dq' && R.chance(0.6) };
+}
+
 export class UniverseSim {
   constructor(career, hooks = {}) {
     this.c = career;
     this.u = career.universe;
     this.hooks = hooks;
-    this.stats = { matches: 0, titleChanges: 0, betrayals: 0, alliances: 0, retirements: 0, arrivals: 0, injuries: 0, turns: 0 };
+    this.stats = { fullEngine: 0, matches: 0, titleChanges: 0, betrayals: 0, alliances: 0, retirements: 0, arrivals: 0, injuries: 0, turns: 0 };
   }
 
   /** Advance the universe up to and including `day`. */
@@ -125,7 +144,9 @@ export class UniverseSim {
     const { a, b, title, feud } = m;
     const ple = ev.kind === 'ple';
     const seed = parseInt(`${a.id.length}${b.id.length}${day}${a.popularity}`, 10) + Math.floor(rng.next() * 1e6);
-    const res = runAIMatch(u, a, b, { seed, title, ple });
+    const full = title || ple || (feud && Math.min(a.tier, b.tier) >= 2) || Math.min(a.tier, b.tier) >= 3;
+    if (full) this.stats.fullEngine += 1;
+    const res = full ? runAIMatch(u, a, b, { seed, title, ple }) : quickAIMatch(a, b, { seed });
     this.stats.matches += 1;
     for (const w of [a, b]) w.lastMatchDay = day;
     // injuries
@@ -249,6 +270,11 @@ export class UniverseSim {
           continue;
         }
         const age = year - (w.debutYear || year);
+        // contracts lapse for low-tier wrestlers who have gone nowhere
+        if (w.status === 'active' && !w.real && w.tier === 0 && age >= 2 && w.record.l > w.record.w + 4 && rng.chance(0.12) && !u._holdsTitle(w.id)) {
+          w.status = 'retired'; w.retiredDay = day; w.release = true; this.stats.retirements += 1; u.note(day, 'release', `${w.name} was released.`, [w.id]);
+          continue;
+        }
         if (w.status === 'active' && age > 15 + (w.tier >= 3 ? 8 : 0) && rng.chance(0.12)) {
           for (const t of u.titlesOf(w.id)) u.setChampion(t.id, null, day);
           w.status = 'retired'; w.retiredDay = day; this.stats.retirements += 1; u.note(day, 'retire', `${w.name} retired.`, [w.id]);
@@ -260,8 +286,10 @@ export class UniverseSim {
         if (key === 'second' && !u.split) continue;
         if (key === 'dev' && year < 2010) continue;
         const have = u.list((w) => w.brandKey === key).length;
-        const want = key === 'dev' ? 16 : 18;
-        for (let i = have; i < want; i++) {
+        const want = key === 'dev' ? 16 : (key === 'main' && !u.split ? 30 : 18);
+        // steady talent pipeline: a debut most months while the brand has room (call-ups, signings, tryouts)
+        const target = have < want + 8 && rng.chance(0.55) ? Math.max(want, have + 1) : want;
+        for (let i = have; i < target; i++) {
           const w = generateWrestler(u.rng, { id: `f${++u.counters.wrestlers}`, tier: key === 'dev' ? 0 : u.rng.pick([0, 1, 1, 2]), gender: u.rng.chance(year >= 2016 ? 0.34 : 0.15) ? 'F' : 'M' });
           w.brandKey = key; u._finalize(w, year, u.rng); w.debutYear = year; u.roster[w.id] = w; this.stats.arrivals += 1;
         }
