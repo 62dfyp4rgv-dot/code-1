@@ -119,6 +119,12 @@ export function finalizeRound(state, R, spent) {
   state.crowdStats = state.crowdStats || { sum: 0, n: 0, peak: 0 };
   state.crowdStats.sum += state.crowd.heat; state.crowdStats.n += 1; state.crowdStats.peak = Math.max(state.crowdStats.peak, state.crowd.heat);
   state.phase = phaseOf(state);
+  state.peakDeficit = state.peakDeficit || {};
+  for (const f of Object.values(state.fighters)) {
+    if (!f.legal) continue;
+    const o = F(state, opponentOf(state, f.id));
+    if (o) state.peakDeficit[f.id] = Math.max(state.peakDeficit[f.id] || 0, damageFraction(f) - damageFraction(o));
+  }
   // count-out
   if (state.rules.countout && !state.result) {
     for (const side of [0, 1]) {

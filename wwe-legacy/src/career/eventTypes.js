@@ -1,0 +1,28 @@
+// Registry of every event type the game can emit, with its category and the module that emits it.
+// The achievement prover and the Gauntlet check that achievements only depend on emittable events.
+export const EVENT_TYPES = {
+  debut: { category: 'career', emitter: 'career/game' },
+  match_result: { category: 'match', emitter: 'career/career.recordMatch' },
+  title_win: { category: 'career', emitter: 'career/titles' }, title_defense: { category: 'career', emitter: 'career/titles' },
+  title_loss: { category: 'career', emitter: 'career/titles' }, title_vacate: { category: 'career', emitter: 'career/titles' },
+  title_unify: { category: 'career', emitter: 'career/titles' },
+  rumble_result: { category: 'match', emitter: 'career/rumble' },
+  promo_delivered: { category: 'promo', emitter: 'story/media' }, promise_made: { category: 'promo', emitter: 'story/media' },
+  promise_kept: { category: 'promo', emitter: 'career/career.record' }, promise_broken: { category: 'promo', emitter: 'career/career.record' },
+  confrontation: { category: 'promo', emitter: 'story/media' },
+  podcast: { category: 'media', emitter: 'story/media' }, press_conference: { category: 'media', emitter: 'story/media' },
+  interview: { category: 'media', emitter: 'story/media' }, social_post: { category: 'media', emitter: 'story/media' },
+  alliance_formed: { category: 'relationship', emitter: 'story/scenarios' }, faction_formed: { category: 'relationship', emitter: 'story/scenarios' },
+  faction_joined: { category: 'relationship', emitter: 'story/scenarios' }, faction_left: { category: 'relationship', emitter: 'story/scenarios' },
+  betrayal: { category: 'relationship', emitter: 'story/scenarios' }, reconciliation: { category: 'relationship', emitter: 'story/scenarios' },
+  mentorship: { category: 'relationship', emitter: 'story/scenarios' }, respect_shown: { category: 'relationship', emitter: 'career/career.recordMatch' },
+  refusal_to_help: { category: 'relationship', emitter: 'story/scenarios' }, obligation_resolved: { category: 'system', emitter: 'story/scenarios' },
+  award: { category: 'career', emitter: 'universe/awards' }, hall_of_fame: { category: 'career', emitter: 'universe/awards' },
+  retirement: { category: 'career', emitter: 'career/game' }, record_set: { category: 'career', emitter: 'universe/records' },
+  injury: { category: 'career', emitter: 'career/career.recordInjury' }, return: { category: 'career', emitter: 'career/career.advanceDays' },
+  contract_signed: { category: 'career', emitter: 'story/scenarios' }, brand_transfer: { category: 'career', emitter: 'universe/draft' },
+  milestone: { category: 'career', emitter: 'career/career.checkMilestones' }, training: { category: 'personal', emitter: 'career/training' },
+  achievement_unlocked: { category: 'achievement', emitter: 'achievements/engine' }, scenario_choice: { category: 'story', emitter: 'story/scenarios' },
+  decision: { category: 'personal', emitter: 'story/scenarios' }, goal_set: { category: 'personal', emitter: 'career/game' },
+  world_match: { category: 'world', emitter: 'universe/sim' }, world_title_change: { category: 'world', emitter: 'universe/sim' },
+};
