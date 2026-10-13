@@ -18,7 +18,7 @@ export const FEATURES = [
   { id: 'mt_chamber', area: 'match', label: 'Elimination Chamber / TLC / Money in the Bank / battle royal / handicap', status: 'unimplemented' },
   { id: 'mt_triple', area: 'match', label: 'Triple threat and fatal four-way (3-4 sides, bystander pin break-ups, focus targeting)', status: 'complete', probe: () => has('src/match/rules.js', /fatal_four/) },
   // Career
-  { id: 'c_create', area: 'career', label: 'Character creation (5-step wizard, styles, backgrounds, gimmick, finisher, signatures)', status: 'complete', probe: () => has('ui/views.js', /createView|wizard/i) },
+  { id: 'c_create', area: 'career', label: 'Character creation (5-step wizard, styles, backgrounds, gimmick, finisher, signatures)', status: 'complete', probe: () => has('ui/views.js', /export function create\(/) },
   { id: 'c_progress', area: 'career', label: 'Progression: training, fatigue, injuries, popularity, contract/money', status: 'complete', probe: () => has('src/game.js', /train\(/) },
   { id: 'c_finance', area: 'career', label: 'Finances: match pay, salary, merchandise, lifestyle costs, debt, contract renewal, statements in the ledger', status: 'complete', probe: () => has('src/career/finance.js', /settleMonth/), note: 'No investments, property or taxes beyond a flat withholding.' },
   { id: 'c_personal', area: 'career', label: 'Personal life (family, health, hobbies) beyond scenario choices', status: 'partial', note: 'Scenario-driven only; no standalone systems.' },
@@ -30,7 +30,7 @@ export const FEATURES = [
   { id: 'u_tagtitles', area: 'universe', label: 'Tag-team championships (AI defenses and changes; player can challenge and defend with a partner)', status: 'complete', probe: () => has('src/universe/sim.js', /_playTagTitle/) },
   { id: 'u_factions', area: 'universe', label: 'Factions: AI factions form/dissolve and tag together; the player joins or founds one through story scenes', status: 'partial', note: 'No faction management screen; recruitment/leadership decisions happen inside scenarios.' },
   { id: 'u_history', area: 'universe', label: 'Verified historical data (real rosters, title lineages, PLE results)', status: 'partial', note: 'Roster/titles are approximate and flagged approx:true; NOT verified against sources.' },
-  { id: 'u_modes', area: 'universe', label: 'Historical / modern modes with separation of fictional results', status: 'complete', probe: () => has('src/universe/universe.js', /historical/) },
+  { id: 'u_modes', area: 'universe', label: 'Historical / modern modes with separation of fictional results', status: 'complete', probe: () => has('src/game.js', /mode: spec\.mode/) },
   { id: 'u_custom', area: 'universe', label: 'Alternate-history and fully custom universe editor', status: 'partial', note: 'Generator supports fictional rosters; no editor UI.' },
   // Story
   { id: 's_scenarios', area: 'story', label: 'Scenario engine with validated templates (cast, slots, choices, effects)', status: 'complete', probe: () => has('src/story/scenarios.js', /class ScenarioEngine/) },
@@ -40,7 +40,7 @@ export const FEATURES = [
   // Platform
   { id: 'p_save', area: 'platform', label: 'Versioned saves, slots, autosave, backup, migrations, checksum', status: 'complete', probe: () => has('src/save/save.js', /migrateCareerJSON/) },
   { id: 'p_pwa', area: 'platform', label: 'Offline PWA (manifest, service worker), iPhone viewport UI', status: 'complete', probe: () => has('ui/sw.js', /addEventListener/) },
-  { id: 'p_settings', area: 'platform', label: 'Settings: text size, themes, slots', status: 'complete', probe: () => has('ui/app.js', /textSize|text_size|fontScale/i) },
+  { id: 'p_settings', area: 'platform', label: 'Settings: text size, themes, slots', status: 'complete', probe: () => has('ui/app.js', /S\.settings\.size/) },
   { id: 'p_native', area: 'platform', label: 'Native iOS app / App Store build', status: 'unimplemented', note: 'Web PWA only (add to Home Screen).' },
 ];
 

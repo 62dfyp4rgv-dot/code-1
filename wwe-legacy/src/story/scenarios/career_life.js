@@ -598,8 +598,8 @@ export default [
     id: 'life_cbk_ring_rust', category: 'comeback', title: 'Shaking Off the Ring Rust', weight: 2, cooldownDays: 90, maxPerCareer: 3, categoryCooldown: 8,
     cast: { trainer: { pick: 'staff', role: 'trainer' } },
     trigger: { injured: false, daysSince: { match: { gte: 90 } } },
-    slots: { cause: ['a long recovery', 'a contract dispute', 'family leave', 'an office decision'], rust: ['timing', 'conditioning', 'reading the crowd', 'your finishing sequences'] },
-    body: ['After the layoff, caused by {cause}, you step back in the ring with {trainer.name} and find what you feared: your {rust} are not where they were.', 'The next show is close, and so is the temptation to fake it. You can fix what is broken or pretend it is not.'],
+    slots: { cause: ['a long recovery', 'a contract dispute', 'family leave', 'an office decision'], rust: ['your timing', 'your conditioning', 'your read of the crowd', 'your finishing sequences'] },
+    body: ['After the layoff, caused by {cause}, you step back in the ring with {trainer.name} and find what you feared. The rust shows in {rust}.', 'The next show is close, and so is the temptation to fake it. You can fix what is broken or pretend it is not.'],
     choices: [
       { id: 'drill', label: 'Drill the basics for a week', risk: 'low', result: 'Day after day, rep after rep. By the end of the week, the rust has been scraped off and replaced with a plain, solid base.', effects: [{ attr: { name: 'technical', delta: 1 } }, { fatigue: 9 }, { conf: 3 }] },
       { id: 'live', label: 'Work live shows and learn by doing', risk: 'high', outcomes: [
@@ -1029,7 +1029,7 @@ export default [
     id: 'life_trn_new_coach', category: 'training', title: 'A New Coach with a {style} Approach', weight: 2, cooldownDays: 150, maxPerCareer: 3, categoryCooldown: 8,
     cast: { coach: { pick: 'staff', role: 'coach' } },
     trigger: { stat: { careerYears: { gte: 1 } } },
-    slots: { style: ['old-school', 'science-heavy', 'storytelling-first', 'hard-conditioning'], offer: ['a three-month plan', 'a one-week trial', 'a private contract', 'a spot in a team program'] },
+    slots: { style: ['traditional', 'science-heavy', 'storytelling-first', 'hard-conditioning'], offer: ['a three-month plan', 'a one-week trial', 'a private contract', 'a spot in a team program'] },
     body: ['{coach.name} has a {style} way of teaching and offers {offer}. Your current routine works, but you have wondered what you might be missing.', 'A change of coach can unlock a plateau or wreck a rhythm. It is a gamble with some data behind it.'],
     choices: [
       { id: 'adopt', label: 'Adopt the new approach completely', risk: 'high', outcomes: [

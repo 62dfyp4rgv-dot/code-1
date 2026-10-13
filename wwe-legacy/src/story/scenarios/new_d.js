@@ -7,10 +7,10 @@ export default [
     cast: { interviewer: { pick: 'media', kind: 'interviewer' } },
     trigger: { stat: { popularity: { gte: 20 } } },
     slots: {
-      crew: [`a documentary crew with one very tired sound man`, `a regional news team with a camera on a tripod`, `a student film crew who keep apologising`, `a magazine pair holding a notebook and a tape recorder`],
+      crew: [`a documentary crew with one very tired sound man`, `a regional news team with a camera on a tripod`, `a student film crew, apologising constantly`, `a magazine writer and photographer with a tape recorder`],
       query: [`Who taught you how to fall without breaking?`, `Who first told you that you could do this for a living?`, `Who drove you to your first show?`, `Who did you call after your first really big night?`],
     },
-    body: [`In a quiet corner of the arena, {crew} has set up a single light on a stand. {interviewer.name} lets the small talk run out and asks, "{query}"`, `It is not a question about moves or titles, and nothing in your media training covers it. The camera is patient, and so is the silence.`],
+    body: [`In a quiet corner of the arena, {crew} have set up a single light on a stand. {interviewer.name} lets the small talk run out and asks, "{query}"`, `It is not a question about moves or titles, and nothing in your media training covers it. The camera is patient, and so is the silence.`],
     choices: [
       { id: 'name_names', label: 'Name the person and say what they gave you', risk: 'low', result: `You say the name out loud, and then the part you have never told anyone: how much that person carried for you without asking for anything back. The crew stops adjusting their gear to listen.`, effects: [{ pop: 0.5 }, { conf: 3 }, { fatigue: 2 }, { event: { type: 'interview', participants: ['interviewer'], summary: 'Spoke openly about the person who made the career possible.', data: { quality: { base: 66, charisma: 0.5, conf: 0.2, noise: 8 }, viral: { minQuality: 88, chance: 0.3 } } } }] },
       { id: 'polish', label: 'Give the polished answer you have used before', risk: 'low', result: `The answer is smooth, warm and fully rehearsed. It will cut together nicely, and nobody will remember a word of it.`, effects: [{ pop: 0.2 }] },
@@ -61,10 +61,10 @@ export default [
     cast: { host: { pick: 'media', kind: 'host' } },
     trigger: { minYear: 1990, stat: { popularity: { gte: 30 } } },
     slots: {
-      segment: [`a live cooking demonstration`, `the weather map`, `a trivia game against two eight-year-olds`, `a bedtime story hour for the breakfast crowd`],
-      hazard: [`an open flame`, `a set the size of a closet`, `a producer shouting a countdown into your ear`, `a studio audience made up mostly of retirees`],
+      segment: [`a live cooking demonstration`, `a turn at the weather map`, `a trivia game against two eight-year-olds`, `a bedtime story hour for the breakfast crowd`],
+      hazard: [`an open flame at your elbow`, `a set the size of a closet`, `a producer shouting a countdown in your ear`, `a studio audience of retirees in the front row`],
     },
-    body: [`The company wanted exposure, and exposure arrives at a quarter to seven. {host.name} stands you in front of {segment}, with {hazard} close enough to touch.`, `The host has the warm, practised smile of someone who has done this with athletes, politicians and one very confused parrot. You have ninety seconds, and none of them are rehearsed.`],
+    body: [`The company wanted exposure, and exposure arrives at a quarter to seven. {host.name} has you booked for {segment}, with {hazard}.`, `The host has the warm, practised smile of someone who has done this with athletes, politicians and one very confused parrot. You have ninety seconds, and none of them are rehearsed.`],
     choices: [
       { id: 'straight', label: 'Play it completely straight and sweet', risk: 'low', result: `You do the segment properly, hat in hand and gentle with the children. The host thanks you with an actual hug, and the station's inbox fills with kind letters.`, effects: [{ pop: 0.6 }, { conf: 2 }, { fatigue: 3 }] },
       { id: 'menace', label: 'Stay in character and menace the segment', risk: 'high', outcomes: [
@@ -96,7 +96,7 @@ export default [
     trigger: { stat: { popularity: { gte: 35 } } },
     slots: {
       rumour: [`a creative argument that ended with a thrown clipboard`, `a dispute over pay that has stalled for weeks`, `a plan to move you to a different show`, `a shouting match with a veteran in the parking lot`],
-      source: [`a source who asked to stay anonymous`, `a photograph somebody mailed from the arena`, `a tip dropped by someone in catering`, `a note slipped under the reporter's windscreen wiper`],
+      source: [`a source who asked to stay anonymous`, `a photograph somebody mailed from the arena`, `a tip dropped by someone in catering`, `a note slipped under a windshield wiper`],
     },
     body: [`{journalist.name} catches you by the vending machines and says there is a story about {rumour}. The reporter has {source}, and wants to know if you will confirm it.`, `Part of it is true and part is wildly off, which is the worst kind of rumour. Any answer you give will be read for what you left out.`],
     choices: [
@@ -116,7 +116,7 @@ export default [
       crew: [`the ring crew`, `the production truck`, `the lighting riggers`, `the catering and merchandise crew`],
       hour: [`at four in the morning`, `in the cold of a loading dock`, `before the doors open`, `while the building empties`],
     },
-    body: [`{reporter.name} is writing a feature on the show and has found you {hour}, notebook out. One question: who would you thank, and not the stars, but the people who keep the building running.`, `Since dawn, {crew} has been at work, and not one of them has been mentioned in print this season. Several are within earshot, pretending not to listen.`],
+    body: [`{reporter.name} is writing a feature on the show and has found you {hour}, notebook out. One question: who would you thank, and not the stars, but the people who keep the building running.`, `Since dawn, {crew} have been at work, and not one of them has been mentioned in print this season. Several are within earshot, pretending not to listen.`],
     choices: [
       { id: 'names', label: 'Name them one by one, and say what each does', risk: 'low', result: `It takes a full five minutes, and the reporter keeps writing. The next morning a laminated copy of the piece is taped to the wall of the crew room, and someone leaves a coffee on your bag.`, effects: [{ pop: 0.3 }, { conf: 3 }, { fatigue: 2 }] },
       { id: 'carry', label: 'Skip the interview and help carry the cases', risk: 'low', result: `You hand the notebook back and take one end of a road case. The reporter writes about that instead, and the crew pretend they did not notice, which is its own compliment.`, effects: [{ fatigue: 6 }, { conf: 2 }, { pop: 0.3 }] },
@@ -133,7 +133,7 @@ export default [
     trigger: { mem: [{ role: 'rival', respectGte: 12 }] },
     slots: {
       outlet: [`a trade magazine`, `a late-night radio call`, `a fan newsletter`, `a hallway chat that someone recorded`],
-      praise: [`called your matches the hardest ones on the card to work`, `said you made the crowd care about the whole show`, `credited you for what makes the feud work`, `admitted to studying your tapes on long drives`],
+      praise: [`called your matches the hardest ones on the card to work`, `said you made the crowd care about the whole show`, `credited you with what makes the feud work`, `admitted to studying your tapes on long drives`],
     },
     body: [`{interviewer.name} slides a printed page across the table. In {outlet}, {rival.name} {praise}, with no hook and no sarcasm that you can find.`, `You have spent weeks bracing for the other kind of quote. The interviewer watches your face like a poker player, waiting to see what a surprise does to you.`],
     choices: [
@@ -168,10 +168,10 @@ export default [
     cast: { host: { pick: 'media', kind: 'host' } },
     trigger: { minYear: 2008, promise: 'broken', stat: { popularity: { gte: 20 } } },
     slots: {
-      manner: [`gently, as if reading from a hospital chart`, `with a raised eyebrow and a pile of printed clips`, `while the engineer plays a sad trombone`, `without any music or a joke, which is worse`],
+      manner: [`gently, as if reading from a hospital chart`, `with a raised eyebrow and a pile of printed clips`, `while the engineer plays a sad trombone`, `with no music and no joke, which is worse`],
       show: [`a morning drive-time show`, `a podcast recorded in a spare bedroom`, `a fan roundtable with a sponsor reading in the middle`, `a late-night call-in show`],
     },
-    body: [`On {show}, {host.name} reminds you, {manner}, of what you said not long ago: "{brokenPromise}". It did not happen, and everyone listening knows it.`, `There is no gotcha in the question, only a long pause, and the pause is doing most of the damage. How you fill it will decide how this episode is remembered.`],
+    body: [`On {show}, {host.name} reads back what you said not long ago, {manner}: "{brokenPromise}". It did not happen, and everyone listening knows it.`, `There is no gotcha in the question, only a long pause, and the pause is doing most of the damage. How you fill it will decide how this episode is remembered.`],
     choices: [
       { id: 'own_it', label: 'Own the miss in plain words, with no excuses', risk: 'low', result: `Four sentences, none of them defensive, and the host softens visibly. The comment section is full of people saying they have missed their own goals this year too.`, effects: [{ pop: 0.4 }, { conf: -1 }, { event: { type: 'podcast', participants: ['host'], summary: 'Owned a missed promise in plain words.', data: { quality: { base: 64, charisma: 0.4, noise: 8 }, handled: true } } }] },
       { id: 'blame', label: 'Blame the booking and the circumstances', risk: 'high', outcomes: [
@@ -189,7 +189,7 @@ export default [
       place: [`at three in the morning in a motel room`, `in the dark of a sleeper bus`, `alone in a hotel gym with the lights on timers`, `at a departure gate before dawn`],
       ask: [`whether you ever feel lonely out there`, `whether anyone checks on you between towns`, `what it feels like after the roar stops`, `where the adrenaline goes when it has nowhere to land`],
     },
-    body: [`The episode is meant to be fun, but {host.name} lowers the microphone and asks about {ask}. You have thought about this moment {place}, and never once answered the question out loud.`, `The red recording light keeps shining. The host does not rush to fill the quiet, which is a courtesy and also a trap.`],
+    body: [`The episode is meant to be fun, but {host.name} lowers the microphone and asks {ask}. You have thought about this moment {place}, and never once answered the question out loud.`, `The red recording light keeps shining. The host does not rush to fill the quiet, which is a courtesy and also a trap.`],
     choices: [
       { id: 'honest', label: 'Tell the truth about how empty it can get', risk: 'med', result: `You describe the silence after a big night, the cold sandwich, the phone with nobody to call. The host does not joke, and the clip travels among fans who know exactly what you mean.`, effects: [{ pop: 0.6 }, { conf: -1 }, { fatigue: -3 }, { event: { type: 'podcast', participants: ['host'], summary: 'Spoke honestly about loneliness on the road.', data: { quality: { base: 66, charisma: 0.5, noise: 6 }, viral: { minQuality: 88, chance: 0.3 } } } }] },
       { id: 'tough', label: 'Brush it off: the road is the job', risk: 'low', result: `You smile and say you love every mile. The host takes it at face value, and you hold the smile a beat too long after the red light goes off.`, effects: [{ pop: 0.1 }, { conf: 1 }, { fatigue: 3 }] },
@@ -246,7 +246,7 @@ export default [
       game: [`a game of Keep, Cut or Crown`, `a tier list drawn on a whiteboard`, `a round of one-word reviews`, `a draft where you pick a tag partner`],
       twist: [`with a buzzer for every wrong answer`, `while the chat votes in real time`, `against a kitchen timer`, `with a producer eating something very loud`],
     },
-    body: [`{host.name} springs {game} on you, {twist}. Around the fourth question, {rival.name} appears on the card, and the host leans forward with delight.`, `Whatever you say is going to be in {rival.their} inbox before the end of the hour. The audience knows the history, even if the host pretends otherwise.`],
+    body: [`{host.name} springs a surprise on you, {twist}: {game}. Around the fourth turn, {rival.name} appears on the card, and the host leans forward with delight.`, `Whatever you say is going to be in {rival.their} inbox before the end of the hour. The audience knows the history, even if the host pretends otherwise.`],
     choices: [
       { id: 'rank_high', label: 'Put {rival.first} near the top and explain why', risk: 'low', result: `You give the reasons plainly and without a barb: the timing, the toughness, the way {rival.first} makes a crowd believe. The host looks almost disappointed, and then impressed.`, effects: [{ rel: { who: 'rival', respect: 5, heat: -4 } }, { pop: 0.3 }, { event: { type: 'podcast', participants: ['host', 'rival'], summary: 'Ranked {rival.name} highly on a podcast game.', data: { quality: { base: 62, charisma: 0.4 } } } }] },
       { id: 'rank_low', label: 'Bury {rival.first} at the bottom with a flourish', risk: 'high', outcomes: [
@@ -298,7 +298,7 @@ export default [
     cast: { reporter: { pick: 'media', kind: 'reporter' } },
     trigger: { promise: 'open', stat: { popularity: { gte: 20 } } },
     slots: {
-      room: [`a hotel ballroom with a hundred folding chairs`, `a basement room under the arena`, `a hallway scrum under a flickering light`, `a ringside media table with water glasses`],
+      room: [`a hotel ballroom with a hundred folding chairs`, `a basement room under the arena`, `a hallway scrum under a flickering light`, `a ringside media room with warm water glasses`],
       manner: [`politely`, `for the third time this month`, `at the same time as two other reporters`, `while holding a stopwatch`],
     },
     body: [`In {room}, {reporter.name} asks {manner} what the plan is for your public vow: "{openPromise}". The reporter has been running a small weekly column that counts the days down, and it is not a flattering clock.`, `Microphones lean in, and a camera operator shifts for a better angle on your face. Whatever you say next gets pasted under the countdown.`],
@@ -355,7 +355,7 @@ export default [
       paper: [`a school newspaper`, `a library newsletter`, `a scout troop zine`, `a youth sports page`],
       question: [`Do you ever get scared before you walk out?`, `Do the chairs actually hurt?`, `Have you ever wanted to quit?`, `Who was your hero when you were my age?`],
     },
-    body: [`Between two grown men with recorders and one with a phone, a child with a notebook from {paper} puts a hand in the air. {reporter.name} lets the kid go first, and the question is: "{question}"`, `The older reporters smile in the way they do before a pitch has been thrown. This one will not be answered by a catchphrase, and the kid is staring at you with undisguised hope.`],
+    body: [`Between two grown men with recorders and one with a pocket camera, a child with a notebook from {paper} puts a hand in the air. {reporter.name} lets the kid go first, and the question is: "{question}"`, `The older reporters smile in the way they do before a pitch has been thrown. This one will not be answered by a catchphrase, and the kid is staring at you with undisguised hope.`],
     choices: [
       { id: 'truth', label: 'Answer for real, the way you would to a friend', risk: 'low', result: `You get down on one knee so you are level with the kid, and you tell the truth in plain words. The older reporters quietly put their pens down, and the kid writes for a very long time.`, effects: [{ pop: 0.6 }, { conf: 3 }, { fatigue: 1 }, { event: { type: 'press_conference', participants: ['reporter'], summary: 'Answered a child reporter honestly.', data: { quality: { base: 66, charisma: 0.5 }, viral: { minQuality: 86, chance: 0.2 } } } }] },
       { id: 'kayfabe', label: 'Stay in character and growl a great answer', risk: 'low', result: `You perform a snarl and a snarky reply, and the kid grins with delight. It is a memory, but not a very personal one, and you move on to the next question.`, effects: [{ pop: 0.4 }, { conf: 1 }] },
@@ -389,7 +389,7 @@ export default [
       worry: [`whether you rushed back to satisfy the schedule`, `whether you are still hiding pain from the doctors`, `whether the office pushed you back too early`, `whether you will ever move like you used to`],
       moment: [`as you step off the training mat`, `in the middle of a hotel lobby`, `outside the doctor\'s office`, `during the first media day since your return`],
     },
-    body: [`{reporter.name} asks bluntly about {worry}, {moment}. {doctor.name} stands three metres away with a clipboard, pretending not to hear.`, `You know the honest answer, and you know the safe one, and they are not the same. A hundred fans at home are about to decide how they feel about your body.`],
+    body: [`{reporter.name} asks bluntly {worry}, {moment}. {doctor.name} stands three metres away with a clipboard, pretending not to hear.`, `You know the honest answer, and you know the safe one, and they are not the same. A hundred fans at home are about to decide how they feel about your body.`],
     choices: [
       { id: 'truth', label: 'Describe truthfully what is healed and what is not', risk: 'low', result: `You list the parts that are better and the parts that remain stubborn, in a voice free of drama. {doctor.first} nods with relief, and the fans seem to feel safer for it.`, effects: [{ pop: 0.4 }, { conf: -1 }, { fatigue: -2 }] },
       { id: 'tough', label: 'Insist that you are one hundred percent', risk: 'high', outcomes: [
@@ -408,7 +408,7 @@ export default [
       entrance: [`strolls in through the back door with a microphone of their own`, `stands up in the third row and starts talking`, `arrives dragging a folding chair`, `takes the empty seat beside you and says nothing`],
       reaction: [`the cameras swing around`, `every reporter stops typing`, `someone drops a coffee`, `the hotel manager hurries toward the door`],
     },
-    body: [`The press conference was moving along nicely until {rival.name} {entrance}. Behind you, {reaction}, and {reporter.name} sits up with a grin that would make a vulture proud.`, `This is either a gift or a trap. In either case, the next thirty seconds will be the clip.`],
+    body: [`The press conference is moving along nicely until {rival.name} {entrance}. Behind you, {reaction}, and {reporter.name} sits up with a grin that would make a vulture proud.`, `This is either a gift or a trap. In either case, the next thirty seconds will be the clip.`],
     choices: [
       { id: 'face_off', label: 'Stand up and meet {rival.first} nose to nose', risk: 'high', outcomes: [
         { weight: 2, bonus: { confidence: 0.5 }, text: `You do not flinch and you do not speak first. The silence is thick enough to cut, and {rival.first} blinks before you do.`, effects: [{ pop: 1.0 }, { rivalry: { who: 'rival', heat: 12 } }, { rel: { who: 'rival', heat: 8, fear: 3 } }, { conf: 3 }] },
@@ -423,7 +423,7 @@ export default [
     cast: { reporter: { pick: 'media', kind: 'reporter' } },
     trigger: { stat: { careerYears: { gte: 8 }, popularity: { gte: 30 } } },
     slots: {
-      gift: [`a framed poster signed by the whole crew`, `a sheet cake the size of a ring apron`, `a stack of letters from fans`, `a small banner hung from the rafters`],
+      gift: [`a framed poster signed by the whole crew`, `a sheet cake the size of a ring apron`, `a stack of letters from fans`, `a small banner, rolled up and tied with ribbon`],
       speaker: [`a retired referee`, `the ring announcer`, `a young wrestler who looks terrified`, `a fan who has been to every show in your region`],
     },
     body: [`The company marks your long run with a short, rather awkward ceremony at the media table. From behind a curtain comes {gift}, and {speaker} stumbles through a speech that is much better than they think it is.`, `Afterward, {reporter.name} lowers the camera and asks what you want to be remembered for. It is a simple question, and you realise with a jolt that you have never been asked it.`],
@@ -459,10 +459,10 @@ export default [
     cast: { fan: { pick: 'media', kind: 'fan' } },
     trigger: { minYear: 2010, stat: { popularity: { gte: 25 } } },
     slots: {
-      work: [`a pencil drawing`, `a hand-knitted doll`, `a charcoal portrait`, `a comic strip in which you save the day`],
+      work: [`a pencil drawing of you`, `a hand-knitted doll of you`, `a charcoal portrait of you`, `a comic strip in which you save the day`],
       maker: [`a nurse on the night shift`, `a teenager at a kitchen table`, `a retired machinist`, `a girl of nine, helped by her father`],
     },
-    body: [`{fan.name}, {maker}, has sent a photograph of {work} of you, with a short message and no request attached. The detail is extraordinary: someone has studied your stance and the tape on your wrist.`, `It is rare to be sent something with nothing wanted in return. You look at it for much longer than you intended.`],
+    body: [`{fan.name}, {maker}, has sent a photograph of {work}, with a short message and no request attached. The detail is extraordinary: someone has studied your stance and the tape on your wrist.`, `It is rare to be sent something with nothing wanted in return. You look at it for much longer than you intended.`],
     choices: [
       { id: 'share', label: 'Share it with full credit and a thank-you', risk: 'low', result: `You post the picture, tag the artist and write only: this is the best thing in my inbox this year. The replies pour in, and {fan.first} has more followers by morning than ever before.`, effects: [{ pop: 0.5 }, { conf: 2 }, { event: { type: 'social_post', participants: ['fan'], summary: 'Shared a fan\'s artwork with credit.', data: { quality: { base: 62, charisma: 0.4 } } } }] },
       { id: 'buy', label: 'Ask to buy the original, and pay too much', risk: 'low', result: `You offer a price that makes the reply come back in capital letters. It will hang in your hallway at home, and it will stay there.`, effects: [{ money: -600 }, { conf: 3 }, { pop: 0.2 }] },
@@ -563,7 +563,7 @@ export default [
     trigger: { minYear: 2010, stat: { popularity: { gte: 40 } } },
     slots: {
       language: [`Spanish`, `Japanese`, `Portuguese`, `German`],
-      gift: [`subtitles for an entire promo`, `a cheer written out phonetically on a banner`, `a fan-made dub of your best line`, `a hand-lettered translation of your catchphrase`],
+      gift: [`subtitles for an entire promo`, `a cheer written out phonetically on a banner`, `a dub of your best line`, `a hand-lettered translation of your catchphrase`],
     },
     body: [`A group of fans on the other side of the world has made {gift} in {language}, because they cannot follow your words any other way. They have never seen you in person, and they have never been to a show.`, `It must have taken them dozens of hours. In the feed, the work looks surprisingly warm and surprisingly careful, and you feel a rush of embarrassment at how little you have done to deserve it.`],
     choices: [
@@ -598,7 +598,7 @@ export default [
     trigger: { minYear: 2010, stat: { popularity: { gte: 30 }, careerYears: { gte: 1 } } },
     slots: {
       grievance: [`wrestlers who skip the basics`, `finishers with no story behind them`, `promos read off cue cards`, `young stars who post more than they train`],
-      tone: [`sorrowful`, `scathing`, `affectionate in a way that stings`, `oddly poetic`],
+      tone: [`sorrowful`, `scathing`, `tender`, `poetic`],
     },
     body: [`{vet.name} has published a long, {tone} post about {grievance}, and everybody agrees that the post is about you without saying so. It has been shared a thousand times by the time you read it.`, `There is real knowledge in it, and some real cruelty, and you cannot tell where one stops. Several people in the locker room are watching you read it.`],
     choices: [
@@ -785,6 +785,378 @@ export default [
       { id: 'conduct', label: 'Conduct the crowd and make it louder', risk: 'low', result: `You raise a hand and the sound doubles; lower it and it sinks to a whisper. A veteran at the curtain mutters that you have it, the quiet gift, and not everyone does.`, effects: [{ pop: 0.8 }, { mic: 1 }, { fatigue: 2 }] },
       { id: 'work', label: 'Ignore it and keep the match tight', risk: 'low', result: `You keep every beat of the plan and ride the noise rather than chasing it. It is clean, professional work, and the agent grunts approval.`, effects: [{ conf: 2 }, { pop: 0.3 }] },
       { id: 'moved', label: 'Let the emotion show, just for a second', risk: 'low', result: `You press a hand to your chest and swallow, and the crowd sees it. It is not a trick, and that is exactly why it works.`, effects: [{ pop: 0.6 }, { conf: 4 }, { fatigue: -1 }] },
+    ],
+  },
+  // ===================================================================== RUMBLE
+  {
+    id: 'nd_rum_number_draw', category: 'rumble', title: 'The Number in Your Hand', weight: 2.5, cooldownDays: 300, maxPerCareer: 3, major: true, contexts: ['show_day', 'pre_show'],
+    cast: { agent: { pick: 'staff', role: 'agent' } },
+    trigger: { minYear: 1988, event: 'royal_rumble', stat: { popularity: { gte: 15 } } },
+    slots: {
+      number: [`number two`, `number thirteen`, `number twenty-six`, `number thirty`],
+      draw: [`from a metal bucket of numbered balls`, `from a stack of numbered envelopes on a folding table`, `from a clipboard shoved under your nose`, `from the hat of a rather smug stagehand`],
+    },
+    body: [`You draw your slot {draw}, and the slip says {number}. Every veteran in the room has an opinion about what that means, and half of them are contradicting the other half.`, `{agent.name} reads it over your shoulder, taps the paper once, and says nothing, which is a technique. The next ten minutes of how you think about this will shape the next hour of how you work.`],
+    choices: [
+      { id: 'plan', label: 'Accept the number and build a plan around it', risk: 'low', result: `You and {agent.first} work through the timing, the exits and the places to rest, with a stubby pencil and the back of a call sheet. The plan is plain and sensible, and it steadies you.`, effects: [{ conf: 3 }, { fatigue: 2 }, { pop: 0.2 }] },
+      { id: 'bold', label: 'Pitch a spot nobody has seen before', risk: 'high', outcomes: [
+        { weight: 2, bonus: { charisma: 0.5, popularity: 0.3 }, text: `The idea is unreasonable and perfect, and the agent says yes after ten seconds of staring at the wall. When it happens in front of the crowd, the noise is so large that you feel it behind your teeth.`, effects: [{ pop: 1.3 }, { conf: 3 }, { fatigue: 4 }] },
+        { weight: 1, text: `The idea needs another person to hit their mark, and they miss it by a metre. You spend the next two minutes making a mess look deliberate.`, effects: [{ pop: -0.3 }, { conf: -3 }, { fatigue: 4 }] } ] },
+      { id: 'veteran', label: 'Seek out an old hand and ask what this number is worth', risk: 'low', result: `A veteran by the vending machine gives you eleven minutes and two stories that have nothing to do with the question. Somewhere in them is exactly what you needed.`, effects: [{ attr: { name: 'psychology', delta: 1 } }, { conf: 2 }, { fatigue: 1 }] },
+      { id: 'sulk', label: 'Complain loudly that the number is a punishment', risk: 'med', result: `The room winces, and the agent looks away. You get a bit of sympathy and a reputation, and the number remains exactly what it was.`, effects: [{ pop: 0.1 }, { conf: -2 }, { fatigue: 1 }] },
+    ],
+  },
+  {
+    id: 'nd_rum_veteran_rules', category: 'rumble', title: 'Three Rules from Someone Who Has Seen It', weight: 2, cooldownDays: 300, maxPerCareer: 2,
+    cast: { vet: { pick: 'roster', tier: { gte: 3 } } },
+    trigger: { minYear: 1988, eventWithin: { id: 'royal_rumble', days: 10 }, stat: { popularity: { gte: 20 } } },
+    slots: {
+      setting: [`the stairwell by the loading dock`, `a quiet corner of catering`, `the back of a rental van`, `the empty locker room`],
+      rule: [`Do not trust the first big pop`, `Always know where the ropes are before you hit the floor`, `Watch the person beside you, not the one in front`, `Your feet are your worst enemy in the final ten`],
+    },
+    body: [`In {setting}, {vet.name} calls you over with a crooked finger. The older wrestler has done this match more times than anyone alive and has only one thing to say: "{rule}."`, `There is no joke attached, and no invoice. {vet.first} looks at you the way a person looks at an old photograph of themselves, and waits to see what you do with the gift.`],
+    choices: [
+      { id: 'notes', label: 'Take notes and ask three follow-up questions', risk: 'low', result: `You write it all down in a hotel notepad, with the wrong pen. {vet.first} answers every question and then adds a fourth rule you did not ask for.`, effects: [{ attr: { name: 'psychology', delta: 1 } }, { rel: { who: 'vet', respect: 4, trust: 3 } }, { fatigue: 2 }, { conf: 1 }] },
+      { id: 'walk', label: 'Ask to walk the ring and rehearse it together', risk: 'med', result: `The two of you pace the empty ring for an hour, calling spots out softly, and a stagehand sweeps the apron without looking up. It leaves you aching and unusually calm.`, effects: [{ rel: { who: 'vet', respect: 5, affinity: 4 } }, { tag: { who: 'vet', tag: 'mentor' } }, { fatigue: 6 }, { conf: 3 }] },
+      { id: 'laugh', label: 'Laugh it off and say you have your own methods', risk: 'high', outcomes: [
+        { weight: 1, bonus: { confidence: 0.5 }, text: `{vet.first} grunts, a short laugh, and says good luck with that. The cool you show carries you through the night, and you do not need the advice, this time.`, effects: [{ conf: 3 }, { rel: { who: 'vet', respect: -1 } }] },
+        { weight: 2, text: `{vet.first} says nothing more and leaves. In the match, you break rule number one in the first ninety seconds, and spot the old wrestler at the curtain shaking a head slowly.`, effects: [{ conf: -3 }, { rel: { who: 'vet', respect: -5 } }, { pop: -0.3 }] } ] },
+      { id: 'thank', label: 'Thank {vet.first} sincerely and keep the advice private', risk: 'low', result: `You shake a hand that has held a lot of bad news in its time. You tell nobody, and when the moment comes, the rule is in your head like a stone in a shoe.`, effects: [{ conf: 2 }, { rel: { who: 'vet', respect: 3, trust: 2 } }] },
+    ],
+  },
+  {
+    id: 'nd_rum_pact_whisper', category: 'rumble', title: 'A Whispered Arrangement', weight: 2, cooldownDays: 300, maxPerCareer: 2,
+    cast: { ally: { pick: 'roster', tier: { gte: 1, lte: 3 } } },
+    trigger: { minYear: 1988, eventWithin: { id: 'royal_rumble', days: 7 }, stat: { popularity: { gte: 20 } } },
+    slots: {
+      pact: [`to leave each other alone for the first ten minutes`, `to stand back to back when the ring fills up`, `to throw out a third person together and then shake hands`, `to protect each other until the last five are left`],
+      place: [`the shower line`, `a hotel breakfast buffet`, `the shadows of the gorilla position`, `the vending machine alcove`],
+    },
+    body: [`{ally.name} finds you in {place} and drops a voice to a whisper. It is a simple proposal: {pact}.`, `Pacts like this are as old as the match itself, and as unreliable. The Rumble has ended a lot of friendships that began over a breakfast buffet.`],
+    choices: [
+      { id: 'agree', label: 'Shake on it and keep your word', risk: 'low', result: `The handshake is brief and dry, and both of you mean it. In the ring you hold up your end when it is inconvenient, and the nod you get across the canvas is a better reward than the pop.`, effects: [{ event: { type: 'alliance_formed', participants: ['ally'], summary: 'Formed a Rumble pact with {ally.name}.', data: {} } }, { rel: { who: 'ally', trust: 6, respect: 3 } }, { pop: 0.3 }] },
+      { id: 'betray', label: 'Agree, and plan to break it at the right moment', risk: 'high', outcomes: [
+        { weight: 2, bonus: { mic: 0.2 }, text: `The moment arrives and you take it, and the crowd roars at the treachery. {ally.first} lies in the aisle staring up at the lights, and the look is going to be a long memory.`, effects: [{ pop: 1.0 }, { event: { type: 'betrayal', participants: ['ally'], summary: 'Broke a Rumble pact with {ally.name}.', data: {} } }, { rel: { who: 'ally', trust: -15, heat: 15 } }, { conf: 1 }] },
+        { weight: 1, text: `{ally.first} saw it coming and gets there first. The hands you thought were holding the ropes are holding your ankle, and the crowd loves watching you fall.`, effects: [{ pop: 0.3 }, { rel: { who: 'ally', trust: -6, heat: 8 } }, { conf: -3 }] } ] },
+      { id: 'decline', label: 'Decline politely: you want to win it clean', risk: 'low', result: `"I want to know what I can do alone." {ally.first} nods, a bit disappointed but unsurprised, and the offer is withdrawn without hard feelings.`, effects: [{ rel: { who: 'ally', respect: 3 } }, { conf: 2 }] },
+      { id: 'tell_agent', label: 'Tell the agent so the plan can be adjusted', risk: 'low', result: `The agent thanks you for the discretion and rewrites the sequence in thirty seconds. {ally.first} hears who spoke, and a door closes quietly.`, effects: [{ rel: { who: 'ally', trust: -8, respect: -2 } }, { conf: 1 }, { pop: -0.1 }] },
+    ],
+  },
+  {
+    id: 'nd_rum_gorilla_fear', category: 'rumble', title: 'Sixty Seconds in the Dark', weight: 2.5, cooldownDays: 300, maxPerCareer: 2, major: true, contexts: ['show_day', 'pre_show'],
+    cast: { coach: { pick: 'staff', role: 'coach' } },
+    trigger: { minYear: 1988, event: 'royal_rumble', stat: { popularity: { gte: 15 } } },
+    slots: {
+      symptom: [`your hands will not stop shaking`, `your chest feels like a locked door`, `you cannot remember the first move you planned`, `the entrance music sounds like a radio in another building`],
+      moment: [`with sixty seconds on the countdown clock`, `two entrances before yours`, `as the previous entrant is thrown out`, `while smoke fills the tunnel`],
+    },
+    body: [`Standing in the dark at the top of the ramp, {moment}, you realise that {symptom}. {coach.name} stands at your shoulder, and has the sense not to say anything bright.`, `The fear is not dramatic. It is small and flat and relentless, and it makes the roar of the crowd feel like a verdict.`],
+    choices: [
+      { id: 'breathe', label: 'Let the coach count breaths with you', risk: 'low', result: `You breathe in for four and out for six, over and over, and {coach.first} counts in a voice that sounds like a metronome. The shaking does not stop, but it stops mattering.`, effects: [{ conf: 5 }, { fatigue: -2 }] },
+      { id: 'say_it', label: 'Say out loud that you are terrified', risk: 'med', outcomes: [
+        { weight: 2, bonus: { confidence: 0.4 }, text: `"I am scared." {coach.first} replies that everybody here is, and that you are the only one who said it. The weight shifts, and your legs are yours again.`, effects: [{ conf: 4 }, { pop: 0.2 }] },
+        { weight: 1, text: `Saying it makes it larger, and for a moment the tunnel narrows. The music cue rescues you, but only just, and the first ninety seconds belong to someone else.`, effects: [{ conf: -2 }, { pop: -0.2 }] } ] },
+      { id: 'adrenaline', label: 'Fire yourself up and charge out swinging', risk: 'high', outcomes: [
+        { weight: 2, bonus: { popularity: 0.4 }, text: `You throw the fear at the first opponent and the crowd takes the energy for ferocity. It is the loudest entrance you have ever had.`, effects: [{ pop: 1.0 }, { conf: 2 }, { fatigue: 6 }] },
+        { weight: 1, text: `You burn the whole tank in the first four minutes and spend the rest of the match hunting for breath. The crowd sees it, and it is not the look you wanted.`, effects: [{ pop: -0.3 }, { conf: -2 }, { fatigue: 9 }] } ] },
+      { id: 'picture', label: 'Think about one face in the crowd and walk toward it', risk: 'low', result: `You choose a person you love, wherever they are, and walk to the sound for them alone. The fear is still there, but it has somewhere to go.`, effects: [{ conf: 3 }, { pop: 0.4 }, { fatigue: 2 }] },
+    ],
+  },
+  // ===================================================================== WRESTLEMANIA
+  {
+    id: 'nd_wm_family_tickets', category: 'wrestlemania', title: 'Who Is Coming to See It?', weight: 2, cooldownDays: 320, maxPerCareer: 3, major: true,
+    cast: { agent: { pick: 'staff', role: 'agent' } },
+    trigger: { minYear: 1985, eventWithin: { id: 'wrestlemania', days: 20 }, stat: { popularity: { gte: 20 } } },
+    slots: {
+      guest: [`a parent`, `your oldest friend`, `a sibling`, `your first coach`],
+      problem: [`cannot afford the trip`, `could not get a ticket before they sold out`, `had a flight cancelled`, `says they are too nervous to attend in case they cry`],
+    },
+    body: [`You have mentioned to {agent.name} that you want {guest} in the building for the biggest night of your year, and the news is not good. The person you want there {problem}, and the date is moving closer.`, `Nobody who has done this job will tell you that the match matters more than the people who made you. They will only tell you that the time to fix it is now.`],
+    choices: [
+      { id: 'pay', label: 'Pay for everything: tickets, flights and a hotel', risk: 'low', result: `It takes a morning of phone calls and a debit that makes the bank call you. On the night, the empty seat in the second row is filled, and nothing else you spent this year will matter the way that seat does.`, effects: [{ money: -4500 }, { conf: 4 }, { pop: 0.2 }] },
+      { id: 'ask_office', label: 'Ask {agent.first} to call in a favour for seats', risk: 'med', outcomes: [
+        { weight: 2, bonus: { popularity: 0.4 }, text: `{agent.first} calls three people, makes one promise, and delivers two seats on the aisle. It will be repaid in some way you cannot predict.`, effects: [{ conf: 3 }, { money: -800 }, { pop: 0.2 }] },
+        { weight: 1, text: `The favour comes back with strings, a promotional appearance you did not want and a grin from a man in a nice jacket. The seats are good, and the cost is real.`, effects: [{ conf: 1 }, { fatigue: 5 }, { money: -800 }] } ] },
+      { id: 'watch_home', label: 'Promise a long call after the show instead', risk: 'low', result: `You say you understand, and you mean it, and you hate that you mean it. After the show you talk for two hours in a stairwell, and the connection is warm and a little sad.`, effects: [{ conf: 1 }, { fatigue: 2 }] },
+      { id: 'dedicate', label: 'Dedicate the match to them on the biggest stage', risk: 'med', result: `You tell nobody except the camera, in one small gesture before the bell. The commentators miss it, and the person at home does not.`, effects: [{ conf: 3 }, { pop: 0.4 }, { fatigue: 1 }] },
+    ],
+  },
+  {
+    id: 'nd_wm_entrance_change', category: 'wrestlemania', title: 'A Late Change to the Walk', weight: 2, cooldownDays: 320, maxPerCareer: 3,
+    cast: { creative: { pick: 'staff', role: 'creative' } },
+    trigger: { minYear: 1985, eventWithin: { id: 'wrestlemania', days: 10 }, stat: { popularity: { gte: 20 } } },
+    slots: {
+      change: [`a different song`, `a plainer outfit`, `a much longer walk`, `a much shorter walk`],
+      reason: [`a sponsor wants a logo on camera`, `the stadium sound system cannot carry your usual track`, `the director wants a different camera angle`, `a visiting celebrity needs the stage`],
+    },
+    body: [`{creative.name} comes to you with a clipboard and the gentle face of someone who has been told to deliver bad news. The plan for your entrance has been changed to {change}, because {reason}.`, `Your entrance is the part of the night that belongs to you alone, the one place in a scripted business that no one else writes. It is also one of the few things you can lose without anyone ever seeing it happen.`],
+    choices: [
+      { id: 'accept', label: 'Accept the change and make it work', risk: 'low', result: `You say yes before the argument starts. The walk is a little different and a little worse, and the crowd does not know the difference.`, effects: [{ conf: -1 }, { pop: 0.2 }, { fatigue: -1 }] },
+      { id: 'refuse', label: 'Refuse flatly: this is your walk', risk: 'high', outcomes: [
+        { weight: 1, bonus: { confidence: 0.5 }, text: `{creative.first} sighs, checks with a producer, and comes back to say it is on. The fight earns you respect and an eyebrow raised in your direction.`, effects: [{ conf: 3 }, { pop: 0.4 }] },
+        { weight: 2, text: `The producer is out of patience, and a dozen unlucky decisions follow. Your walk is changed anyway, and you have angered the one person who could have helped.`, effects: [{ conf: -3 }, { pop: -0.4 }, { money: -1000 }] } ] },
+      { id: 'negotiate', label: 'Negotiate: give up the walk, keep the music', risk: 'med', result: `You trade the length of the ramp for the first twenty seconds of your song. Everyone leaves with something, and the compromise feels grown-up.`, effects: [{ charisma: 1 }, { conf: 1 }, { pop: 0.2 }] },
+      { id: 'twist', label: 'Embrace the change and add a twist of your own', risk: 'med', outcomes: [
+        { weight: 2, bonus: { mic: 0.4 }, text: `You turn the constraint into a surprise: a pause, a look at the camera, a single gesture that no one planned. The commentators scramble to describe it.`, effects: [{ pop: 0.9 }, { conf: 2 }, { fatigue: 2 }] },
+        { weight: 1, text: `The twist needs more rehearsal than you have, and the pause stretches into an awkward moment. The crowd politely waits.`, effects: [{ pop: -0.1 }, { conf: -2 }, { fatigue: 2 }] } ] },
+    ],
+  },
+  {
+    id: 'nd_wm_rookie_knock', category: 'wrestlemania', title: 'A Knock at the Door the Night Before', weight: 2, cooldownDays: 320, maxPerCareer: 3, contexts: ['weekly', 'post_show'],
+    cast: { rookie: { pick: 'roster', tier: { lte: 1 } } },
+    trigger: { minYear: 1985, eventWithin: { id: 'wrestlemania', days: 2 }, stat: { popularity: { gte: 20 } } },
+    slots: {
+      hour: [`just after midnight`, `a little before one`, `close to two in the morning`, `at an hour when only the ice machine is awake`],
+      request: [`to run the finish one more time`, `to share a late meal`, `to borrow a lucky charm`, `to sit in silence because being alone is worse`],
+    },
+    body: [`The knock comes {hour}, and it is {rookie.name}, who is obviously not supposed to be there and does not know what to say. The request, once it comes out in a rush, is simple: {request}.`, `{rookie.first} has a smaller match tomorrow than yours, and probably a bigger fear. You are tired and have your own list of things to worry about, but the doorway is a small place for a person to stand.`],
+    choices: [
+      { id: 'invite', label: 'Let them in and give them the time they need', risk: 'low', result: `You make bad hotel coffee and talk through anything but the match. When {rookie.first} finally falls asleep on the couch, you cover them with a jacket, and sleep comes harder for you.`, effects: [{ rel: { who: 'rookie', respect: 6, trust: 5, affinity: 4 } }, { conf: 2 }, { fatigue: 4 }] },
+      { id: 'pep', label: 'Give a short, firm pep talk in the corridor', risk: 'low', result: `You say three useful things standing up and send {rookie.first} back to bed with a hand on a shoulder. It is kind, and it is brief, and it is enough.`, effects: [{ rel: { who: 'rookie', respect: 3, trust: 2 } }, { conf: 1 }, { fatigue: 1 }] },
+      { id: 'send_away', label: 'Send them away gently and protect your sleep', risk: 'low', result: `You say you will see them in the morning and close the door softly. The sleep that follows is good, and the guilt arrives at about seven.`, effects: [{ fatigue: -6 }, { rel: { who: 'rookie', respect: -2 } }, { conf: -1 }] },
+      { id: 'meal', label: 'Take them to the all-night diner downstairs', risk: 'med', result: `Over eggs and bad coffee, a stranger recognises both of you and asks for a picture. The rookie laughs for the first time all week, and the picture is on the diner wall by Sunday.`, effects: [{ money: -80 }, { rel: { who: 'rookie', respect: 5, affinity: 5 } }, { pop: 0.4 }, { fatigue: 3 }] },
+    ],
+  },
+  {
+    id: 'nd_wm_empty_stadium', category: 'wrestlemania', title: 'After the Lights Go Down', weight: 2.5, cooldownDays: 320, maxPerCareer: 3, contexts: ['post_show'],
+    trigger: { minYear: 1985, event: 'wrestlemania', stat: { popularity: { gte: 20 } } },
+    slots: {
+      debris: [`confetti drifting across the floor`, `a single unclaimed foam finger`, `the sound of the crew coiling cable`, `a stack of folded chairs`],
+      witness: [`a janitor with a wide broom`, `the ring announcer, loosening a tie`, `a boy waiting for his parents`, `a veteran referee with a cooler`],
+    },
+    body: [`An hour after the final bell, the stadium is hollow. In the empty rows the floor holds {debris}, and near it you find {witness}, who does not say anything and does not leave.`, `The noise you worked for all year has gone, and the silence is its own thing, heavy and kind. Whatever the card did to you, this is the first moment you can feel it.`],
+    choices: [
+      { id: 'sit_ring', label: 'Climb into the ring and sit alone for a while', risk: 'low', result: `The canvas is still warm in places, and you sit with your back to a corner post until the lights above you start to go off one by one. It is your private ceremony, and it takes exactly as long as it needs.`, effects: [{ conf: 4 }, { fatigue: -4 }] },
+      { id: 'stay_chat', label: 'Stay and talk to whoever else is still here', risk: 'low', result: `You swap a few sentences and a story with the person who stayed. They have seen thirty of these nights and it still moves them, and so, you notice, it still moves you.`, effects: [{ conf: 3 }, { pop: 0.2 }, { fatigue: -2 }] },
+      { id: 'party', label: 'Head straight to the after-party and keep the high going', risk: 'med', result: `The party is loud, bright and generous, and you are toasted by people you admire. You get back to the room at dawn with a happy blur and a headache.`, effects: [{ pop: 0.5 }, { fatigue: 7 }, { conf: 2 }, { money: -400 }] },
+      { id: 'call_home', label: 'Phone someone who is not in this business', risk: 'low', result: `It rings four times, and the voice that answers is sleepy and instantly glad. You describe the night in ten minutes, badly, and it is the best telling of it you will ever give.`, effects: [{ conf: 4 }, { fatigue: -1 }] },
+    ],
+  },
+  // ===================================================================== CHAMPIONSHIP
+  {
+    id: 'nd_chp_new_champ_nerves', category: 'championship', title: 'The Belt Feels Different at Night', weight: 2.5, cooldownDays: 220, maxPerCareer: 2, major: true,
+    cast: { agent: { pick: 'staff', role: 'agent' } },
+    trigger: { holdsTitle: true, stat: { defenses: { lte: 1 } } },
+    slots: {
+      nerve: [`the belt feels heavier on your shoulder than it did on the poster`, `you keep checking the strap in the mirror to see if it is still there`, `your name on the plate looks like it belongs to somebody else`, `every dressing-room silence seems aimed at the strap in your bag`],
+      hunters: [`a line of contenders`, `a contender with a grudge`, `a hungry rookie`, `a former champion eager to return`],
+    },
+    body: [`Somewhere in the last few days the celebration ended and the job began. Tonight, {nerve}, and {hunters} is watching how you carry it.`, `{agent.name} finds you alone with the case and sits down on an upturned bucket. No champion in history has felt ready, and the veterans tell the story as if it were a punchline.`],
+    choices: [
+      { id: 'confess', label: 'Tell {agent.first} you are afraid of losing it', risk: 'low', result: `The words come out smaller than you expected, and {agent.first} nods like a doctor. The advice that follows is plain: you are the champion because someone decided you could be, and you do not need to apologise for it.`, effects: [{ conf: 4 }, { fatigue: -2 }, { pop: 0.1 }] },
+      { id: 'act', label: 'Act like a champion until it feels like one', risk: 'med', outcomes: [
+        { weight: 2, bonus: { confidence: 0.5 }, text: `You walk through the building as if the belt were a part of your arm, and by the second night the pretending has become the thing itself. The crowd believes it before you do.`, effects: [{ pop: 0.8 }, { conf: 3 }, { fatigue: 3 }] },
+        { weight: 1, text: `The performance has a crack in it, and a veteran spots it at once and says nothing. The next night, your entrance feels a half step too stiff.`, effects: [{ pop: 0.1 }, { conf: -2 }, { fatigue: 3 }] } ] },
+      { id: 'train', label: 'Work harder than ever to earn the belt twice', risk: 'low', result: `You take extra rounds in the ring after the building empties. The belt feels lighter with every rep, and your body registers the bill.`, effects: [{ attr: { name: 'endurance', delta: 1 } }, { conf: 3 }, { fatigue: 7 }] },
+      { id: 'friends', label: 'Take a few friends out for a quiet dinner', risk: 'low', result: `The belt sits on a spare chair like a guest, and nobody mentions the business for two hours. You leave feeling like a person again, and a little silly for needing it.`, effects: [{ money: -300 }, { conf: 2 }, { fatigue: -3 }] },
+    ],
+  },
+  {
+    id: 'nd_chp_challenger_asks', category: 'championship', title: 'The Challenger Asks for One Thing', weight: 2, cooldownDays: 200, maxPerCareer: 3, major: true,
+    cast: { rival: { pick: 'rivalry', minHeat: 15 } },
+    memory: { role: 'rival', max: 2 },
+    trigger: { holdsTitle: true, mem: [{ role: 'rival', matchesGte: 1 }] },
+    slots: {
+      request: [`one honest match with no outside interference`, `a fair referee and a finish that cannot be disputed`, `to shake hands before the bell`, `to have their family seated near the ring`],
+      place: [`the hallway outside the arena\'s medical room`, `a corner of the parking lot`, `the empty ring at the end of the night`, `the elevator, going up`],
+    },
+    body: [`{rival.name} approaches you in {place}, not with a threat but with a request. The challenger would like {request}, and speaks plainly, without the usual swagger.`, `There is no angle in the tone, or if there is, it is well hidden. A champion who grants the request may look generous, or may look soft, and a champion who refuses may look like a bully with a strap.`],
+    choices: [
+      { id: 'grant', label: 'Grant it, no conditions', risk: 'low', result: `You say yes at once and mean it. {rival.first} stares for a moment, then nods once, and the contest ahead feels a little cleaner for the deal.`, effects: [{ rel: { who: 'rival', respect: 6, trust: 4, heat: -5 } }, { pop: 0.4 }, { conf: 1 }] },
+      { id: 'terms', label: 'Grant it, and attach a public promise of your own', risk: 'med', result: `You say yes, and then you say loudly that you will retain the belt. The promise raises the stakes, and {rival.first} lets the smile show.`, effects: [{ promise: { kind: 'retain_title', text: 'I will retain my title against all comers', params: { defenses: 1 }, deadlineDays: 60 } }, { rel: { who: 'rival', respect: 3 } }, { pop: 0.6 }, { conf: 2 }] },
+      { id: 'refuse', label: 'Refuse: champions do not negotiate', risk: 'med', result: `The reply is cold and brief. {rival.first} turns away without arguing, and you find that the hallway is warmer after the turn.`, effects: [{ rivalry: { who: 'rival', heat: 8 } }, { rel: { who: 'rival', respect: -4, heat: 6 } }, { pop: 0.2 }, { conf: 1 }] },
+      { id: 'mock', label: 'Laugh and tell them to earn it in the ring', risk: 'high', outcomes: [
+        { weight: 2, bonus: { mic: 0.5 }, text: `The line is quoted by half the roster before the end of the night. {rival.first} does not respond, which is more worrying than any retort.`, effects: [{ pop: 0.8 }, { rivalry: { who: 'rival', heat: 10 } }, { rel: { who: 'rival', heat: 8, respect: -3 } }] },
+        { weight: 1, text: `The laugh lands as arrogant, and an older champion in the corridor looks at you with something close to pity. {rival.first} walks off with a plan.`, effects: [{ pop: -0.2 }, { rivalry: { who: 'rival', heat: 10 } }, { conf: -2 }] } ] },
+    ],
+  },
+  {
+    id: 'nd_chp_belt_left_behind', category: 'championship', title: 'The Belt Is Not in the Bag', weight: 2, cooldownDays: 250, maxPerCareer: 2,
+    trigger: { holdsTitle: true },
+    slots: {
+      where: [`a taxi`, `a hotel courtesy car`, `a rental van`, `a shuttle bus`],
+      cargo: [`a bag of someone else's laundry`, `a casserole you did not order`, `a stack of programmes`, `a coat that does not belong to you`],
+    },
+    body: [`Two hours before the show, you open the gear bag and find {cargo} where the championship belt should be. The last time you saw the strap, it was riding in {where}, and the driver is not answering.`, `It is the sort of mistake that goes into locker-room legend, and you are holding a leading role. A voice somewhere in your head is already composing the headline.`],
+    choices: [
+      { id: 'hunt', label: 'Ring every company in town until you find it', risk: 'low', result: `Forty-one minutes and nine calls later, a dispatcher recognises the description and a driver sprints it back through traffic. You walk to the ring with it a little crooked, and you say nothing to anyone.`, effects: [{ fatigue: 4 }, { conf: 1 }, { money: -120 }] },
+      { id: 'tell', label: 'Tell the office straight away and take the heat', risk: 'med', result: `The office is irritated for about ten minutes and then, to your surprise, helpful. A fine of $500 appears on your next cheque, and you are on first-name terms with the dispatch desk of three companies.`, effects: [{ money: -500 }, { conf: -1 }, { fatigue: 1 }] },
+      { id: 'rookie', label: 'Send a young wrestler to retrieve it', risk: 'med', outcomes: [
+        { weight: 2, bonus: { charisma: 0.3 }, text: `The rookie runs the errand with the zeal of a person who has been handed a state secret, and returns with the belt and a hot dog. For the rest of the tour they idolise you slightly more than is healthy.`, effects: [{ conf: 1 }, { fatigue: -1 }, { money: -40 }] },
+        { weight: 1, text: `The rookie returns with the wrong belt, a tag championship strap that belongs to somebody else. The ensuing conversation is loud, and the story gets round the building twice.`, effects: [{ conf: -3 }, { pop: -0.3 }, { fatigue: 3 }] } ] },
+      { id: 'angle', label: 'Turn it into a segment: the missing belt', risk: 'high', outcomes: [
+        { weight: 2, bonus: { mic: 0.6 }, text: `You walk out empty-handed and tell the crowd the belt has been stolen. The accusations that follow are theatre of the highest order, and the belt arrives in the middle of it, delivered by a bewildered taxi driver. The pop is huge.`, effects: [{ pop: 1.2 }, { conf: 2 }, { fatigue: 3 }] },
+        { weight: 1, text: `The office does not appreciate being surprised, and the segment is cut at the commercial. The belt arrives, and so does a stern conversation.`, effects: [{ pop: -0.3 }, { conf: -2 }, { money: -1000 }] } ] },
+    ],
+  },
+  {
+    id: 'nd_chp_shot_denied', category: 'championship', title: 'Not This Year', weight: 2.5, cooldownDays: 250, maxPerCareer: 2, major: true,
+    cast: { gm: { pick: 'staff', role: 'gm' } },
+    trigger: { holdsTitle: false, stat: { popularity: { gte: 55 }, wins: { gte: 8 } } },
+    slots: {
+      reason: [`the merchandise numbers favour someone else`, `a sponsor wants another face on the poster`, `the office thinks you are more valuable chasing the belt than holding it`, `the schedule already contains a story for someone else`],
+      delivery: [`over a plate of cold fries`, `in an office with the blinds drawn`, `in an elevator between floors`, `in a handwritten note on hotel stationery`],
+    },
+    body: [`{gm.name} breaks the news {delivery}: there will be no title shot for you this year, because {reason}. The tone is regretful and professional, and does not leave much room.`, `You have given this place everything, and you were allowed to hope. The word hope is, in this business, a very expensive thing to be handed.`],
+    choices: [
+      { id: 'argue', label: 'Make the case for yourself with numbers and nights', risk: 'med', outcomes: [
+        { weight: 1, bonus: { mic: 0.4 }, text: `You lay out your record without raising your voice, and {gm.first} writes some of it down. A promise of reconsideration is the best you get, but it is a real one.`, effects: [{ conf: 2 }, { pop: 0.2 }, { fatigue: 2 }] },
+        { weight: 2, text: `The argument runs hot and short, and {gm.first} reminds you of the power balance in the room. You leave with a stiff handshake and a reputation for being difficult.`, effects: [{ conf: -2 }, { pop: -0.2 }, { money: -800 }] } ] },
+      { id: 'accept', label: 'Accept it with grace and ask for something else', risk: 'low', result: `You say you understand, and you do, which is the worst part. {gm.first} offers a larger role on the next card as a consolation, and you accept it with a straight face.`, effects: [{ conf: -2 }, { pop: 0.3 }, { money: 1500 }] },
+      { id: 'go_over', label: 'Go over the GM\'s head and plead to an executive', risk: 'high', outcomes: [
+        { weight: 1, bonus: { charisma: 0.5 }, text: `An executive hears you out over a late coffee and makes a call. The shot is not promised, but the matter is open again, and {gm.first} will not forget who opened it.`, effects: [{ pop: 0.4 }, { conf: 2 }, { fatigue: 2 }] },
+        { weight: 2, text: `The executive is polite and unmoved, and the message returns to {gm.first} before you have left the building. The warmth in the office drops by a degree, and stays down.`, effects: [{ conf: -3 }, { pop: -0.3 }] } ] },
+      { id: 'quiet_work', label: 'Say nothing and work the next ninety days like a fury', risk: 'low', result: `You take every match as if it were the title, and by the end of the quarter, no one can argue about your standing. The fire is private, and the results are public.`, effects: [{ conf: 3 }, { fatigue: 7 }, { pop: 0.4 }] },
+    ],
+  },
+  // ===================================================================== CREATIVE
+  {
+    id: 'nd_cre_catchphrase_forced', category: 'creative', title: 'Creative Has a Phrase for You', weight: 1.5, cooldownDays: 180, maxPerCareer: 2,
+    cast: { creative: { pick: 'staff', role: 'creative' } },
+    trigger: { stat: { popularity: { gte: 25 } } },
+    slots: {
+      phrase: [`"No Refunds"`, `"Ask Me Again"`, `"Under New Management"`, `"This Is Not A Drill"`],
+      origin: [`written by a committee`, `shouted by an intern during a meeting`, `tested on a focus group of nine people`, `scribbled on a napkin at midnight`],
+    },
+    body: [`{creative.name} slides a sheet across the table with a single line on it: {phrase}. The phrase was {origin}, and it will be on a T-shirt by Friday if you let it.`, `You say it out loud once, quietly. The room waits, and a marketing person you have never met looks pleadingly at you across the plate of biscuits.`],
+    choices: [
+      { id: 'embrace', label: 'Say it with total conviction and see what happens', risk: 'med', outcomes: [
+        { weight: 2, bonus: { mic: 0.6 }, text: `On the third delivery the phrase starts to sound inevitable, and the crowd starts to say it back. By the end of the month a child in the front row has it on a sign.`, effects: [{ pop: 0.9 }, { money: 1500 }, { conf: 1 }] },
+        { weight: 1, text: `It dies in the air, every time, in every accent. The crowd goes quiet at the exact spot where the cheer should be, and you spend a week pretending it was meant.`, effects: [{ pop: -0.4 }, { conf: -3 }] } ] },
+      { id: 'rewrite', label: 'Sit with {creative.first} and rewrite it properly', risk: 'low', result: `Two hours and a lot of coffee later, the line is yours and still shaped like theirs. {creative.first} lets you take the credit and quietly leaves a thumbs-up on the board.`, effects: [{ mic: 1 }, { conf: 2 }, { fatigue: 3 }, { pop: 0.2 }] },
+      { id: 'sarcasm', label: 'Say it with obvious irony and let the crowd in on the joke', risk: 'med', result: `You deliver it with a raised eyebrow, and the crowd decides it is the best bad line in the business. It is an unplanned success, and {creative.first} pretends the whole thing was a plan.`, effects: [{ pop: 0.7 }, { charisma: 1 }, { conf: 1 }] },
+      { id: 'refuse', label: 'Refuse to say it at all', risk: 'high', result: `You hand the sheet back and say that your voice is the one thing you own. The office remembers the refusal, and your next promo gets a little less time.`, effects: [{ conf: 2 }, { pop: -0.2 }, { money: -500 }] },
+    ],
+  },
+  {
+    id: 'nd_cre_writers_room', category: 'creative', title: 'A Seat in the Writers\' Room', weight: 2, cooldownDays: 240, maxPerCareer: 2,
+    cast: { creative: { pick: 'staff', role: 'creative' } },
+    trigger: { stat: { popularity: { gte: 40 }, careerYears: { gte: 3 } } },
+    slots: {
+      room: [`a conference room with a broken projector`, `a back office lined with whiteboards`, `a hotel suite turned into a war room`, `the back room of a rented diner`],
+      mood: [`tense after a bad rating`, `giddy with a new storyline`, `running on cold pizza`, `brittle with deadline`],
+    },
+    body: [`Without warning, {creative.name} has invited you into the writers\' meeting. The group is {mood}, in {room}, and a sheet of paper with your name at the top waits in the middle of the table.`, `You are being asked, in effect, what you want to be. It is a rare thing to be handed the pen by a business that usually holds it, and not everyone who gets the offer knows what to write.`],
+    choices: [
+      { id: 'pitch_self', label: 'Pitch the next year of your own character', risk: 'med', outcomes: [
+        { weight: 2, bonus: { charisma: 0.4, mic: 0.3 }, text: `You talk for twenty minutes without notes and notice that the room has stopped typing, which is the best compliment a writers\' room can give. Two of your ideas go straight to the whiteboard.`, effects: [{ pop: 0.8 }, { conf: 3 }, { mic: 1 }, { fatigue: 3 }] },
+        { weight: 1, text: `Halfway through the pitch you realise you are describing a version of yourself that does not exist. The room is polite, and nothing makes it to the board.`, effects: [{ conf: -2 }, { fatigue: 3 }] } ] },
+      { id: 'pitch_other', label: 'Use your turn to pitch a story for someone else', risk: 'low', result: `You ask for a spot for a talented wrestler stuck near the bottom of the card, and the room is momentarily silent. The idea is adopted, mostly, and a younger performer will never know whose voice was in the room.`, effects: [{ conf: 3 }, { pop: 0.2 }, { fatigue: 2 }] },
+      { id: 'listen', label: 'Stay quiet and learn how the machine actually works', risk: 'low', result: `You take eight pages of notes and speak twice. By the end, you understand why the show feels the way it does, and why every decision is a trade-off between six people.`, effects: [{ attr: { name: 'psychology', delta: 1 } }, { conf: 1 }, { fatigue: 1 }] },
+      { id: 'wild', label: 'Pitch something so strange the room has to react', risk: 'high', outcomes: [
+        { weight: 1, bonus: { charisma: 0.5 }, text: `The idea is outrageous, the room erupts, and a producer says that it just might work. Whether it does or not, you are now somebody who thinks differently.`, effects: [{ pop: 0.9 }, { conf: 2 }] },
+        { weight: 2, text: `The idea is met with a long, cold silence, and the producer says, gently, that they will think about it. They will not.`, effects: [{ conf: -3 }, { pop: -0.1 }] } ] },
+    ],
+  },
+  {
+    id: 'nd_cre_promo_cut_short', category: 'creative', title: 'Your Promo Just Lost Its Time', weight: 2.5, cooldownDays: 100, maxPerCareer: 4, contexts: ['pre_show', 'show_day'],
+    cast: { producer: { pick: 'staff', role: 'producer' } },
+    trigger: { stat: { popularity: { gte: 25 }, promos: { gte: 1 } } },
+    slots: {
+      time: [`forty seconds`, `a minute fifteen`, `ninety seconds`, `half a minute`],
+      reason: [`a commercial slot was sold late`, `the first match is running long`, `a sponsor segment moved up`, `a special guest needs a longer introduction`],
+    },
+    body: [`The promo you rehearsed in the car has just shrunk. {producer.name} gives you {time} instead of what you were promised, because {reason}.`, `You have pages of lines and a rhythm you spent two days building. The producer is not unkind, but there is a clock on the wall, and it ticks louder than usual.`],
+    choices: [
+      { id: 'cut', label: 'Cut to the single best line and deliver it clean', risk: 'low', outcomes: [
+        { weight: 2, bonus: { mic: 0.5 }, text: `Stripped of everything except the thing you cared about, the promo is the tightest of your career. The crowd leans in, and the producer gives you a quiet thumbs-up.`, effects: [{ pop: 0.7 }, { mic: 1 }, { conf: 2 }] },
+        { weight: 1, text: `The best line turns out not to be the best without its setup. It lands softly, and you walk back wondering what you sacrificed.`, effects: [{ pop: -0.2 }, { conf: -2 }, { fatigue: 2 }] } ] },
+      { id: 'off_script', label: 'Ignore the clock and go long on purpose', risk: 'high', outcomes: [
+        { weight: 1, bonus: { mic: 0.7, charisma: 0.4 }, text: `The crowd refuses to let you stop, and the producer, rather than cutting your mic, lets it run. It is a rare triumph and an unrepeatable one.`, effects: [{ pop: 1.2 }, { conf: 3 }, { money: -500 }] },
+        { weight: 2, text: `The sound desk fades your mic out in the middle of a sentence. You are fined and watched, and your next promo will be supervised by a person with a stopwatch.`, effects: [{ pop: -0.6 }, { conf: -3 }, { money: -1500 }] } ] },
+      { id: 'merge', label: 'Fold the promo into the start of the match', risk: 'med', result: `You pitch it to the producer on the walk, and the producer says yes with the air of someone handed an escape hatch. The words are fewer, but they land with a punch behind them.`, effects: [{ pop: 0.5 }, { conf: 1 }, { fatigue: 2 }] },
+      { id: 'object', label: 'Object loudly and ask who made the decision', risk: 'med', result: `The producer explains the arithmetic of television, patiently, and you leave with the sharp taste of being right and having lost anyway. The crew remember that you cared.`, effects: [{ conf: 1 }, { pop: -0.2 }, { fatigue: 1 }] },
+    ],
+  },
+  {
+    id: 'nd_cre_costume_pitch', category: 'creative', title: 'A New Outfit and a Very Hopeful Smile', weight: 1.5, cooldownDays: 200, maxPerCareer: 2,
+    cast: { creative: { pick: 'staff', role: 'creative' } },
+    trigger: { stat: { popularity: { gte: 25 } } },
+    slots: {
+      outfit: [`a sequined cape with a hood`, `tights covered in tiny flags`, `a bathrobe with a very large collar`, `a safari jacket and a pith helmet`],
+      pitch: [`it tests well with the audience`, `it shows you in a softer light`, `the merchandise people love it`, `it was the producer\'s own idea`],
+    },
+    body: [`In a quiet corner, {creative.name} unveils {outfit} on a hanger and says the magic words: {pitch}. The costume designer is standing beside it with an expression that is both hopeful and braced for impact.`, `It is the sort of garment that would make a Roman emperor ask a few questions. The stitching, you must admit, is superb.`],
+    choices: [
+      { id: 'wear_proud', label: 'Wear it with total commitment', risk: 'med', outcomes: [
+        { weight: 2, bonus: { charisma: 0.5 }, text: `You strut out in it as if it were a coronation, and the crowd decides that anyone who looks that sure must be right. By next week it is for sale.`, effects: [{ pop: 0.9 }, { money: 1200 }, { conf: 1 }] },
+        { weight: 1, text: `The outfit wins the fashion argument and loses the match, and you spend the night feeling like a parade float. The jokes begin before the bell.`, effects: [{ pop: -0.3 }, { conf: -3 }] } ] },
+      { id: 'negotiate', label: 'Keep the best half and lose the rest', risk: 'low', result: `The cape stays, the helmet goes, and the designer clutches a pincushion. It is a decent compromise, and it looks like something you chose.`, effects: [{ conf: 2 }, { pop: 0.3 }, { fatigue: 1 }] },
+      { id: 'refuse', label: 'Refuse to be seen in it', risk: 'high', result: `You say it plainly, and the creative team goes quiet. You keep your dignity, but you lose a little of their goodwill.`, effects: [{ conf: 2 }, { pop: -0.2 }, { money: -600 }] },
+      { id: 'ironic', label: 'Wear it, and make a joke of how ridiculous it is', risk: 'low', result: `You point out every absurd detail before the crowd can, and the audience laughs with you rather than at you. The costume designer is delighted and the producer is baffled.`, effects: [{ pop: 0.6 }, { mic: 1 }, { conf: 1 }] },
+    ],
+  },
+  // ===================================================================== OPPORTUNITY
+  {
+    id: 'nd_opp_movie_cameo', category: 'opportunity', title: 'A Studio Wants You for Two Lines', weight: 2, cooldownDays: 250, maxPerCareer: 2,
+    cast: { executive: { pick: 'staff', role: 'executive' } },
+    trigger: { minYear: 1995, stat: { popularity: { gte: 45 } } },
+    slots: {
+      role: [`a bouncer who gets thrown into a swimming pool`, `a villain\'s henchman with two lines`, `the voice of an animated bear`, `a wedding guest who ruins the cake`],
+      production: [`a low-budget comedy`, `a family adventure`, `a television sitcom guest spot`, `a rural independent film`],
+    },
+    body: [`{executive.name} has a call from a studio: they want you for {production}, playing {role}. The pay is decent, the dates overlap with two shows, and the casting director is fond of the phrase built-in audience.`, `Neither of you pretends it is art. It is, however, one of those doors that opens rarely and shuts without a sound.`],
+    choices: [
+      { id: 'take', label: 'Take it for the money and the exposure', risk: 'low', result: `You spend a rainy three days in a trailer with a thermos, and you discover that acting is mostly waiting. The cheque clears, and your face reaches theatres.`, effects: [{ money: 18000 }, { pop: 0.5 }, { fatigue: 7 }] },
+      { id: 'bigger', label: 'Hold out for a bigger part', risk: 'high', outcomes: [
+        { weight: 1, bonus: { charisma: 0.5 }, text: `The studio hesitates, then adds a third scene and a line that is actually funny. It is a better part, a better cheque and a real credit.`, effects: [{ money: 30000 }, { pop: 0.8 }, { fatigue: 8 }, { conf: 2 }] },
+        { weight: 2, text: `The studio says they will keep you in mind, and nobody calls again. A younger wrestler gets the role, and you read about it in the trade papers.`, effects: [{ conf: -2 }, { pop: -0.1 }] } ] },
+      { id: 'decline', label: 'Decline and stay focused on the ring', risk: 'low', result: `You send a gracious refusal and stay in the gym. A few veterans approve of the discipline, and the exposure goes elsewhere.`, effects: [{ conf: 2 }, { fatigue: -2 }] },
+      { id: 'promote', label: 'Say yes only if the office promotes it on the show', risk: 'med', result: `{executive.first} makes the calls and the deal is done: a segment, a plug and a premiere night at the arena. It is more work than the film, and the pop is better than the cheque.`, effects: [{ money: 9000 }, { pop: 0.9 }, { fatigue: 6 }] },
+    ],
+  },
+  {
+    id: 'nd_opp_teach_class', category: 'opportunity', title: 'A Morning at the Training School', weight: 1.5, cooldownDays: 200, maxPerCareer: 3,
+    cast: { trainer: { pick: 'staff', role: 'trainer' } },
+    trigger: { stat: { popularity: { gte: 30 }, careerYears: { gte: 2 } } },
+    slots: {
+      class: [`a dozen nervous teenagers`, `four career-changers in their forties`, `a mixed group of beginners who have never been hit`, `a class of former soldiers looking for something new`],
+      topic: [`how to take a bump`, `how to cut a first promo`, `how to read a crowd`, `how to say no to a bad idea`],
+    },
+    body: [`{trainer.name} has asked a favour that you cannot easily refuse: one morning at the school, teaching {class} about {topic}. There is no fee, only a folding table of stale pastries and a gym that smells like old mats and enthusiasm.`, `The students watch you with an intensity usually reserved for scripture. You can see in one face the person you were at that age, and in another the one you were afraid of becoming.`],
+    choices: [
+      { id: 'teach', label: 'Teach properly: slow, patient, with real drills', risk: 'low', result: `You break the lesson into steps and make everyone repeat them until the repetition stops being scary. By noon a student you have never met lands cleanly and laughs, and you find your eyes are damp.`, effects: [{ attr: { name: 'psychology', delta: 1 } }, { conf: 3 }, { fatigue: 5 }, { pop: 0.2 }] },
+      { id: 'show_off', label: 'Show off a little and wow them', risk: 'med', outcomes: [
+        { weight: 2, bonus: { charisma: 0.4 }, text: `The demonstration is dazzling, and the students are open-mouthed. A photograph of you mid-air will hang on the school wall for twenty years.`, effects: [{ pop: 0.6 }, { conf: 2 }, { fatigue: 4 }] },
+        { weight: 1, text: `You land a little off and your shoulder objects. The students are impressed by how you hide it, and you spend the afternoon on a bag of ice.`, effects: [{ pop: 0.2 }, { fatigue: 7 }, { injury: { part: 'arms', severity: 1, days: 7 } }] } ] },
+      { id: 'truth', label: 'Tell them honestly what the business costs', risk: 'med', result: `You talk about the money, the injuries and the hotel-room silences, and then you ask who still wants it. Half the hands go up slowly, and you have never respected a room more.`, effects: [{ conf: 2 }, { pop: 0.3 }, { fatigue: 2 }] },
+      { id: 'invite', label: 'Offer your best student a place at your next session', risk: 'low', result: `You pick the person who worked hardest and least conspicuously, and give them your gym\'s address. They turn up early, nervous and delighted, and the training partner you needed arrives.`, effects: [{ conf: 2 }, { attr: { name: 'technical', delta: 1 } }, { fatigue: 5 }, { money: -100 }] },
+    ],
+  },
+  {
+    id: 'nd_opp_game_scan', category: 'opportunity', title: 'The Day They Scanned You', weight: 1.5, cooldownDays: 300, maxPerCareer: 2,
+    cast: { producer: { pick: 'staff', role: 'producer' } },
+    trigger: { minYear: 1998, stat: { popularity: { gte: 40 } } },
+    slots: {
+      task: [`rotate slowly in a grey suit covered in dots`, `perform your signature moves for twelve cameras`, `record eight hundred lines of grunts and taunts`, `hold a victory pose for three solid minutes`],
+      vanity: [`the technician asks you to remove your jacket and your dignity`, `the model on screen looks nothing like you`, `the scan reveals an old scar you had forgotten`, `the sculptor has given your nose a mind of its own`],
+    },
+    body: [`The video game people have rented a warehouse, and you spend the day being asked to {task}. By lunch, {vanity}, and {producer.name} is standing in the corner with a smile that is trying not to be a smirk.`, `It is the first time you have seen yourself reduced to coordinates. Somewhere inside the machine, a version of you is about to be played by a hundred thousand strangers.`],
+    choices: [
+      { id: 'embrace', label: 'Embrace the absurdity and ham it up', risk: 'low', result: `You turn the rotating pose into a performance and give the technicians something to laugh at. The final model, years later, has an expression no one can explain.`, effects: [{ pop: 0.6 }, { conf: 1 }, { fatigue: 3 }] },
+      { id: 'details', label: 'Insist on getting the details right', risk: 'med', result: `You spend three extra hours correcting the stance, the tape and the walk. The result is faithful, and the technicians quietly begin calling you the Professor.`, effects: [{ conf: 2 }, { fatigue: 6 }, { pop: 0.3 }] },
+      { id: 'royalty', label: 'Ask about the royalty terms in front of everyone', risk: 'high', outcomes: [
+        { weight: 1, bonus: { charisma: 0.3 }, text: `The studio executive happens to be there, and the question lands nicely. A better rate comes back in writing before the end of the week.`, effects: [{ money: 7000 }, { conf: 2 }] },
+        { weight: 2, text: `The room goes cold, and the technician stares at the floor. The terms do not change, and you are the person who talked about money during a scan.`, effects: [{ conf: -2 }, { pop: -0.2 }] } ] },
+      { id: 'publicity', label: 'Convince the studio to film a behind-the-scenes feature', risk: 'med', result: `A camera crew follows you through the afternoon, and the footage is charming and silly. The company is pleased, and you are asked to attend a launch party you did not want.`, effects: [{ pop: 0.8 }, { fatigue: 4 }, { money: 1500 }] },
+    ],
+  },
+  {
+    id: 'nd_opp_local_endorsement', category: 'opportunity', title: 'A Local Business Wants Your Face', weight: 1.5, cooldownDays: 200, maxPerCareer: 3,
+    cast: { agent: { pick: 'staff', role: 'agent' } },
+    trigger: { stat: { popularity: { gte: 35 } } },
+    slots: {
+      business: [`a furniture chain`, `a regional burger restaurant`, `a mattress warehouse`, `a car wash with a giant inflatable gorilla`],
+      condition: [`you must appear in character at every grand opening`, `your face must go on a billboard`, `you must say the slogan on the air`, `the owner insists on a seat at ringside`],
+    },
+    body: [`{agent.name} sets the contract in front of you and taps one clause. In short, {business} wants to hire you for a season-long endorsement, and the condition is simple: {condition}.`, `The money is real and the slogan is not good. You imagine your face at the end of a highway, forty feet wide, looking pleased about a sale.`],
+    choices: [
+      { id: 'sign', label: 'Sign it as written and take the money', risk: 'low', result: `The first cheque lands inside a week, and so do a surprising number of congratulations from people who shop there. The billboard is as bad as you feared, and your neighbours love it.`, effects: [{ money: 15000 }, { pop: -0.2 }, { conf: -1 }, { fatigue: 4 }] },
+      { id: 'negotiate', label: 'Negotiate the conditions down and take a smaller fee', risk: 'med', outcomes: [
+        { weight: 2, bonus: { charisma: 0.3 }, text: `You and {agent.first} trade clauses for an afternoon, and the final deal keeps your dignity and most of the money. The owner shakes your hand and grins.`, effects: [{ money: 9000 }, { conf: 2 }] },
+        { weight: 1, text: `The owner takes offence at the haggling and walks, and you are left with a handshake and nothing else. The next offer is smaller.`, effects: [{ conf: -2 }, { money: 1000 }] } ] },
+      { id: 'decline', label: 'Decline: you want to be known for something else', risk: 'low', result: `The agent sighs and puts the contract back in the folder. It is a clean, slightly proud no, and the bank balance notices.`, effects: [{ conf: 2 }, { pop: 0.1 }] },
+      { id: 'charity', label: 'Counter with a deal that includes a charity night', risk: 'med', result: `The owner is wary and then keen, and a benefit night is arranged with a percentage for a local food bank. The cheque is smaller, and the goodwill is not.`, effects: [{ money: 3500 }, { pop: 0.7 }, { conf: 2 }, { fatigue: 4 }] },
     ],
   },
 ];

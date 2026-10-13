@@ -44,6 +44,19 @@ function checkTriggerShape(trig, errors, where = 'trigger') {
   }
 }
 
+/** Prose lint on rendered text: mechanical mistakes a reader would notice. */
+export function lintProse(text) {
+  const out = [];
+  if (/\b(\w{2,})\s+\1\b/i.test(text.replace(/\b(that|had)\s+\1\b/gi, ''))) out.push(`repeated word: "${text.match(/\b(\w{2,})\s+\1\b/i)[0]}"`);
+  if (/'s's|\bs's\b/.test(text)) out.push('doubled possessive');
+  if (/([.,;!?])\1(?!\.)|\s[,.;!?]|,\./.test(text.replace(/\.\.\./g, ''))) out.push('stray punctuation spacing');
+  if (/undefined|\bnull\b|\[object|\{|\}/.test(text)) out.push('placeholder leak');
+  if (/\b(a|an) \1\b/i.test(text)) out.push('repeated article');
+  if (/\ba [aeiou][a-z]+/i.test(text) && /\ba (apple|actor|agent|argument|apology|angle|ally|arena|announcement|answer|empty|early|easy|offer|owner|old|open|idea|hour|honest|ugly|opening|opponent)\b/i.test(text)) out.push('article a/an mismatch');
+  if (/\ban [bcdfgjklmpqrstvwxyz][a-z]+/i.test(text) && /\ban (backup|bad|big|brand|call|crowd|deal|favour|favor|friend|good|great|long|new|plan|promo|short|small|team|title|trip|tough|week|win)\b/i.test(text)) out.push('article an/a mismatch');
+  return out;
+}
+
 export function validateTemplate(t) {
   const errors = [], warnings = [];
   const E = (m) => errors.push(m), W = (m) => warnings.push(m);
@@ -73,6 +86,14 @@ export function validateTemplate(t) {
       try { render(str, bind, combo, { brand: 'Raw', year: 2024, show: 'Raw', brokenPromise: 'a promise', openPromise: 'a promise', era: 'current' }); } catch (e) { E(`text "${str.slice(0, 40)}...": ${e.message}`); break; }
     }
     seen.add(JSON.stringify(combo));
+  }
+  // prose lint on the first few rendered combinations
+  const lintSeen = new Set();
+  for (const combo of combos.slice(0, 4)) {
+    for (const str of textsOf(t)) {
+      let r; try { r = render(str, bind, combo, { brand: 'Raw', year: 2024, show: 'Raw', brokenPromise: 'a broken promise', openPromise: 'an open promise', era: 'current' }); } catch { continue; }
+      for (const issue of lintProse(r)) { const key = `${issue}|${str.slice(0, 30)}`; if (!lintSeen.has(key)) { lintSeen.add(key); W(`prose: ${issue} in "${r.slice(0, 60)}..."`); } }
+    }
   }
   for (const k of Object.keys(slotUse)) if (!textsOf(t).some((s) => s.includes(`{${k}}`))) E(`slot "${k}" is never used in the text`);
   // choices & effects

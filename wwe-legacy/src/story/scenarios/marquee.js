@@ -55,7 +55,7 @@ export default [
     cast: { rival: { pick: 'rivalry', minHeat: 20, status: 'active' } },
     trigger: { minYear: 1988, eventWithin: { id: 'royal_rumble', days: 10 } },
     slots: { where: [`at the Rumble press call`, `in the line for catering`, `outside the hotel elevator`], threat: [`first man or woman through the ropes`, `anyone who stands between me and the win`, `the one who embarrassed me`] },
-    body: [`{rival.name} walks up {where} with a grin that is mostly teeth. "I do not care what number I draw. Come the Rumble, you are the {threat}."`, `It might be a mind game. It might be a plan with a script behind it. Either way, the other contenders are listening.`],
+    body: [`{rival.name} walks up {where} with a grin that is mostly teeth. "I do not care what number I draw. Come the Rumble, my target is {threat}."`, `It might be a mind game. It might be a plan with a script behind it. Either way, the other contenders are listening.`],
     choices: [
       { id: 'meet', label: `Promise to meet {rival.them} head on in the ring`, risk: 'med', outcomes: [
         { weight: 2, bonus: { confidence: 0.5 }, text: `You hold the stare and tell {rival.first} the queue starts at your feet. The crowd around you buzzes. It is a feud that will have to be settled in the ring.`, effects: [{ rivalry: { who: 'rival', heat: 12 } }, { rel: { who: 'rival', respect: 4, heat: 6 } }, { pop: 0.7 }, { conf: 3 }] },
