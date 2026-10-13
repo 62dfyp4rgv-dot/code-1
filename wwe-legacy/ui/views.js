@@ -128,10 +128,11 @@ export function home(S) {
   else if (ph === 'prematch') action = `<button class="btn primary" data-action="toPrep">Back to Match Preparation</button>`;
   else if (today && h.rumbleToday) action = `<button class="btn primary" data-action="startRumble" id="btn-rumble">Enter the Royal Rumble</button>`;
   else if (today) action = `<button class="btn primary" data-action="bookTonight" id="btn-book">Book Tonight's Match</button>`;
+  else if (ph === 'home' && !c.flags.retired && next) action = `<button class="btn primary" data-action="advance" id="btn-advance">Go to the show <small style="font-weight:500;opacity:.85">in ${next.inDays} day${next.inDays === 1 ? '' : 's'}</small></button>`;
   const held = g.universe.titlesOf(p.id);
   const timeCard = ph === 'home' && !h.scenario && !c.flags.retired ? `<div class="card"><div class="row spread"><h2>${today ? 'Show day' : 'Before the show'}</h2>${today ? '' : `<span class="pill">${next ? `${next.inDays} day${next.inDays === 1 ? '' : 's'}` : ''}</span>`}</div>
       ${today ? '<p class="muted">Training is off until after tonight\'s show.</p>' : `<div class="grid2">${Object.entries(TRAINING).map(([id, t]) => `<button class="btn small" data-action="train" data-id="${id}"><span class="t">${esc(t.label)}<small class="fx">+${cap(t.attr)}</small></span></button>`).join('')}</div>
-      <div class="row"><button class="btn grow" data-action="rest" id="btn-rest">Rest a day</button><button class="btn grow" data-action="advance" id="btn-advance">Go to the show</button></div>`}</div>` : '';
+      <div class="row"><button class="btn grow" data-action="rest" id="btn-rest">Rest a day <small class="muted">(-22 fatigue)</small></button></div>`}</div>` : '';
   const injuries = h.status.injuries;
   return `<main class="screen">
     <div class="banner">
@@ -217,13 +218,12 @@ export function match(S) {
       <div class="names"><div class="nm">${esc(mv.me.name)}</div><div class="clock num">${mmss(mv.time)}<small>${esc(mv.phase)} · ${mmss(mv.timeLimit)}</small></div><div class="nm r">${esc(mv.opp.name)}</div></div>
       <div class="grid2" style="gap:12px">${fighterBoard(mv.me, false)}${fighterBoard(mv.opp, true)}</div>
       ${mv.ways > 2 ? `<div class="others"><span class="eyebrow" style="color:var(--mat-ink)">Also in the ring</span>${mv.others.map((o) => `<span class="pill" style="color:var(--mat-ink)">${esc(o.name)} · STA ${o.stamina} · MOM ${o.momentum}</span>`).join('')}</div>` : ''}
-      <div class="legend">STA stamina · MOM momentum · red fill = damage taken</div>
       <div class="heat"><span>Crowd</span>${bar(mv.crowd)}<span>${mv.referee === 'watching' ? 'Ref watching' : mv.referee === 'down' ? 'REF DOWN' : 'Ref distracted'}</span></div>
       ${mv.rules.tag && mv.team ? `<div class="posrow"><span class="eyebrow" style="color:var(--mat-ink)">Legal: ${esc(mv.team.mine.find((x) => x.legal)?.name || '')}</span><span class="eyebrow" style="color:var(--mat-ink)">Legal: ${esc(mv.team.theirs.find((x) => x.legal)?.name || '')}</span></div>` : ''}
       ${mv.rules.ironMan ? `<div class="posrow"><b class="num">Falls ${mv.falls[mv.mySide]}</b><b class="num">Falls ${mv.falls[1 - mv.mySide]}</b></div>` : ''}
       ${mv.rules.objective ? `<div class="posrow"><b class="num">Climb ${mv.climb.me}/${mv.objective.steps}</b><b class="num">Climb ${mv.climb.opp}/${mv.objective.steps}</b></div>` : ''}
     </div>
-    <div class="feed" id="feed" role="log" aria-label="Commentary">${lines.length ? lines.map((l) => `<p class="${feedClass(l, me)}">${esc(l.text)}</p>`).join('') : '<p>The bell rings.</p>'}</div>
+    <div class="feed" id="feed" role="log" aria-label="Commentary">${lines.length ? lines.slice(-4).map((l) => `<p class="${feedClass(l, me)}">${esc(l.text)}</p>`).join('') : '<p>The bell rings.</p>'}</div>
     ${panel}
   </div>`;
 }
@@ -237,7 +237,7 @@ function decisionPanel(S, d, mv) {
     head = `<div class="prompt"><div class="eyebrow">Your move · ${mmss(mv.time)}</div><h2>${mv.me.pos === 'grounded' ? 'You are down' : 'Take control'}</h2></div>`;
     const groups = GROUPS.filter((gr) => all.some((o) => o.group === gr));
     const cur = S.ui.group || 'Top';
-    chips = `<div class="chips wrap" role="tablist">${['Top', ...groups].map((gr) => `<button class="chip ${cur === gr ? 'on' : ''}" data-action="group" data-id="${gr}" role="tab">${gr}</button>`).join('')}</div>`;
+    chips = `<div class="chips" role="tablist">${['Top', ...groups].map((gr) => `<button class="chip ${cur === gr ? 'on' : ''}" data-action="group" data-id="${gr}" role="tab">${gr}</button>`).join('')}</div>`;
     shown = cur === 'Top' ? all.filter((o) => o.featured) : all.filter((o) => o.group === cur);
     if (!shown.length) shown = all.filter((o) => o.featured);
   } else if (d.kind === 'defense') {
@@ -255,7 +255,7 @@ function decisionPanel(S, d, mv) {
     head = `<div class="prompt"><div class="eyebrow">On the apron</div><h2>${d.context.pin ? 'Your partner is being pinned!' : 'Support your partner'}</h2></div>`;
   }
   const btn = (o) => {
-    const hint = o.hint ? `<span class="hint ${(o.hint.split(' ')[0] || '').replace(/\W/g, '')} ${/%/.test(o.hint) ? 'n' : ''}">${esc(o.hint)}</span>` : '';
+    const hint = o.hint ? `<span class="hint ${(o.hint.split(' ')[0] || '').replace(/\W/g, '')} ${/%/.test(o.hint) ? 'n' : ''}">${esc(o.hint)}${o.pct != null ? ` ${o.pct}%` : ''}</span>` : '';
     const cost = o.cost > 0 ? `<span class="r">${o.cost} STA</span>` : o.cost < 0 ? `<span class="r">+${-o.cost} STA</span>` : o.free ? '<span class="r">Free</span>' : '';
     return `<button class="btn" data-action="choose" data-id="${esc(o.id)}"><span class="t"><b>${esc(o.label)}</b>${o.desc ? `<small>${esc(o.desc)}</small>` : ''}</span><span class="col" style="align-items:flex-end;gap:4px">${hint}${cost}</span></button>`;
   };
@@ -272,6 +272,7 @@ export function result(S) {
     <div class="banner result-${r.result}"><div class="eyebrow">${esc(r.opponents.join(' & '))}</div><h1>${r.result === 'win' ? 'Victory' : r.result === 'loss' ? 'Defeat' : 'Draw'}</h1>
       <div class="row spread"><span class="stars" aria-label="${r.rating.stars} stars">${stars(r.rating.stars)} <b class="num">${Number(r.rating.stars).toFixed(2)}</b></span><span class="num">${mmss(r.durationSec)}</span></div>
       <p style="opacity:.85">${esc(r.summary)}</p></div>
+    ${(r.promises || []).length ? `<div class="card" style="border-color:var(--rope)"><h3>Promises settled</h3>${r.promises.map((p) => `<div class="row"><span class="pill ${p.status === 'kept' ? 'good' : 'bad'}">${cap(p.status)}</span><b>${esc(p.text)}</b></div>`).join('')}</div>` : ''}
     ${r.unlocked.length ? `<div class="card" style="border-color:var(--brass-fill)"><h3>Achievements unlocked</h3>${r.unlocked.map((u) => `<div class="item"><span class="dot gold"></span><div class="col" style="gap:2px"><b>${esc(u.name)}</b><span class="muted" style="font-size:.85rem">${esc(u.explanation)}</span></div></div>`).join('')}</div>` : ''}
     <div class="card"><h3>Match stats</h3>
       ${kv('Moves landed', `${st.connected ?? 0} of ${st.moves ?? 0}`)}${kv('Reversals made', st.reversalsMade ?? 0)}${kv('Near falls', st.nearFalls ?? 0)}${kv('Damage taken', st.damageTaken ?? 0)}${kv('Finisher', st.finishersHit ? 'Hit' : 'Not landed')}
@@ -280,7 +281,7 @@ export function result(S) {
     <div class="col"><div class="eyebrow">What now?</div>
     ${opts.map((o) => `<button class="btn" data-action="post" data-id="${o.id}"><span class="t"><b>${esc(o.label)}</b><small>${esc(o.desc)}</small></span></button>`).join('') || '<p class="muted">Nothing left to decide.</p>'}
     ${S.ui.postMsg ? `<p class="line">${esc(S.ui.postMsg)}</p>` : ''}</div>
-    <button class="btn primary" data-action="donePost" id="btn-done">Back to the locker room</button></main>`;
+    <button class="btn primary sticky-cta" data-action="donePost" id="btn-done">Back to the locker room</button></main>`;
 }
 
 // ---------------------------------------------------------------- career
@@ -327,8 +328,12 @@ function recordBook(S) {
   const g = S.g, c = g.career;
   const names = (id) => g.universe.get(id)?.name || (id === c.player.id ? c.player.name : id);
   const book = buildRecordBook(c, names);
+  const empty = (it) => String(it.value) === '0' || it.value === '—' || String(it.value) === '$0';
+  const hidden = S.ui.rbAll ? 0 : book.sections.reduce((n, s) => n + s.items.filter(empty).length, 0);
+  const row = (s, it, i) => `<div class="kv"><span>${esc(it.label)}</span><span class="v">${esc(it.value)} ${it.evidence && it.evidence.length ? `<button class="chip" style="margin:-9px 0;padding:1px 10px" data-action="evidence" data-sec="${s.id}" data-i="${i}">${it.evidence.length} ev.</button>` : ''}</span></div>`;
   return `<main class="screen">${header('Record Book', `${book.player} · as of ${book.asOf}`, back('closeSub'))}
-    ${book.sections.map((s) => `<div class="card"><h3>${esc(s.title)}</h3>${s.items.length ? s.items.map((it, i) => `<div class="kv ${String(it.value) === '0' || it.value === '—' ? 'zero' : ''}"><span>${esc(it.label)}</span><span class="v">${esc(it.value)} ${it.evidence && it.evidence.length ? `<button class="chip" style="margin:-9px 0;padding:1px 10px" data-action="evidence" data-sec="${s.id}" data-i="${i}">${it.evidence.length} ev.</button>` : ''}</span></div>`).join('') : '<div class="empty">Nothing yet.</div>'}</div>`).join('')}</main>`;
+    ${book.sections.map((s) => { const rows = s.items.map((it, i) => (!S.ui.rbAll && empty(it) ? '' : row(s, it, i))).join(''); return rows ? `<div class="card"><h3>${esc(s.title)}</h3>${rows}</div>` : ''; }).join('')}
+    <button class="btn ghost" data-action="rbToggle">${S.ui.rbAll ? 'Hide empty statistics' : hidden ? `Show ${hidden} empty statistic${hidden === 1 ? '' : 's'}` : 'All statistics shown'}</button></main>`;
 }
 
 // ---------------------------------------------------------------- calendar
@@ -457,6 +462,7 @@ function media(S) {
   const tone = o.tones[ui.tone];
   return `<main class="screen">${header('Media', 'Promos, interviews and press', back('closeSub'))}
     ${o.pending ? '<p class="line">The crowd is waiting for you to speak.</p>' : ''}
+    ${(() => { const pv = g.promiseView(); return pv.promises.length || pv.obligations.length ? `<div class="card"><h3>On the record</h3>${pv.promises.slice(0, 6).map((p) => `<div class="row spread"><span style="min-width:0">${esc(p.text)}${p.target ? ` <span class="muted">(${esc(p.target)})</span>` : ''}</span><span class="pill ${p.status === 'kept' ? 'good' : p.status === 'broken' ? 'bad' : 'brass'}">${p.status === 'open' ? (p.daysLeft != null ? `${Math.max(0, p.daysLeft)}d left` : 'Open') : cap(p.status)}</span></div>`).join('')}${pv.obligations.slice(0, 3).map((o) => `<div class="row spread"><span>${esc(o.from)} · ${esc(cap(o.kind))}</span><span class="pill warn">${o.dueIn <= 0 ? 'due' : `in ${o.dueIn}d`}</span></div>`).join('')}</div>` : ''; })()}
     <div class="col"><div class="eyebrow">Interviews &amp; press</div>${g.appearanceOptions().map((k) => `<button class="btn" data-action="apStart" data-id="${k.id}" ${k.available ? '' : 'disabled'}><span class="t"><b>${esc(k.label)}</b><small>${esc(k.reason || k.desc)}</small></span><span class="r">${k.questions} Qs</span></button>`).join('')}</div>
     <div class="eyebrow">Cut a promo</div>
     <div class="col"><div class="eyebrow">Tone</div><div class="chips">${Object.entries(o.tones).map(([id, t]) => `<button class="chip ${ui.tone === id ? 'on' : ''}" data-action="promoSet" data-k="tone" data-v="${id}">${esc(t.label)}</button>`).join('')}</div><p class="muted">${esc(tone.desc)}</p></div>

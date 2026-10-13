@@ -208,8 +208,19 @@ export function bindCast(t, ctx, seedKey) {
 
 // ------------------------------------------------------------------------------------------ text
 /** Capitalise the start of every sentence (slot values and pronoun tokens can land mid-sentence in lower case). */
+const ABBREV = /(?:\ba\.m|\bp\.m|\bMr|\bMrs|\bMs|\bDr|\bSt|\bvs|\bno|\betc|\be\.g|\bi\.e)\.\s+$/i;
 export function tidy(text) {
-  return text.replace(/(^|[.!?]["')\]]?\s+)([a-z])/g, (m, pre, ch) => pre + ch.toUpperCase()).replace(/ {2,}/g, ' ').replace(/\s+([,.;!?])/g, '$1');
+  return text.replace(/(^|[.!?]["')\]]?\s+)([a-z])/g, (m, pre, ch, off) => (ABBREV.test(text.slice(0, off) + pre) ? m : pre + ch.toUpperCase())).replace(/ {2,}/g, ' ').replace(/\s+([,.;!?])/g, '$1');
+}
+const SMALL = new Set(['a', 'an', 'the', 'of', 'in', 'on', 'at', 'for', 'to', 'and', 'but', 'or', 'nor', 'with', 'by', 'from', 'as', 'vs']);
+/** Headline-style capitalisation for rendered titles (slot values arrive in sentence case). */
+export function titleCase(t) {
+  return t.split(' ').map((w, i) => {
+    if (!w) return w;
+    const bare = w.replace(/[^A-Za-z'-]/g, '').toLowerCase();
+    if (i > 0 && SMALL.has(bare)) return w.toLowerCase() === w ? w : w;
+    return w.replace(/(^|-)([a-z])/g, (m, pre, ch) => pre + ch.toUpperCase());
+  }).join(' ');
 }
 export function render(str, bind, slots = {}, extra = {}) {
   return tidy(String(str).replace(/\{([a-zA-Z0-9_]+)(?:\.([a-zA-Z0-9_]+))?\}/g, (m, a, b) => {
@@ -380,7 +391,7 @@ export class ScenarioEngine {
       }
     }
     const inst = {
-      id: instId, templateId: t.id, category: t.category, title: text(t.title), major: !!t.major,
+      id: instId, templateId: t.id, category: t.category, title: titleCase(text(t.title)), major: !!t.major,
       body: t.body.map(text), memory: memLines, combo, cast: Object.fromEntries(Object.entries(bind).filter(([k]) => !k.startsWith('__')).map(([k, v]) => [k, v])),
       obligations: bind.__obligation || {},
       choices: t.choices.map((ch) => ({ id: ch.id, label: text(ch.label), hint: ch.hint ? text(ch.hint) : null, risk: ch.risk || null, enabled: !ch.requires || checkTrigger(ch.requires, ctx, bind), requires: ch.requires ? true : false })),

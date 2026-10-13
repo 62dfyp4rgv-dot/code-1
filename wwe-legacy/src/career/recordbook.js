@@ -44,7 +44,7 @@ export function buildRecordBook(career, nameOf = (x) => x) {
     id: 'titles', title: 'Championships', items: [
       item('Championships won', s.titles.won, evidenceOf('titleWins')),
       item('Championship reigns', s.titles.reigns.length, s.titles.reigns.map((r) => r.startEvent)),
-      item('Total days as champion', days, s.titles.reigns.map((r) => r.startEvent)),
+      item('Total days as champion', days, s.titles.reigns.flatMap((r) => [r.startEvent, r.endEvent]).filter(Boolean)),
       item('Successful title defenses', s.titles.defenses, evidenceOf('titleDefenses')),
       item('Longest reign', s.titles.longestReignDays ? `${s.titles.longestReignDays} days (${s.titles.longestReign.name})` : '—', s.titles.longestReign ? [s.titles.longestReign.startEvent, s.titles.longestReign.endEvent].filter(Boolean) : []),
       item('Currently holding', Object.keys(s.titles.current).length, Object.values(s.titles.current).map((i) => s.titles.reigns[i].startEvent)),
@@ -72,7 +72,7 @@ export function buildRecordBook(career, nameOf = (x) => x) {
   const fin = ledger.ofType('finance_month').map((e) => e.id);
   sections.push({
     id: 'finance', title: 'Finances', items: [
-      item('Career earnings', `$${(s.earnings.matches + s.earnings.salary + s.earnings.merch).toLocaleString()}`, [...evidenceOf('matches'), ...fin]),
+      item('Earnings: matches, salary, merchandise', `$${(s.earnings.matches + s.earnings.salary + s.earnings.merch).toLocaleString()}`, [...evidenceOf('matches'), ...fin]),
       item('Match payouts', `$${s.earnings.matches.toLocaleString()}`, evidenceOf('matches')),
       item('Salary', `$${s.earnings.salary.toLocaleString()}`, fin), item('Merchandise', `$${s.earnings.merch.toLocaleString()}`, fin),
       item('Spent (lifestyle, fees, tax)', `$${s.earnings.spent.toLocaleString()}`, fin),

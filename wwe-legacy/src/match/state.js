@@ -86,6 +86,8 @@ export function createMatchState(cfg) {
       if (!rules.pinfall) for (const id of BASIC_HOLDS) if (!f.moveIds.includes(id)) f.moveIds.push(id);
       f.legal = idx === 0;
       f.pos = idx === 0 ? 'standing' : 'apron';
+      // Elimination Chamber: only the first few start in the ring; the others wait in pods and enter on a timer
+      if (rules.entries && side >= rules.entries.start) { f.legal = false; f.pos = 'pod'; }
       fighters[f.id] = f;
       teams[side].push(f.id);
     });
@@ -96,7 +98,7 @@ export function createMatchState(cfg) {
   if (rules.teamSize && teams.some((t) => t.length !== rules.teamSize)) {
     throw new Error(`${rules.name} requires ${rules.teamSize} per side`);
   }
-  const firstLegal = teams.map((t) => t[0]);
+  const firstLegal = teams.map((t) => t[0]).filter((id) => fighters[id].legal);
   // slight edge to the higher-psychology wrestler for opening initiative (lock-up), decided by seeded roll
   const lead = (id) => fighters[id].attrs.psychology + fighters[id].attrs.grappling;
   const initiative = firstLegal.length === 2
@@ -111,7 +113,7 @@ export function createMatchState(cfg) {
     crowd: { heat: clamp(cfg.context?.crowdBase ?? 30, 0, 100) },
     referee: { state: 'watching', turns: 0 },
     warnings: {}, outsideTicks: {}, events: [], seq: 0, result: null, log: [],
-    falls: Object.fromEntries(teams.map((_, i) => [i, 0])), fallLog: [], focus: {}, objective: rules.objective ? { steps: OBJECTIVE[rules.objective].steps } : null,
+    falls: Object.fromEntries(teams.map((_, i) => [i, 0])), fallLog: [], focus: {}, eliminated: [], nextEntry: rules.entries ? rules.entries.start : null, objective: rules.objective ? { steps: OBJECTIVE[rules.objective].steps } : null,
     lastAction: null, history: [], difficulty: cfg.difficulty ?? 0.5,
   };
   return state;
@@ -123,7 +125,7 @@ export const sideOf = (state, id) => state.fighters[id].side;
 export const opposingTeam = (state, id) => state.teams[other(state.fighters[id].side)];
 export const partnerOf = (state, id) => state.teams[state.fighters[id].side].find((x) => x !== id) || null;
 export const legalOf = (state, side) => state.teams[side].find((id) => state.fighters[id].legal) || null;
-export const liveFoes = (state, id) => state.teams.flatMap((t, i) => (i === state.fighters[id].side ? [] : [t.find((x) => state.fighters[x].legal) || t[0]])).filter(Boolean);
+export const liveFoes = (state, id) => state.teams.flatMap((t, i) => (i === state.fighters[id].side ? [] : [t.find((x) => state.fighters[x].legal)])).filter(Boolean);
 /** The wrestler `id` is currently working against. In multi-way matches this is the "focus" target, chosen by the player or
  *  (by default) the most damaged foe; being attacked turns your attention to the attacker (see beginAttack). */
 export const opponentOf = (state, id) => {

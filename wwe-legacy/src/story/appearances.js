@@ -5,7 +5,7 @@
 import { clamp, hash53 } from '../core/util.js';
 import { gainPop } from '../career/pace.js';
 import { hooks } from './dialogue.js';
-import { getRivalry, openPromises, brokenPromises } from '../memory/world.js';
+import { getRivalry, openPromises, brokenPromises, hasOpenPromise } from '../memory/world.js';
 
 export const APPEARANCE_KINDS = {
   interview: { label: 'Backstage Interview', desc: 'Three quick questions with the camera rolling.', questions: 3, fatigue: 2, pay: 0, cooldown: 5, type: 'interview' },
@@ -52,9 +52,10 @@ export function candidateQuestions(c, extras = {}) {
     const oppName = opp ? nameOf(c, opp) : 'your opponent';
     const days = c.day - m.day;
     const when = days <= 1 ? 'last night' : days <= 7 ? `${days} days ago` : 'recently';
-    if (m.data.result === 'win') qs.push({ id: 'last_match', ctx: 'last_match_win', subject: opp, refs: [m.id], text: `You beat ${oppName} ${when} by ${String(m.data.finish).replace(/_/g, ' ')}. What did you see out there that others missed?` });
-    else if (m.data.result === 'loss') qs.push({ id: 'last_match', ctx: 'last_match_loss', subject: opp, refs: [m.id], text: `${oppName} beat you ${when}. People are asking whether you were outclassed. Were you?` });
-    else qs.push({ id: 'last_match', ctx: 'last_match_loss', subject: opp, refs: [m.id], text: `Your match with ${oppName} ${when} ended without a winner. Who do you think deserved the win?` });
+    const fx = { finish: String(m.data.finish || 'finish').replace(/_/g, ' '), move: m.data.finishMoveName || null };
+    if (m.data.result === 'win') qs.push({ id: 'last_match', fx, ctx: 'last_match_win', subject: opp, refs: [m.id], text: `You beat ${oppName} ${when} by ${String(m.data.finish).replace(/_/g, ' ')}. What did you see out there that others missed?` });
+    else if (m.data.result === 'loss') qs.push({ id: 'last_match', fx, ctx: 'last_match_loss', subject: opp, refs: [m.id], text: `${oppName} beat you ${when}. People are asking whether you were outclassed. Were you?` });
+    else qs.push({ id: 'last_match', fx, ctx: 'last_match_loss', subject: opp, refs: [m.id], text: `Your match with ${oppName} ${when} ended without a winner. Who do you think deserved the win?` });
   }
   const rivals = Object.values(c.memory.world.rivalries).filter((r) => (r.a === me || r.b === me) && r.status === 'active').sort((a, b) => b.heat - a.heat);
   if (rivals[0]) {
@@ -93,7 +94,7 @@ function factAbout(hs, nm) {
     if (!h) continue;
     const text = {
       you_betrayed_me: `${nm} betrayed you, and that is on the record.`, i_betrayed_you: `You turned on ${nm} once, and that is on the record.`,
-      old_insult: h.quote ? `You once said of ${nm}: "${h.quote}".` : `You have insulted ${nm} publicly before.`,
+      old_insult: h.quote ? `You once said of ${nm}: "${String(h.quote).replace(/[.!?]+$/, '')}".` : `You have insulted ${nm} publicly before.`,
       controversial_finish: `Your last meeting ended in controversy.`, clean_dominance: `You have beaten ${nm} cleanly ${h.n} times.`,
       you_beat_me: `${nm} has beaten you ${h.n === 1 ? 'once' : `${h.n} times`}.`, i_beat_you: `You have beaten ${nm} ${h.n === 1 ? 'once' : `${h.n} times`}.`,
       respect: `You have shown ${nm} respect before.`,
@@ -150,7 +151,7 @@ export function appearanceView(c) {
 // ---- prose: one short answer per (topic, stance); every placeholder comes from the question's facts
 const SAY = {
   confident: {
-    last_match: (x) => `I knew what I was going to do before the bell rang. ${x.opp} had no answer for it.`,
+    last_match: (x) => `I had ${x.opp} figured out early. ${x.move ? `The ${x.move}` : `The ${x.finish}`} was always going to be how it ended.`,
     rival: (x) => `${x.opp} can say whatever ${x.they} wants. The result is the only thing that does not change.`,
     open_promise: () => `I said it and I meant it. I am right on schedule.`,
     title: () => `A shot is coming and I will be ready, because I am always ready.`,
@@ -161,7 +162,7 @@ const SAY = {
     injury: () => `It is a setback, not a stop sign. I will be back stronger.`,
   },
   humble: {
-    last_match: (x) => `Honestly? ${x.opp} pushed me harder than I expected. I am just grateful to walk out of it.`,
+    last_match: (x) => `Honestly? ${x.opp} pushed me harder than I expected, and I am just grateful the ${x.finish} went my way.`,
     rival: (x) => `${x.opp} has earned respect from me. Whatever happens next, I will remember that.`,
     open_promise: () => `I made a promise. I am working every day to keep it, and I will not pretend it is easy.`,
     title: () => `I have a lot left to prove. I will earn it, not demand it.`,
@@ -172,7 +173,7 @@ const SAY = {
     injury: () => `It hurts, I will not lie. I am listening to the doctors and being patient.`,
   },
   aggressive: {
-    last_match: (x) => `Others missed it because they were not looking. ${x.opp} looked up and I was already there.`,
+    last_match: (x) => `Anyone who thought ${x.opp} had a chance was not watching. ${x.move ? `The ${x.move}` : 'The finish'} proves it.`,
     rival: (x) => `${x.opp} wants to talk? Fine. Say it to my face next time, because I am done being polite.`,
     open_promise: () => `Watch me. Everyone doubting it will have to eat their words.`,
     title: () => `The champions should be worried. Nobody in that locker room wants this smoke.`,
@@ -183,7 +184,7 @@ const SAY = {
     injury: () => `Does it matter how bad it is? I wrestle through anything.`,
   },
   honest: {
-    last_match: (x) => `It was ugly in places. ${x.opp} found things I need to fix, and I know exactly what they are.`,
+    last_match: (x) => `It was ugly in places. That ${x.finish} came from mistakes I made, and I know exactly what they were.`,
     rival: (x) => `Part of it is on me. ${x.opp} and I got under each other's skin, and some of that was my doing.`,
     open_promise: () => `I do not know if I will make it. I am going to try harder than I have ever tried.`,
     title: () => `I am not ready yet, and I know it. The gap is smaller than it was a few months ago.`,
@@ -194,7 +195,7 @@ const SAY = {
     injury: () => `It is worse than I have said publicly. I am here because I would rather you hear it from me.`,
   },
   joking: {
-    last_match: (x) => `Mostly that ${x.opp} sweats a lot. Beyond that, a masterclass.`,
+    last_match: (x) => `Mostly that ${x.opp} sweats a lot. The ${x.finish} was a bonus.`,
     rival: (x) => `${x.opp} has a lot of opinions for someone who has looked at the lights as often as ${x.they} has.`,
     open_promise: () => `Deadline? I did not realise there would be a deadline. Somebody tell my agent.`,
     title: () => `Soon! Very soon! I have already cleared a shelf.`,
@@ -215,6 +216,14 @@ const REACT = {
   mid: ['It is an answer. It does not move anyone.', 'A polite pause before the next question.', 'Nobody argues, nobody quotes it.'],
   poor: ['The room goes cold.', 'That one will not age well.', 'The host raises an eyebrow and moves on.'],
 };
+const REACT_STANCE = {
+  joking: { great: ['The whole room laughs, and the host has to wipe an eye.', 'That gets a roar - and a clip.'], good: ['A few laughs, and the host lets you keep the bit.', 'The joke lands softly but it lands.'], mid: ['A couple of polite chuckles.', 'The host smiles and moves on quickly.'], poor: ['Nobody laughs. The silence is louder than the joke.', 'The host gives a tight smile.'] },
+  humble: { great: ['The room softens; even the cynics nod.', 'Real warmth, and the host says so.'], good: ['Heads nod around the room.', 'It reads as sincere.'], mid: ['It is gracious and forgettable.', 'The host thanks you and moves on.'], poor: ['It comes across as hedging.', 'Somebody mutters that it sounded rehearsed.'] },
+  aggressive: { great: ['Gasps, then applause. The clip is already circulating.', 'The room leans in; this is the line they will quote.'], good: ['The edge is felt and the host loves it.', 'Reporters scribble that one down.'], mid: ['It has heat but no sting.', 'A shrug from the back row.'], poor: ['It sounds angry instead of dangerous.', 'The host glances at the producer.'] },
+  honest: { great: ['A long quiet, then the room applauds the candour.', 'Nobody expected that. Everybody respects it.'], good: ['The honesty earns a respectful nod.', 'That is the most real thing said all night.'], mid: ['It is honest, and a little flat.', 'The host nods slowly.'], poor: ['It sounds like an excuse.', 'The honesty comes out as complaint.'] },
+  confident: { great: ['The confidence fills the room.', 'You sound like a champion already.'], good: ['It sounds sure of itself, and it works.', 'The room believes you.'], mid: ['It is composed and unremarkable.', 'Nobody argues, nobody quotes it.'], poor: ['The confidence rings hollow.', 'A reporter raises an eyebrow at the bravado.'] },
+  guarantee: { great: ['The room erupts - that is the headline.', 'A guarantee like that dominates the night.'], good: ['They write that down.', 'A bold line, and it lands.'], mid: ['It is a promise, and promises get remembered.', 'The room waits to see if you mean it.'], poor: ['The guarantee sounds desperate.', 'Somebody already wants to hold you to it.'] },
+};
 const tier = (q) => (q >= 78 ? 'great' : q >= 62 ? 'good' : q >= 46 ? 'mid' : 'poor');
 
 export function answerAppearance(c, answerId, extras = {}) {
@@ -232,8 +241,9 @@ export function answerAppearance(c, answerId, extras = {}) {
   const subj = q.subject ? U(c).get(q.subject) : null;
   const they = subj && subj.gender === 'F' ? 'she' : subj && subj.gender === 'M' ? 'he' : 'they';
   const nxt = extras.nextEvent;
-  const text = (SAY[answerId][q.id] || (() => 'No comment.'))({ opp, they, event: nxt ? (nxt.displayName || nxt.name) : 'the next show' });
-  const react = REACT[tier(quality)][parseInt(hash53(`${s.seed}:${q.id}r`), 36) % 3];
+  const text = (SAY[answerId][q.id] || (() => 'No comment.'))({ opp, they, finish: q.fx ? q.fx.finish : 'finish', move: q.fx ? q.fx.move : null, event: nxt ? (nxt.displayName || nxt.name) : 'the next show' });
+  const sr = REACT_STANCE[answerId] ? REACT_STANCE[answerId][tier(quality)] : REACT[tier(quality)];
+  const react = sr[parseInt(hash53(`${s.seed}:${q.id}r`), 36) % sr.length];
   s.given.push({ q: q.id, promiseId: q.promiseId || null, ctx: q.ctx, answer: answerId, quality, text, react, subject: q.subject || null, refs: q.refs, question: q.text });
   s.index += 1;
   if (s.index >= s.questions.length) return finishAppearance(c);
@@ -256,9 +266,10 @@ function finishAppearance(c) {
     }
     if (g.answer === 'guarantee') {
       const kind = g.q === 'title' ? 'win_title' : 'win_streak';
-      promises.push(kind === 'win_title'
+      const claim = kind === 'win_title'
         ? { kind, text: 'I will win a championship', deadlineDay: c.day + 365 }
-        : { kind, params: { n: 3 }, text: 'I will win my next three matches', deadlineDay: c.day + 60 });
+        : { kind, params: { n: 3 }, text: 'I will win my next three matches', deadlineDay: c.day + 60 };
+      if (!hasOpenPromise(c.memory.world, { by: me, kind, target: null, params: claim.params || {} }) && !promises.some((x) => x.kind === kind)) promises.push(claim);
     }
   }
   // owning a broken promise honestly settles it (it stops being thrown back at the player)

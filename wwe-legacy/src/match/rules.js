@@ -42,6 +42,14 @@ export const RULESETS = {
     id: 'fatal_four', name: 'Fatal Four-Way', teamSize: 1, ways: 4, pinfall: true, submission: true, dq: false, countout: false,
     weapons: false, outside: true, ropeBreaks: true, timeLimit: 26, desc: 'Four wrestlers, one fall. Everyone is a target and everyone is a threat to steal the pin.',
   },
+  elimination: {
+    id: 'elimination', name: 'Elimination Match', teamSize: 1, ways: 4, elimination: true, pinfall: true, submission: true, dq: false, countout: false,
+    weapons: false, outside: true, ropeBreaks: true, timeLimit: 40, desc: 'Four wrestlers. Every pinfall or submission eliminates the loser and the match goes on until one is left.',
+  },
+  chamber: {
+    id: 'chamber', name: 'Elimination Chamber', teamSize: 1, ways: 6, elimination: true, entries: { start: 2, every: 140 }, pinfall: true, submission: true, dq: false, countout: false,
+    weapons: true, outside: false, ropeBreaks: false, timeLimit: 70, desc: 'Six wrestlers in a steel chamber. Two start, the rest are released from pods every few minutes, and every fall eliminates one competitor.',
+  },
   hell_cell: {
     id: 'hell_cell', name: 'Hell in a Cell', teamSize: 1, pinfall: true, submission: true, dq: false, countout: false,
     weapons: true, outside: true, ropeBreaks: false, cell: true, timeLimit: 30, desc: 'A towering cell. No DQ, no count-out, brutal bumps. Pinfall or submission only.',

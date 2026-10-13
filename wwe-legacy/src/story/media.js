@@ -4,6 +4,7 @@ import { clamp } from '../core/util.js';
 import { hash53 } from '../core/util.js';
 import { gainPop } from '../career/pace.js';
 import { hooks } from './dialogue.js';
+import { hasOpenPromise } from '../memory/world.js';
 
 export const PROMO_TONES = {
   insult: { label: 'Insult', desc: 'Cut them down in front of everyone.', needsTarget: true, fit: { heel: 8, face: -4, tweener: 2 } },
@@ -26,7 +27,7 @@ export const CLAIMS = {
 };
 
 const OPEN = {
-  insult: ['Let me be honest with all of you about {t}.', '{t} thinks they belong here. Watch me prove they do not.', 'I have been polite long enough, {t}.'],
+  insult: ['Let me be honest with all of you about {t}.', '{t} acts like this ring is {their} property. Watch me prove otherwise.', 'I have been polite long enough, {t}.'],
   humiliate: ['Everybody look at {t}. Take a good look.', '{t}, you are the punchline of this entire locker room.'],
   challenge: ['{t}, I am done waiting. You and me. Any time.', 'This is a challenge, {t}. Accept it or hide.'],
   threat: ['{t}, when we meet you will not walk out the way you walked in.', 'I am coming for you, {t}, and nobody can stop it.'],
@@ -36,8 +37,8 @@ const OPEN = {
   boast: ['Nobody in this building works harder than I do.', 'You came here to see greatness. You are looking at it.'],
   inspire: ['You people are the reason I do this.', 'Every night I step through those curtains for you.'],
 };
-const CLOSE = ['Remember this night.', 'Make of it what you will.', 'That is all I have to say.', 'You know where to find me.'];
-const CLOSE_PROMISE = ['Write it down.', 'Hold me to it.', 'Check the record when I am done.', 'You heard it here first.'];
+const CLOSE = ['Remember this night.', 'Make of it what you will.', 'That is all I have to say.', 'You know where to find me.', 'The bell does the rest of the talking.', 'Now you have heard it from me.', 'Take that back to the locker room.', 'I am not done, but this is all you get tonight.'];
+const CLOSE_PROMISE = ['Write it down.', 'Hold me to it.', 'Check the record when I am done.', 'You heard it here first.', 'Put it on the board and watch me cross it off.', 'Say what you like. The record will say the rest.'];
 // tone-specific body lines so an insult actually insults and a tribute actually honours
 const BODY = {
   insult: ['You are not a threat, {t}. You are a warm-up act.', '{t} talks like a main eventer and wrestles like a favour.', 'I have seen more fight in the ring crew, {t}.'],
@@ -74,46 +75,59 @@ export function deliverPromo(career, { tone, targetId = null, claim = 'none', co
   const lines = [];
   const seed = key + tone;
   const tn = target ? target.name : '';
-  lines.push({ text: pick(OPEN[tone], seed).replace('{t}', tn), refs: [] });
-  if (BODY[tone] && !(hs.length >= 2)) lines.push({ text: pick(BODY[tone], seed + 'b').replace(/\{t\}/g, tn || 'everyone'), refs: [] });
+  const tl = tn ? tn.split(' ').slice(-1)[0] : '';
+  const gen = target && target.gender === 'F' ? { their: 'her', they: 'she', them: 'her' } : target && target.gender === 'M' ? { their: 'his', they: 'he', them: 'him' } : { their: 'their', they: 'they', them: 'them' };
+  const fill = (str, who) => str.replace(/\{t\}/g, who).replace(/\{their\}/g, gen.their).replace(/\{they\}/g, gen.they).replace(/\{them\}/g, gen.them);
+  lines.push({ text: fill(pick(OPEN[tone], seed), tn), role: 'open', refs: [] });
+  // the tone's own body line: an insult has to insult, a tribute has to honour
+  if (BODY[tone]) lines.push({ text: fill(pick(BODY[tone], seed + 'b'), tl || 'everyone'), role: 'body', refs: [] });
   if (target) {
     const order = ['broken_promise', 'old_insult', 'you_betrayed_me', 'i_betrayed_you', 'controversial_finish', 'controversial_finish_old', 'clean_dominance', 'i_beat_you', 'you_beat_me'];
+    const record = new Set(['clean_dominance', 'i_beat_you', 'you_beat_me']); // one head-to-head line is enough
+    const maxHooks = ['insult', 'humiliate', 'threat'].includes(tone) ? 1 : 2;
     const hookUse = (career.flags.hookUse = career.flags.hookUse || {});
-    const used = [];
+    const used = []; let recordUsed = false;
     for (const kind of order) {
       const h = hs.find((x) => x.kind === kind);
-      if (!h || used.length >= 2) continue;
+      if (!h || used.length >= maxHooks) continue;
+      if (record.has(kind) && recordUsed) continue;
       const hk = `promo:${targetId}:${kind}:${(h.refs || []).slice(-1)[0] || ''}`;
       if (hookUse[hk] !== undefined && career.day - hookUse[hk] < 40) continue; // do not repeat the same callback every promo
-      hookUse[hk] = career.day;
       if (['respect', 'tribute', 'apology', 'inspire'].includes(tone) && ['old_insult', 'broken_promise'].includes(kind) && tone !== 'apology') continue;
+      hookUse[hk] = career.day;
+      if (record.has(kind)) recordUsed = true;
       const refs = h.refs.filter(Boolean);
+      const quote = h.quote ? String(h.quote).replace(/[.!?]+$/, '') : null;
       const text = {
         broken_promise: `Some of you remember I once said "${h.text}". I did not deliver. I own that.`,
-        old_insult: h.quote ? `I told everyone what I think of you, ${tn}: "${h.quote}". I stand by it.` : 'I have not forgotten the things said between us.',
-        you_betrayed_me: `You betrayed me, ${tn}. That is a debt, not a memory.`,
-        i_betrayed_you: `I turned on you once, ${tn}. I know what that cost between us.`,
-        controversial_finish: `Last time ended in controversy, ${tn}. This time there will be no doubt.`,
-        controversial_finish_old: `Not every finish between us was clean, ${tn}. This one will be.`,
-        clean_dominance: `I beat you clean ${h.n} times, ${tn}. Clean.`,
-        i_beat_you: `I have beaten you ${h.n === 1 ? 'before' : h.n + ' times'}, ${tn}.`,
-        you_beat_me: `${tn}, you have beaten me ${h.n === 1 ? 'once' : h.n + ' times'}. I remember every one.`,
+        old_insult: quote ? `I said it to everyone before: "${quote}". I stand by it.` : 'I have not forgotten the things said between us.',
+        you_betrayed_me: `You betrayed me, ${tl}. That is a debt, not a memory.`,
+        i_betrayed_you: `I turned on you once, ${tl}. I know what that cost between us.`,
+        controversial_finish: `Last time ended in controversy, ${tl}. This time there will be no doubt.`,
+        controversial_finish_old: `Not every finish between us was clean, ${tl}. This one will be.`,
+        clean_dominance: `${h.n} clean wins over you and not one of them was close, ${tl}.`,
+        i_beat_you: `I have beaten you ${h.n === 1 ? 'before' : h.n + ' times'}, ${tl}.`,
+        you_beat_me: `${tl}, you have beaten me ${h.n === 1 ? 'once' : h.n + ' times'}. I remember every one.`,
       }[kind];
       lines.push({ text, refs, kind }); used.push(kind);
     }
   }
   const claimDef = CLAIMS[claim] ? claim : 'none';
   const promises = [];
-  if (claimDef === 'win_match' && target) { promises.push({ kind: 'win_match', target: targetId, text: `I will beat ${tn}`, deadlineDay: career.day + 150 }); lines.push({ text: pick([`I promise this: I will beat you, ${tn}.`, `${tn}, I am putting it on the record: I beat you next time.`, `Next time we meet, ${tn}, it is my hand that gets raised.`], seed + 'p'), refs: [], promise: true }); }
-  if (claimDef === 'win_streak') { promises.push({ kind: 'win_streak', params: { n: 5 }, text: 'I will win five in a row', deadlineDay: career.day + 120 }); lines.push({ text: 'Five wins in a row. Mark my words.', refs: [], promise: true }); }
-  if (claimDef === 'win_rumble') { const y = year || career.year + (career.day % 365 > 40 ? 1 : 0); promises.push({ kind: 'win_rumble', params: { year: y }, text: `I will win the ${y} Royal Rumble`, deadlineDay: career.day + 420 }); lines.push({ text: `I guarantee I will win the ${y} Royal Rumble.`, refs: [], promise: true }); }
-  if (claimDef === 'win_title') { promises.push({ kind: 'win_title', text: 'I will win a championship', deadlineDay: career.day + 365 }); lines.push({ text: 'I will be champion. Nothing will stop me.', refs: [], promise: true }); }
+  const addPromiseClaim = (c, line) => {
+    if (hasOpenPromise(career.memory.world, { by: p.id, kind: c.kind, target: c.target || null, params: c.params || {} })) { lines.push({ text: `I stand by what I said before: ${c.text.charAt(0).toLowerCase()}${c.text.slice(1)}.`, refs: [] }); return; }
+    promises.push(c); lines.push(line);
+  };
+  if (claimDef === 'win_match' && target) { addPromiseClaim({ kind: 'win_match', target: targetId, text: `I will beat ${tn}`, deadlineDay: career.day + 150 }, { text: pick([`I promise this: I will beat you, ${tl}.`, `${tl}, I am putting it on the record: I will beat you next time.`, `Next time we meet, ${tl}, it is my hand that gets raised.`], seed + 'p'), refs: [], promise: true }); }
+  if (claimDef === 'win_streak') addPromiseClaim({ kind: 'win_streak', params: { n: 5 }, text: 'I will win five in a row', deadlineDay: career.day + 120 }, { text: 'Five wins in a row, starting now. Mark my words.', refs: [], promise: true });
+  if (claimDef === 'win_rumble') { const y = year || career.year + (career.day % 365 > 40 ? 1 : 0); addPromiseClaim({ kind: 'win_rumble', params: { year: y }, text: `I will win the ${y} Royal Rumble`, deadlineDay: career.day + 420 }, { text: `I guarantee I will win the ${y} Royal Rumble.`, refs: [], promise: true }); }
+  if (claimDef === 'win_title') addPromiseClaim({ kind: 'win_title', text: 'I will win a championship', deadlineDay: career.day + 365 }, { text: 'I will be champion. Nothing will stop me.', refs: [], promise: true });
   lines.push({ text: pick(promises.length ? CLOSE_PROMISE : CLOSE, seed + 'c'), refs: [] });
   const out = career.record({
     key, category: 'promo', type: 'promo_delivered', participants: [p.id, ...(targetId ? [targetId] : [])],
     refs: [...new Set(lines.flatMap((l) => l.refs))].filter((id) => career.memory.ledger.get(id)),
     summary: `${p.name} cut a ${tone} promo${target ? ` on ${target.name}` : ''} (${quality}/100)${claimDef !== 'none' ? ` and made a promise` : ''}.`, importance: viral || quality >= 85 ? 4 : 3,
-    data: { tone, targets: targetId ? [targetId] : [], quality, viral, context, line: lines[0].text, promises, claim: claimDef, exposedWeakness: memBonus >= 8 && ['insult', 'humiliate'].includes(tone) },
+    data: { tone, targets: targetId ? [targetId] : [], quality, viral, context, line: (lines.find((l) => l.role === 'body') || lines[0]).text, promises, claim: claimDef, exposedWeakness: memBonus >= 8 && ['insult', 'humiliate'].includes(tone) },
   });
   // popularity effect
   gainPop(p, (quality - 50) / 120 + (viral ? 1.5 : 0));

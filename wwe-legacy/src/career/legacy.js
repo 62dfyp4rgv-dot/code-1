@@ -15,6 +15,9 @@ export const HOF_THRESHOLD = 95;
 /** Components of the legacy score. Each: { id, label, count, points, cap, evidence, sample } */
 export function legacyScore(c) {
   const s = c.stats.s;
+  // 'now' is the last thing recorded in the ledger, never the wall clock or c.day: the same ledger always scores the same
+  const evs = c.memory.ledger.events;
+  const asOf = evs.length ? evs[evs.length - 1].day : 0;
   const parts = [];
   const add = (id, label, count, per, cap, evs, note = '') => {
     const points = Math.min(cap, Math.round(count * per * 10) / 10);
@@ -25,8 +28,9 @@ export function legacyScore(c) {
   add('world_titles', 'World championship reigns', world.length, 12, 60, world);
   add('secondary_titles', 'Secondary championship reigns', sec.length, 5, 20, sec);
   add('other_titles', 'Other championship reigns', other.length, 2, 10, other);
-  const days = c.stats.totalDaysChampion(c.day);
-  add('title_days', 'Days as champion', days, 0.06, 30, tw, 'Counted from championship reigns');
+  const days = c.stats.totalDaysChampion(asOf);
+  const losses = q(c, { types: ['title_loss'] });
+  add('title_days', 'Days as champion', days, 0.06, 30, [...tw, ...losses].sort((a, b) => a.seq - b.seq), 'Counted from championship reigns (wins and losses mark each reign)');
   const wins = q(c, { types: ['match_result'], where: { 'data.result': 'win' } });
   add('wins', 'Victories', wins.length, 0.18, 36, wins);
   add('main_events', 'Main events', s.mainEvents, 0.8, 20, q(c, { types: ['match_result'], where: { 'data.mainEvent': true } }));
@@ -38,7 +42,7 @@ export function legacyScore(c) {
   const ach = q(c, { types: ['achievement_unlocked'] });
   const w = (e) => ({ common: 0, uncommon: 0.3, rare: 1, epic: 2.5, legendary: 5 }[e.data.rarity] || 0);
   add('achievements', 'Achievements (rarity-weighted)', Math.round(ach.reduce((t, e) => t + w(e), 0) * 10) / 10, 1, 25, ach.filter((e) => w(e) > 0));
-  const years = Math.max(0, (c.day - (s.days.first ?? 0)) / 365.25);
+  const years = Math.max(0, (asOf - (s.days.first ?? 0)) / 365.25);
   add('longevity', 'Years in the business', Math.round(years * 10) / 10, 1, 15, q(c, { types: ['debut'] }));
   const kept = c.memory.ledger.ofType('promise_kept');
   add('promises', 'Promises kept on the record', kept.length, 0.8, 8, kept);
@@ -51,13 +55,14 @@ export function legacyScore(c) {
 export function retirePlayer(c, reason = 'choice') {
   if (c.flags.retired && typeof c.flags.retired === 'object') throw new Error('already retired');
   const sc = legacyScore(c);
-  const yearsActive = Math.round(((c.day - (c.stats.s.days.first ?? 0)) / 365.25) * 10) / 10;
+  const evsAll = c.memory.ledger.events;
+  const yearsActive = Math.round((((evsAll.length ? evsAll[evsAll.length - 1].day : 0) - (c.stats.s.days.first ?? 0)) / 365.25) * 10) / 10;
   const legendary = sc.tier.id === 'legend' || sc.tier.id === 'hall_of_famer';
-  // a story scene may already have announced the retirement: reuse that event instead of writing a second one
+  // a story scene may already have announced the retirement; the final verdict is still its own, fully-described event
   const prior = c.memory.ledger.ofType('retirement').slice(-1)[0];
-  const ret = prior ? { event: prior, unlocked: [] } : c.record({
+  const ret = c.record({
     key: 'retirement:final', category: 'career', type: 'retirement', importance: 5, summary: `${c.player.name} retired after ${yearsActive} years (${sc.tier.label}).`,
-    refs: sc.parts.flatMap((p) => p.evidence).slice(0, 5), data: { reason, years: yearsActive, legacy: sc.total, tier: sc.tier.id, legendary, final: true },
+    refs: [...(prior ? [prior.id] : []), ...sc.parts.flatMap((p) => p.evidence).slice(0, 5)], data: { reason, years: yearsActive, legacy: sc.total, tier: sc.tier.id, legendary, final: true },
   });
   let hof = null;
   if (sc.inducted) {

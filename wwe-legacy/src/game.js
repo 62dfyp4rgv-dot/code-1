@@ -62,7 +62,7 @@ export const ENTRANCES = {
   menace: { label: 'Menacing', desc: 'Make them hate you (heels).', heat: 9, momentum: 4, heel: true },
 };
 
-export const STIPULATION_HEAT = { singles: 0, tag: 0, triple_threat: 15, fatal_four: 30, no_dq: 40, submission: 30, iron_man: 55, last_man: 60, ladder: 65, cage: 65, hell_cell: 85 };
+export const STIPULATION_HEAT = { singles: 0, tag: 0, triple_threat: 15, fatal_four: 30, elimination: 45, chamber: 70, no_dq: 40, submission: 30, iron_man: 55, last_man: 60, ladder: 65, cage: 65, hell_cell: 85 };
 
 const POST_WIN = ['celebrate', 'show_respect', 'cut_promo', 'attack_rival', 'call_out', 'talk_management', 'seek_treatment', 'help_up'];
 const POST_LOSS = ['show_respect', 'vow_revenge', 'request_rematch', 'argue_result', 'talk_management', 'seek_treatment', 'walk_away'];
@@ -583,6 +583,7 @@ export class Game {
       result: out.result, finish: st.result.finish, rating: out.rating, durationSec: st.result.durationSec, event: out.event, unlocked: [...out.unlocked, ...out.events.flatMap(() => [])],
       summary: out.event.summary, opponents: booking.opponents.map((o) => o.name), matchId: booking.matchId, finishMove: out.event.data.finishMoveName,
       stats: out.event.data.stats, injuries: st.fighters[c.player.id].injuriesNew,
+      promises: (out.extra || []).filter((e) => e && ['promise_kept', 'promise_broken'].includes(e.type)).map((e) => ({ id: e.id, text: e.data.text, status: e.data.status })),
     };
     result.titleOutcome = this._titleOutcome(booking, out);
     checkRecords(c);
@@ -731,6 +732,16 @@ export class Game {
     const r = deliverPromo(this.c, o);
     this.c.flags.promoPending = null;
     return r;
+  }
+
+  /** every public promise and pending obligation, with how they stand now */
+  promiseView() {
+    const c = this.c, me = c.player.id, w = c.memory.world;
+    const nm = (id) => this.universe.get(id)?.name || id;
+    return {
+      promises: w.promises.filter((p) => p.by === me).map((p) => ({ id: p.id, text: p.text, status: p.status, target: p.target ? nm(p.target) : null, daysLeft: p.deadlineDay != null ? p.deadlineDay - c.day : null, made: p.madeEvent, resolved: p.resolvedEvent || null, acknowledged: !!p.acknowledged })).sort((a, b) => (a.status === 'open' ? -1 : 1) - (b.status === 'open' ? -1 : 1)),
+      obligations: w.obligations.filter((o) => o.status === 'pending').map((o) => ({ kind: o.kind, from: nm(o.from), dueIn: o.dueDay - c.day, source: o.source })),
+    };
   }
 
   // ---- money

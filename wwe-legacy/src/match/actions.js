@@ -101,8 +101,8 @@ function describeMove(state, A, D, move, enabled, reason) {
   };
   if (enabled && D) {
     const { p } = computeConnect(state, A.id, move, D.id, null);
-    o.p = p; o.hint = hintLabel(p);
-    o.desc = `${move.tgt === 'full' ? '' : `Targets ${move.tgt}. `}Stamina ${move.cost}.${move.risk ? ' Risky if it misses.' : ''}${move.illegal ? ' Illegal.' : ''}`;
+    o.p = p; o.hint = hintLabel(p); o.pct = Math.round(p * 100);
+    o.desc = `${move.tgt === 'full' ? 'Full body.' : `Targets the ${move.tgt}.`}${move.risk ? ' Risky if it misses.' : ''}${move.illegal ? ' Illegal.' : ''}`;
     if (move.cat === 'finisher') o.desc = 'Your finishing move. Momentum is spent on the attempt.';
   }
   return o;

@@ -46,7 +46,7 @@ export class MatchEngine {
     if (s.hold) { s.pending = { kind: 'hold_h', actor: s.hold.holder }; return; }
     if (s.pin) { s.pending = { kind: 'pin', actor: s.pin.pinned }; return; }
     let init = s.initiative;
-    if (!F(s, init).legal) init = legalOf(s, F(s, init).side);
+    if (!F(s, init).legal) init = legalOf(s, F(s, init).side) || Object.values(s.fighters).find((f) => f.legal).id;
     s.initiative = init;
     s.pending = { kind: 'action', actor: init };
   }

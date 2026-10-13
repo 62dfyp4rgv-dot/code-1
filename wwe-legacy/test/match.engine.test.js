@@ -433,12 +433,13 @@ test('every match type terminates with a coherent result across builds and strat
       if (a === b) continue;
       const overrides = { [W[a].id]: profs[i % profs.length], [W[b].id]: profs[(i + 2) % profs.length] };
       const extra = (k) => ({ ...W[builds[(i + k * 2 + 1) % builds.length]], id: `extra${k}`, name: `Extra ${k}` });
-      const sides = type === 'tag' ? [[W[a], W.partnerA], [W[b], W.partnerB]] : waysOf(getRuleset(type)) > 2 ? [[W[a]], [W[b]], [extra(1)], ...(waysOf(getRuleset(type)) > 3 ? [[extra(2)]] : [])] : [[W[a]], [W[b]]];
+      const sides = type === 'tag' ? [[W[a], W.partnerA], [W[b], W.partnerB]] : waysOf(getRuleset(type)) > 2 ? [[W[a]], [W[b]], ...Array.from({ length: waysOf(getRuleset(type)) - 2 }, (_, k) => [extra(k + 1)])] : [[W[a]], [W[b]]];
       const m = MatchEngine.simulate({ seed: 1000 + i, type, sides, playerId: W[a].id }, overrides);
       const r = m.result;
       assert.ok(r, `${type} produced no result`);
       assert.ok(r.rounds <= 700);
       assert.ok(['pinfall', 'submission', 'dq', 'countout', 'ten_count', 'falls', 'objective', 'time_limit_draw', 'double_countout', 'stalemate'].includes(r.finish), r.finish);
+      if (getRuleset(type).elimination && r.winnerSide !== null) assert.equal(r.eliminated.length, waysOf(getRuleset(type)) - 1);
       assert.equal(m.state.events.filter((x) => x.type === 'match_end').length, 1);
       assert.equal(m.getDecision(), null);
       assert.throws(() => m.choose('t:taunt'), /over/);
@@ -569,4 +570,28 @@ test('multi-way: a human can choose who to go after, and a saved match resumes i
   assert.equal(JSON.stringify(copy.toJSON()), mid);
   const sa = MatchEngine.simulate({ seed: 5, type: 'fatal_four', sides: multiSides(4), playerId: 'mw0' }, {}), sb = MatchEngine.simulate({ seed: 5, type: 'fatal_four', sides: multiSides(4), playerId: 'mw0' }, {});
   assert.equal(JSON.stringify(sa.state), JSON.stringify(sb.state), 'same seed, same match');
+});
+
+test('elimination matches: every fall removes one competitor until one remains; chamber entrants arrive on a timer', () => {
+  for (const [type, n] of [['elimination', 4], ['chamber', 6]]) {
+    for (let i = 0; i < 25; i++) {
+      const m = MatchEngine.simulate({ seed: 8100 + i, type, sides: multiSides(n), playerId: 'mw0' }, {});
+      const r = m.result;
+      assert.ok(r);
+      if (r.winnerSide === null) { assert.equal(r.finish, 'time_limit_draw'); continue; }
+      const elim = m.state.events.filter((e) => e.type === 'eliminated');
+      assert.equal(elim.length, n - 1, 'everyone but the winner is eliminated');
+      assert.equal(new Set(elim.map((e) => e.target)).size, n - 1, 'nobody is eliminated twice');
+      assert.ok(!elim.some((e) => e.target === r.winnerId));
+      assert.equal(r.winners.length, 1); assert.equal(r.losers.length, n - 1);
+      assert.deepEqual(elim.map((e) => e.remaining), Array.from({ length: n - 1 }, (_, k) => n - 1 - k));
+      if (type === 'chamber') {
+        const entries = m.state.events.filter((e) => e.type === 'entry');
+        assert.ok(entries.length <= n - 2);
+        for (let k = 1; k < entries.length; k++) assert.ok(entries[k].t >= entries[k - 1].t, 'entries are in order');
+        // nobody acts before entering: pod fighters are not legal until their entry event
+        for (const e of m.state.events) { if (e.actor && e.type === 'move_connected') { const entered = entries.find((x) => x.actor === e.actor); const started = ['mw0', 'mw1'].includes(e.actor); assert.ok(started || (entered && entered.seq < e.seq), `${e.actor} acted from the pod`); } }
+      }
+    }
+  }
 });

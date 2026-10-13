@@ -70,7 +70,37 @@ function scoreFall(state, side, finish, extra = {}) {
 }
 
 /** End the match or (iron man) score a fall. */
+/** Elimination Chamber: release the next competitor from a pod */
+function enterNext(state) {
+  const id = state.teams[state.nextEntry][0];
+  const f = F(state, id);
+  f.legal = true; f.pos = 'standing'; addMom(f, 12); addStamina(f, 10); addHeat(state, 14);
+  state.lastActive = state.lastActive || {}; state.lastActive[id] = state.round;
+  emit(state, 'entry', { actor: id, number: state.nextEntry + 1 });
+  state.nextEntry += 1;
+}
+
+/** Elimination matches: a pinfall or submission removes the loser; the match ends when one competitor is left. */
+function eliminate(state, loserId, winnerSide, finish, extra) {
+  const L = F(state, loserId);
+  L.legal = false; L.pos = 'eliminated'; L.out = true;
+  state.eliminated.push(loserId);
+  state.pin = null; state.hold = null;
+  for (const k of Object.keys(state.focus)) if (k === loserId || state.focus[k] === loserId) delete state.focus[k];
+  const winner = F(state, extra.winnerId);
+  emit(state, 'eliminated', { actor: extra.winnerId, target: loserId, finish, remaining: state.teams.filter((t) => t.some((id) => !F(state, id).out)).length });
+  const alive = state.teams.map((t, i) => ({ i, left: t.filter((id) => !F(state, id).out) })).filter((x) => x.left.length);
+  if (alive.length <= 1) { finishMatch(state, alive[0] ? alive[0].i : winnerSide, finish, { ...extra, eliminated: [...state.eliminated] }); return; }
+  addMom(winner, 10); addHeat(state, 10); addStamina(winner, -4);
+  // the chamber never leaves a lone wrestler in the ring: the next pod opens at once
+  if (state.rules.entries && state.nextEntry != null && state.nextEntry < state.teams.length && Object.values(state.fighters).filter((x) => x.legal).length < 2) enterNext(state);
+  state.initiative = extra.winnerId;
+  state.chain = null;
+  if (L.id === state.playerId) emit(state, 'player_out', { actor: L.id });
+}
+
 function decide(state, winnerSide, finish, extra = {}) {
+  if (state.rules.elimination && ['pinfall', 'submission'].includes(finish) && extra.loserId) { eliminate(state, extra.loserId, winnerSide, finish, extra); return; }
   if (state.rules.ironMan && finish !== 'time_limit') { scoreFall(state, winnerSide, finish, extra); return; }
   finishMatch(state, winnerSide, finish, extra);
 }
@@ -124,6 +154,11 @@ export function finalizeRound(state, R, spent) {
     if (!f.legal) continue;
     const o = F(state, opponentOf(state, f.id));
     if (o) state.peakDeficit[f.id] = Math.max(state.peakDeficit[f.id] || 0, damageFraction(f) - damageFraction(o));
+  }
+  // Elimination Chamber: pods open on a timer
+  if (state.rules.entries && !state.result && state.nextEntry != null && state.nextEntry < state.teams.length) {
+    const due = state.rules.entries.start * 0 + state.rules.entries.every * (state.nextEntry - state.rules.entries.start + 1);
+    if (state.time >= due) enterNext(state);
   }
   // count-out
   if (state.rules.countout && !state.result) {
@@ -676,7 +711,7 @@ export function resolvePinChoice(state, choiceId) {
     emit(state, 'pin_count', { actor: A.id, target: D.id, count: 3 });
     const fm = state.lastImpact && state.lastImpact.target === D.id && state.lastImpact.moveId ? state.lastImpact.moveId : null;
     emit(state, 'pin_win', { actor: A.id, target: D.id, lastCat: pin.lastCat, finishMove: fm, surprise: pin.surprise });
-    decide(state, A.side, 'pinfall', { finishMove: fm, finishCat: pin.lastCat, winnerId: A.id });
+    decide(state, A.side, 'pinfall', { finishMove: fm, finishCat: pin.lastCat, winnerId: A.id, loserId: D.id });
   }
   finalizeRound(state, R, spent);
   return state.events;
@@ -748,7 +783,7 @@ export function resolveHoldVictim(state, choiceId) {
   const finish = (init) => { state.hold = null; state.initiative = init; finalizeRound(state, R, 14); return state.events; };
   if (key === 'tap') {
     emit(state, 'submission_win', { actor: H.id, target: V.id, tap: true, moveName: hold.moveName, voluntary: true });
-    decide(state, H.side, 'submission', { finishMove: hold.moveId, winnerId: H.id, finishCat: hold.finisher ? 'finisher' : 'submission' });
+    decide(state, H.side, 'submission', { finishMove: hold.moveId, winnerId: H.id, loserId: V.id, finishCat: hold.finisher ? 'finisher' : 'submission' });
     if (!state.result) { finalizeRound(state, R, 8); }
     else finalizeRound(state, R, 8);
     return state.events;
@@ -802,7 +837,7 @@ export function resolveHoldVictim(state, choiceId) {
   if (R.next() < submitChance(state, hold)) {
     emit(state, 'submission_win', { actor: H.id, target: V.id, tap: true, moveName: hold.moveName });
     state.hold = null;
-    decide(state, H.side, 'submission', { finishMove: hold.moveId, winnerId: H.id, finishCat: hold.finisher ? 'finisher' : 'submission' });
+    decide(state, H.side, 'submission', { finishMove: hold.moveId, winnerId: H.id, loserId: V.id, finishCat: hold.finisher ? 'finisher' : 'submission' });
     finalizeRound(state, R, 14);
     return state.events;
   }

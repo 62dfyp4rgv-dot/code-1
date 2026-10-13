@@ -37,9 +37,9 @@ async function refreshSlots() { try { S.slots = await saves.list(); } catch { S.
 
 function toast(text, kind = '') {
   if (S.screen === 'match' && kind === 'ach') return; // unlocks are listed on the result screen; a toast would cover the scoreboard
-  S.toast = { text, kind };
+  S.toast = { text, kind, key: null }; // key = the screen it first appears on; it is dropped as soon as the player navigates elsewhere
   clearTimeout(toast.t);
-  toast.t = setTimeout(() => { S.toast = null; render(); }, kind === 'ach' ? 3600 : 2600);
+  toast.t = setTimeout(() => { S.toast = null; render(); }, kind === 'ach' ? 2600 : 2200);
 }
 
 async function autosave() {
@@ -63,6 +63,8 @@ function render() {
   const scrollY = window.scrollY;
   const feedEl = document.getElementById('feed');
   const feedStick = !feedEl || feedEl.scrollTop + feedEl.clientHeight >= feedEl.scrollHeight - 30;
+  const navKey = `${S.screen}|${S.tab}|${S.sub}`;
+  if (S.toast) { if (S.toast.key == null) S.toast.key = navKey; else if (S.toast.key !== navKey) S.toast = null; }
   let html = '';
   const g = S.g;
   if (S.screen === 'title') html = V.title(S);
@@ -246,6 +248,7 @@ const A = {
     } catch (e) { err(e); }
   },
   lifestyle: ({ id }) => { try { S.g.setLifestyle(id); render(); } catch (e) { err(e); } },
+  rbToggle: () => { S.ui.rbAll = !S.ui.rbAll; render(); },
   openLegacy: () => { S.tab = 'career'; S.sub = 'legacy'; render(); },
   retireAsk: () => { S.ui.confirmRetire = true; render(); },
   retireCancel: () => { S.ui.confirmRetire = false; render(); },

@@ -8,20 +8,31 @@ import { hash53 } from '../core/util.js';
 export function hooks(memory, me, other) {
   const { ledger, world } = memory;
   const out = [];
-  const h2h = ledger.query({ types: ['match_result'], allParticipants: [me, other] });
+  // head-to-head means they were an OPPONENT: a tag partner's wins and losses are not ours against them
+  const h2h = ledger.query({ types: ['match_result'], allParticipants: [me, other] }).filter((e) => (e.data.opponents || []).includes(other));
   if (h2h.length) {
     const wins = h2h.filter((e) => e.data.winner === me), losses = h2h.filter((e) => e.data.winner === other);
-    if (wins.length) out.push({ kind: 'i_beat_you', n: wins.length, last: wins[wins.length - 1], refs: wins.map((e) => e.id).slice(-12) });
-    if (losses.length) out.push({ kind: 'you_beat_me', n: losses.length, last: losses[losses.length - 1], refs: losses.map((e) => e.id).slice(-12) });
+    if (wins.length) out.push({ kind: 'i_beat_you', n: wins.length, last: wins[wins.length - 1], refs: wins.map((e) => e.id).slice(-40) });
+    if (losses.length) out.push({ kind: 'you_beat_me', n: losses.length, last: losses[losses.length - 1], refs: losses.map((e) => e.id).slice(-40) });
     const clean = wins.filter((e) => e.data.clean);
-    if (clean.length >= 2) out.push({ kind: 'clean_dominance', n: clean.length, refs: clean.map((e) => e.id).slice(-12) });
+    if (clean.length >= 2) out.push({ kind: 'clean_dominance', n: clean.length, refs: clean.map((e) => e.id).slice(-40) });
+    const cleanLost = losses.filter((e) => e.data.clean);
+    if (cleanLost.length >= 2) out.push({ kind: 'clean_losses', n: cleanLost.length, refs: cleanLost.map((e) => e.id).slice(-40) });
     const dirty = h2h.filter((e) => ['dq', 'countout'].includes(e.data.finish) || e.data.interference);
     // "last time" is only true if the MOST RECENT meeting was the controversial one
     const lastMeeting = h2h[h2h.length - 1];
     if (dirty.length) out.push({ kind: dirty.includes(lastMeeting) ? 'controversial_finish' : 'controversial_finish_old', n: dirty.length, refs: dirty.map((e) => e.id).slice(-4) });
   }
   const rel = getRel(world, me, other);
-  for (const b of rel.betrayals) out.push({ kind: b.by === me ? 'i_betrayed_you' : 'you_betrayed_me', refs: [b.event] });
+  // a betrayal that was followed by a reconciliation is history, not a live grudge
+  const recs = ledger.query({ types: ['reconciliation'], allParticipants: [me, other] });
+  const lastRec = recs[recs.length - 1];
+  for (const b of rel.betrayals) {
+    const ev = ledger.get(b.event);
+    if (lastRec && ev && lastRec.seq > ev.seq) continue;
+    out.push({ kind: b.by === me ? 'i_betrayed_you' : 'you_betrayed_me', refs: [b.event] });
+  }
+  if (lastRec) out.push({ kind: 'reconciled', refs: [lastRec.id] });
   const insult = ledger.query({ types: ['promo_delivered'], allParticipants: [me, other] }).filter((e) => ['insult', 'humiliate'].includes(e.data.tone));
   if (insult.length) out.push({ kind: 'old_insult', n: insult.length, refs: insult.map((e) => e.id).slice(-2), quote: insult[insult.length - 1].data.line || null });
   // only a promise made ABOUT this person is theirs to throw back (and one already owned up to on air is settled)
@@ -30,7 +41,7 @@ export function hooks(memory, me, other) {
   const respect = ledger.query({ types: ['respect_shown'], allParticipants: [me, other] });
   if (respect.length) out.push({ kind: 'respect', n: respect.length, refs: respect.map((e) => e.id).slice(-2) });
   const rv = getRivalry(world, me, other);
-  if (rv && rv.matches >= 2) out.push({ kind: 'long_rivalry', n: rv.matches, refs: rv.events.slice(-6) });
+  if (h2h.length >= 2) out.push({ kind: 'long_rivalry', n: h2h.length, refs: h2h.map((e) => e.id).slice(-40) });
   const open = openPromises(world, me);
   if (open.length) out.push({ kind: 'open_promise', refs: [open[open.length - 1].madeEvent], text: open[open.length - 1].text });
   return out;
@@ -51,6 +62,14 @@ const LINES = {
     (h, n) => `${who(n) === 'you' ? 'You' : n} got the better of me ${times(h.n)}. That ends now.`,
     (h, n) => `I haven't forgotten ${h.n === 1 ? 'the loss' : `losing ${times(h.n)}`} to ${who(n)}. I've been waiting for this.`,
     (h, n) => `${h.n === 1 ? 'One loss' : `${h.n} losses`} to ${who(n)}. Tonight I fix that.`,
+  ],
+  clean_losses: [
+    (h, n) => `${h.n} clean losses to ${who(n)}, and I remember every one.`,
+    (h, n) => `${who(n) === 'you' ? 'You' : n} beat me clean ${times(h.n)}. No excuses.`,
+  ],
+  reconciled: [
+    (h, n) => `We settled things${voc(n)}. I have not forgotten, but I am not holding it against you.`,
+    (h, n) => `That chapter between us is closed${voc(n)}. Do not make me reopen it.`,
   ],
   clean_dominance: [
     (h, n) => `${h.n} clean victories over ${who(n)}. Not one fluke among them.`,
@@ -74,7 +93,7 @@ const LINES = {
   ],
   old_insult: [
     (h, n) => (h.quote ? `"${h.quote}" - that's what was said in front of everyone, and I remember it.` : `The insults in front of everyone${voc(n)} - I remember every one.`),
-    (h, n) => `Words said in public stay said${voc(n)}. I've kept mine.`,
+    (h, n) => `Words said in public stay said${voc(n)}. I heard every one.`,
   ],
   broken_promise: [
     (h) => `Remember when "${h.text}" was promised? We all saw how that ended.`,
@@ -98,14 +117,15 @@ const variant = (list, h) => list[parseInt(hash53(`${h.kind}:${(h.refs || []).jo
 /** speaker: 'player' | 'other'. `cooldown` ({ store, day, days }) stops the same callback being repeated every scene. */
 export function memoryLines(memory, me, other, otherName, { speaker = 'other', max = 3, allow, cooldown } = {}) {
   const hs = hooks(memory, me, other).filter((h) => !allow || allow.includes(h.kind));
-  const priority = ['you_betrayed_me', 'i_betrayed_you', 'broken_promise', 'old_insult', 'controversial_finish', 'clean_dominance', 'you_beat_me', 'i_beat_you', 'controversial_finish_old', 'long_rivalry', 'respect', 'open_promise'];
+  const priority = ['you_betrayed_me', 'i_betrayed_you', 'broken_promise', 'old_insult', 'controversial_finish', 'clean_dominance', 'clean_losses', 'you_beat_me', 'i_beat_you', 'controversial_finish_old', 'long_rivalry', 'reconciled', 'respect', 'open_promise'];
   hs.sort((a, b) => priority.indexOf(a.kind) - priority.indexOf(b.kind));
   const lines = [];
   for (const h of hs) {
     // perspective: when the *other* speaks, "I beat you" / "you beat me" swap
     let hh = h;
     if (speaker === 'other') {
-      const swap = { i_beat_you: 'you_beat_me', you_beat_me: 'i_beat_you', i_betrayed_you: 'you_betrayed_me', you_betrayed_me: 'i_betrayed_you' };
+      const swap = { i_beat_you: 'you_beat_me', you_beat_me: 'i_beat_you', i_betrayed_you: 'you_betrayed_me', you_betrayed_me: 'i_betrayed_you', clean_dominance: 'clean_losses', clean_losses: 'clean_dominance' };
+      if (h.kind === 'open_promise') continue; // someone else's promise is not theirs to quote at you
       if (swap[h.kind]) hh = { ...h, kind: swap[h.kind] };
     }
     const list = LINES[hh.kind];

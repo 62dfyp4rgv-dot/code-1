@@ -109,6 +109,10 @@ export function addPromise(world, p) {
   if (world.promises.some(same)) return;
   world.promises.push({ status: 'open', ...p });
 }
+/** is an equivalent public promise already open? (the same claim made twice is one promise) */
+export function hasOpenPromise(world, p) {
+  return world.promises.some((x) => x.status === 'open' && x.by === p.by && x.kind === p.kind && (x.target || null) === (p.target || null) && JSON.stringify(x.params || {}) === JSON.stringify(p.params || {}));
+}
 export function openPromises(world, who) { return world.promises.filter((p) => p.status === 'open' && (!who || p.by === who)); }
 export function brokenPromises(world, who) { return world.promises.filter((p) => p.status === 'broken' && (!who || p.by === who)); }
 

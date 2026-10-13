@@ -194,3 +194,14 @@ label.f { display: flex; flex-direction: column; gap: 6px; font-weight: 600; fon
 
 .others { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .others .pill { font-size: .72rem; }
+
+/* toast: compact, one line, above the tab bar, never intercepts taps */
+.toast { top: auto; bottom: calc(var(--tab-h) + 10px + env(safe-area-inset-bottom, 0px)); font-size: .82rem; padding: 6px 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: calc(100% - 32px); }
+.kv .v { display: inline-flex; align-items: center; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+.feed { max-height: none; min-height: 0; overflow: visible; }
+.sticky-cta { position: sticky; bottom: 8px; z-index: 4; }
+
+.chips { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 26px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 26px), transparent); }
+.chips.wrap { -webkit-mask-image: none; mask-image: none; }
+.opts .btn { padding: 9px 12px; min-height: 50px; }
+.opts .btn .t small { font-size: .78rem; }

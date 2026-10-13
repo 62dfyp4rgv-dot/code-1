@@ -30,9 +30,11 @@ const PROMISE_JUDGES = {
     return null;
   },
   win_streak(p, ev) {
+    // counted from the moment the promise was made: earlier wins do not count, and the first loss ends it
     if (ev.type !== 'match_result') return null;
-    if (ev.data.winStreak >= (p.params?.n || 5)) return 'kept';
-    if (ev.data.result === 'loss' && ev.data.winStreakBefore < (p.params?.n || 5)) return 'broken';
+    const n = p.params?.n || 5;
+    if (ev.data.result === 'win') { p.streak = (p.streak || 0) + 1; return p.streak >= n ? 'kept' : null; }
+    if (ev.data.result === 'loss') return 'broken';
     return null;
   },
 };
@@ -162,7 +164,7 @@ const RULES = {
     }
   },
   reconciliation(world, ev) { const [a, b] = ev.participants; reconcile(world, a, b, ev.id); adjustRel(world, a, b, { respect: 5 }, ev.id, ev.day); adjustRel(world, b, a, { respect: 5 }, ev.id, ev.day); },
-  mentorship(world, ev) { const [m, s] = ev.participants; addTag(world, m, s, 'mentor', ev.id); adjustRel(world, s, m, { respect: 10, trust: 10 }, ev.id, ev.day); adjustRel(world, m, s, { trust: 6, affinity: 5 }, ev.id, ev.day); },
+  mentorship(world, ev) { const [first, second] = ev.participants; const [m, s] = ev.data.byPlayer === false ? [second, first] : [first, second]; addTag(world, m, s, 'mentor', ev.id); adjustRel(world, s, m, { respect: 10, trust: 10 }, ev.id, ev.day); adjustRel(world, m, s, { trust: 6, affinity: 5 }, ev.id, ev.day); },
   faction_formed(world, ev) {
     const d = ev.data;
     world.factions[d.factionId] = { id: d.factionId, name: d.name, leader: d.leader, members: [...ev.participants], formedDay: ev.day, trust: 30, event: ev.id };
@@ -218,7 +220,8 @@ export function applyRules(world, ev, ctx) {
   world.applied[ev.id] = true;
   const rule = RULES[ev.type];
   if (rule) rule(world, ev, ctx);
-  const resolved = resolvePromises(world, ev, ctx);
+  // only player-scope events settle promises, so every resolution can be written back as a promise_kept / promise_broken event
+  const resolved = ev.scope === 'player' && !['achievement_unlocked', 'record_lost'].includes(ev.type) ? resolvePromises(world, ev, ctx) : [];
   return { applied: true, resolved };
 }
 

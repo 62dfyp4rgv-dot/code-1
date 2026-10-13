@@ -32,7 +32,8 @@ const sidesFor = (type, a, b, c3 = W.power, c4 = W.flyer, pa = W.partnerA, pb = 
   const n = waysOf(getRuleset(type));
   if (n === 2) return [[a], [b]];
   const extra = (w, id) => ({ ...w, id, name: `${w.name} II` });
-  return [[a], [b], [extra(c3, 'x3')], ...(n > 3 ? [[extra(c4, 'x4')]] : [])];
+  const pool = [c3, c4, W.show, W.sub, W.brawler];
+  return [[a], [b], ...Array.from({ length: n - 2 }, (_, k) => [extra(pool[k % pool.length], `x${k + 3}`)])];
 };
 
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');

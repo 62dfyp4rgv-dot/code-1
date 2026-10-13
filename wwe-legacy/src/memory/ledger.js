@@ -1,7 +1,7 @@
 // Layer A: the immutable, append-only event ledger. The single authoritative record of what
 // happened. Events are frozen, hash-chained (tamper/corruption detection), idempotent by `key`,
 // and indexed for fast retrieval so a career of tens of thousands of events stays queryable.
-import { canonical, deepFreeze, hash53, pad } from '../core/util.js';
+import { canonical, deepFreeze, sha256, pad } from '../core/util.js';
 
 export const EVENT_CATEGORIES = ['match', 'promo', 'media', 'relationship', 'career', 'personal', 'story', 'achievement', 'world', 'system'];
 
@@ -82,7 +82,7 @@ export class Ledger {
       canon: spec.canon !== false, data: spec.data || {},
     };
     body.prev = this.head;
-    body.hash = hash53(body.prev + canonical(body));
+    body.hash = sha256(body.prev + canonical(body)).slice(0, 40);
     this.head = body.hash;
     const ev = deepFreeze(body);
     this._index(ev);
@@ -136,7 +136,7 @@ export class Ledger {
       const ev = this.events[i];
       const { hash, ...rest } = ev;
       if (ev.prev !== prev) return { ok: false, at: i, reason: 'broken chain link' };
-      if (hash53(prev + canonical(rest)) !== hash) return { ok: false, at: i, reason: 'hash mismatch (event altered)' };
+      if (sha256(prev + canonical(rest)).slice(0, 40) !== hash) return { ok: false, at: i, reason: 'hash mismatch (event altered)' };
       if (seenIds.has(ev.id) || seenKeys.has(ev.key)) return { ok: false, at: i, reason: 'duplicate id/key' };
       seenIds.add(ev.id); seenKeys.add(ev.key);
       for (const r of ev.refs) if (!seenIds.has(r)) return { ok: false, at: i, reason: `dangling reference ${r}` };
