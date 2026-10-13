@@ -128,6 +128,30 @@ function refCheck(state, R, A, move) {
 // ------------------------------------------------------------------------------------------
 export const TIME_SCALE = 1.0;
 
+/** Commentary-team colour: rare, purely descriptive events derived from state (no RNG, so they never change an outcome). */
+function emitColor(state) {
+  if (state.result || state.round < 6 || state.round - (state.colorAt ?? -99) < 8) return;
+  state.colorLast = state.colorLast || {};
+  const ready = (kind) => state.round - (state.colorLast[kind] ?? -99) >= 24;
+  const live = Object.values(state.fighters).filter((f) => f.legal);
+  const pickBy = (cond, score) => live.filter(cond).sort((x, y) => score(y) - score(x) || (x.id < y.id ? -1 : 1))[0];
+  const fire = (kind, f) => {
+    if (!f) return false;
+    const o = state.fighters[opponentOf(state, f.id)];
+    state.colorLast[kind] = state.round; state.colorAt = state.round;
+    emit(state, 'color', { kind, actor: f.id, target: o ? o.id : null });
+    return true;
+  };
+  const frac = state.time / state.timeLimit;
+  if (ready('late') && frac > 0.8) { if (fire('late', pickBy(() => true, (f) => f.momentum))) return; }
+  if (ready('tired') && fire('tired', pickBy((f) => staminaFrac(f) < 0.28, (f) => 1 - staminaFrac(f)))) return;
+  if (ready('momentum') && fire('momentum', pickBy((f) => f.momentum >= 75, (f) => f.momentum))) return;
+  if (state.crowd.heat >= 55) {
+    if (ready('crowd_for') && fire('crowd_for', pickBy((f) => crowdBias(state, f.id) > 0.35, (f) => crowdBias(state, f.id)))) return;
+    if (ready('crowd_against') && fire('crowd_against', pickBy((f) => crowdBias(state, f.id) < -0.35, (f) => -crowdBias(state, f.id)))) return;
+  }
+}
+
 export function finalizeRound(state, R, spent) {
   state.time += spent * TIME_SCALE;
   state.round += 1;
@@ -155,6 +179,7 @@ export function finalizeRound(state, R, spent) {
     const o = F(state, opponentOf(state, f.id));
     if (o) state.peakDeficit[f.id] = Math.max(state.peakDeficit[f.id] || 0, damageFraction(f) - damageFraction(o));
   }
+  emitColor(state);
   // Elimination Chamber: pods open on a timer
   if (state.rules.entries && !state.result && state.nextEntry != null && state.nextEntry < state.teams.length) {
     const due = state.rules.entries.start * 0 + state.rules.entries.every * (state.nextEntry - state.rules.entries.start + 1);

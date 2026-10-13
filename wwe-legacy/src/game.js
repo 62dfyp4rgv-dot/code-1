@@ -26,6 +26,7 @@ import { generateRoster, TIERS, SIG_NAMES, FIN_NAMES } from './data/generator.js
 import { nextEvent, eventsOn, formatDate, brandsInYear, weekdayOf } from './universe/calendar.js';
 import { eraForYear } from './data/eras.js';
 import { getRel, getRivalry } from './memory/world.js';
+import { buildPairSummary } from './memory/summaries.js';
 import { memoryLines } from './story/dialogue.js';
 import { deliverPromo, PROMO_TONES, CLAIMS } from './story/media.js';
 import { appearanceOptions, startAppearance, answerAppearance, appearanceView, cancelAppearance, APPEARANCE_KINDS } from './story/appearances.js';
@@ -742,6 +743,28 @@ export class Game {
       promises: w.promises.filter((p) => p.by === me).map((p) => ({ id: p.id, text: p.text, status: p.status, target: p.target ? nm(p.target) : null, daysLeft: p.deadlineDay != null ? p.deadlineDay - c.day : null, made: p.madeEvent, resolved: p.resolvedEvent || null, acknowledged: !!p.acknowledged })).sort((a, b) => (a.status === 'open' ? -1 : 1) - (b.status === 'open' ? -1 : 1)),
       obligations: w.obligations.filter((o) => o.status === 'pending').map((o) => ({ kind: o.kind, from: nm(o.from), dueIn: o.dueDay - c.day, source: o.source })),
     };
+  }
+
+  /** "Story so far": the live threads of the career, each claim carrying the ledger events that justify it */
+  storySoFar() {
+    const c = this.c, me = c.player.id, w = c.memory.world;
+    const nm = (id) => (id === me ? c.player.name : this.universe.get(id)?.name || id);
+    const rank = new Map();
+    for (const r of Object.values(w.rivalries)) if (r.a === me || r.b === me) rank.set(r.a === me ? r.b : r.a, (rank.get(r.a === me ? r.b : r.a) || 0) + r.heat + 5 * r.matches);
+    for (const [k, rel] of Object.entries(w.relationships)) {
+      const [x, y] = k.split('|');
+      if (x !== me && y !== me) continue;
+      const other = x === me ? y : x;
+      const r = getRel(w, me, other);
+      rank.set(other, (rank.get(other) || 0) + (r.tags ? r.tags.length * 8 : 0) + (r.betrayals ? r.betrayals.length * 20 : 0));
+    }
+    const threads = [...rank.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5).map(([id]) => {
+      const sum = buildPairSummary(c.memory, me, id, nm);
+      const rel = getRel(w, me, id);
+      return { id, name: nm(id), tags: rel.tags || [], lines: sum.facts.map((f) => ({ text: f.text, eventId: f.eventIds[f.eventIds.length - 1], count: f.eventIds.length })) };
+    }).filter((t) => t.lines.length);
+    const moments = c.memory.ledger.query({ scope: 'player', newestFirst: true, limit: 60 }).filter((e) => e.importance >= 4 && e.type !== 'finance_month').slice(0, 5).map((e) => ({ id: e.id, date: e.date, text: e.summary }));
+    return { threads, promises: this.promiseView().promises.filter((p) => p.status === 'open'), moments };
   }
 
   // ---- money
