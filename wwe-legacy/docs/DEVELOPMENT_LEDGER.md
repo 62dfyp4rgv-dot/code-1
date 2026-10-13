@@ -31,3 +31,13 @@ One entry per Gauntlet round: what was targeted, what changed, what was measured
 - Largest losses: Authored, validated templates (target 2,000 would be complete) (327); Verified historical data (partial); Independent reviewer score (4); Share of scenario templates that read ledger memory (mem trigger / memory block / rivalry / obligation) (0.45)
 - Regressions: careerProgression -0.17
 - Report: docs/gauntlet/round-03.md
+
+## Round 4
+
+- Target: Features: legacy/Hall of Fame, tag titles, factions, finances, multi-way matches, interviews; 589 authored scenarios; visual identity pass; memory fixes from review
+- Changes: Added legacy/HoF pipeline, tag-team championships (AI + player), AI factions, finance system, triple threat/fatal four-way engine, avatar/hero/rarity visuals, 44px targets; authored scenarios 327 -> 589 via four writer agents (validated, prose-linted); promo/dialogue/appearance fixes; world replay-on-load check
+- Mean 9.22 | min 7.60 | >=9: 8/12 | tests 123/123
+- Weakest: Scenario diversity 7.60, WWE universe simulation 8.32, Narrative quality 8.64
+- Largest losses: Authored, validated templates (target 2,000 would be complete) (589); Verified historical data (partial); Independent reviewer score (4); Share of scenario templates that read ledger memory (mem trigger / memory block / rivalry / obligation) (0.42)
+- Regressions: performance -0.41
+- Report: docs/gauntlet/round-04.md

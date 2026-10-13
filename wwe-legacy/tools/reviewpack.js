@@ -32,7 +32,7 @@ fs.writeFileSync(path.join(out, 'commentary.md'), lines.join('\n'));
 
 // ---------------------------------------------------------------- 2. a played career: scenarios, promos, memory
 const g = new Game();
-const c = g.newCareer({ seed: 21, name: 'Review Sample', startYear: 2024, background: 'prospect', style: 'brawler', bonus: { technical: 5, psychology: 5 }, signatures: [], finisher: { tpl: 'fin_ddt', name: 'Sample Finisher' } });
+const c = g.newCareer({ seed: 33, name: 'Review Sample', startYear: 2024, background: 'prospect', style: 'brawler', bonus: { technical: 5, psychology: 5 }, signatures: [], finisher: { tpl: 'fin_ddt', name: 'Sample Finisher' } });
 const rng = new Rng('review');
 const scn = [];
 const captureScenario = () => {

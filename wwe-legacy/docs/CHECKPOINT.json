@@ -1,26 +1,26 @@
 {
- "updated": "2026-10-13T11:50:28.740Z",
- "lastRound": 3,
- "mean": 8.97,
+ "updated": "2026-10-13T16:04:36.994Z",
+ "lastRound": 4,
+ "mean": 9.22,
  "scores": {
-  "matchEngine": 9.61,
-  "playerAgency": 9.66,
-  "memoryConsistency": 8.89,
-  "achievementIntegrity": 9.83,
-  "scenarioDiversity": 7.58,
-  "narrativeQuality": 8.27,
-  "universeSimulation": 7.51,
-  "careerProgression": 8.58,
+  "matchEngine": 9.8,
+  "playerAgency": 9.56,
+  "memoryConsistency": 8.83,
+  "achievementIntegrity": 9.85,
+  "scenarioDiversity": 7.6,
+  "narrativeQuality": 8.64,
+  "universeSimulation": 8.32,
+  "careerProgression": 9.5,
   "mobileUsability": 9.45,
   "technicalReliability": 10,
-  "performance": 9.99,
-  "replayability": 8.25
+  "performance": 9.58,
+  "replayability": 9.54
  },
  "nextFocus": [
   {
    "category": "scenarioDiversity",
    "criterion": "Authored, validated templates (target 2,000 would be complete)",
-   "value": 327
+   "value": 589
   },
   {
    "category": "universeSimulation",
@@ -35,24 +35,24 @@
   {
    "category": "memoryConsistency",
    "criterion": "Share of scenario templates that read ledger memory (mem trigger / memory block / rivalry / obligation)",
-   "value": 0.45
+   "value": 0.42
   },
   {
-   "category": "universeSimulation",
-   "criterion": "Tag-team championships",
-   "value": "unimplemented"
+   "category": "mobileUsability",
+   "criterion": "Independent reviewer score",
+   "value": 6
   }
  ],
  "resume": [
   "cd wwe-legacy",
   "npm install",
   "npm test",
-  "node tools/gauntlet.js --round 4 --targets \"<what you will improve>\" --changes \"<what you changed>\""
+  "node tools/gauntlet.js --round 5 --targets \"<what you will improve>\" --changes \"<what you changed>\""
  ],
  "features": {
-  "complete": 14,
-  "partial": 9,
-  "unimplemented": 5
+  "complete": 21,
+  "partial": 4,
+  "unimplemented": 3
  },
  "files": {
   "ledger": "docs/DEVELOPMENT_LEDGER.md",

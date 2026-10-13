@@ -2,144 +2,128 @@
 
 These 14 situations were shown to a simulated player during a played career (day 330). Choices were picked at random. `Memory` lines are generated from ledger events the character can actually cite.
 
-## A Story from the Old Days  _(day 13, mentor)_
+## The Agent Wants a Name  _(day 3, betrayal)_
 
-> During the last hour before doors, CM Punk starts telling a story about the time a title run ended before it began. It's not a lesson at first, just a story, but by the end you realise it was meant for you.
+> Nadia Petrova lines everyone up after a prank that went bad and ruined a costume. "Somebody is going to tell me who did this, or the entire roster takes a note in every file."
+> You saw it, and the culprit is Nova Oakes. Nobody else knows you saw.
+
+Choices offered: [Give the agent the name] [Cover for them and say you saw nothing] [Take the blame yourself] [Make the culprit confess, quietly]
+
+Chosen: **Cover for them and say you saw nothing** → Nobody talks and everyone takes the fine. Nova owes you one.
+
+## Tryout at a former bowling alley  _(day 15, debut)_
+
+> The tryout is held in a former bowling alley, and the ring has clearly been assembled that morning. Samira Okoye sits at the edge of the apron with forty other hopefuls behind their shoulder.
+> You get ninety seconds of ring time and a promise that someone will call. Most people in the room will never hear from anyone.
+
+Choices offered: [Run the basics with perfect execution] [Go for the highlight move] [Ask for a few seconds on the mic as well] [Spend your savings on a hotel night before the tryout]
+
+Chosen: **Run the basics with perfect execution** → Every bump, every lock-up, every roll-through is textbook. Nobody gasps, but nobody frowns either, and your name ends up on the callback list.
+
+## A Training Partner Worth Keeping  _(day 32, alliance)_
+
+> Viktor Ember suggests training together, with a focus on heavy conditioning blocks. The deal comes with a standing 6 a.m. Slot.
+> Every trainer on the card says the same thing: you improve fastest next to someone better than you. You are not sure which of you that is.
+
+Choices offered: [Commit to a full training block] [Agree to one session a week] [Swap training secrets instead] [Pass: you work better alone]
+
+Chosen: **Agree to one session a week** → It's not the full block, but it's something. Viktor nods, and you both mean it.
+
+## The Conditioning Test  _(day 36, training)_
+
+> Walter Grimes sets up a shuttle run timed to the bell with a stopwatch and a face that gives nothing away. By the end, the numbers on the clipboard confirm something you already suspected: your legs fail long before your lungs do.
+> A wrestler can hide a weakness for a few minutes, but never for a full television hour. The coach slides the sheet across the table and lets you read your own results.
+
+Choices offered: [Double your conditioning work for the next month] [Change your style to rest in the match] [Hire the coach to build a proper plan] [Shrug it off: the test is not the match]
+
+Chosen: **Hire the coach to build a proper plan** → Walter drafts a plan that includes sleep, food and a schedule that actually accounts for travel. The price is steep and the plan is realistic, and the first week is a revelation.
+
+## A Training Block on a lakeside track  _(day 42, training)_
+
+> You have two free weeks and a plan for a lakeside track: a block built around speed. The program sits on the fridge door in blue marker.
+> Training blocks reward consistency and punish overreach. What you work on shapes who you will be in the ring next month.
+
+Choices offered: [Lift heavy and eat for size] [Work agility, plyometrics and footwork] [Study holds and transitions in slow motion] [Work on psychology: reading crowds and pacing matches]
+
+Chosen: **Lift heavy and eat for size** → The plates get heavier and so does your presence in the ring. Your joints grumble about it.
+
+## Awake in the Back of the Ride  _(day 43, debut)_
+
+> It is the dead hour before dawn, and a night flight on a regional jet hums down a road whose exit signs you stopped reading an hour ago. Everyone else has found a corner and a pillow, while you have found a paperback you have read twice and a window that shows only your own reflection.
+> Two seats ahead, Becky Lynch is awake with a thermos, and after a minute a hand pats the empty cushion beside her. It is the kind of invitation that comes without a sign, and one you could easily pretend not to see.
+
+Choices offered: [Take the seat beside Becky] [Stay in your corner with the paperback] [Offer to take a shift behind the wheel] [Use the next gas station to call home]
+
+Chosen: **Take the seat beside Becky** → Becky says nothing for twenty miles, then tells you about a first road trip that ended with a flat tire and a missing wallet. By the next exit you are laughing, and no one has asked you to prove anything.
+
+## Two O'Clock With the Ring Crew  _(day 51, debut)_
+
+> At two in the afternoon, hours before anyone worth seeing arrives, the crew is laying the canvas over the foam in August heat that turns the steel to a griddle. The chief, a quiet man with forearms like fence posts, has not asked for help and does not look like he would refuse it.
+> You have nothing scheduled and a slow certainty that these are the people who hold your safety in their hands every night. Rookies who learn their names tend to meet fewer surprises in the ring.
+
+Choices offered: [Pitch in until the ring is built] [Ask the chief to teach you how a ring goes together] [Bring coffee and doughnuts for the whole crew] [Save your energy and stay out of their way]
+
+Chosen: **Ask the chief to teach you how a ring goes together** → He shows you why the pads get checked twice and where this particular ring wobbles. You leave knowing things most wrestlers never bother to learn.
+
+## A sit-down interview About Your Legacy  _(day 55, legacy)_
+
+> Taylor Brennan (Pinfall Podcast) sets up for a sit-down interview, and the first question is a hard one: the toughest night of your career. You can feel the weight of years behind the question.
+> Everything you say will be quoted. How you want to be remembered is partly up to you, and partly a matter of how you speak tonight.
+
+Choices offered: [Answer honestly, including the failures] [Tell the polished version of the story] [Spend the interview crediting the people who helped] [Politely decline to talk about the past]
+
+Chosen: **Tell the polished version of the story** → The story is warm and well-shaped. It is not the whole truth, but nobody objects.
+
+## The Belt Feels Different at Night  _(day 56, championship)_
+
+> Somewhere in the last few days the celebration ended and the job began. Tonight, your name on the plate looks like it belongs to somebody else, and a contender with a grudge is watching how you carry it.
+> Nadia Petrova finds you alone with the case and sits down on an upturned bucket. No champion in history has felt ready, and the veterans tell the story as if it were a punchline.
+
+Choices offered: [Tell Nadia you are afraid of losing it] [Act like a champion until it feels like one] [Work harder than ever to earn the belt twice] [Take a few friends out for a quiet dinner]
+
+Chosen: **Take a few friends out for a quiet dinner** → The belt sits on a spare chair like a guest, and nobody mentions the business for two hours. You leave feeling like a person again, and a little silly for needing it.
+
+## A Story from the Old Days  _(day 71, mentor)_
+
+> During a quiet stretch in the hotel bar, CM Punk starts telling a story about the night the arena lost power and the match went on in the dark. It's not a lesson at first, just a story, but by the end you realise it was meant for you.
 > The veteran watches you the whole time, curious to see what you take from it.
 
 Choices offered: [Listen closely and take it in] [Ask the hard question underneath it] [Offer a story of your own in return] [Make an excuse and slip away]
 
-Chosen: **Ask the hard question underneath it** → CM pauses, then answers honestly. It's the truest thing you've heard all year.
+Chosen: **Make an excuse and slip away** → You leave to prepare for your match. The legend pretends not to mind.
 
-## After the War with Julian Ellison  _(day 16, rivalry)_
+## A Rule Nobody Wrote Down  _(day 72, backstage)_
 
-> The towels are bloody and the ribs are screaming. In the back of the ring truck, Julian Ellison nods once from across the room, and the whole crew pretends not to see it.
-> Two people who have spent months trying to hurt each other just made something that the fans will remember. Whether you let it show is up to you.
+> Randy Orton stops you outside the showers and speaks quietly, which is always worse than shouting. You broke an unwritten rule today, namely answering the fans' questions about a finish, and he says so beside a vending machine that hums.
+> There is no malice in the voice, and no mercy either. Whatever you say next will tell the room what kind of person you are when you are corrected.
 
-Memory callbacks shown: "Last time ended with people yelling at the referee. This time nobody can blame anyone." / "2 losses to you. Tonight I fix that."
+Choices offered: [Apologise properly and thank Randy for saying so] [Ask for the rest of the rules while you have the chance] [Push back and ask who made that rule] [Laugh it off and change the subject]
 
-Choices offered: [Return the respect, openly] [Stay cold: the feud is not over] [Ask for a rematch on bigger terms] [Slip out and ice the injuries alone]
+Chosen: **Ask for the rest of the rules while you have the chance** → Randy laughs, counts a dozen on his fingers, and ends with the one that matters: never lie to the person you work with. It is the best ten minutes of advice you have had all year.
 
-Chosen: **Return the respect, openly** → You say it plainly: that was the best work either of you has done. Julian nods and the tension in the room drops.
+## Where Your Memorabilia Goes  _(day 84, legacy)_
 
-## A Long Ride: a rush-hour crawl  _(day 20, travel)_
+> An auction house has come asking about your worn jacket. The offer is real, the story it carries is valuable, and you have to decide where it belongs.
+> Once it is gone, it is gone. Memories tend to attach themselves to objects, and so do their prices.
 
-> You are on a rush-hour crawl with two rookies in the back, and the radio has been stuck on one station for an hour. It is late, the coffee is cold, and the show is behind you.
-> Road trips give wrestlers time to talk, sleep, fight or plan. Tonight you can choose which.
+Choices offered: [Sell to the highest bidder] [Donate it to a museum exhibit] [Give it to a fan who truly wants it] [Keep it for yourself and your family]
 
-Choices offered: [Take the wheel so others can sleep] [Talk shop and dissect the show] [Curl up in the back and sleep] [Start a singalong and lift the mood]
+Chosen: **Donate it to a museum exhibit** → It goes on public display with a small plaque. The press is kind and your accountant is not.
 
-Chosen: **Talk shop and dissect the show** → The conversation covers pacing, finishes and all the ways the main event could have gone better. By dawn you have a notebook of ideas.
+## The Morning After a Hot Streak  _(day 89, breakout)_
 
-## A Grudge Demands a Rematch  _(day 25, rivalry)_
-
-> The way your last match with Julian Ellison ended left a sour taste. He has been telling anyone who will listen that it was not clean.
-> Management is open to a rematch if you are.
-
-Memory callbacks shown: "2 matches. Neither of us has learned to walk away."
-
-Choices offered: [Book the rematch] [Add a stipulation: No DQ] [Ignore it - move on]
-
-Chosen: **Add a stipulation: No DQ** → You make it personal. Management loves a grudge match.
-
-## Julian Ellison Gloats After the Loss  _(day 38, rivalry)_
-
-> The loss still stings, and Julian Ellison cannot leave it alone. Julian is enjoying it by holding an imaginary microphone in front of an interviewer with a camera.
-> You can respond now, or turn it into fuel. Anything you say will travel.
-
-Memory callbacks shown: "2 clean victories over you. Not one fluke among them." / "You got the better of me 3 times. That ends now."
-
-Choices offered: [Cut Julian down with one line] [Swallow it and demand a rematch] [Shove Julian in front of everyone] [Leave without a word]
-
-Chosen: **Cut Julian down with one line** → Your line is quoted for days. The gloat dies on Julian's face.
-
-## The First Contract Offer  _(day 39, debut)_
-
-> Tobias Reed slides the paperwork across the table: a per-appearance deal with no guarantee. The money is modest, and next to a rumor that another office is also interested, the room feels smaller than it did when you walked in.
-> It is your first real offer. You can sign, haggle, or walk, and each of those says something about you.
-
-Choices offered: [Sign it as written and get to work] [Counter for a better rate and an extra year] [Pay a lawyer to read every clause first] [Walk away and keep working the independents]
-
-Chosen: **Sign it as written and get to work** → You sign. The ink is barely dry before you are handed a training schedule. It is not much money, but it is a start.
-
-## Julian Ellison Takes Shots at You  _(day 46, media)_
-
-> In a sit-down interview, Julian Ellison has been mocking you again. Alexis Moreau (The Turnbuckle) plays you the clip and asks for a response.
-> You have a few seconds to decide how to answer.
-
-Memory callbacks shown: "Some of the history between us still smells bad." / "3 matches and we're still here."
-
-Choices offered: [Fire back with a sharp line] [Take the high road] [No comment]
-
-Chosen: **Take the high road** → You refuse to engage. Fans respect the restraint.
-
-## Julian Ellison Wants a Truce  _(day 47, rivalry)_
-
-> Julian Ellison catches you in the catering room with open hands and nobody else around. "Truce," he says. "At least until the next big show, because the crowd is getting bored of the same fight."
-> You cannot tell whether he means it. Backing off would calm the room, but a feud this hot is also paying your bills.
-
-Choices offered: [Shake on a quiet truce] [Agree, but only in private] [Refuse and keep the fire burning] [Fake the truce and ambush at the show]
-
-Chosen: **Agree, but only in private** → Someone saw you two talking. By evening everyone says you went soft, and Julian does nothing to correct it.
-
-## The Morning After a Hot Streak  _(day 55, breakout)_
-
-> At an airport gate, you wake up to a congratulatory message from a veteran. The streak has lifted you above the pack, and the cheerful noise is already attracting attention you did not have a month ago.
+> At a gas-station parking lot, you wake up to a headline with your name in it. The streak has lifted you above the pack, and the cheerful noise is already attracting attention you did not have a month ago.
 > The question is what to do with it. Streaks end, and what you build while it lasts decides how much of it you keep.
 
 Choices offered: [Double down on training while the iron is hot] [Take the crew out and celebrate] [Pitch yourself for a bigger spot while it counts] [Keep a low profile and stay humble]
 
-Chosen: **Keep a low profile and stay humble** → You say nothing, smile when asked, and go home. People notice that your head did not swell.
+Chosen: **Take the crew out and celebrate** → The night turns into a bonding event with the locker room. You come home with new friends and a lighter wallet.
 
-## A Chance to Get Even with Julian Ellison  _(day 67, betrayal)_
+## The Commentary Booth Takes Aim  _(day 111, media)_
 
-> Julian Ellison has left a gear bag unattended at ringside, and you are alone with a stack of paper plates. It is the sort of petty revenge you spent weeks fantasising about.
-> You could also do the grown-up thing. The grown-up thing has never felt less satisfying.
+> Jordan Pruitt (Ringside Report) has criticised your in-ring work in a viral clip, naming overselling specifically. It is the kind of critique that stings because it is half right.
+> Your trainer has not mentioned it. The silence from the production truck is louder.
 
-Choices offered: [Do it. Make it public] [Walk away. You are better than that] [Wake them and give a warning instead] [Wreck something that matters instead]
+Choices offered: [Take the note and drill it in the ring] [Confront Jordan face to face] [Fire back with a line on social or air] [Shrug it off as the price of attention]
 
-Chosen: **Wreck something that matters instead** → You sabotage his promo notes. The segment goes badly for Julian, and the question of who did it is left unanswered.
-
-## Julian Ellison's Show Goes After You  _(day 78, podcast)_
-
-> Julian Ellison used a polished eight-minute cold open to tell Sam Okonkwo (Mat Talk Daily)'s audience that you owe the locker room an apology. The episode has been downloaded tens of thousands of times in a day, and your phone is full of people asking whether you saw it.
-> Julian is clearly pleased with the reaction. A reply from you, or the lack of one, becomes part of the story.
-
-Memory callbacks shown: "3 matches and we're still here."
-
-Choices offered: [Answer back on your own channel tonight] [Appear on the show of a rival's enemy] [Challenge Julian to settle it in the ring] [Ignore the show and let the work speak]
-
-Chosen: **Appear on the show of a rival's enemy** → You book a guest slot on a show with a different audience and make your case in front of a friendlier room. It splits the crowd into camps.
-
-## Forced to Team with Julian Ellison  _(day 79, rivalry)_
-
-> Gordon Pike presents the plan with a straight face: you and Julian Ellison will team up for the next show because of a ratings experiment. The office thinks the tension will sell tickets.
-> Nobody asked you. You can fight it, run with it, or turn it into something else.
-
-Memory callbacks shown: "3 matches. Neither of us has learned to walk away."
-
-Choices offered: [Embrace it and play it straight] [Make it fall apart on purpose] [Refuse to team with them] [Pitch a betrayal for the finish]
-
-Chosen: **Make it fall apart on purpose** → A perfectly timed miscue sends it sideways and the crowd loves the chaos. The office is thrilled.
-
-## Julian Ellison Wants Payback  _(day 80, betrayal)_
-
-> Julian Ellison finds you at the hotel. He has been replaying the betrayal in his head for weeks, and it shows.
-> This is not going to end on its own.
-
-Memory callbacks shown: "3 matches and we're still here."
-
-Choices offered: [Face it: let them say their piece] [Offer to make amends] [Double down: you did what you had to]
-
-Chosen: **Face it: let them say their piece** → You listen to every word. It does not fix anything, but Julian respects that you did not hide.
-
-## The Stipulation for Julian Ellison  _(day 91, wrestlemania)_
-
-> Dolores Marsh calls you and Julian Ellison to a catering room with the chairs stacked on tables. Your feud has run so hot that everyone has a theory, and the office is asking what kind of match this should be at WrestleMania.
-> Julian has opinions, and so do you. Whatever you agree on becomes the story of the month.
-
-Memory callbacks shown: "4 matches. Neither of us has learned to walk away."
-
-Choices offered: [Demand a steel cage to lock the feud shut] [Suggest a ladder match with something hanging above] [Insist on a clean singles match, no tricks] [Ask for a submission match to prove who is better]
-
-Chosen: **Suggest a ladder match with something hanging above** → The ladder match goes on the card and the climbers in you both rise to it. The finish is breathtaking.
+Chosen: **Confront Jordan face to face** → It becomes an argument within the first minute. Someone in the corridor records the last fifteen seconds.
