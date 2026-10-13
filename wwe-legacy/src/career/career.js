@@ -239,6 +239,9 @@ export class Career {
     }
   }
 
+  recordsHeld() { return this.universe ? Object.entries(this.universe.records).filter(([, r]) => r.holder === this.player.id).map(([k, r]) => ({ key: k, ...r })) : []; }
+  recordsLost() { return this.memory.ledger.ofType('record_lost'); }
+
   // -------------------------------------------------------------- views
   timeline({ minImportance = 1, types, limit = 100, newestFirst = true } = {}) {
     const evs = this.memory.ledger.query({ types, scope: 'player', newestFirst }).filter((e) => e.importance >= minImportance);

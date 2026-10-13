@@ -10,6 +10,7 @@ import { generateWrestler } from '../data/generator.js';
 import { eventsOn, dateOf } from './calendar.js';
 import { ERAS, eraForYear } from '../data/eras.js';
 import { getRel } from '../memory/world.js';
+import { noteAIRecord, ensureRecords } from './records.js';
 
 const profileOf = (w) => ({
   id: w.id, name: w.name, style: w.style, alignment: w.alignment, attrs: w.attrs, gender: w.gender, popularity: w.popularity, signatures: w.signatures, finisher: w.finisher,
@@ -136,7 +137,11 @@ export class UniverseSim {
     if (res.draw) { feud && this._feudHeat(feud, 4); return; }
     const { winner, loser } = res;
     winner.record.w += 1; loser.record.l += 1;
+    const yr0 = yearOf(day, c.startYear);
+    for (const [w, k] of [[winner, 'w'], [loser, 'l']]) { if (!w.yr || w.yr.y !== yr0) w.yr = { y: yr0, w: 0, l: 0 }; w.yr[k] += 1; }
     winner.streak = Math.max(0, winner.streak) + 1; loser.streak = Math.min(0, loser.streak) - 1;
+    noteAIRecord(c, 'win_streak', winner.streak, winner.id, day);
+    if (res.rating >= 5) { winner.fiveStar = (winner.fiveStar || 0) + 1; noteAIRecord(c, 'five_star', winner.fiveStar, winner.id, day); }
     winner.momentum = clamp(winner.momentum + 7, 0, 100); loser.momentum = clamp(loser.momentum - 5, 0, 100);
     winner.popularity = clamp(winner.popularity + 0.15 * (ple ? 2 : 1), 1, 99); loser.popularity = clamp(loser.popularity - 0.05, 1, 99);
     // best match of the year (world level)
@@ -161,6 +166,7 @@ export class UniverseSim {
         this.hooks.onTitleChange && this.hooks.onTitleChange(title, winner, loser, day);
       } else {
         u.recordDefense(title.id, day);
+        noteAIRecord(c, 'title_defenses', title.defenses, title.holder, day);
       }
     }
     // seed new feuds from notable results

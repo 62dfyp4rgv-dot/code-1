@@ -10,24 +10,31 @@ export function newWorld() {
 }
 
 /** A relationship from the perspective of `from` toward `to` (directional values, shared tags). */
-export function getRel(world, a, b) {
-  const k = pairKey(a, b);
-  if (!world.relationships[k]) {
-    const [x, y] = a < b ? [a, b] : [b, a];
-    world.relationships[k] = {
+function blankRel(a, b) {
+  const [x, y] = a < b ? [a, b] : [b, a];
+  return {
       a: x, b: y,
       // directional: [x->y, y->x]
       trust: [0, 0], respect: [0, 0], fear: [0, 0], heat: 0, affinity: 0,
       tags: [], betrayals: [], betrayalCeiling: null, events: [], lastDay: 0,
-    };
-  }
+  };
+}
+
+/** Read a relationship. Never inserts: merely looking at someone must not change the world. */
+export function getRel(world, a, b) {
+  return world.relationships[pairKey(a, b)] || blankRel(a, b);
+}
+/** Get-or-create for mutations. */
+export function ensureRel(world, a, b) {
+  const k = pairKey(a, b);
+  if (!world.relationships[k]) world.relationships[k] = blankRel(a, b);
   return world.relationships[k];
 }
 
 const idx = (rel, from) => (rel.a === from ? 0 : 1);
 
 export function adjustRel(world, from, to, delta, eventId, day = 0) {
-  const rel = getRel(world, from, to);
+  const rel = ensureRel(world, from, to);
   const i = idx(rel, from);
   if (delta.trust) rel.trust[i] = clamp(rel.trust[i] + delta.trust, -100, 100);
   if (delta.respect) rel.respect[i] = clamp(rel.respect[i] + delta.respect, -100, 100);
@@ -43,20 +50,20 @@ export function adjustRel(world, from, to, delta, eventId, day = 0) {
 }
 
 export function addTag(world, a, b, tag, eventId) {
-  const rel = getRel(world, a, b);
+  const rel = ensureRel(world, a, b);
   if (!rel.tags.includes(tag)) rel.tags.push(tag);
   if (eventId && !rel.events.includes(eventId)) rel.events.push(eventId);
   return rel;
 }
 export const hasTag = (world, a, b, tag) => getRel(world, a, b).tags.includes(tag);
 export function removeTag(world, a, b, tag) {
-  const rel = getRel(world, a, b);
+  const rel = ensureRel(world, a, b);
   rel.tags = rel.tags.filter((t) => t !== tag);
 }
 
 /** `victim` records a betrayal by `betrayer`: permanent memory, trust ceiling, revenge motive. */
 export function recordBetrayal(world, betrayer, victim, eventId, day) {
-  const rel = getRel(world, betrayer, victim);
+  const rel = ensureRel(world, betrayer, victim);
   rel.betrayals.push({ by: betrayer, against: victim, event: eventId, day });
   const iVictim = idx(rel, victim);
   rel.betrayalCeiling = rel.betrayalCeiling || [100, 100];
@@ -68,7 +75,7 @@ export function recordBetrayal(world, betrayer, victim, eventId, day) {
 }
 
 export function reconcile(world, a, b, eventId) {
-  const rel = getRel(world, a, b);
+  const rel = ensureRel(world, a, b);
   rel.betrayalCeiling = null;
   rel.tags = rel.tags.filter((t) => t !== 'betrayal').concat(rel.tags.includes('reconciled') ? [] : ['reconciled']);
   rel.heat = Math.max(0, rel.heat - 30);

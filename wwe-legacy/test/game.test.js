@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Game, BACKGROUNDS, PLANS } from '../src/game.js';
+import { BACKGROUNDS, PLANS } from '../src/game.js';
+import { AutoGame as Game } from './autogame.js';
 import { SaveManager, MemoryAdapter } from '../src/save/save.js';
 import { buildRecordBook } from '../src/career/recordbook.js';
 

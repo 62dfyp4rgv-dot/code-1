@@ -479,4 +479,777 @@ export default [
         { weight: 1, text: `The joke falls flat and the reporter looks annoyed. It reads as dodging.`, effects: [{ pop: -0.3 }, { conf: -2 }] } ] },
     ],
   },
+  {
+    id: 'wm_celebrity_corner', category: 'wrestlemania', title: `A Celebrity Wants In on Your Match`, weight: 2, major: true, cooldownDays: 365, maxPerCareer: 2, categoryCooldown: 15,
+    cast: { exec: { pick: 'staff', role: 'executive' }, foe: { pick: 'rivalry', minHeat: 15, status: 'active' } },
+    trigger: { minYear: 1985, eventWithin: { id: 'wrestlemania', days: 25 }, stat: { popularity: { gte: 35 } } },
+    slots: { guest: [`a film star with a huge following`, `a retired sports legend`, `a chart-topping singer`], role: [`in your corner`, `as the special guest referee`, `as a surprise partner`] },
+    body: [`{exec.name} drops a pitch on your desk: {guest} has asked to be involved in your WrestleMania match against {foe.name}, {role}. The publicity would be enormous.`, `Celebrities bring cameras and headlines. They also bring egos, and an unpredictable nerve in the one place you can't afford mistakes.`],
+    choices: [
+      { id: 'embrace', label: `Embrace the guest and make them look like a pro`, risk: 'med', outcomes: [
+        { weight: 2, bonus: { charisma: 0.5 }, text: `You coach your guest through every beat. The cameras love the moment, and the headlines go global.`, effects: [{ pop: 1.2 }, { conf: 3 }, { money: 5000 }, { fatigue: 8 }] },
+        { weight: 1, text: `Your guest mistimes a key spot and the match sags. The coverage is huge, but the match is not what you wanted.`, effects: [{ pop: 0.7 }, { conf: -2 }, { money: 5000 }, { fatigue: 8 }] } ] },
+      { id: 'double_cross', label: `Plan a swerve where the guest turns on you`, risk: 'high', outcomes: [
+        { weight: 1, bonus: { charisma: 0.4, popularity: 0.3 }, text: `The swerve goes perfectly and the crowd gasps. The foe is as stunned as anyone, and the match is talked about for years.`, effects: [{ rivalry: { who: 'foe', heat: 10 } }, { pop: 1.5 }, { conf: 4 }] },
+        { weight: 2, text: `The guest misses the beat, the swerve dies, and the press calls it a stunt gone wrong.`, effects: [{ pop: -0.4 }, { conf: -4 }] } ] },
+      { id: 'keep_out', label: `Insist the guest stay out of it`, risk: 'low', result: `You tell {exec.first} the match speaks for itself. Fans appreciate the purity and the press moves on.`, effects: [{ rel: { who: 'foe', respect: 4 } }, { pop: 0.2 }, { conf: 2 }, { money: -2000 }] },
+      { id: 'cash', label: `Take the guest's fee for a cameo and share the credit`, risk: 'low', result: `A short, scripted cameo keeps the guest happy and the cameras rolling. Your cut is generous, and the match is smaller for it.`, effects: [{ money: 12000 }, { pop: 0.3 }, { conf: -1 }] },
+    ],
+  },
+  // ============================================================ CHAMPIONSHIP
+  {
+    id: 'chp_title_shot_offered', category: 'championship', title: `A Title Shot Against {champ.name}`, weight: 3, major: true, cooldownDays: 200, maxPerCareer: 4, categoryCooldown: 12,
+    cast: { champ: { pick: 'champion', class: 'world' }, boss: { pick: 'staff', role: 'gm' } },
+    trigger: { holdsTitle: false, stat: { popularity: { gte: 35 } }, recent: { winsGte: 2 } },
+    slots: { delivery: [`over a stack of production schedules`, `in a hallway, between two meetings`, `on a phone call you almost missed`], deadline: [`at the next big show`, `in three weeks`, `within the month`] },
+    body: [`{boss.name} gives you the news {delivery}: you are getting a shot at {champ.name}'s title, to be settled {deadline}. Your recent run of wins has made the decision easy.`, `The offer is real, but so is the clock. How you accept sets the terms for what comes next.`],
+    choices: [
+      { id: 'accept', label: `Accept the shot and prepare for the fight`, risk: 'low', result: `You take the match as offered. The champion hears the news through the grapevine and does not smile.`, effects: [{ booking: { who: 'champ', type: 'singles', stakes: 'title' } }, { rel: { who: 'champ', heat: 6 } }, { pop: 0.5 }, { conf: 3 }] },
+      { id: 'promise', label: `Accept and promise the world you will win`, risk: 'high', outcomes: [
+        { weight: 2, bonus: { mic: 0.6, confidence: 0.3 }, text: `Your promise roars through the building. The hype for the match doubles overnight.`, effects: [{ booking: { who: 'champ', type: 'singles', stakes: 'title' } }, { promise: { kind: 'win_title', who: 'champ', text: `I will take the title from {champ.name}`, deadlineDays: 45 } }, { pop: 1.2 }, { conf: 4 }, { rivalry: { who: 'champ', heat: 10 } }] },
+        { weight: 1, text: `The promise lands awkwardly and the champion's allies seize on it. The pressure is on, and the crowd is mixed.`, effects: [{ booking: { who: 'champ', type: 'singles', stakes: 'title' } }, { promise: { kind: 'win_title', who: 'champ', text: `I will take the title from {champ.name}`, deadlineDays: 45 } }, { pop: 0.1 }, { conf: -2 }] } ] },
+      { id: 'stip', label: `Demand a no disqualification match for the title`, risk: 'med', result: `You tell {boss.first} you want no loopholes. The office agrees, and the champion has to answer.`, effects: [{ booking: { who: 'champ', type: 'no_dq', stakes: 'title' } }, { rivalry: { who: 'champ', heat: 12 } }, { pop: 0.7 }, { fatigue: 8 }] },
+      { id: 'wait', label: `Ask to wait until you are fully prepared`, risk: 'low', result: `You tell {boss.first} you want to be sharper. The office hears hesitation. The shot slips down the schedule, and so does the energy around you.`, effects: [{ pop: -0.4 }, { conf: -3 }, { fatigue: -8 }] },
+    ],
+  },
+  {
+    id: 'chp_rival_demands_shot', category: 'championship', title: `{rival.name} Wants the Belt`, weight: 3, major: true, cooldownDays: 150, maxPerCareer: 5, categoryCooldown: 10, memory: { role: 'rival', max: 1 },
+    cast: { rival: { pick: 'rivalry', minHeat: 20, status: 'active' } },
+    trigger: { holdsTitle: true },
+    slots: { how: [`in a promo that makes the front office wince`, `with a signed petition from the locker room`, `through an open letter published on the network's site`], claim: [`the best man in the company`, `the only real challenger`, `the next champion`] },
+    body: [`{rival.name} has put your title in its sights {how}. {rival.they} calls {rival.them}self {claim} and demands a match.`, `You could ignore it, but the audience is already picking sides. Whatever you decide, the belt on your shoulder will take the blame or the credit.`],
+    choices: [
+      { id: 'accept', label: `Accept the challenge and defend your title`, risk: 'med', outcomes: [
+        { weight: 2, bonus: { overall: 0.4, confidence: 0.3 }, text: `You answer the call with a smile, and the crowd erupts. Both of you have a lot to prove.`, effects: [{ booking: { who: 'rival', type: 'singles', stakes: 'title' } }, { rivalry: { who: 'rival', heat: 8 } }, { pop: 0.8 }, { conf: 3 }] },
+        { weight: 1, text: `The match is made, but the build is chaotic and the champion looks reactive.`, effects: [{ booking: { who: 'rival', type: 'singles', stakes: 'title' } }, { pop: 0.2 }, { conf: -2 }] } ] },
+      { id: 'stall', label: `Stall: make {rival.first} earn it in other matches first`, risk: 'med', result: `You demand a qualifying run. The fans split over whether this is wise or cowardly, and {rival.first} sharpens the knife.`, effects: [{ rivalry: { who: 'rival', heat: 14 } }, { rel: { who: 'rival', heat: 10, respect: -3 } }, { pop: -0.2 }, { conf: 1 }] },
+      { id: 'cage', label: `Accept, but inside a steel cage`, risk: 'high', outcomes: [
+        { weight: 2, bonus: { overall: 0.4 }, text: `A cage match built around the title is a spectacle the office loves. Your body will pay for it.`, effects: [{ booking: { who: 'rival', type: 'cage', stakes: 'title' } }, { pop: 1.0 }, { conf: 3 }, { fatigue: 14 }] },
+        { weight: 1, text: `The cage plan is stuffed with spots that nearly get out of hand. You finish the match scarred.`, effects: [{ booking: { who: 'rival', type: 'cage', stakes: 'title' } }, { pop: 0.6 }, { fatigue: 16 }, { injury: { part: 'arms', severity: 1, days: 14 } }] } ] },
+      { id: 'retain', label: `Promise to retain your title against everyone`, risk: 'high', result: `You tell the world nobody is taking your belt. It is a gutsy claim, and the cameras love it.`, effects: [{ promise: { kind: 'retain_title', text: `I will retain my title against all comers`, params: { defenses: 3 }, deadlineDays: 150 } }, { pop: 0.8 }, { conf: 3 }, { rivalry: { who: 'rival', heat: 6 } }] },
+    ],
+  },
+  {
+    id: 'chp_challenger_nowhere', category: 'championship', title: `A Challenger Nobody Saw Coming`, weight: 2, major: true, cooldownDays: 200, maxPerCareer: 3, categoryCooldown: 10,
+    cast: { upstart: { pick: 'roster', tier: { lte: 1 }, sameBrand: true }, boss: { pick: 'staff', role: 'creative' } },
+    trigger: { holdsTitle: true, stat: { popularity: { gte: 30 } } },
+    slots: { story: [`a string of upsets in the opening matches`, `a viral backstage clip the office could not ignore`, `a surprise win over one of your friends`], urgency: [`the fans have started a chant`, `the sponsors have noticed`, `the network wants a fresh face`] },
+    body: [`{boss.name} breaks the news: {upstart.name}, off {story}, will get a shot at your title. {urgency}.`, `{upstart.first} is hungry, loose, and not afraid. You are the establishment, and the establishment has a lot to lose.`],
+    choices: [
+      { id: 'elevate', label: `Take the match and put the challenger over strong`, risk: 'med', result: `You work a generous, competitive match that builds {upstart.first}. You keep the belt, but the audience loves the new name nearly as much as the old.`, effects: [{ booking: { who: 'upstart', type: 'singles', stakes: 'title' } }, { rel: { who: 'upstart', respect: 10, trust: 6 } }, { pop: 0.4 }, { conf: 1 }] },
+      { id: 'crush', label: `Squash the challenger to protect your reign`, risk: 'med', outcomes: [
+        { weight: 2, bonus: { overall: 0.4 }, text: `You send a message to the entire roster. The champion is a wall. The fans are impressed, but some fans tire of watching a bully.`, effects: [{ booking: { who: 'upstart', type: 'singles', stakes: 'title' } }, { rel: { who: 'upstart', fear: 8, respect: -4, heat: 8 } }, { pop: 0.3 }, { conf: 4 }] },
+        { weight: 1, text: `The squash comes off as cruel, and the crowd rallies behind the upstart.`, effects: [{ booking: { who: 'upstart', type: 'singles', stakes: 'title' } }, { rel: { who: 'upstart', heat: 10 } }, { pop: -0.6 }, { conf: -1 }] } ] },
+      { id: 'mentor', label: `Take the challenger under your wing before the match`, risk: 'low', result: `You offer advice, a gym session, a moment of respect. The match becomes a mentor-versus-student story with real heart.`, effects: [{ event: { type: 'mentorship', participants: ['upstart'], summary: `Mentored {upstart.name} ahead of a title match.`, data: { byPlayer: true } } }, { booking: { who: 'upstart', type: 'singles', stakes: 'title' } }, { rel: { who: 'upstart', trust: 14, respect: 12, affinity: 10 } }, { fatigue: 6 }, { pop: 0.5 }] },
+      { id: 'refuse', label: `Refuse the match as beneath a champion`, risk: 'high', result: `You say the champion does not defend against unknowns. The office is annoyed, and the fans are more so.`, effects: [{ pop: -0.9 }, { conf: 2 }, { rel: { who: 'upstart', heat: 12, respect: -6 } }] },
+    ],
+  },
+  {
+    id: 'chp_briefcase_stalker', category: 'championship', title: `{cashin.name} Is Circling With a Briefcase`, weight: 3, major: true, cooldownDays: 200, maxPerCareer: 3, categoryCooldown: 10, contexts: ['weekly', 'post_match', 'post_show'],
+    cast: { cashin: { pick: 'roster', tier: { gte: 2, lte: 3 }, alignment: 'heel' } },
+    trigger: { minYear: 2005, holdsTitle: true, stat: { fatigue: { gte: 25 } } },
+    slots: { place: [`the shadows at the end of the tunnel`, `a corner of the car park`, `the empty announce desk`], rumour: [`after the main event`, `the moment the lights go down`, `when you are at your most exhausted`] },
+    body: [`You see {cashin.name} in {place}, gripping a locked briefcase and watching you like someone watching a clock. Everyone knows what is inside: a guaranteed title match, to be redeemed whenever {cashin.they} wants.`, `Rumour says it will be cashed in {rumour}. You are beaten up and still have a belt to hold.`],
+    choices: [
+      { id: 'confront', label: `Confront {cashin.them} and dare {cashin.them} to try`, risk: 'high', outcomes: [
+        { weight: 2, bonus: { confidence: 0.5, mic: 0.3 }, text: `You step into {cashin.first}'s space and say your piece. The standoff is tense, public and perfect television.`, effects: [{ rivalry: { who: 'cashin', heat: 14 } }, { rel: { who: 'cashin', fear: 4, heat: 10 } }, { pop: 0.8 }, { conf: 3 }] },
+        { weight: 1, text: `{cashin.first} smirks and walks away without a word. You look like you have been rattled.`, effects: [{ rel: { who: 'cashin', respect: -3 } }, { conf: -3 }, { pop: -0.2 }] } ] },
+      { id: 'avoid', label: `Avoid {cashin.them} and stay in public view`, risk: 'low', result: `You keep security close and your schedule tight. It's an exhausting way to live, but the title stays safe for now.`, effects: [{ fatigue: 8 }, { conf: -2 }, { pop: -0.1 }] },
+      { id: 'bait', label: `Bait {cashin.first} into cashing in early, on your terms`, risk: 'high', outcomes: [
+        { weight: 1, bonus: { overall: 0.5, confidence: 0.3 }, text: `You stage a moment of weakness, and {cashin.first} takes the bait. You retain in front of a stunned arena.`, effects: [{ booking: { who: 'cashin', type: 'singles', stakes: 'title' } }, { rivalry: { who: 'cashin', heat: 18 } }, { pop: 1.3 }, { conf: 5 }, { fatigue: 12 }] },
+        { weight: 2, text: `{cashin.first} reads the bait and waits. You have made yourself a bigger target for nothing.`, effects: [{ pop: -0.2 }, { conf: -3 }, { fatigue: 8 }, { rel: { who: 'cashin', heat: 6 } }] } ] },
+      { id: 'pre_empt', label: `Ask the office to book the match before it's cashed`, risk: 'med', result: `You push the office to force the issue. The match is booked on your terms, but it looks like you blinked.`, effects: [{ booking: { who: 'cashin', type: 'singles', stakes: 'title' } }, { pop: -0.1 }, { conf: 2 }, { rel: { who: 'cashin', respect: 3 } }] },
+    ],
+  },
+  {
+    id: 'chp_asked_to_drop', category: 'championship', title: `The Office Wants You to Drop the Title`, weight: 3, major: true, cooldownDays: 250, maxPerCareer: 3, categoryCooldown: 15,
+    cast: { successor: { pick: 'roster', tier: { gte: 2, lte: 4 } }, boss: { pick: 'staff', role: 'creative' } },
+    trigger: { holdsTitle: true, stat: { daysChampion: { gte: 60 } } },
+    slots: { reason: [`the new direction`, `a pay-per-view build`, `fan fatigue`, `an upcoming film release`], softener: [`a long hug`, `a promise of a rematch`, `a tray of expensive dinners`] },
+    body: [`{boss.name} looks like someone delivering bad news with the polite face already on. For {reason}, the title will move to {successor.name} at the next show, and it is your job to do the honours.`, `{boss.first} offers {softener}. The belt is the highlight of your career, and it is also, in the end, the company's property.`],
+    choices: [
+      { id: 'graceful', label: `Hand it over gracefully and make the loss look great`, risk: 'low', result: `You drop the belt in a clean, thrilling finish. {successor.first} gets the moment, and you get the thanks of the locker room.`, effects: [{ rel: { who: 'successor', respect: 10, trust: 8 } }, { pop: 0.4 }, { conf: -3 }] },
+      { id: 'bargain', label: `Agree only for a rematch clause and a bigger payday`, risk: 'med', outcomes: [
+        { weight: 2, bonus: { mic: 0.4, charisma: 0.3 }, text: `{boss.first} signs off on the rematch and a cheque to match. You lose the belt but keep your seat at the table.`, effects: [{ money: 12000 }, { pop: 0.2 }, { conf: 1 }, { rel: { who: 'successor', respect: 2 } }] },
+        { weight: 1, text: `The office hears the demand and hears ego. You get the cheque, but a cold front settles over the room.`, effects: [{ money: 12000 }, { conf: -2 }, { pop: -0.2 }] } ] },
+      { id: 'resist', label: `Fight the decision and plead to keep the title`, risk: 'high', outcomes: [
+        { weight: 1, bonus: { popularity: 0.5, confidence: 0.3 }, text: `The office is surprised by how popular you are and agrees to postpone the change. {successor.first} is not pleased.`, effects: [{ pop: 0.4 }, { conf: 4 }, { rel: { who: 'successor', heat: 10, respect: -4 } }] },
+        { weight: 2, text: `The plea goes nowhere, and it gets back to the locker room. You lose the belt and a little dignity.`, effects: [{ pop: -0.6 }, { conf: -4 }, { rel: { who: 'successor', heat: 6 } }] } ] },
+      { id: 'send_off', label: `Request a big send-off promo on the night`, risk: 'low', result: `You get your goodbye on live television, and the fans are on their feet. You lose the belt but win the room.`, effects: [{ pop: 0.8 }, { conf: 1 }, { rel: { who: 'successor', respect: 4 } }] },
+    ],
+  },
+  {
+    id: 'chp_long_reign_pressure', category: 'championship', title: `The Weight of a Long Reign`, weight: 2, major: true, cooldownDays: 250, maxPerCareer: 3, categoryCooldown: 15,
+    cast: { boss: { pick: 'staff', role: 'executive' }, media: { pick: 'media', kind: 'journalist' } },
+    trigger: { holdsTitle: true, stat: { daysChampion: { gte: 150 } } },
+    slots: { complaint: [`stale`, `predictable`, `a one-note act`], fix: [`a surprise opponent`, `a heel turn`, `a short break`, `a fresh gimmick`] },
+    body: [`{media.name} writes that your reign has become {complaint}, and {boss.name} forwards the column with a short note: "Fans are noticing."`, `The belt is heavier than it looks. The office suggests {fix}, but every fix has a cost.`],
+    choices: [
+      { id: 'reinvent', label: `Reinvent your approach and take a creative risk`, risk: 'high', outcomes: [
+        { weight: 2, bonus: { charisma: 0.5, mic: 0.4 }, text: `You throw out a script, try something new, and the crowd bites. The criticism fades into a "comeback" story.`, effects: [{ pop: 1.1 }, { conf: 4 }, { fatigue: 8 }] },
+        { weight: 1, text: `The experiment confuses fans, and they wait for the old champion to come back.`, effects: [{ pop: -0.5 }, { conf: -3 }, { fatigue: 8 }] } ] },
+      { id: 'defend', label: `Defend against every serious challenger in a gauntlet`, risk: 'med', result: `You defend the title again and again over the month. The fans respect the grind, and your body does not.`, effects: [{ promise: { kind: 'retain_title', text: `I will face every challenger and keep my title`, params: { defenses: 3 }, deadlineDays: 90 } }, { pop: 0.7 }, { conf: 3 }, { fatigue: 22 }] },
+      { id: 'break', label: `Ask for a short break to recharge`, risk: 'low', result: `The office agrees to a lighter schedule for two weeks. You return sharper but less visible.`, effects: [{ fatigue: -18 }, { pop: -0.4 }, { conf: 1 }] },
+      { id: 'ignore', label: `Ignore the column and carry on`, risk: 'med', result: `You shrug and stay the course. The silence reads as arrogance to some, steadiness to others.`, effects: [{ pop: -0.2 }, { conf: 2 }, { money: 1500 }] },
+    ],
+  },
+  {
+    id: 'chp_defence_milestone', category: 'championship', title: `Another Successful Defence`, weight: 2, major: true, cooldownDays: 250, maxPerCareer: 3, categoryCooldown: 12,
+    cast: { host: { pick: 'media', kind: 'interviewer' } },
+    trigger: { holdsTitle: true, stat: { defenses: { gte: 4 } } },
+    slots: { format: [`a prime-time sit-down`, `a stadium-side interview`, `a live Q&A with fans`], challenge: [`an open challenge to anyone`, `a defiant list of names`, `a calm refusal to name anyone`] },
+    body: [`{host.name} has you for {format} after yet another successful defence. The question is not whether you will keep winning, but what you will do about the line of challengers forming behind you.`, `You can offer {challenge}. The crowd is hanging on every word.`],
+    choices: [
+      { id: 'open', label: `Issue an open challenge to the entire locker room`, risk: 'high', outcomes: [
+        { weight: 2, bonus: { confidence: 0.5, mic: 0.4 }, text: `The open challenge sets the show alight. Nobody dares step forward on night one, but the next week is yours.`, effects: [{ pop: 1.1 }, { conf: 4 }, { fatigue: 10 }] },
+        { weight: 1, text: `A big name accepts, and the match is ugly. You retain, but at a cost.`, effects: [{ pop: 0.4 }, { conf: 1 }, { fatigue: 18 }, { injury: { part: 'legs', severity: 1, days: 10 } }] } ] },
+      { id: 'list', label: `Name the challengers you respect, in order`, risk: 'low', result: `You name three people and say why. The locker room hears it as respect, and the fans as a map.`, effects: [{ pop: 0.5 }, { conf: 2 }] },
+      { id: 'dismiss', label: `Say nobody is in your league`, risk: 'med', outcomes: [
+        { weight: 2, bonus: { mic: 0.5 }, text: `Your swagger polarises the crowd, and the heel energy is real. The ratings spike.`, effects: [{ pop: 0.8 }, { conf: 4 }] },
+        { weight: 1, text: `The claim lands as hollow arrogance, and a long line of challengers snap back.`, effects: [{ pop: -0.5 }, { conf: -2 }] } ] },
+      { id: 'humble', label: `Credit your opponents and the fans`, risk: 'low', result: `A warm, grounded answer lifts the room without lighting any fires.`, effects: [{ pop: 0.4 }, { conf: 1 }, { fatigue: -3 }] },
+    ],
+  },
+  {
+    id: 'chp_unification_talks', category: 'championship', title: `Unification Talks With {other.name}`, weight: 2, major: true, cooldownDays: 300, maxPerCareer: 2, categoryCooldown: 15,
+    cast: { other: { pick: 'champion', class: 'secondary' }, boss: { pick: 'staff', role: 'executive' } },
+    trigger: { minYear: 1990, holdsTitle: true, stat: { popularity: { gte: 40 } } },
+    slots: { framing: [`a historic night`, `a battle of the two champions`, `a necessary simplification`], terms: [`the stronger belt survives`, `the loser keeps their belt in a lesser role`, `both belts will be absorbed into one`] },
+    body: [`{boss.name} wants to bring your title and {other.name}'s together for {framing}. The proposal is that {terms}.`, `It is a prestige play, a storyline gold mine, and a gamble with your hard-won position.`],
+    choices: [
+      { id: 'unify', label: `Agree to the unification match`, risk: 'med', outcomes: [
+        { weight: 2, bonus: { overall: 0.4, confidence: 0.3 }, text: `You and {other.first} produce a night to remember, with a finish that justifies the build.`, effects: [{ booking: { who: 'other', type: 'singles', stakes: 'title' } }, { rel: { who: 'other', respect: 8 } }, { pop: 1.0 }, { conf: 4 }, { fatigue: 10 }] },
+        { weight: 1, text: `The match falls short of the build, and the finish is muddled. Nobody quite agrees what happened.`, effects: [{ booking: { who: 'other', type: 'singles', stakes: 'title' } }, { rel: { who: 'other', respect: 2 } }, { pop: 0.2 }, { fatigue: 10 }] } ] },
+      { id: 'terms', label: `Demand the right to name the stipulation`, risk: 'med', result: `The office bows to your pull and makes the match a No DQ bout. {other.first} is irritated but not surprised.`, effects: [{ booking: { who: 'other', type: 'no_dq', stakes: 'title' } }, { rel: { who: 'other', heat: 8 } }, { pop: 0.6 }, { conf: 2 }] },
+      { id: 'refuse', label: `Refuse: your belt is the crown`, risk: 'high', result: `You dismiss the idea, saying the lesser title should earn the right. The press calls you stubborn.`, effects: [{ pop: -0.3 }, { conf: 3 }, { rel: { who: 'other', heat: 10, respect: -5 } }] },
+      { id: 'delay', label: `Stall until you have a better position`, risk: 'low', result: `You slow-walk the talks, and the office loses interest. The belt stays yours, for now.`, effects: [{ conf: 1 }, { pop: -0.2 }, { fatigue: -2 }] },
+    ],
+  },
+  {
+    id: 'chp_after_the_belt', category: 'championship', title: `Life After the Title`, weight: 2, major: true, cooldownDays: 200, maxPerCareer: 3, categoryCooldown: 15,
+    cast: { boss: { pick: 'staff', role: 'creative' }, champ: { pick: 'champion', class: 'world' } },
+    trigger: { holdsTitle: false, stat: { titleWins: { gte: 1 } }, recent: { lossesGte: 2 } },
+    slots: { feel: [`a hole in the middle of your week`, `a kind of silence you have not heard in months`, `a plain, empty locker room`], pitch: [`a fresh program`, `a mentor role`, `a lengthy rest`] },
+    body: [`Since the loss, there is {feel}. The belt is on {champ.name}'s shoulder now, and the agents have started calling you by your first name.`, `{boss.name} offers {pitch}. The thing about losing a title is that every choice you make next gets read as a reaction to it.`],
+    choices: [
+      { id: 'rematch', label: `Demand a rematch and reclaim what is yours`, risk: 'high', outcomes: [
+        { weight: 2, bonus: { confidence: 0.5, popularity: 0.3 }, text: `You make a compelling case for a second chance. The office books it, and the build writes itself.`, effects: [{ booking: { who: 'champ', type: 'singles', stakes: 'title' } }, { promise: { kind: 'win_title', who: 'champ', text: `I will win my title back from {champ.name}`, deadlineDays: 90 } }, { pop: 0.8 }, { conf: 3 }] },
+        { weight: 1, text: `The request is shelved and a few eyebrows go up at your insistence.`, effects: [{ pop: -0.2 }, { conf: -3 }] } ] },
+      { id: 'grace', label: `Take a gracious step back and lead by example`, risk: 'low', result: `You congratulate the champion, offer help to younger wrestlers, and keep your name warm. The locker room approves.`, effects: [{ rel: { who: 'champ', respect: 8, trust: 5 } }, { pop: 0.3 }, { conf: -1 }] },
+      { id: 'bitter', label: `Lash out at the booking and the champion`, risk: 'high', outcomes: [
+        { weight: 1, bonus: { mic: 0.5 }, text: `Your rant lands as raw and real, and fans pick up on it. A new kind of heat begins.`, effects: [{ pop: 0.7 }, { rivalry: { who: 'champ', heat: 16 } }, { rel: { who: 'champ', heat: 12 } }, { conf: 2 }] },
+        { weight: 2, text: `The rant is aimed at the wrong people and the office takes notes. You look sour.`, effects: [{ pop: -0.7 }, { conf: -4 }, { rel: { who: 'champ', heat: 8 } }] } ] },
+      { id: 'reset', label: `Take time away to recharge and rebuild`, risk: 'low', result: `You step back from the spotlight and work on training, writing and the small details. It is a reset, but it is also a pause.`, effects: [{ fatigue: -16 }, { conf: 2 }, { pop: -0.4 }, { attr: { name: 'technical', delta: 1 } }] },
+    ],
+  },
+  {
+    id: 'chp_belt_duties', category: 'championship', title: `The Champion's Calendar`, weight: 2, major: true, cooldownDays: 200, maxPerCareer: 3, categoryCooldown: 10,
+    cast: { boss: { pick: 'staff', role: 'executive' } },
+    trigger: { holdsTitle: true, stat: { fatigue: { gte: 25 } } },
+    slots: { demand: [`a children's hospital visit`, `a sponsor luncheon`, `a morning-show tour`, `a mall appearance with a long line`], conflict: [`the same morning as a training session`, `the day before a title defence`, `an hour after you land from another city`] },
+    body: [`The champion's schedule is a monster. {boss.name} has added {demand}, scheduled {conflict}.`, `It is good for the company, good for the fans, and brutal for your body. You can say yes to everything, but not for long.`],
+    choices: [
+      { id: 'all', label: `Say yes to everything and push through`, risk: 'med', outcomes: [
+        { weight: 2, bonus: { confidence: 0.3 }, text: `You do it all with a smile. The office thinks you are a dream champion, and the fans are charmed.`, effects: [{ pop: 0.9 }, { money: 4000 }, { fatigue: 20 }, { conf: 2 }] },
+        { weight: 1, text: `By the third day, you are sleepwalking and miss a cue on live television.`, effects: [{ pop: 0.1 }, { money: 4000 }, { fatigue: 24 }, { conf: -3 }] } ] },
+      { id: 'trim', label: `Trim the schedule to the engagements that matter`, risk: 'low', result: `You pick the three that count and let the rest go. {boss.first} is mildly annoyed but understands.`, effects: [{ pop: 0.3 }, { fatigue: 6 }, { conf: 1 }] },
+      { id: 'delegate', label: `Send a stand-in to the less important events`, risk: 'med', result: `The stand-ins do a fine job, but the fans who wanted you notice. It saves energy and costs goodwill.`, effects: [{ pop: -0.4 }, { fatigue: -6 }, { conf: 1 }, { money: -1500 }] },
+      { id: 'refuse', label: `Refuse the extras: your job is in the ring`, risk: 'high', result: `You tell {boss.first} that the belt gets defended, not paraded. The office isn't thrilled, but the matches get sharper.`, effects: [{ conf: 3 }, { fatigue: -10 }, { pop: -0.6 }, { money: -3000 }] },
+    ],
+  },
+  {
+    id: 'chp_champion_dismisses', category: 'championship', title: `{champ.name} Brushes You Off`, weight: 3, major: true, cooldownDays: 150, maxPerCareer: 4, categoryCooldown: 10,
+    cast: { champ: { pick: 'champion', class: 'world' } },
+    trigger: { holdsTitle: false, stat: { popularity: { gte: 35 } } },
+    slots: { setting: [`on live television`, `at a press conference`, `in front of the whole locker room`], insult: [`"a nice story"`, `"a support act"`, `"not even a footnote"`] },
+    body: [`{setting}, {champ.name} is asked about the line of contenders behind the title. When your name comes up, {champ.they} laughs and calls you {insult}.`, `The room goes quiet. A response is expected, and the way you choose to give it will define your next month.`],
+    choices: [
+      { id: 'promo', label: `Answer on the mic with a career-best promo`, risk: 'med', outcomes: [
+        { weight: 2, bonus: { mic: 0.7, charisma: 0.3 }, text: `You rip the insult apart in front of a screaming crowd. By the end, even the champion has stopped laughing.`, effects: [{ rivalry: { who: 'champ', heat: 14 } }, { rel: { who: 'champ', heat: 10, respect: 4 } }, { pop: 1.2 }, { conf: 4 }, { event: { type: 'promo_delivered', participants: ['champ'], summary: `Answered {champ.name}'s dismissal on the mic.`, data: { quality: { base: 66, mic: 0.6, charisma: 0.3 }  } } }] },
+        { weight: 1, text: `You trip over the key line and the promo drains away. Boos follow.`, effects: [{ rivalry: { who: 'champ', heat: 8 } }, { pop: -0.5 }, { conf: -4 }] } ] },
+      { id: 'attack', label: `Ambush {champ.them} backstage`, risk: 'high', outcomes: [
+        { weight: 2, bonus: { overall: 0.4, confidence: 0.3 }, text: `You land the first blows. By the time security arrives, a story is born.`, effects: [{ rivalry: { who: 'champ', heat: 20 } }, { rel: { who: 'champ', heat: 16, fear: 4 } }, { pop: 0.8 }, { conf: 3 }, { fatigue: 5 }] },
+        { weight: 1, text: `The champion was ready for you. You limp away with a bruised ribcage and a lecture.`, effects: [{ rivalry: { who: 'champ', heat: 14 } }, { pop: -0.3 }, { conf: -3 }, { fatigue: 8 }] } ] },
+      { id: 'request', label: `Take it up with the office and request a match`, risk: 'low', result: `You skip the theatrics and ask for a shot. The office likes your professionalism and will consider it.`, effects: [{ rel: { who: 'champ', respect: 3 } }, { pop: 0.2 }, { conf: 1 }] },
+      { id: 'ignore', label: `Let it slide and let the results do the talking`, risk: 'low', result: `You smile, say nothing, and win your next three matches. It takes a while, but the quiet answer is the loudest.`, effects: [{ conf: 2 }, { pop: -0.1 }, { rel: { who: 'champ', respect: 4 } }] },
+    ],
+  },
+  {
+    id: 'chp_tag_ambition', category: 'championship', title: `{partner.name} Wants the Tag Titles`, weight: 2, major: true, cooldownDays: 250, maxPerCareer: 3, categoryCooldown: 12,
+    cast: { partner: { pick: 'roster', tier: { gte: 1, lte: 3 }, sameBrand: true }, champ: { pick: 'champion', class: 'tag' } },
+    trigger: { holdsTitle: false, stat: { popularity: { gte: 25 } } },
+    slots: { pitch: [`a team with a snappy name`, `a cheap, scrappy duo that fights dirty`, `a stately partnership built on trust`], reason: [`Neither of you is getting a singles push`, `The tag division is thin`, `The champions are holding everyone back`] },
+    body: [`{partner.name} proposes {pitch}. "{reason}," {partner.they} says, "and the tag belts are the fastest route to a pay-per-view card."`, `The idea has merit, and the current champions have noticed. But a tag team is a marriage, and singles gold is lonely.`],
+    choices: [
+      { id: 'team_up', label: `Team up and go after the tag championships`, risk: 'med', outcomes: [
+        { weight: 2, bonus: { overall: 0.3, charisma: 0.3 }, text: `Your chemistry clicks, and the first few matches make the crowd smile. The tag champions start to look over their shoulders.`, effects: [{ event: { type: 'alliance_formed', participants: ['partner'], summary: `Formed a tag team with {partner.name}.`, data: {} } }, { booking: { who: 'champ', type: 'tag', stakes: 'title' } }, { rel: { who: 'partner', trust: 10, affinity: 8 } }, { pop: 0.8 }, { conf: 3 }] },
+        { weight: 1, text: `The partnership never quite finds its rhythm, and the sloppy matches keep the team in the lower card.`, effects: [{ event: { type: 'alliance_formed', participants: ['partner'], summary: `Formed a shaky tag team with {partner.name}.`, data: {} } }, { rel: { who: 'partner', trust: 4 } }, { pop: -0.2 }, { conf: -2 }] } ] },
+      { id: 'singles', label: `Decline: your future is as a singles star`, risk: 'low', result: `You tell {partner.first} you are better alone. {partner.they} nods, hurt but understanding.`, effects: [{ rel: { who: 'partner', trust: -4, respect: 2 } }, { conf: 2 }, { pop: 0.1 }] },
+      { id: 'one_off', label: `Agree to one tag match, no strings`, risk: 'low', result: `A one-night partnership keeps the door open without a long commitment. The match is solid, and {partner.first} appreciates the compromise.`, effects: [{ rel: { who: 'partner', trust: 5, respect: 4 } }, { pop: 0.3 }, { fatigue: 5 }] },
+      { id: 'steal', label: `Go after the tag champions as a singles challenger`, risk: 'high', result: `You ignore {partner.first}'s plan and make your own pitch to the office. It's gutsy, and {partner.they} will not forget it.`, effects: [{ booking: { who: 'champ', type: 'singles', stakes: 'title' } }, { rel: { who: 'partner', trust: -12, heat: 10 } }, { pop: 0.4 }, { conf: 2 }] },
+    ],
+  },
+  {
+    id: 'chp_midcard_belt', category: 'championship', title: `The Forgotten Championship`, weight: 2, major: true, cooldownDays: 200, maxPerCareer: 3, categoryCooldown: 12,
+    cast: { holder: { pick: 'champion', class: 'secondary' }, boss: { pick: 'staff', role: 'creative' } },
+    trigger: { holdsTitle: false, stat: { popularity: { gte: 20, lte: 65 } } },
+    slots: { state: [`a tarnished belt that nobody has defended in months`, `a proud title being treated like a prop`, `a championship with a good name and no storyline`], prize: [`a real feud`, `a real spot on the card`, `a real shot at prestige`] },
+    body: [`The secondary title sits on {holder.name}'s shoulder, {state}. {boss.name} suggests that it could be a ladder for the right wrestler, bringing {prize}.`, `It is not the world title, and nobody pretends it is. But it is a belt, and belts mean booking.`],
+    choices: [
+      { id: 'chase', label: `Chase the belt and rebuild its prestige`, risk: 'med', outcomes: [
+        { weight: 2, bonus: { overall: 0.4, charisma: 0.3 }, text: `You and {holder.first} stage a feud that makes the title matter again. Fans start tuning in for the secondary belt.`, effects: [{ booking: { who: 'holder', type: 'singles', stakes: 'title' } }, { rivalry: { who: 'holder', heat: 10 } }, { pop: 0.9 }, { conf: 3 }] },
+        { weight: 1, text: `The attempt goes sideways. Crowds don't care, and you get nothing but a few polite claps.`, effects: [{ booking: { who: 'holder', type: 'singles', stakes: 'title' } }, { pop: 0.1 }, { conf: -2 }] } ] },
+      { id: 'aim_higher', label: `Wait for a world title chance instead`, risk: 'med', result: `You turn the pitch down, saying you are aiming higher. The office makes a note and moves on.`, effects: [{ conf: 2 }, { pop: -0.2 }] },
+      { id: 'steal_spotlight', label: `Cut a promo calling the belt a joke to rally the fans`, risk: 'high', outcomes: [
+        { weight: 1, bonus: { mic: 0.6 }, text: `You say what everyone has been thinking, and the crowd cheers. {holder.first} fires back and the feud takes off.`, effects: [{ rivalry: { who: 'holder', heat: 18 } }, { rel: { who: 'holder', heat: 14 } }, { pop: 1.0 }, { conf: 3 }] },
+        { weight: 2, text: `The office does not like having its belt mocked. A producer cools your next few spots.`, effects: [{ pop: -0.5 }, { conf: -3 }, { rel: { who: 'holder', heat: 8 } }] } ] },
+      { id: 'team', label: `Propose a unified storyline with {holder.name}`, risk: 'low', result: `You and {holder.first} map out a story with mutual benefit. It's smart, safe, and a little too tidy.`, effects: [{ rel: { who: 'holder', trust: 8, respect: 6 } }, { pop: 0.4 }, { conf: 1 }] },
+    ],
+  },
+  {
+    id: 'chp_champion_leverage', category: 'championship', title: `{champ.name} Wants to Call the Match`, weight: 2, major: true, cooldownDays: 200, maxPerCareer: 3, categoryCooldown: 10,
+    cast: { champ: { pick: 'champion', class: 'world' }, boss: { pick: 'staff', role: 'producer' } },
+    trigger: { holdsTitle: false, stat: { popularity: { gte: 30 } } },
+    slots: { demand: [`work a slower, safer style`, `lose the first fall cleanly`, `cut your best spots out of the match`], reason: [`the champion's back is acting up`, `the champion knows the camera angles and you do not`, `the champion has pull and enjoys using it`] },
+    body: [`Before your title match, {champ.name} sits you down for a talk: you will {demand}. {boss.name} confirms that the champion has leverage, because {reason}.`, `It's reasonable, up to a point. It is also a slow erosion of your edge.`],
+    choices: [
+      { id: 'defer', label: `Defer to the champion and keep the peace`, risk: 'low', result: `You do as asked and the match works well enough. {champ.first} is grateful and the locker room sees a professional.`, effects: [{ rel: { who: 'champ', respect: 8, trust: 6 } }, { pop: 0.1 }, { conf: -3 }] },
+      { id: 'compromise', label: `Negotiate a middle path`, risk: 'med', outcomes: [
+        { weight: 2, bonus: { charisma: 0.4, mic: 0.3 }, text: `You give a little and take a little. The match keeps your best spots and the champion keeps the pace.`, effects: [{ rel: { who: 'champ', respect: 5 } }, { pop: 0.5 }, { conf: 2 }] },
+        { weight: 1, text: `Negotiations stall and the match is clumsy as a result.`, effects: [{ rel: { who: 'champ', heat: 6 } }, { pop: -0.2 }, { conf: -2 }] } ] },
+      { id: 'refuse', label: `Refuse and go to the producer`, risk: 'high', outcomes: [
+        { weight: 1, bonus: { popularity: 0.4, confidence: 0.4 }, text: `{boss.first} listens to you, and the champion is told to adapt. It's a rare win over a veteran's leverage.`, effects: [{ rel: { who: 'champ', heat: 12, respect: -4 } }, { pop: 0.5 }, { conf: 4 }] },
+        { weight: 2, text: `The producer sides with the champion. You have made an enemy and gained nothing.`, effects: [{ rel: { who: 'champ', heat: 12 } }, { pop: -0.4 }, { conf: -4 }] } ] },
+      { id: 'go_rogue', label: `Say yes, then do it your way in the ring`, risk: 'high', outcomes: [
+        { weight: 1, bonus: { overall: 0.5, confidence: 0.3 }, text: `You deviate on the night, the crowd goes wild, and the champion has to go along. It's a thrilling match and a dangerous move.`, effects: [{ pop: 1.2 }, { conf: 4 }, { rel: { who: 'champ', trust: -14, heat: 14 } }, { rivalry: { who: 'champ', heat: 10 } }] },
+        { weight: 2, text: `The champion catches you deviating and reins it in so hard that you look foolish. Backstage is cold afterwards.`, effects: [{ pop: -0.5 }, { conf: -4 }, { rel: { who: 'champ', trust: -12, heat: 10 } }] } ] },
+    ],
+  },
+  {
+    id: 'chp_defend_hurt', category: 'championship', title: `Defending With a Bad Body`, weight: 3, major: true, cooldownDays: 200, maxPerCareer: 3, categoryCooldown: 12,
+    cast: { doctor: { pick: 'staff', role: 'doctor' }, boss: { pick: 'staff', role: 'gm' } },
+    trigger: { holdsTitle: true, injured: true },
+    slots: { hurt: [`a torn rotator cuff`, `a deep bone bruise in your leg`, `three cracked ribs`], defence: [`next week`, `at the upcoming pay-per-view`, `in two days`] },
+    body: [`{doctor.name} lays out the facts: {hurt}, and it will not heal before your next title defence {defence}. Working through it risks turning a short layoff into a long one.`, `{boss.name} says the office will back any call. But if you step aside, the belt may not be yours when you return.`],
+    choices: [
+      { id: 'defend', label: `Defend the title anyway and work through the pain`, risk: 'high', outcomes: [
+        { weight: 2, bonus: { confidence: 0.4, overall: 0.3 }, text: `You walk in on borrowed willpower and leave with the belt. The crowd worships you, and the doctors do not.`, effects: [{ pop: 1.3 }, { conf: 5 }, { fatigue: 20 }] },
+        { weight: 1, text: `Midway through, something snaps. You finish the bout, but the injury is far worse than it was.`, effects: [{ pop: 0.5 }, { fatigue: 24 }, { injury: { part: 'torso', severity: 2, days: 45 } }, { conf: -3 }] } ] },
+      { id: 'adjust', label: `Defend, but ask for a short, protective finish`, risk: 'med', result: `The agents book a quick finish and an angle to cover the shortfall. The title stays, the match is short, and the audience mostly accepts it.`, effects: [{ pop: 0.3 }, { conf: 1 }, { fatigue: 8 }] },
+      { id: 'vacate', label: `Step aside and let the title be vacated`, risk: 'low', result: `You hand the belt to the office. The fans are sympathetic, but sympathy is no substitute for a title.`, effects: [{ pop: -0.3 }, { conf: -4 }, { fatigue: -18 }] },
+      { id: 'hide', label: `Hide the injury from the office and fans`, risk: 'high', outcomes: [
+        { weight: 1, text: `Nobody notices. You retain, and the secret gives you a thrilling private pride.`, effects: [{ pop: 0.8 }, { conf: 3 }, { fatigue: 20 }] },
+        { weight: 2, text: `The doctor finds out. The office is furious, and you lose trust as well as time.`, effects: [{ pop: -0.4 }, { conf: -4 }, { fatigue: 18 }, { injury: { part: 'legs', severity: 1, days: 20 } }] } ] },
+    ],
+  },
+  // ============================================================ OPPORTUNITY
+  {
+    id: 'opp_main_event_nontitle', category: 'opportunity', title: `Main Event Slot, No Belt on the Line`, weight: 3, major: true, cooldownDays: 200, maxPerCareer: 4, categoryCooldown: 12,
+    cast: { star: { pick: 'roster', tier: { gte: 3 }, sameBrand: true }, boss: { pick: 'staff', role: 'gm' } },
+    trigger: { stat: { popularity: { gte: 45 }, mainEvents: { lte: 3 } } },
+    slots: { show: [`this week's closer`, `the final match of the next big show`, `a special-event headliner`], reason: [`a star pulled out with an injury`, `the ratings need a spark`, `the office wants to see if you can carry the hour`] },
+    body: [`{boss.name} wants you in the main event of {show} against {star.name}, because {reason}. No title is on the line, and the poster will not carry your name.`, `It is a spotlight with a trapdoor. Do it well and you are a main-event name. Do it badly and the office may not offer again.`],
+    choices: [
+      { id: 'accept', label: `Take the slot and treat it as the biggest night of your life`, risk: 'med', outcomes: [
+        { weight: 2, bonus: { overall: 0.5, confidence: 0.3 }, text: `You and {star.first} tear the roof off. By the final minutes, the crowd is yours and the star is nodding in approval.`, effects: [{ booking: { who: 'star', type: 'singles' } }, { rel: { who: 'star', respect: 10 } }, { pop: 1.4 }, { conf: 5 }, { fatigue: 12 }] },
+        { weight: 1, text: `The match is solid but uneventful, and the crowd stays on its seats. You get the credit for showing up, not for stealing the show.`, effects: [{ booking: { who: 'star', type: 'singles' } }, { rel: { who: 'star', respect: 4 } }, { pop: 0.4 }, { fatigue: 12 }] } ] },
+      { id: 'demand_belt', label: `Ask for the title to be on the line`, risk: 'high', outcomes: [
+        { weight: 1, bonus: { popularity: 0.5, mic: 0.4 }, text: `{boss.first} blinks. The office upgrades the match, and you have an enormous opportunity.`, effects: [{ booking: { who: 'star', type: 'singles', stakes: 'title' } }, { pop: 1.0 }, { conf: 4 }] },
+        { weight: 2, text: `The office decides you are not ready for that call. The slot is reassigned.`, effects: [{ pop: -0.4 }, { conf: -4 }] } ] },
+      { id: 'tag', label: `Suggest a tag match, so you aren't alone out there`, risk: 'low', result: `The match becomes a tag bout. It is safer and still a main event, but the glory is shared.`, effects: [{ booking: { who: 'star', type: 'tag' } }, { rel: { who: 'star', respect: 2 } }, { pop: 0.6 }, { conf: 1 }] },
+      { id: 'pass', label: `Turn it down and wait for a better setup`, risk: 'low', result: `You decline and say you want to earn a bigger slot. {boss.first} shrugs. The opportunity goes to someone else.`, effects: [{ pop: -0.4 }, { conf: -2 }, { fatigue: -6 }] },
+    ],
+  },
+  {
+    id: 'opp_asked_to_lose', category: 'opportunity', title: `Lose to {star.name} on the Big Show`, weight: 3, major: true, cooldownDays: 200, maxPerCareer: 4, categoryCooldown: 12,
+    cast: { star: { pick: 'roster', tier: { gte: 3 } }, boss: { pick: 'staff', role: 'producer' } },
+    trigger: { eventWithin: { kind: 'ple', days: 14 }, stat: { popularity: { gte: 30 } } },
+    slots: { pitch: [`it is a favour to the whole card`, `it protects a big angle`, `it is a business decision`], offer: [`a sizeable bonus`, `a better slot next time`, `a shot at the star's allies`] },
+    body: [`{boss.name} walks you through the card: you are booked to lose to {star.name} at the pay-per-view. {pitch}, and in return you get {offer}.`, `The loss will be clean, quick and televised. It also sits on your record.`],
+    choices: [
+      { id: 'accept', label: `Accept and make {star.first} look like a world-beater`, risk: 'low', result: `You sell every move and lose with grace. {star.first} owes you a favour, and you earn a quiet reputation.`, effects: [{ rel: { who: 'star', respect: 10, trust: 8 } }, { money: 6000 }, { pop: 0.1 }, { conf: -3 }] },
+      { id: 'bargain', label: `Accept but demand a rematch clause`, risk: 'med', outcomes: [
+        { weight: 2, bonus: { mic: 0.3, charisma: 0.3 }, text: `{boss.first} agrees, and a rematch is pencilled in. It is a smart trade that costs you nothing but ego.`, effects: [{ rel: { who: 'star', respect: 4 } }, { money: 3000 }, { pop: 0.3 }, { conf: 1 }] },
+        { weight: 1, text: `The clause is promised but never written. You lose the match and nothing else comes of it.`, effects: [{ money: 3000 }, { conf: -3 }] } ] },
+      { id: 'compete', label: `Ask for a competitive loss that makes you look strong`, risk: 'med', outcomes: [
+        { weight: 2, bonus: { overall: 0.4, popularity: 0.3 }, text: `You lose, but you leave the audience thinking you nearly won. The sympathy is genuine.`, effects: [{ rel: { who: 'star', respect: 6 } }, { pop: 0.8 }, { conf: 2 }, { fatigue: 8 }] },
+        { weight: 1, text: `The star doesn't want to share the stage. You are overshadowed.`, effects: [{ rel: { who: 'star', heat: 6 } }, { pop: -0.1 }, { conf: -2 }, { fatigue: 8 }] } ] },
+      { id: 'refuse', label: `Refuse to lose`, risk: 'high', result: `You tell {boss.first} the loss isn't worth the favour. The slot goes elsewhere, and so does a chunk of goodwill.`, effects: [{ pop: -0.3 }, { conf: 3 }, { rel: { who: 'star', respect: -6, heat: 8 } }, { money: -2000 }] },
+    ],
+  },
+  {
+    id: 'opp_new_brand_face', category: 'opportunity', title: `Be the Face of the New Direction`, weight: 2, major: true, cooldownDays: 400, maxPerCareer: 2, categoryCooldown: 20,
+    cast: { exec: { pick: 'staff', role: 'executive' } },
+    trigger: { minYear: 2002, brand: ['Raw'], stat: { popularity: { gte: 50 }, careerYears: { gte: 2 } } },
+    slots: { launch: [`a flagship Friday broadcast`, `a reimagined roster built around new faces`, `a brand-new championship picture`], promise: [`a main-event spot every week`, `a say in your own booking`, `a guaranteed title run`] },
+    body: [`{exec.name} invites you to lunch and gets to the point. The company is launching {launch} on the other brand and wants you as the centrepiece. The pitch: {promise}.`, `Leaving your current show means leaving a roster, a rhythm and some loyalties. Staying means hoping the offer comes again.`],
+    choices: [
+      { id: 'jump', label: `Move to the new brand and lead the charge`, risk: 'high', outcomes: [
+        { weight: 2, bonus: { popularity: 0.4, confidence: 0.3 }, text: `The move is an instant event. Fans tune in to see you headline, and the company rewards the bet.`, effects: [{ brand: 'SmackDown' }, { pop: 1.3 }, { conf: 4 }, { money: 10000 }] },
+        { weight: 1, text: `The brand struggles to find its audience, and you carry too much on your shoulders.`, effects: [{ brand: 'SmackDown' }, { pop: 0.2 }, { conf: -2 }, { fatigue: 12 }, { money: 10000 }] } ] },
+      { id: 'terms', label: `Stay, and use the offer to renegotiate your deal`, risk: 'med', outcomes: [
+        { weight: 2, bonus: { mic: 0.3, charisma: 0.3 }, text: `You leverage the interest and walk away with a better deal on your current show.`, effects: [{ money: 14000 }, { conf: 3 }, { pop: 0.3 }] },
+        { weight: 1, text: `The executive sees through the manoeuvre and withdraws the offer entirely.`, effects: [{ money: 2000 }, { conf: -2 }, { pop: -0.2 }] } ] },
+      { id: 'stay', label: `Decline out of loyalty to your current roster`, risk: 'low', result: `You turn down the offer. The locker room hears about it, and the loyalty is noticed and appreciated.`, effects: [{ conf: 2 }, { pop: 0.2 }, { fatigue: -3 }] },
+      { id: 'stall', label: `Ask for time and shop the offer around`, risk: 'med', result: `The offer stays open for a month, then quietly closes. You gain nothing but information and a reputation for indecision.`, effects: [{ conf: -1 }, { pop: -0.2 }, { money: 1000 }] },
+    ],
+  },
+  {
+    id: 'opp_locker_room_vote', category: 'opportunity', title: `The Locker Room Wants a Voice`, weight: 2, major: true, cooldownDays: 365, maxPerCareer: 2, categoryCooldown: 20,
+    cast: { rep: { pick: 'roster', tier: { gte: 2, lte: 4 }, sameBrand: true }, boss: { pick: 'staff', role: 'gm' } },
+    trigger: { stat: { careerYears: { gte: 2 }, popularity: { gte: 30 } } },
+    slots: { issue: [`pay and travel`, `injury protection`, `how much time is protected for rest`], deadline: [`before the next tour`, `by the end of the month`, `in a week`] },
+    body: [`A vote is brewing to pick a locker-room representative who can speak to {boss.name} about {issue}, and the decision lands {deadline}. {rep.name} is the front-runner, but a few veterans have quietly suggested you.`, `The job comes with respect, headaches, and a seat in rooms where bad news is delivered.`],
+    choices: [
+      { id: 'run', label: `Run for the role and fight for the roster`, risk: 'high', outcomes: [
+        { weight: 2, bonus: { charisma: 0.5, confidence: 0.3 }, text: `Your speech wins over a crowded locker room. You take the post and hold your first meeting with management.`, effects: [{ rel: { who: 'rep', respect: -2, heat: 6 } }, { pop: 0.4 }, { conf: 5 }, { fatigue: 8 }] },
+        { weight: 1, text: `You lose the vote, and the front-runner enjoys a little too much of it.`, effects: [{ rel: { who: 'rep', heat: 4 } }, { conf: -3 }, { pop: -0.2 }] } ] },
+      { id: 'endorse', label: `Endorse {rep.first} and stay in the background`, risk: 'low', result: `You back the front-runner publicly. {rep.first} wins, and the debt is acknowledged.`, effects: [{ rel: { who: 'rep', trust: 10, respect: 6 } }, { conf: 1 }] },
+      { id: 'boss_side', label: `Whisper to the GM that you can keep the room quiet`, risk: 'high', outcomes: [
+        { weight: 1, bonus: { charisma: 0.4 }, text: `{boss.first} likes the idea, and you win favours behind the scenes. But the whispering gets out.`, effects: [{ money: 6000 }, { conf: 2 }, { rel: { who: 'rep', trust: -8, respect: -6 } }, { pop: -0.3 }] },
+        { weight: 2, text: `The word gets back to the veterans before the end of the day. You are branded a company stooge.`, effects: [{ rel: { who: 'rep', trust: -14, respect: -10, heat: 8 } }, { pop: -0.8 }, { conf: -4 }] } ] },
+      { id: 'abstain', label: `Abstain: you are here to wrestle`, risk: 'low', result: `You stay out of the whole business. Nobody holds it against you, nor do they remember it.`, effects: [{ conf: 1 }, { fatigue: -3 }] },
+    ],
+  },
+  {
+    id: 'opp_hof_induction', category: 'opportunity', title: `Introduce {legend.name} at the Hall of Fame`, weight: 2, major: true, cooldownDays: 365, maxPerCareer: 2, categoryCooldown: 20, contexts: ['weekly', 'post_show'],
+    cast: { legend: { pick: 'roster', tier: { gte: 4 } }, exec: { pick: 'staff', role: 'executive' } },
+    trigger: { minYear: 1993, eventWithin: { id: 'wrestlemania', days: 21 }, stat: { popularity: { gte: 35 } } },
+    slots: { honour: [`a place in the main ceremony`, `a short speech before the video package`, `the final words before the trophy`], tone: [`the emotional heart of the night`, `a chance to tell a story only you know`, `a stage with the whole industry watching`] },
+    body: [`{exec.name} calls with an invitation: {legend.name} is being inducted into the Hall of Fame, and the legend has asked for you to give the introduction. You'll have {honour}.`, `It is {tone}. The honour is genuine, and so is the pressure to say the right thing in front of the biggest names in the business.`],
+    choices: [
+      { id: 'heartfelt', label: `Write a heartfelt speech from scratch`, risk: 'med', outcomes: [
+        { weight: 2, bonus: { mic: 0.5, charisma: 0.4 }, text: `Your words land, the room is quiet and then on its feet. {legend.first} wipes an eye, and the video makes the rounds.`, effects: [{ rel: { who: 'legend', respect: 14, affinity: 10, trust: 8 } }, { pop: 1.0 }, { conf: 4 }, { event: { type: 'promo_delivered', participants: ['legend'], summary: `Delivered a heartfelt Hall of Fame introduction for {legend.name}.`, data: { quality: { base: 66, mic: 0.5, charisma: 0.4 } } } }] },
+        { weight: 1, text: `You stumble over the middle and forget a line. {legend.first} laughs and rescues you with a joke.`, effects: [{ rel: { who: 'legend', respect: 8, affinity: 6 } }, { pop: 0.3 }, { conf: -2 }] } ] },
+      { id: 'funny', label: `Go for laughs with a roast-style tribute`, risk: 'high', outcomes: [
+        { weight: 1, bonus: { charisma: 0.6 }, text: `You have the room howling, including the guest of honour. It's the most fun of the night.`, effects: [{ rel: { who: 'legend', respect: 8, affinity: 10 } }, { pop: 1.1 }, { conf: 3 }] },
+        { weight: 2, text: `A few of the jokes cross the line, and the room goes cold. {legend.first} takes it with a stiff smile.`, effects: [{ rel: { who: 'legend', respect: -8, heat: 6 } }, { pop: -0.5 }, { conf: -4 }] } ] },
+      { id: 'short', label: `Keep it brief and let the video do the work`, risk: 'low', result: `You say thirty heartfelt seconds and step aside. It's tasteful, quiet, and a little forgettable.`, effects: [{ rel: { who: 'legend', respect: 4 } }, { pop: 0.2 }, { conf: 1 }] },
+      { id: 'decline', label: `Decline: you do not want the spotlight`, risk: 'med', result: `You turn it down and recommend someone else. {legend.first} is hurt but gracious, and you miss a rare chance.`, effects: [{ rel: { who: 'legend', respect: -6, trust: -4 } }, { conf: -2 }, { fatigue: -3 }] },
+    ],
+  },
+  {
+    id: 'opp_program_with_star', category: 'opportunity', title: `A Program With {star.name}`, weight: 3, major: true, cooldownDays: 250, maxPerCareer: 3, categoryCooldown: 15,
+    cast: { star: { pick: 'roster', tier: { gte: 3 }, sameBrand: true }, boss: { pick: 'staff', role: 'creative' } },
+    trigger: { stat: { popularity: { gte: 35 }, careerYears: { gte: 1 } } },
+    slots: { length: [`three weeks`, `six weeks`, `a full quarter`], price: [`a character shift`, `a bruising losing streak early on`, `a rewritten finishing move`] },
+    body: [`{boss.name} unrolls a storyboard for a program between you and {star.name}, running {length}. It is a rare chance to be seen beside a headliner. The price is {price}.`, `Stars help careers, and they also take over them. You'd be sharing the stage with someone whose shadow is long.`],
+    choices: [
+      { id: 'accept', label: `Accept the program and the price`, risk: 'med', outcomes: [
+        { weight: 2, bonus: { overall: 0.4, charisma: 0.3 }, text: `The program clicks. You spar with {star.first}, learn on the fly, and finish with a name that means something.`, effects: [{ rivalry: { who: 'star', heat: 14 } }, { rel: { who: 'star', respect: 8 } }, { pop: 1.1 }, { conf: 3 }, { fatigue: 12 }] },
+        { weight: 1, text: `The star steamrolls you for most of the run. The audience only remembers the final week.`, effects: [{ rivalry: { who: 'star', heat: 10 } }, { rel: { who: 'star', respect: 3 } }, { pop: 0.4 }, { conf: -2 }, { fatigue: 12 }] } ] },
+      { id: 'negotiate', label: `Counter with terms that protect your image`, risk: 'med', result: `You push back and win half of what you want. The story is still strong, but the star's camp is cooler toward you.`, effects: [{ rivalry: { who: 'star', heat: 8 } }, { rel: { who: 'star', respect: 2, heat: 4 } }, { pop: 0.5 }, { conf: 2 }, { fatigue: 8 }] },
+      { id: 'friendly', label: `Propose a respectful, partnership-style program`, risk: 'low', result: `You and {star.first} find common ground, and the program becomes a slow-burn friendship. It is warm, but nobody is losing sleep.`, effects: [{ rel: { who: 'star', trust: 10, respect: 8, affinity: 6 } }, { tag: { who: 'star', tag: 'ally' } }, { pop: 0.4 }, { conf: 1 }] },
+      { id: 'decline', label: `Decline and keep your current direction`, risk: 'low', result: `You turn down the program, to the surprise of the room. You keep your character and your pride.`, effects: [{ conf: 2 }, { pop: -0.4 }, { rel: { who: 'star', respect: -3 } }] },
+    ],
+  },
+  {
+    id: 'opp_screen_offer', category: 'opportunity', title: `A Studio Wants You for {part}`, weight: 2, major: true, cooldownDays: 365, maxPerCareer: 2, categoryCooldown: 20,
+    cast: { exec: { pick: 'staff', role: 'executive' } },
+    trigger: { minYear: 2000, stat: { popularity: { gte: 45 }, money: { gte: 5000 } } },
+    slots: { part: [`a supporting role`, `a cameo`, `a voice role`, `a reality series`], shoot: [`six weeks overseas`, `three separate weekends`, `a month that overlaps with a pay-per-view`] },
+    body: [`A production company has called the front office about {part}. The shoot would take {shoot}, and the fee is more than you make in a quarter.`, `{exec.name} says the company would back the project, but with conditions. The spotlight is tempting. So is the risk of being absent when the crowd needs you.`],
+    choices: [
+      { id: 'accept', label: `Take the role and rearrange your schedule`, risk: 'med', outcomes: [
+        { weight: 2, bonus: { charisma: 0.5, popularity: 0.3 }, text: `Your screen time introduces you to a new audience. When you return to the ring, the cheers are louder.`, effects: [{ money: 40000 }, { pop: 1.0 }, { conf: 3 }, { fatigue: 16 }] },
+        { weight: 1, text: `The project is shelved after you have already cleared your calendar. The money is nice, but the momentum is lost.`, effects: [{ money: 20000 }, { pop: -0.4 }, { conf: -2 }, { fatigue: 12 }] } ] },
+      { id: 'terms', label: `Accept only if the company tailors your schedule`, risk: 'med', result: `The company agrees to a lighter workload on the road. You still make the movie, but the paycheque is smaller and your name shrinks in the credits.`, effects: [{ money: 18000 }, { pop: 0.5 }, { conf: 2 }, { fatigue: 8 }] },
+      { id: 'tie_in', label: `Pitch a story crossover that ties the project to the ring`, risk: 'high', outcomes: [
+        { weight: 1, bonus: { charisma: 0.5, mic: 0.4 }, text: `The tie-in becomes a two-way win. Fans of one flock to the other, and the executive is delighted.`, effects: [{ money: 30000 }, { pop: 1.4 }, { conf: 4 }] },
+        { weight: 2, text: `The producers don't care for being told how to sell their product, and walk away.`, effects: [{ pop: -0.2 }, { conf: -3 }] } ] },
+      { id: 'decline', label: `Decline: wrestling is your focus`, risk: 'low', result: `You send a polite no and return to your training. The fans never know what they missed.`, effects: [{ conf: 2 }, { pop: -0.1 }, { fatigue: -4 }] },
+    ],
+  },
+  {
+    id: 'opp_overseas_tour', category: 'opportunity', title: `A Tour Through {region}`, weight: 2, major: true, cooldownDays: 300, maxPerCareer: 3, categoryCooldown: 15,
+    cast: { boss: { pick: 'staff', role: 'producer' } },
+    trigger: { stat: { popularity: { gte: 25 }, fatigue: { lte: 70 } } },
+    slots: { region: [`Japan`, `the United Kingdom`, `Australia and New Zealand`, `Latin America`], length: [`two weeks`, `five weeks`, `a month with a day off every ten days`] },
+    body: [`{boss.name} has a spot for you on the next overseas swing: {length} in {region}, a different building every night, and crowds who treat wrestling like a religion.`, `The pay is decent, the travel is brutal, and the audiences will remember you long after the airport lights fade.`],
+    choices: [
+      { id: 'all_in', label: `Take the full tour and give every night everything`, risk: 'med', outcomes: [
+        { weight: 2, bonus: { overall: 0.4, charisma: 0.3 }, text: `You grow with every town. By the end, you are a name the locals chant for. The memories will outlast the bruises.`, effects: [{ pop: 1.2 }, { conf: 4 }, { fatigue: 22 }, { attr: { name: 'endurance', delta: 1 } }, { money: 6000 }] },
+        { weight: 1, text: `The jet lag and bad food catch up with you, and a few of the later shows are rough.`, effects: [{ pop: 0.6 }, { conf: 1 }, { fatigue: 28 }, { money: 6000 }] } ] },
+      { id: 'partial', label: `Join for half the dates to save your body`, risk: 'low', result: `You do half the tour and enjoy the best part. The fans are delighted, and you keep your health.`, effects: [{ pop: 0.6 }, { fatigue: 10 }, { conf: 1 }, { money: 3000 }] },
+      { id: 'headline', label: `Demand to headline in exchange for the grind`, risk: 'high', outcomes: [
+        { weight: 1, bonus: { popularity: 0.5, confidence: 0.3 }, text: `The tour promoters agree, and you become the face of the swing. It's the showiest run of your career.`, effects: [{ pop: 1.5 }, { conf: 5 }, { fatigue: 24 }, { money: 8000 }] },
+        { weight: 2, text: `The promoters balk, and the offer is withdrawn. A rival takes the dates.`, effects: [{ pop: -0.3 }, { conf: -3 }] } ] },
+      { id: 'decline', label: `Decline and stay home to rest`, risk: 'low', result: `You skip the road trip and take a stretch of home cooking and sleep. The fans overseas will have to wait.`, effects: [{ fatigue: -14 }, { pop: -0.2 }, { conf: 1 }] },
+    ],
+  },
+  {
+    id: 'opp_short_notice_save', category: 'opportunity', title: `A Match Falls Apart Two Hours Before Bell`, weight: 3, major: true, cooldownDays: 250, maxPerCareer: 3, categoryCooldown: 12, contexts: ['pre_show', 'show_day'],
+    cast: { star: { pick: 'roster', tier: { gte: 3 } }, boss: { pick: 'staff', role: 'gm' } },
+    trigger: { event: 'ple', injured: false, stat: { popularity: { gte: 25 }, fatigue: { lte: 60 } } },
+    slots: { cause: [`a flight cancelled by weather`, `a back spasm during warm-up`, `a family emergency`], slot: [`a mid-card spot`, `the semi-main event`, `a late-card showcase`] },
+    body: [`{boss.name} grabs you in the hallway, phone still in hand. {star.name} cannot work tonight because of {cause}, and someone has to take over {slot}.`, `You have ninety minutes to learn a finish, figure out an opponent's tendencies and pretend you planned all of it.`],
+    choices: [
+      { id: 'step_in', label: `Step in with no rehearsal and trust your instincts`, risk: 'high', outcomes: [
+        { weight: 2, bonus: { overall: 0.5, confidence: 0.4 }, text: `You call it in the ring and the opponent rolls with it. The crowd never knows it was improvised, and the office takes notes.`, effects: [{ pop: 1.4 }, { conf: 5 }, { fatigue: 12 }, { rel: { who: 'star', respect: 6 } }, { money: 4000 }] },
+        { weight: 1, text: `It gets messy in the ring. You miss a cue, and the match sags into a safe, flat finish.`, effects: [{ pop: 0.1 }, { conf: -3 }, { fatigue: 12 }, { money: 4000 }] } ] },
+      { id: 'ask_price', label: `Ask for a bonus and a promise of a better slot`, risk: 'med', result: `{boss.first} grits teeth and agrees. The match is fine and the bonus is better, but nobody loves an opportunist.`, effects: [{ money: 10000 }, { pop: 0.4 }, { conf: 1 }, { fatigue: 10 }] },
+      { id: 'safe', label: `Agree to a simplified, protective match`, risk: 'low', result: `You and the opponent keep it simple and clean. Nobody gets hurt and nobody is dazzled.`, effects: [{ pop: 0.3 }, { conf: 1 }, { fatigue: 6 }, { rel: { who: 'star', respect: 2 } }] },
+      { id: 'decline', label: `Decline: it is not your match to take`, risk: 'low', result: `You step aside, and someone more eager takes the slot. {boss.first} is understanding, though the shrug says otherwise.`, effects: [{ conf: -2 }, { pop: -0.2 }, { fatigue: -4 }] },
+    ],
+  },
+  {
+    id: 'opp_open_the_show', category: 'opportunity', title: `Open the Show With a Promo`, weight: 2, major: true, cooldownDays: 250, maxPerCareer: 3, categoryCooldown: 10, contexts: ['pre_show', 'show_day'],
+    cast: { boss: { pick: 'staff', role: 'producer' } },
+    trigger: { event: 'weekly', stat: { popularity: { gte: 30 }, mic: { gte: 35 } } },
+    slots: { crowd: [`a hostile crowd`, `a sold-out house`, `a half-empty arena`, `a crowd already loud from the pre-show`], length: [`five minutes`, `eight minutes`, `whatever you need`] },
+    body: [`{boss.name} wants you to open tonight's broadcast, alone, with a microphone. You have {length}, and {crowd} is waiting.`, `There is no script. There is a camera, a light, and whatever you decide to say.`],
+    choices: [
+      { id: 'story', label: `Tell a personal story that brings everyone in`, risk: 'med', outcomes: [
+        { weight: 2, bonus: { mic: 0.6, charisma: 0.4 }, text: `You talk about the bumps, the miles and the faces who got you here. By the end, the building is silent in the best way.`, effects: [{ pop: 1.1 }, { conf: 4 }, { event: { type: 'promo_delivered', participants: [], summary: `Opened a show with a personal promo.`, data: { quality: { base: 64, mic: 0.6, charisma: 0.4 } } } }] },
+        { weight: 1, text: `The story drags and the crowd's attention drifts. You rush the ending and exit quickly.`, effects: [{ pop: -0.2 }, { conf: -3 }] } ] },
+      { id: 'attack', label: `Call out the whole roster and name names`, risk: 'high', outcomes: [
+        { weight: 2, bonus: { mic: 0.7 }, text: `You light the fuse. Names are shouted, challenges accepted, and the show catches fire.`, effects: [{ pop: 1.2 }, { conf: 3 }, { fatigue: 4 }] },
+        { weight: 2, text: `You name the wrong people. A veteran laughs at you from the stage, and the feud begins on the wrong foot.`, effects: [{ pop: -0.3 }, { conf: -3 }, { fatigue: 4 }] } ] },
+      { id: 'joke', label: `Play it light and work the crowd with comedy`, risk: 'low', result: `You get easy laughs, a few good chants, and a warm reaction. You hand the show over in a good mood.`, effects: [{ pop: 0.5 }, { conf: 2 }] },
+      { id: 'cede', label: `Hand the mic to another wrestler`, risk: 'low', result: `You hand over the slot, and the opportunity goes to someone else. They do well, and you look generous and a little scared.`, effects: [{ conf: -2 }, { pop: -0.1 }, { fatigue: -3 }] },
+    ],
+  },
+  {
+    id: 'opp_documentary_crew', category: 'opportunity', title: `A Camera Crew Wants to Follow You`, weight: 2, major: true, cooldownDays: 365, maxPerCareer: 2, categoryCooldown: 20,
+    cast: { exec: { pick: 'staff', role: 'executive' }, host: { pick: 'media', kind: 'host' } },
+    trigger: { minYear: 2010, stat: { popularity: { gte: 40 }, careerYears: { gte: 2 } } },
+    slots: { outlet: [`a streaming service`, `a cable network`, `an independent film studio`], scope: [`your road to the next big event`, `a year in your life`, `your family and your training`] },
+    body: [`{exec.name} has an offer: {outlet} wants to film a documentary about {scope}, with {host.name} presenting. They want access to your home, gym and locker room.`, `Fame has a price, and so does honesty. Anything on camera can come back to you later.`],
+    choices: [
+      { id: 'open', label: `Give them full access and be completely honest`, risk: 'high', outcomes: [
+        { weight: 2, bonus: { charisma: 0.5, confidence: 0.3 }, text: `The footage is raw and human. The fans fall in love with the person behind the character.`, effects: [{ pop: 1.3 }, { conf: 3 }, { money: 12000 }, { fatigue: 10 }] },
+        { weight: 1, text: `A private bad day makes the final cut, and it is much shared online. Your image takes a dent.`, effects: [{ pop: -0.2 }, { conf: -4 }, { money: 12000 }, { fatigue: 10 }] } ] },
+      { id: 'controlled', label: `Agree to limited access and approve the final cut`, risk: 'low', result: `The documentary is polished, careful and a bit bland. It earns you a respectable reception.`, effects: [{ pop: 0.6 }, { money: 7000 }, { conf: 1 }, { fatigue: 5 }] },
+      { id: 'sell', label: `Sell exclusive rights to the highest bidder`, risk: 'med', result: `A bidding war pays you handsomely and sends the project behind a paywall. Fewer people see it, but your account is bigger.`, effects: [{ money: 24000 }, { pop: 0.2 }, { conf: 1 }] },
+      { id: 'decline', label: `Decline: some things should stay private`, risk: 'low', result: `You say no and keep your life to yourself. The project goes ahead without you, with someone else's story.`, effects: [{ pop: -0.3 }, { conf: 2 }, { fatigue: -3 }] },
+    ],
+  },
+  {
+    id: 'opp_dream_partner', category: 'opportunity', title: `{partner.name} Wants You as a Partner`, weight: 2, major: true, cooldownDays: 250, maxPerCareer: 3, categoryCooldown: 15,
+    cast: { partner: { pick: 'roster', tier: { gte: 3 }, sameBrand: true } },
+    trigger: { stat: { popularity: { gte: 30 } } },
+    slots: { reason: [`You remind me of a younger version of myself`, `You are the only one who matches my pace`, `The office told me to find a partner`], stakes: [`a big match at the next pay-per-view`, `a tag title push`, `a month of TV segments`] },
+    body: [`{partner.name} stops you outside the gym. "I want you on my side," {partner.they} says. "{reason}." The proposal: {stakes}.`, `It is flattering and probably smart. It also puts you in someone else's orbit.`],
+    choices: [
+      { id: 'accept', label: `Accept and stand shoulder to shoulder`, risk: 'med', outcomes: [
+        { weight: 2, bonus: { overall: 0.3, charisma: 0.3 }, text: `You and {partner.first} click, and the crowd roars for the team. You pick up pointers and a following.`, effects: [{ event: { type: 'alliance_formed', participants: ['partner'], summary: `Teamed with {partner.name}.`, data: {} } }, { rel: { who: 'partner', trust: 12, respect: 8, affinity: 8 } }, { pop: 1.0 }, { conf: 3 }] },
+        { weight: 1, text: `The chemistry fizzles. You end up the junior half of a team that nobody can pick a favourite from.`, effects: [{ event: { type: 'alliance_formed', participants: ['partner'], summary: `Teamed with {partner.name}.`, data: {} } }, { rel: { who: 'partner', trust: 6, respect: 3 } }, { pop: 0.3 }, { conf: -1 }] } ] },
+      { id: 'condition', label: `Accept if you get equal billing`, risk: 'med', outcomes: [
+        { weight: 1, bonus: { popularity: 0.4, mic: 0.3 }, text: `{partner.first} agrees with a small smile. You are partners, not sidekicks, and it shows.`, effects: [{ rel: { who: 'partner', respect: 8, trust: 4 } }, { pop: 0.8 }, { conf: 3 }] },
+        { weight: 2, text: `{partner.first} bristles at the condition and withdraws the offer.`, effects: [{ rel: { who: 'partner', respect: -4 } }, { conf: -2 }] } ] },
+      { id: 'decline', label: `Decline and keep your independence`, risk: 'low', result: `You say you are not ready to share your story. {partner.first} nods and wishes you luck.`, effects: [{ rel: { who: 'partner', respect: 1, trust: -2 } }, { conf: 2 }, { pop: -0.1 }] },
+      { id: 'use', label: `Take the exposure, then walk away at the first chance`, risk: 'high', outcomes: [
+        { weight: 1, bonus: { charisma: 0.4 }, text: `The exposure launches you. When you split, the break is clean enough that you part on semi-good terms.`, effects: [{ pop: 1.1 }, { conf: 3 }, { rel: { who: 'partner', trust: -10, heat: 8 } }] },
+        { weight: 2, text: `{partner.first} sees what you are doing and ends it early. The fallout is public.`, effects: [{ pop: -0.5 }, { conf: -3 }, { rel: { who: 'partner', trust: -20, heat: 18 } }, { event: { type: 'betrayal', participants: ['partner'], summary: `Used and dropped {partner.name} as a partner.`, data: {} } }] } ] },
+    ],
+  },
+  {
+    id: 'opp_answer_open_challenge', category: 'opportunity', title: `{champ.name} Issues an Open Challenge`, weight: 3, major: true, cooldownDays: 200, maxPerCareer: 4, categoryCooldown: 12, contexts: ['weekly', 'pre_show'],
+    cast: { champ: { pick: 'champion', class: 'world' } },
+    trigger: { holdsTitle: false, event: 'weekly', stat: { popularity: { gte: 25 } } },
+    slots: { mood: [`mocking`, `bored`, `ferocious`], prize: [`a month of bragging rights`, `a spot on the next big card`, `the right to ask for a title shot`] },
+    body: [`{champ.name} stands in the ring, belt held high, {mood} as the crowd waits. "Anyone," {champ.they} says, "who thinks they belong here can come get it." The stake for a challenger is {prize}.`, `You are sitting in the gorilla position with the sound of the crowd rattling the door. Nobody else has moved.`],
+    choices: [
+      { id: 'answer', label: `Walk out and answer the challenge`, risk: 'high', outcomes: [
+        { weight: 2, bonus: { overall: 0.4, confidence: 0.5 }, text: `Your music hits and the roof comes off. You push the champion to the limit, and even in defeat you leave the building a threat.`, effects: [{ booking: { who: 'champ', type: 'singles' } }, { rel: { who: 'champ', respect: 8 } }, { pop: 1.3 }, { conf: 4 }, { fatigue: 12 }] },
+        { weight: 1, text: `The champion brushes you aside in a squash. The crowd is stunned, and so are you.`, effects: [{ booking: { who: 'champ', type: 'singles' } }, { rel: { who: 'champ', respect: 2 } }, { pop: 0.2 }, { conf: -4 }, { fatigue: 10 }] } ] },
+      { id: 'sneak', label: `Attack the champion from behind to start a feud`, risk: 'high', outcomes: [
+        { weight: 1, bonus: { overall: 0.3, charisma: 0.4 }, text: `A cheap shot lights the arena, and the champion is down. You are suddenly the most talked-about name in the building.`, effects: [{ rivalry: { who: 'champ', heat: 18 } }, { rel: { who: 'champ', heat: 16 } }, { pop: 1.0 }, { conf: 3 }] },
+        { weight: 2, text: `Security tackles you before the blow lands, and the crowd boos you off the stage.`, effects: [{ rivalry: { who: 'champ', heat: 10 } }, { pop: -0.6 }, { conf: -3 }] } ] },
+      { id: 'wait', label: `Hold back and demand a proper title match instead`, risk: 'low', result: `You send word to the office. The champion hears, the crowd doesn't, and the moment passes.`, effects: [{ rel: { who: 'champ', respect: 2 } }, { conf: 1 }, { pop: -0.2 }] },
+      { id: 'send_friend', label: `Push a friend out to answer the call`, risk: 'med', result: `Your friend takes the beating, and the story is theirs. You get gratitude and guilt in equal measure.`, effects: [{ pop: -0.2 }, { conf: -2 }, { money: 1500 }] },
+    ],
+  },
+  {
+    id: 'opp_rival_company_offer', category: 'opportunity', title: `A Rival Promotion Makes an Offer`, weight: 2, major: true, cooldownDays: 365, maxPerCareer: 2, categoryCooldown: 20,
+    cast: { exec: { pick: 'staff', role: 'executive' } },
+    trigger: { minYear: 1990, contract: { lte: 150 }, stat: { popularity: { gte: 35 } } },
+    slots: { courier: [`a lawyer in a good suit`, `a former wrestler who now runs bookings`, `an unmarked envelope slid under your hotel door`], perk: [`a guaranteed main-event run`, `a significantly bigger contract`, `full creative control of your character`] },
+    body: [`The offer arrives through {courier}: a rival promotion wants you and will give you {perk}. Your contract has months left, and {exec.name} has already heard rumours.`, `The company you work for has never been entirely fair to you. The company that is courting you has never had to be.`],
+    choices: [
+      { id: 'leverage', label: `Use the offer to demand a better deal in-house`, risk: 'med', outcomes: [
+        { weight: 2, bonus: { mic: 0.4, charisma: 0.3 }, text: `{exec.first} sees you mean it and opens the vault. You stay, and you are paid like it.`, effects: [{ money: 24000 }, { pop: 0.3 }, { conf: 4 }] },
+        { weight: 1, text: `{exec.first} calls the bluff and the talks sour. You keep your contract, but the goodwill is gone.`, effects: [{ money: 3000 }, { conf: -3 }, { pop: -0.2 }] } ] },
+      { id: 'secret', label: `Take a secret meeting and keep both options open`, risk: 'high', outcomes: [
+        { weight: 1, text: `The meeting stays private and gives you real power in the next negotiation.`, effects: [{ money: 12000 }, { conf: 3 }] },
+        { weight: 2, text: `A hallway rumour spreads. The office assumes the worst and freezes your push.`, effects: [{ money: -3000 }, { pop: -0.6 }, { conf: -4 }] } ] },
+      { id: 'loyal', label: `Tell {exec.first} everything and recommit publicly`, risk: 'low', result: `Your honesty is rewarded with a handshake and a modest bump. The fans hear about your loyalty and cheer.`, effects: [{ money: 6000 }, { pop: 0.5 }, { conf: 2 }] },
+      { id: 'walk', label: `Explore the offer seriously and prepare to leave`, risk: 'high', result: `You take the meeting, inspect the contract and weigh the future. It's thrilling, uncertain, and costs you a lot of nights of sleep.`, effects: [{ money: 8000 }, { conf: 2 }, { pop: -0.4 }, { fatigue: 10 }] },
+    ],
+  },
+  {
+    id: 'opp_charity_headliner', category: 'opportunity', title: `Headline the {cause} Benefit`, weight: 2, major: true, cooldownDays: 300, maxPerCareer: 3, categoryCooldown: 15,
+    cast: { host: { pick: 'media', kind: 'host' }, boss: { pick: 'staff', role: 'executive' } },
+    trigger: { stat: { popularity: { gte: 30 } } },
+    slots: { cause: [`Children's Hospital`, `Veterans' Fund`, `Food Bank`, `Local Gym Rebuild`], format: [`a special exhibition match`, `a live auction and a short match`, `a meet-and-greet with the fans`] },
+    body: [`{host.name} is emceeing the {cause} benefit and wants you as the headliner for {format}. {boss.name} wants the company's name on it, and a fair share of the cameras.`, `It is a good cause and a fine stage. It is also a night off from your regular schedule that your body probably needs.`],
+    choices: [
+      { id: 'give_all', label: `Give the night everything and donate your fee`, risk: 'low', outcomes: [
+        { weight: 3, bonus: { charisma: 0.5 }, text: `The room is moved by your effort, and the donation total beats every target. Photos of you with the families circulate for weeks.`, effects: [{ pop: 1.0 }, { conf: 3 }, { money: -3000 }, { fatigue: 10 }] },
+        { weight: 1, text: `The event runs late and chaotic. Your good intentions survive, but you leave exhausted.`, effects: [{ pop: 0.6 }, { money: -3000 }, { fatigue: 16 }] } ] },
+      { id: 'sponsor', label: `Bring a sponsor along and double the donation`, risk: 'med', outcomes: [
+        { weight: 2, text: `The sponsor pledges a generous sum, and the event grows. Some cynics grumble about the branding.`, effects: [{ pop: 0.6 }, { money: 4000 }, { conf: 1 }] },
+        { weight: 1, text: `The sponsor's presence overshadows the cause, and the press calls it a publicity stunt.`, effects: [{ pop: -0.4 }, { money: 4000 }, { conf: -2 }] } ] },
+      { id: 'short', label: `Appear briefly, sign things, and move on`, risk: 'low', result: `You give an hour and a smile. Nobody is disappointed, nobody is dazzled.`, effects: [{ pop: 0.3 }, { fatigue: 3 }, { conf: 1 }] },
+      { id: 'pass', label: `Decline: you need the rest`, risk: 'med', result: `You send a heartfelt apology and a donation. A few columns note your absence, but most understand.`, effects: [{ pop: -0.4 }, { fatigue: -10 }, { money: -1500 }, { conf: 1 }] },
+    ],
+  },
+  // ============================================================ CREATIVE
+  {
+    id: 'bkg_match_time_cut', category: 'creative', title: `Your Match Is Cut to {minutes}`, weight: 3, major: true, cooldownDays: 120, maxPerCareer: 4, categoryCooldown: 8, contexts: ['pre_show', 'show_day'],
+    cast: { boss: { pick: 'staff', role: 'producer' }, opp: { pick: 'roster', tier: { gte: 1, lte: 3 }, sameBrand: true } },
+    trigger: { event: 'ple', stat: { popularity: { gte: 20 } } },
+    slots: { minutes: [`six minutes`, `eight minutes`, `four minutes`], blame: [`a long entrance package`, `an opening segment that ran over`, `a last-minute video tribute`] },
+    body: [`{boss.name} finds you at catering with the new running order. Because of {blame}, your match against {opp.name} has been trimmed to {minutes}.`, `You had planned a story with a build, a near-fall and a finish. Now you have to decide what survives.`],
+    choices: [
+      { id: 'adapt', label: `Adapt: rebuild the match around the highlights`, risk: 'low', outcomes: [
+        { weight: 3, bonus: { overall: 0.4 }, text: `You and {opp.first} strip the match to its sharpest spots. The crowd gets a lightning bolt of a bout and loves it.`, effects: [{ booking: { who: 'opp', type: 'singles' } }, { rel: { who: 'opp', respect: 6 } }, { pop: 0.6 }, { conf: 3 }] },
+        { weight: 1, text: `The compression hurts the story, and the finish comes out of nowhere. It's competent, nothing more.`, effects: [{ booking: { who: 'opp', type: 'singles' } }, { pop: 0.1 }, { conf: -1 }] } ] },
+      { id: 'fight', label: `Fight to keep your time`, risk: 'med', outcomes: [
+        { weight: 1, bonus: { popularity: 0.5, confidence: 0.4 }, text: `{boss.first} negotiates with the truck and wins back a few minutes for you. Someone else on the card loses theirs.`, effects: [{ booking: { who: 'opp', type: 'singles' } }, { rel: { who: 'opp', respect: 3 } }, { pop: 0.5 }, { conf: 3 }] },
+        { weight: 2, text: `{boss.first} snaps that everyone has a complaint tonight. The time stays cut, and you have a reputation for being demanding.`, effects: [{ booking: { who: 'opp', type: 'singles' } }, { pop: -0.3 }, { conf: -3 }] } ] },
+      { id: 'stunt', label: `Squeeze in a risky spot to make your minutes count`, risk: 'high', outcomes: [
+        { weight: 2, bonus: { overall: 0.5, confidence: 0.3 }, text: `You land a daring finish that turns the crowd upside down. The shortest match on the card is the one they talk about.`, effects: [{ booking: { who: 'opp', type: 'singles' } }, { pop: 1.2 }, { conf: 4 }, { fatigue: 10 }] },
+        { weight: 1, text: `The big spot is misjudged in a crowded space. You finish the match but you feel it all the next day.`, effects: [{ booking: { who: 'opp', type: 'singles' } }, { pop: 0.4 }, { fatigue: 14 }, { injury: { part: 'arms', severity: 1, days: 10 } }] } ] },
+      { id: 'accept', label: `Shrug and take the cheque for the short work`, risk: 'low', result: `A short night is an easy night. You collect your pay and slip out before the crowd leaves.`, effects: [{ booking: { who: 'opp', type: 'singles' } }, { money: 1500 }, { fatigue: -6 }, { pop: -0.2 }, { conf: -1 }] },
+    ],
+  },
+  {
+    id: 'bkg_finish_dispute', category: 'creative', title: `A Disagreement About the Finish`, weight: 3, major: true, cooldownDays: 120, maxPerCareer: 4, categoryCooldown: 8, contexts: ['pre_show', 'show_day'],
+    cast: { opp: { pick: 'roster', tier: { gte: 2, lte: 4 }, sameBrand: true }, boss: { pick: 'staff', role: 'producer' } },
+    trigger: { event: 'ple', stat: { popularity: { gte: 25 } } },
+    slots: { finish: [`a roll-up in the middle of the ring`, `a shocking interference`, `a count-out nobody wanted`], stake: [`your momentum`, `an upcoming title feud`, `the story you were pitching`] },
+    body: [`The planned finish is {finish}, and you are not on the winning end. {opp.name} calmly explains why: it protects {stake} for {opp.them}.`, `You think the finish makes you look weak. {boss.name} has said the call is yours and {opp.first}'s to settle, and the clock is running.`],
+    choices: [
+      { id: 'argue', label: `Argue your case with logic and numbers`, risk: 'med', outcomes: [
+        { weight: 2, bonus: { mic: 0.4, confidence: 0.4 }, text: `{opp.first} listens, thinks and blinks. The finish is changed, and neither of you is sure you won.`, effects: [{ rel: { who: 'opp', respect: 4, trust: -2 } }, { pop: 0.3 }, { conf: 3 }] },
+        { weight: 1, text: `The conversation turns into a shouting match overheard by half the locker room.`, effects: [{ rel: { who: 'opp', heat: 12, respect: -4 } }, { pop: -0.3 }, { conf: -3 }] } ] },
+      { id: 'accept', label: `Accept the finish for the good of the show`, risk: 'low', result: `You smile, take the loss, and sell it. {opp.first} makes a mental note that you are easy to work with.`, effects: [{ rel: { who: 'opp', respect: 8, trust: 6 } }, { conf: -3 }, { pop: 0.1 }] },
+      { id: 'swerve', label: `Quietly alter the finish in the ring`, risk: 'high', outcomes: [
+        { weight: 1, bonus: { overall: 0.5, charisma: 0.3 }, text: `You change the ending mid-match, and {opp.first} follows. The crowd explodes. Backstage, though, nobody is smiling.`, effects: [{ rel: { who: 'opp', trust: -16, heat: 14 } }, { rivalry: { who: 'opp', heat: 12 } }, { pop: 1.0 }, { conf: 3 }] },
+        { weight: 2, text: `{opp.first} is ready for it. The finish collapses on live television and you both look sloppy.`, effects: [{ rel: { who: 'opp', trust: -20, heat: 18 } }, { pop: -0.6 }, { conf: -4 }] } ] },
+      { id: 'trade', label: `Trade this finish for a win in the rematch`, risk: 'med', result: `You offer a bargain: you lose here, and win the next. {opp.first} shakes on it. Whether the office honours it is another matter.`, effects: [{ rel: { who: 'opp', respect: 4, trust: 4 } }, { promise: { kind: 'win_match', who: 'opp', text: `I will beat {opp.name} in the rematch`, deadlineDays: 60 } }, { pop: 0.2 }, { conf: 1 }] },
+    ],
+  },
+  {
+    id: 'bkg_new_gimmick', category: 'creative', title: `The Office Wants a New {gimmick}`, weight: 3, major: true, cooldownDays: 250, maxPerCareer: 3, categoryCooldown: 15,
+    cast: { boss: { pick: 'staff', role: 'creative' } },
+    trigger: { stat: { popularity: { gte: 20 }, careerYears: { gte: 1 } } },
+    slots: { gimmick: [`Persona`, `Look`, `Attitude`], flavour: [`a masked mystery act`, `a brooding anti-hero`, `a brash showman with a catchphrase`, `a throwback to the old days`] },
+    body: [`{boss.name} has spent a week with the writers and returned with a pitch: retire the old you and try {flavour}. "People like you," {boss.first} says, "but nobody can say what you stand for."`, `You've built what you have the hard way. A new {gimmick} could be the break you need, or the end of what was working.`],
+    choices: [
+      { id: 'embrace', label: `Embrace the change and commit fully`, risk: 'high', outcomes: [
+        { weight: 2, bonus: { charisma: 0.6, confidence: 0.3 }, text: `You lean into it hard, and the new character catches fire. The crowd that ignored you now has a favourite.`, effects: [{ pop: 1.3 }, { charisma: 1 }, { conf: 3 }, { fatigue: 8 }] },
+        { weight: 1, text: `The new character sits uneasily on you and the crowd senses it. You'll have to work hard to bury the memory.`, effects: [{ pop: -0.6 }, { conf: -4 }, { fatigue: 8 }] } ] },
+      { id: 'tweak', label: `Pitch a hybrid: keep your core, add a new edge`, risk: 'low', result: `The writers wince, then agree. You keep the heart of the character and add some new colour.`, effects: [{ pop: 0.5 }, { conf: 2 }, { fatigue: 4 }] },
+      { id: 'refuse', label: `Refuse: you are who the fans know`, risk: 'med', outcomes: [
+        { weight: 1, bonus: { popularity: 0.5, confidence: 0.4 }, text: `{boss.first} respects the stand. The fans stay loyal, and your standing grows.`, effects: [{ pop: 0.4 }, { conf: 4 }] },
+        { weight: 2, text: `The writers file you under difficult. Your spots start to shrink.`, effects: [{ pop: -0.4 }, { conf: -2 }] } ] },
+      { id: 'own', label: `Write your own version of the character`, risk: 'high', outcomes: [
+        { weight: 1, bonus: { mic: 0.5, charisma: 0.4 }, text: `Your pitch is better than theirs, and you know it. The office lets you run with it.`, effects: [{ pop: 1.2 }, { mic: 1 }, { conf: 5 }, { fatigue: 8 }] },
+        { weight: 2, text: `Your version is overwrought and the writers pass. You've burned a week for nothing.`, effects: [{ pop: -0.2 }, { conf: -3 }, { fatigue: 6 }] } ] },
+    ],
+  },
+  {
+    id: 'bkg_turn_pitch_heel', category: 'creative', title: `They Want You to Turn`, weight: 3, major: true, cooldownDays: 250, maxPerCareer: 3, categoryCooldown: 15,
+    cast: { boss: { pick: 'staff', role: 'creative' }, victim: { pick: 'roster', tier: { gte: 2, lte: 4 }, alignment: 'face' } },
+    trigger: { alignment: ['face'], stat: { popularity: { gte: 30 } } },
+    slots: { cause: [`a blow in the back at the end of a match`, `a smug interview that refuses to apologise`, `a cold-blooded betrayal`], reason: [`The fans have gone stale`, `The main event needs a villain`, `The face division is overcrowded`] },
+    body: [`{boss.name} has a plan for you: turn on {victim.name} through {cause}. {reason}, and you're the best fit.`, `A good heel turn can double a career. A bad one can end it.`],
+    choices: [
+      { id: 'turn', label: `Turn fully and lean into the hatred`, risk: 'high', outcomes: [
+        { weight: 2, bonus: { charisma: 0.5, mic: 0.4 }, text: `You sell the betrayal with ice in your veins. The crowd boos like it matters, and you've never felt this alive.`, effects: [{ rivalry: { who: 'victim', heat: 22 } }, { rel: { who: 'victim', heat: 18, trust: -20 } }, { pop: 1.3 }, { charisma: 1 }, { conf: 4 }, { event: { type: 'betrayal', participants: ['victim'], summary: `Turned on {victim.name} in a heel turn.`, data: {} } }] },
+        { weight: 1, text: `The crowd cannot bring itself to boo you. The turn limps and the angle is dropped.`, effects: [{ rivalry: { who: 'victim', heat: 10 } }, { rel: { who: 'victim', heat: 8 } }, { pop: -0.4 }, { conf: -3 }] } ] },
+      { id: 'slow', label: `Pitch a slow burn instead of an overnight swerve`, risk: 'med', result: `{boss.first} agrees to stretch the turn over a month. The build is richer, the payoff smaller, and fans have time to talk.`, effects: [{ rivalry: { who: 'victim', heat: 10 } }, { pop: 0.5 }, { conf: 2 }] },
+      { id: 'refuse', label: `Refuse: your fans trust you`, risk: 'med', result: `You stay on the side of the angels. The fans reward you, and the office finds another villain.`, effects: [{ pop: 0.4 }, { conf: 1 }, { rel: { who: 'victim', respect: 3 } }] },
+      { id: 'warn', label: `Warn {victim.first} about the plan`, risk: 'high', result: `You tell {victim.first} what is coming. {victim.they} thanks you and promises to sell it better. Someone in the office hears about it.`, effects: [{ rel: { who: 'victim', trust: 12, respect: 6 } }, { pop: -0.2 }, { conf: -2 }] },
+    ],
+  },
+  {
+    id: 'bkg_turn_pitch_face', category: 'creative', title: `The Crowd Is Cheering the Wrong Way`, weight: 3, major: true, cooldownDays: 250, maxPerCareer: 3, categoryCooldown: 15,
+    cast: { boss: { pick: 'staff', role: 'creative' }, ex: { pick: 'roster', tier: { gte: 2, lte: 4 }, alignment: 'heel' } },
+    trigger: { alignment: ['heel'], stat: { popularity: { gte: 35 } } },
+    slots: { sign: [`cheering your insults`, `chanting your name mid-promo`, `drowning out the booing`], tool: [`a dramatic rescue`, `a speech about changing`, `a surprise act of honour`] },
+    body: [`The crowd is {sign} and {boss.name} sees it on the monitors. The writers want to turn you face with {tool}, in a tangle with {ex.name}.`, `Playing villain has been your engine. Turning means losing the edge that earned you the reaction.`],
+    choices: [
+      { id: 'turn', label: `Turn face and give the crowd what it wants`, risk: 'med', outcomes: [
+        { weight: 2, bonus: { popularity: 0.5, charisma: 0.4 }, text: `The first thundering pop tells you the call was right. Fans cheer louder than ever.`, effects: [{ pop: 1.3 }, { conf: 4 }, { rel: { who: 'ex', heat: 8 } }] },
+        { weight: 1, text: `The cheers fade as the character softens. You're less interesting and less feared.`, effects: [{ pop: 0.1 }, { conf: -3 }] } ] },
+      { id: 'tease', label: `Tease the turn and keep your options open`, risk: 'low', result: `You play the middle for weeks, a heel with a heart. It frustrates a few fans and delights the rest.`, effects: [{ pop: 0.6 }, { conf: 1 }] },
+      { id: 'refuse', label: `Refuse and double down on being a villain`, risk: 'high', outcomes: [
+        { weight: 1, bonus: { mic: 0.5, charisma: 0.4 }, text: `Your fresh venom makes the crowd cheer louder for the wrong reasons. You've made a legend of your own evil.`, effects: [{ pop: 1.0 }, { conf: 5 }] },
+        { weight: 2, text: `The audience tires of the act and the cheers turn to boos. You've overplayed your hand.`, effects: [{ pop: -0.6 }, { conf: -3 }] } ] },
+      { id: 'merch', label: `Take the turn, but only with a merchandising cut`, risk: 'med', result: `{boss.first} agrees, and the merchandise starts to move. The turn feels commercial, and some fans notice.`, effects: [{ money: 9000 }, { pop: 0.6 }, { conf: -1 }] },
+    ],
+  },
+  {
+    id: 'bkg_scripted_promo', category: 'creative', title: `A Promo Written by Someone Else`, weight: 3, major: true, cooldownDays: 100, maxPerCareer: 5, categoryCooldown: 8, contexts: ['pre_show', 'show_day'],
+    cast: { boss: { pick: 'staff', role: 'creative' } },
+    trigger: { stat: { mic: { gte: 30 }, popularity: { gte: 20 } } },
+    slots: { script: [`seven pages of rhyming insults`, `a long monologue about destiny`, `a series of one-liners lifted from a sitcom`], tone: [`stiff`, `overwritten`, `cringeworthy`] },
+    body: [`Two hours before the show, {boss.name} hands you the promo: {script}. It reads {tone}, and you would never say it that way.`, `The office has signed off on it. The mic is yours, and so is the blame.`],
+    choices: [
+      { id: 'verbatim', label: `Deliver it word for word, with full commitment`, risk: 'low', outcomes: [
+        { weight: 2, bonus: { mic: 0.4, charisma: 0.4 }, text: `You sell the lines so hard that they work. {boss.first} beams, and the crowd forgets it was written by committee.`, effects: [{ pop: 0.5 }, { conf: 2 }, { money: 1000 }] },
+        { weight: 2, text: `The lines stay stiff however hard you sell them. The crowd shrugs and so do you.`, effects: [{ pop: -0.2 }, { conf: -2 }] } ] },
+      { id: 'rewrite', label: `Rewrite it in your own voice and tell nobody`, risk: 'high', outcomes: [
+        { weight: 2, bonus: { mic: 0.7, charisma: 0.4 }, text: `Your version is sharper, funnier and more real. The crowd erupts, and {boss.first} can only nod.`, effects: [{ pop: 1.1 }, { mic: 1 }, { conf: 4 }, { event: { type: 'promo_delivered', participants: [], summary: `Went off script with a self-written promo.`, data: { quality: { base: 64, mic: 0.6, charisma: 0.4 } } } }] },
+        { weight: 1, text: `You lose your thread halfway through and the producer cuts to commercial. {boss.first} is livid.`, effects: [{ pop: -0.7 }, { conf: -5 }, { money: -2000 }] } ] },
+      { id: 'negotiate', label: `Ask {boss.first} for ten minutes to edit it together`, risk: 'med', result: `You and {boss.first} cut the worst lines and keep the best. It is a compromise that nobody loves but everyone can live with.`, effects: [{ pop: 0.5 }, { conf: 2 }, { fatigue: 3 }] },
+      { id: 'refuse', label: `Refuse to read it`, risk: 'high', result: `You hand the script back. The segment is cut, the slot goes to someone else, and your name goes on a list.`, effects: [{ pop: -0.5 }, { conf: 2 }, { money: -2500 }] },
+    ],
+  },
+  {
+    id: 'bkg_entrance_music', category: 'creative', title: `A New Theme, {sound}`, weight: 2, major: true, cooldownDays: 365, maxPerCareer: 2, categoryCooldown: 15,
+    cast: { boss: { pick: 'staff', role: 'producer' } },
+    trigger: { stat: { popularity: { gte: 25 }, careerYears: { gte: 1 } } },
+    slots: { sound: [`heavy on guitars`, `stripped back and moody`, `led by a choir`, `glossy and electronic`], source: [`a studio the company owns`, `a band that adores you`, `a composer with a long list of credits`] },
+    body: [`{boss.name} wants to retire your entrance music. The replacement comes from {source}, and the demo is {sound}, which you aren't sure about.`, `Your music is half of your character. Changing it could revive you, or erase everything you've built.`],
+    choices: [
+      { id: 'switch', label: `Switch to the new theme and ride the buzz`, risk: 'med', outcomes: [
+        { weight: 2, bonus: { charisma: 0.4 }, text: `The first notes of the new music hit and the arena lights up. The theme starts selling itself.`, effects: [{ pop: 0.9 }, { conf: 3 }, { money: 2000 }] },
+        { weight: 1, text: `The crowd hesitates, missing the old riff. It takes weeks for the new theme to feel like yours.`, effects: [{ pop: -0.3 }, { conf: -2 }] } ] },
+      { id: 'blend', label: `Ask for a hybrid that keeps your old signature`, risk: 'low', result: `The producers merge the two, honouring the old sound. It pleases fans and pleases nobody entirely.`, effects: [{ pop: 0.4 }, { conf: 1 }] },
+      { id: 'veto', label: `Veto the change and protect your identity`, risk: 'med', result: `You say no, and {boss.first} isn't happy. Your music stays, and so does the staleness.`, effects: [{ pop: -0.1 }, { conf: 2 }, { money: -1500 }] },
+      { id: 'co_write', label: `Co-write the theme and take a royalty cut`, risk: 'high', outcomes: [
+        { weight: 1, bonus: { charisma: 0.4, mic: 0.3 }, text: `Your fingerprints are all over the track, and the royalties from streams start to trickle in.`, effects: [{ pop: 0.8 }, { money: 8000 }, { conf: 4 }, { fatigue: 8 }] },
+        { weight: 2, text: `Your writing sessions run long and the result is messy. The producers quietly use the original demo.`, effects: [{ pop: -0.1 }, { conf: -3 }, { fatigue: 10 }] } ] },
+    ],
+  },
+  {
+    id: 'bkg_catchphrase', category: 'creative', title: `They Want You to Say {phrase}`, weight: 2, major: true, cooldownDays: 300, maxPerCareer: 2, categoryCooldown: 15,
+    cast: { boss: { pick: 'staff', role: 'creative' } },
+    trigger: { stat: { popularity: { gte: 25 }, mic: { gte: 30 } } },
+    slots: { phrase: [`"Welcome to My House"`, `"The Rest Can Wait"`, `"Say It Louder"`, `"No Mercy Today"`], sell: [`on a T-shirt`, `before every match`, `in a chant with the fans`] },
+    body: [`{boss.name} has found you a catchphrase, {phrase}. The plan is to use it {sell}, and to build it into your promos.`, `A good phrase can make a career. A bad one is a lifetime of explaining yourself to cashiers.`],
+    choices: [
+      { id: 'embrace', label: `Embrace the phrase and make it your own`, risk: 'med', outcomes: [
+        { weight: 2, bonus: { charisma: 0.5, mic: 0.4 }, text: `You twist it, tease it, repeat it. Within a month the crowd is shouting it back.`, effects: [{ pop: 1.0 }, { conf: 3 }, { money: 3000 }] },
+        { weight: 1, text: `It never lands. The crowd groans every time you say it.`, effects: [{ pop: -0.5 }, { conf: -3 }] } ] },
+      { id: 'edit', label: `Rewrite it into something you'd actually say`, risk: 'med', result: `{boss.first} listens to your edit and grants a reluctant yes. The new line fits you better, if it lacks a little of the original crunch.`, effects: [{ pop: 0.5 }, { conf: 3 }, { mic: 1 }] },
+      { id: 'merch', label: `Take the phrase and push for merch rights`, risk: 'low', result: `The phrase becomes shirts, mugs and posters. It isn't art, but it pays the bills.`, effects: [{ money: 9000 }, { pop: 0.2 }, { conf: -1 }] },
+      { id: 'refuse', label: `Refuse to say it`, risk: 'high', result: `You politely decline, and your promos stay loose. The writers shrug, but they remember.`, effects: [{ conf: 2 }, { pop: -0.3 }, { money: -1500 }] },
+    ],
+  },
+  {
+    id: 'bkg_stuck_midcard', category: 'creative', title: `Winning, and Going Nowhere`, weight: 3, major: true, cooldownDays: 180, maxPerCareer: 3, categoryCooldown: 15,
+    cast: { boss: { pick: 'staff', role: 'creative' } },
+    trigger: { stat: { winStreak: { gte: 3 }, popularity: { gte: 20 }, mainEvents: { lte: 1 } }, holdsTitle: false },
+    slots: { place: [`the same slot on the card for months`, `the third match of every show`, `the dark match before the broadcast`], excuse: [`"the card is full"`, `"the timing is wrong"`, `"we're building to something"`] },
+    body: [`You have been winning, and yet you're still in {place}. When you ask, {boss.name} gives you {excuse} and a pat on the shoulder.`, `The fans see your wins. The office seems not to. What you do next sets how long you stay in the middle.`],
+    choices: [
+      { id: 'demand', label: `Demand a bigger spot, on the record`, risk: 'high', outcomes: [
+        { weight: 1, bonus: { popularity: 0.5, mic: 0.4 }, text: `{boss.first} blinks at your numbers. A better slot is promised, and the promise holds.`, effects: [{ pop: 0.7 }, { conf: 4 }, { money: 3000 }] },
+        { weight: 2, text: `{boss.first} reads the demand as ingratitude. Your spot gets quieter, not louder.`, effects: [{ pop: -0.5 }, { conf: -3 }] } ] },
+      { id: 'pitch', label: `Pitch a storyline that makes your wins matter`, risk: 'med', outcomes: [
+        { weight: 2, bonus: { charisma: 0.4, mic: 0.3 }, text: `Your pitch has teeth. {boss.first} loves it and slots you into a feud with real stakes.`, effects: [{ pop: 1.0 }, { conf: 4 }, { fatigue: 6 }] },
+        { weight: 1, text: `The pitch is polite, and the notebook it vanishes into is never opened again.`, effects: [{ pop: 0.1 }, { conf: -1 }] } ] },
+      { id: 'wait', label: `Keep winning and let the numbers speak`, risk: 'low', result: `You stay patient, sharpen your craft, and wait. The fans keep chanting for you.`, effects: [{ pop: 0.3 }, { conf: 1 }, { fatigue: 5 }, { attr: { name: 'technical', delta: 1 } }] },
+      { id: 'leverage', label: `Float a rumour that another promotion is calling`, risk: 'high', outcomes: [
+        { weight: 1, text: `The rumour does the trick. Suddenly there's room on the card, and a meeting with the front office.`, effects: [{ pop: 0.6 }, { conf: 3 }, { money: 5000 }] },
+        { weight: 2, text: `The bluff is called. The office suggests that you should feel free to go, and your goodwill drains away.`, effects: [{ pop: -0.7 }, { conf: -5 }] } ] },
+    ],
+  },
+  {
+    id: 'bkg_feud_dropped', category: 'creative', title: `Your Feud with {rival.name} Is Being Cancelled`, weight: 3, major: true, cooldownDays: 180, maxPerCareer: 3, categoryCooldown: 12, memory: { role: 'rival', max: 1 },
+    cast: { rival: { pick: 'rivalry', minHeat: 25, status: 'active' }, boss: { pick: 'staff', role: 'creative' } },
+    trigger: {},
+    slots: { reason: [`a change of direction`, `a better idea from the writers' room`, `an injury elsewhere on the card`], pitch: [`a quick, clean finish`, `a no-contest`, `a shoulder shrug and silence`] },
+    body: [`{boss.name} drops the news: after {reason}, your feud with {rival.name} will be wrapped up with {pitch}. The story still had plenty left.`, `The rivalry is the best thing you've had, and the heat in it is real. A weak ending would waste months.`],
+    choices: [
+      { id: 'argue', label: `Argue that the feud has more to give`, risk: 'med', outcomes: [
+        { weight: 2, bonus: { charisma: 0.4, mic: 0.3 }, text: `{boss.first} reconsiders, extends the feud and tweaks the stakes. {rival.first} gives you a nod.`, effects: [{ rivalry: { who: 'rival', heat: 10 } }, { rel: { who: 'rival', respect: 6 } }, { pop: 0.7 }, { conf: 3 }] },
+        { weight: 1, text: `The call stays. {boss.first} writes your pushback in a notebook.`, effects: [{ pop: -0.2 }, { conf: -2 }] } ] },
+      { id: 'grand_finale', label: `Take the finale but demand a stipulation match`, risk: 'med', result: `You agree to end it, but on your terms. The match is a bruising farewell, and it works.`, effects: [{ booking: { who: 'rival', type: 'no_dq' } }, { rel: { who: 'rival', respect: 8, heat: -6 } }, { pop: 0.7 }, { fatigue: 12 }] },
+      { id: 'private', label: `Settle it privately with {rival.first} and make it real`, risk: 'high', outcomes: [
+        { weight: 1, bonus: { overall: 0.3, confidence: 0.3 }, text: `Off the clock, you and {rival.first} work out a fight the cameras won't see. The next week it spills onto live TV by accident, and nobody can look away.`, effects: [{ rivalry: { who: 'rival', heat: 20 } }, { rel: { who: 'rival', heat: 12, respect: 6 } }, { pop: 1.1 }, { conf: 3 }, { fatigue: 8 }] },
+        { weight: 2, text: `It gets heated, then ugly. The office hears of it, and a fine is attached to the warning.`, effects: [{ rivalry: { who: 'rival', heat: 14 } }, { rel: { who: 'rival', heat: 14 } }, { pop: -0.4 }, { money: -3000 }, { conf: -2 }] } ] },
+      { id: 'accept', label: `Accept the call and move on`, risk: 'low', result: `You shake {rival.first}'s hand and let the story go. It's mature, and it's a little sad.`, effects: [{ rel: { who: 'rival', respect: 6, heat: -10, trust: 4 } }, { conf: -1 }] },
+    ],
+  },
+  {
+    id: 'bkg_comedy_segment', category: 'creative', title: `A Comedy Segment With {guest.name}`, weight: 2, major: true, cooldownDays: 250, maxPerCareer: 3, categoryCooldown: 12,
+    cast: { boss: { pick: 'staff', role: 'creative' }, guest: { pick: 'roster', tier: { gte: 2, lte: 4 }, sameBrand: true } },
+    trigger: { stat: { popularity: { gte: 20 } } },
+    slots: { premise: [`a cooking contest in the ring`, `an awkward game show`, `a mock courtroom trial`, `a very long argument about a sandwich`], stake: [`a night of easy laughs`, `a chance to show range`, `a risk to your serious image`] },
+    body: [`{boss.name} wants to build a comedy segment around you and {guest.name}: {premise}. It is {stake}.`, `The audience adores a wrestler who can make them laugh. They also forget quickly how tough you were.`],
+    choices: [
+      { id: 'commit', label: `Commit completely, with every ounce of silliness`, risk: 'med', outcomes: [
+        { weight: 2, bonus: { charisma: 0.7 }, text: `Your timing is perfect, and the building howls. Even {guest.first} cracks up. The segment gets clipped and shared all week.`, effects: [{ pop: 1.1 }, { conf: 3 }, { rel: { who: 'guest', respect: 6, affinity: 6 } }] },
+        { weight: 1, text: `The jokes land awkwardly and the segment drags. You look silly for the wrong reasons.`, effects: [{ pop: -0.5 }, { conf: -4 }] } ] },
+      { id: 'dry', label: `Play it deadpan and let {guest.first} carry the laughs`, risk: 'low', result: `Your straight-faced response becomes the punchline. It is safe and effective, if less memorable.`, effects: [{ pop: 0.5 }, { conf: 1 }, { rel: { who: 'guest', respect: 3 } }] },
+      { id: 'edge', label: `Pitch a darker, more cutting version`, risk: 'high', outcomes: [
+        { weight: 1, bonus: { mic: 0.6, charisma: 0.4 }, text: `Your edge turns the premise into something sharp and uncomfortable. Critics call it the funniest thing on the show.`, effects: [{ pop: 1.2 }, { conf: 4 }, { rel: { who: 'guest', heat: 6 } }] },
+        { weight: 2, text: `The darker tone clashes with a family audience. The segment is cut short.`, effects: [{ pop: -0.4 }, { conf: -3 }] } ] },
+      { id: 'pass', label: `Pass: you want to keep your tough-guy credibility`, risk: 'low', result: `You decline politely, and {guest.first} gets the spot with someone else. Your image stays intact, even if you wonder what you missed.`, effects: [{ conf: 1 }, { pop: -0.2 }, { rel: { who: 'guest', respect: -2 } }] },
+    ],
+  },
+  {
+    id: 'bkg_authority_angle', category: 'creative', title: `The Boss Wants You in a Storyline`, weight: 2, major: true, cooldownDays: 300, maxPerCareer: 2, categoryCooldown: 20,
+    cast: { owner: { pick: 'staff', role: 'owner' } },
+    trigger: { minYear: 1998, stat: { popularity: { gte: 40 } } },
+    slots: { angle: [`a corrupt boss who fines you for everything`, `a mentor-and-student pairing for the cameras`, `a public feud where you stand up to the bosses`], cost: [`a bruise or two`, `humiliating segments`, `a lot of screen time standing around`] },
+    body: [`{owner.name} sits you down in an office that smells of old leather. The pitch: {angle}, with the owner's authority up against you on camera.`, `It will mean television time, guaranteed. It will also mean {cost}.`],
+    choices: [
+      { id: 'take', label: `Take the storyline and embrace the spotlight`, risk: 'med', outcomes: [
+        { weight: 2, bonus: { charisma: 0.5, mic: 0.4 }, text: `You and the owner build a rivalry on live television, and the ratings tick up with every segment. You become a household name.`, effects: [{ pop: 1.3 }, { conf: 4 }, { money: 6000 }, { fatigue: 10 }] },
+        { weight: 1, text: `The owner takes over the storyline, and you are the prop. The ratings dip.`, effects: [{ pop: 0.1 }, { conf: -3 }, { money: 6000 }, { fatigue: 10 }] } ] },
+      { id: 'terms', label: `Take it only if you get to win in the end`, risk: 'med', outcomes: [
+        { weight: 1, bonus: { popularity: 0.5, mic: 0.3 }, text: `The owner laughs, then agrees. You get your triumph at the finale, and a little more authority at the table.`, effects: [{ pop: 0.9 }, { conf: 4 }] },
+        { weight: 2, text: `The owner declines to be pinned down. The talks stall, and the storyline goes to someone else.`, effects: [{ pop: -0.2 }, { conf: -2 }] } ] },
+      { id: 'decline', label: `Decline: you want to be known for matches`, risk: 'low', result: `You turn down the camera time and keep your focus on the ring. The owner nods, a little surprised.`, effects: [{ conf: 2 }, { pop: -0.2 }, { fatigue: -3 }] },
+      { id: 'sell', label: `Take the storyline for a large bonus`, risk: 'low', result: `You sign for the bonus, play the part, and take the cheque. The segments are fine and your bank account is better.`, effects: [{ money: 16000 }, { pop: 0.3 }, { conf: -1 }, { fatigue: 8 }] },
+    ],
+  },
+  {
+    id: 'bkg_rival_takes_spot', category: 'creative', title: `{usurper.name} Gets Your Spot`, weight: 3, major: true, cooldownDays: 180, maxPerCareer: 3, categoryCooldown: 12,
+    cast: { usurper: { pick: 'roster', tier: { gte: 1, lte: 3 }, sameBrand: true }, boss: { pick: 'staff', role: 'creative' } },
+    trigger: { stat: { popularity: { gte: 30 } }, daysSince: { match: { lte: 14 } } },
+    slots: { spot: [`your spot against a top star`, `the match you had been promised`, `the segment you pitched`], excuse: [`"fresh energy"`, `"a better chemistry"`, `"a reaction we can't ignore"`] },
+    body: [`The card sheet is posted, and {spot} now belongs to {usurper.name}. {boss.name} gives you {excuse} as the reason.`, `You've worked years for this. {usurper.first} is waiting by the door, looking uncomfortably guilty or very smug.`],
+    choices: [
+      { id: 'graceful', label: `Take it gracefully and wish {usurper.first} luck`, risk: 'low', result: `You offer congratulations and mean most of it. The locker room sees class, and {boss.first} takes note.`, effects: [{ rel: { who: 'usurper', respect: 8, trust: 5 } }, { conf: -3 }, { pop: 0.1 }] },
+      { id: 'fight', label: `Fight for your spot in front of {boss.first}`, risk: 'high', outcomes: [
+        { weight: 1, bonus: { popularity: 0.5, confidence: 0.4 }, text: `You make the case with facts and heat. {boss.first} concedes half the argument, and you share the spot.`, effects: [{ rel: { who: 'usurper', heat: 8, respect: 2 } }, { pop: 0.7 }, { conf: 4 }] },
+        { weight: 2, text: `The argument gets personal, and {boss.first} dismisses you with a tight smile. The spot stays gone.`, effects: [{ rel: { who: 'usurper', heat: 6 } }, { pop: -0.4 }, { conf: -4 }] } ] },
+      { id: 'challenge', label: `Challenge {usurper.first} to earn it in the ring`, risk: 'med', outcomes: [
+        { weight: 2, bonus: { overall: 0.4, confidence: 0.3 }, text: `You take the match and show why the spot should be yours. The rivalry is born in a hard fight.`, effects: [{ booking: { who: 'usurper', type: 'singles' } }, { rivalry: { who: 'usurper', heat: 14 } }, { pop: 0.9 }, { conf: 3 }, { fatigue: 8 }] },
+        { weight: 1, text: `{usurper.first} wins the match convincingly, and your position gets worse.`, effects: [{ booking: { who: 'usurper', type: 'singles' } }, { rivalry: { who: 'usurper', heat: 8 } }, { pop: -0.4 }, { conf: -4 }, { fatigue: 8 }] } ] },
+      { id: 'sabotage', label: `Spread doubt about {usurper.first} in the locker room`, risk: 'high', outcomes: [
+        { weight: 1, text: `The whisper campaign works. {usurper.first}'s spot is tweaked, and yours comes back. But it leaves a stain.`, effects: [{ rel: { who: 'usurper', trust: -16, heat: 14 } }, { pop: 0.2 }, { conf: 1 }] },
+        { weight: 2, text: `Someone repeats it to {usurper.first} word for word. You're now seen as petty.`, effects: [{ rel: { who: 'usurper', trust: -20, heat: 18, respect: -8 } }, { pop: -0.6 }, { conf: -4 }, { event: { type: 'betrayal', participants: ['usurper'], summary: `Spread rumours about {usurper.name} to win back a spot.`, data: {} } }] } ] },
+    ],
+  },
+  {
+    id: 'bkg_pitch_meeting', category: 'creative', title: `Your Chance to Pitch a Storyline`, weight: 3, major: true, cooldownDays: 150, maxPerCareer: 4, categoryCooldown: 10,
+    cast: { boss: { pick: 'staff', role: 'creative' } },
+    trigger: { stat: { popularity: { gte: 20 }, mic: { gte: 30 } } },
+    slots: { room: [`a cramped conference room`, `a hotel suite at midnight`, `the back of a rental van`], idea: [`a rivalry born from an old tag partnership`, `a mysterious attacker who is never named`, `a grudge about a stolen finisher`, `a redemption run from last place`] },
+    body: [`In {room}, {boss.name} offers you ten minutes to pitch anything you like. You've been carrying an idea around for weeks: {idea}.`, `Writers rarely let wrestlers drive. When they do, the idea lives or dies by how well you sell it.`],
+    choices: [
+      { id: 'full_pitch', label: `Pitch the whole story, beginning to end`, risk: 'med', outcomes: [
+        { weight: 2, bonus: { mic: 0.5, charisma: 0.4 }, text: `You paint the whole arc, and {boss.first} leans forward. The story goes on the board and you are in it.`, effects: [{ pop: 1.1 }, { conf: 4 }, { fatigue: 6 }] },
+        { weight: 1, text: `You lose the room halfway through. The story is shelved, but your effort is noticed.`, effects: [{ pop: 0.1 }, { conf: -2 }] } ] },
+      { id: 'hook', label: `Pitch only the hook and leave the rest to them`, risk: 'low', result: `You give the room a clean hook and let the writers fill in the gaps. They like the idea and the control it gives them.`, effects: [{ pop: 0.5 }, { conf: 2 }] },
+      { id: 'tradeoff', label: `Offer to take a loss in return for the green light`, risk: 'med', result: `{boss.first} agrees, but the loss comes first. You eat a defeat on television to buy a better story.`, effects: [{ pop: 0.6 }, { conf: -1 }, { money: 2000 }] },
+      { id: 'steal', label: `Pitch another wrestler's idea as your own`, risk: 'high', outcomes: [
+        { weight: 1, text: `Nobody knows. The idea works and you get the credit.`, effects: [{ pop: 1.0 }, { conf: 2 }] },
+        { weight: 2, text: `The original wrestler is in the room, and the silence is deafening. Word spreads quickly.`, effects: [{ pop: -0.8 }, { conf: -5 }, { money: -1500 }] } ] },
+    ],
+  },
+  {
+    id: 'bkg_match_length_dispute', category: 'creative', title: `Too Long, or Not Long Enough?`, weight: 2, major: true, cooldownDays: 150, maxPerCareer: 4, categoryCooldown: 10, contexts: ['post_match', 'post_show'],
+    cast: { boss: { pick: 'staff', role: 'producer' }, opp: { pick: 'roster', tier: { gte: 1, lte: 3 }, sameBrand: true } },
+    trigger: { stat: { matches: { gte: 10 }, popularity: { gte: 20 } }, daysSince: { match: { lte: 3 } } },
+    slots: { verdict: [`ran fifteen minutes over its slot`, `felt rushed and under-built`, `was a showstopper the crowd wanted to see longer`], note: [`took a long conversation with the truck`, `forced a whole segment to be moved`, `earned an eyebrow from upstairs`] },
+    body: [`Your match with {opp.name} {verdict}, and {boss.name} walks into the locker room with a note: it {note}.`, `You and {opp.first} both believe in the work. The debrief is going to go one of several ways.`],
+    choices: [
+      { id: 'own', label: `Own the problem and change how you pace matches`, risk: 'low', result: `You take the note and refine your approach. {boss.first} notices, and so does {opp.first}.`, effects: [{ rel: { who: 'opp', respect: 4 } }, { attr: { name: 'psychology', delta: 1 } }, { conf: -1 }, { pop: 0.1 }] },
+      { id: 'defend', label: `Defend the match as the best thing on the show`, risk: 'med', outcomes: [
+        { weight: 2, bonus: { overall: 0.4, confidence: 0.3 }, text: `You make a convincing case, and {boss.first} gives ground. The match becomes a reference point.`, effects: [{ rel: { who: 'opp', respect: 6 } }, { pop: 0.6 }, { conf: 3 }] },
+        { weight: 1, text: `{boss.first} isn't impressed, and the conversation ends coldly.`, effects: [{ rel: { who: 'opp', respect: 2 } }, { pop: -0.2 }, { conf: -3 }] } ] },
+      { id: 'blame', label: `Blame {opp.first} for the problems`, risk: 'high', result: `{opp.first} hears that you tried to push the problem onto {opp.them}. The locker room is silent for the rest of the week.`, effects: [{ rel: { who: 'opp', trust: -14, heat: 12, respect: -8 } }, { conf: 1 }, { pop: -0.4 }] },
+      { id: 'rework', label: `Offer to rework the match with {opp.first} next time`, risk: 'low', result: `You and {opp.first} sit down with a notepad and rework the structure. It costs time and builds trust.`, effects: [{ rel: { who: 'opp', trust: 8, respect: 6 } }, { fatigue: 6 }, { pop: 0.2 }, { conf: 2 }] },
+    ],
+  },
 ];

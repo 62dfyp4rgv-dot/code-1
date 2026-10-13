@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { Career } from '../src/career/career.js';
 import { Universe, TITLE_SLOTS } from '../src/universe/universe.js';
 import { UniverseSim } from '../src/universe/sim.js';
-import { Game } from '../src/game.js';
+import { AutoGame as Game } from './autogame.js';
 import { SaveManager, MemoryAdapter } from '../src/save/save.js';
 import { REAL_ROSTER, activeIn } from '../src/data/roster_real.js';
 

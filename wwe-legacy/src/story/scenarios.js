@@ -96,6 +96,7 @@ export function checkTrigger(t, ctx, bind) {
       case 'tier': break; // evaluated by cast
       case 'phase': if (ctx.c.flags.phase !== v) return false; break;
       case 'mem': {
+        if (!v) break;
         for (const m of v) {
           const b = bind && bind[m.role];
           if (!b || !b.isWrestler) return false;
@@ -274,7 +275,7 @@ export function collectEffects(effects, bind, ctx, rng) {
         if (data.quality !== undefined) data.quality = qualityOf(data.quality, c, rng);
         if (data.viral && typeof data.viral === 'object') data.viral = (data.quality ?? 0) >= (data.viral.minQuality ?? 85) && rng.chance(data.viral.chance ?? 0.4);
         for (const [dk, dv] of Object.entries(data)) if (typeof dv === 'string' && dv.startsWith('@')) data[dk] = who(dv.slice(1)).id; // "@role" -> wrestler id
-        if (v.type === 'retirement') data.legendary = c.stats.s.titles.won >= 3 && c.stats.s.wins >= 150;
+        if (v.type === 'retirement') data.legendary = !!c.stats && c.stats.s.titles.won >= 3 && c.stats.s.wins >= 150;
         out.events.push({ type: v.type, category: v.category || categoryOf(v.type), participants: parts, summary: render(v.summary, bind), importance: v.importance ?? 3, data });
         break;
       }
