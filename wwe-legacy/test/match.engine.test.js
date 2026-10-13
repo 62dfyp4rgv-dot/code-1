@@ -248,8 +248,8 @@ test('submission rules: holds need a grounded opponent, end matches by tap, and 
   assert.ok(listActions(s, 'sub').some((o) => o.cat === 'submission'));
   // find a submission finish & check events
   let subWins = 0, ropeBreaks = 0;
-  for (let seed = 1; seed < 150; seed++) {
-    const m = mk('singles', 'sub', 'tech', seed, { overrides: { sub: 'smart', tech: 'smart' } });
+  for (let seed = 1; seed < 250; seed++) {
+    const m = mk('singles', 'sub', 'tech', seed, { overrides: { sub: 'strong', tech: 'average' } });
     if (m.result.finish === 'submission') {
       subWins++;
       assert.ok(m.state.events.some((x) => x.type === 'submission_win'));

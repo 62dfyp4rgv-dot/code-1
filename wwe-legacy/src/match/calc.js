@@ -132,7 +132,7 @@ export function holdEscapeChance(state, hold, response) {
   const V = F(state, hold.victim), H = F(state, hold.holder);
   const fr = staminaFrac(V);
   const base = { power_out: 0.2 + V.attrs.power / 250, reverse_hold: 0.12 + V.attrs.technical / 220 + V.attrs.psychology / 400,
-    slip_out: 0.16 + V.attrs.agility / 220, crawl_ropes: 0.34 + V.attrs.endurance / 400, fight_on: 0.12 + V.attrs.striking / 400,
+    slip_out: 0.16 + V.attrs.agility / 220, crawl_ropes: 0.44 + V.attrs.endurance / 400, fight_on: 0.12 + V.attrs.striking / 400,
     fan_up: 0.08 + (state.crowd.heat / 100) * 0.18 * Math.max(0, crowdBias(state, V.id) + 0.4), endure: 0.05 }[response] ?? 0.1;
   let p = base - hold.sev / 260 - (H.attrs.technical / 100) * 0.1 - (V.dmg[hold.tgt] / 100) * 0.16 + (fr - 0.5) * 0.14;
   p += ((V.momentum - H.momentum) / 100) * 0.06;

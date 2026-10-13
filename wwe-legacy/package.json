@@ -5,8 +5,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "node --test --test-reporter=spec test/",
-    "test:quick": "node --test test/",
+    "test": "node --test --test-reporter=spec \"test/*.test.js\"",
+    "test:quick": "node --test \"test/*.test.js\"",
     "build": "node tools/build.js",
     "serve": "node tools/serve.js",
     "gauntlet": "node tools/gauntlet.js",
