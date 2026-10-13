@@ -157,3 +157,37 @@ label.f { display: flex; flex-direction: column; gap: 6px; font-weight: 600; fon
 .dmg b { height: 26px; font-size: .72rem; justify-content: space-between; padding: 0 6px; }
 .dmg b em { font-style: normal; position: relative; z-index: 1; opacity: .9; font-variant-numeric: tabular-nums; }
 .btn .t small.fx { color: var(--muted); }
+
+/* identity pass */
+.avatar { flex: none; filter: drop-shadow(0 1px 1px rgba(0,0,0,.25)); }
+.banner.hero { padding-top: 120px; min-height: 280px; justify-content: flex-end; }
+.banner.hero .arena { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .95; }
+.banner.hero > *:not(.arena) { position: relative; z-index: 1; }
+.banner.result-win::after { background: repeating-linear-gradient(90deg, var(--brass-fill) 0 18px, #fff3 18px 36px); height: 7px; }
+.banner.result-loss { background: color-mix(in srgb, var(--mat) 88%, var(--rope)); }
+.card.verdict { text-align: center; padding: 22px 14px; border-width: 2px; }
+.card.verdict h2 { font-size: 2.6rem; letter-spacing: .02em; }
+.card.verdict.won { border-color: var(--brass-fill); background: color-mix(in srgb, var(--surface) 90%, var(--brass-fill)); }
+.card.verdict.lost { border-color: var(--rope); background: color-mix(in srgb, var(--surface) 92%, var(--rope)); }
+.pill.r-common { color: var(--muted); } .pill.r-uncommon { color: var(--good); border-color: currentColor; } .pill.r-rare { color: var(--focus); border-color: currentColor; }
+.pill.r-epic { color: #a24bd6; border-color: currentColor; } .pill.r-legendary { color: var(--brass); border-color: var(--brass-fill); background: color-mix(in srgb, var(--brass-fill) 22%, transparent); }
+.rarity { width: 28px; text-align: center; font-size: 1.25rem; line-height: 1; color: var(--muted); }
+.rarity.got.uncommon { color: var(--good); } .rarity.got.rare { color: var(--focus); } .rarity.got.epic { color: #a24bd6; } .rarity.got.legendary, .rarity.got.common { color: var(--brass-fill); }
+.kv.zero { opacity: .55; padding: 4px 0; }
+.stat .bar { background-image: linear-gradient(90deg, transparent calc(25% - 1px), var(--line) calc(25% - 1px) 25%, transparent 25% calc(50% - 1px), var(--line) calc(50% - 1px) 50%, transparent 50% calc(75% - 1px), var(--line) calc(75% - 1px) 75%, transparent 75%); }
+.feed p:last-child { font-size: 1.05rem; font-weight: 600; }
+.feed p:not(:last-child) { opacity: .82; }
+.opts .btn { border-left-width: 5px; }
+.opts .btn:has(.hint.Strong), .opts .btn:has(.hint.Good) { border-left-color: var(--good); }
+.opts .btn:has(.hint.Fair) { border-left-color: var(--warn); }
+.opts .btn:has(.hint.Risky), .opts .btn:has(.hint.Long) { border-left-color: var(--bad); }
+
+.dmg b { flex-direction: column; height: 38px; gap: 1px; justify-content: center; padding: 0; line-height: 1; }
+.dmg b span { font-size: .6rem; letter-spacing: .08em; opacity: .85; }
+.dmg b em { font-size: .9rem; font-weight: 800; opacity: 1; }
+.banner.hero { padding-top: 250px; min-height: 470px; }
+.banner.hero .arena { inset: 0 0 auto 0; height: 240px; }
+.hint { flex: none; }
+
+.btn > .col { flex: none; max-width: 40%; }
+.btn > .t { flex: 1 1 auto; }

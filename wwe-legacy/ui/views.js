@@ -27,6 +27,14 @@ export const tabbar = (S) => {
   return `<nav class="tabbar" aria-label="Main"><div class="in">${t.map(([id, l]) => `<button class="tab ${S.tab === id ? 'on' : ''}" data-action="tab" data-id="${id}" aria-current="${S.tab === id}"><svg viewBox="0 0 24 24" aria-hidden="true">${ICON[id]}</svg>${l}</button>`).join('')}</div></nav>`;
 };
 
+// generated crest portraits: initials on a seeded gradient, ring colour = alignment (no external art needed)
+const hueOf = (id) => { let h = 7; for (const ch of String(id)) h = (h * 31 + ch.charCodeAt(0)) % 360; return h; };
+export const avatar = (w, size = 40) => {
+  const name = (w && w.name) || '?', id = (w && w.id) || name;
+  const ini = name.split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0]).join('').toUpperCase();
+  const h = hueOf(id), ring = w && w.alignment === 'heel' ? 'var(--rope)' : w && w.alignment === 'face' ? 'var(--good)' : 'var(--brass-fill)';
+  return `<svg class="avatar" width="${size}" height="${size}" viewBox="0 0 40 40" role="img" aria-label="${esc(name)}"><defs><linearGradient id="g${h}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="hsl(${h} 55% 38%)"/><stop offset="1" stop-color="hsl(${(h + 40) % 360} 60% 22%)"/></linearGradient></defs><path d="M20 1.5 37 7v13c0 9.5-6.5 15.5-17 18.5C9.500 35.500 3 29.500 3 20V7z" fill="url(#g${h})" stroke="${ring}" stroke-width="2.4"/><text x="20" y="25" text-anchor="middle" font-family="Big Shoulders Display, Impact, sans-serif" font-weight="900" font-size="15" fill="#fff" letter-spacing=".5">${esc(ini)}</text></svg>`;
+};
 const header = (title, sub, right = '') => `<div class="topbar"><div class="col" style="gap:2px"><h1>${esc(title)}</h1>${sub ? `<div class="sub">${esc(sub)}</div>` : ''}</div>${right}</div>`;
 const back = (to = 'back') => `<button class="btn small ghost" data-action="${to}" aria-label="Back">← Back</button>`;
 const kv = (k, v) => `<div class="kv"><span>${esc(k)}</span><span class="v">${v}</span></div>`;
@@ -35,10 +43,15 @@ const kv = (k, v) => `<div class="kv"><span>${esc(k)}</span><span class="v">${v}
 export function title(S) {
   const has = S.slots.some((s) => !s.empty);
   return `<main class="screen noTab" style="justify-content:center">
-    <div class="banner">
+    <div class="banner hero">
+      <svg class="arena" viewBox="0 0 390 220" aria-hidden="true" preserveAspectRatio="xMidYMax slice"><defs><radialGradient id="spot" cx="50%" cy="0%" r="90%"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient><linearGradient id="mat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a2536"/><stop offset="1" stop-color="#070b12"/></linearGradient></defs>
+        <rect width="390" height="220" fill="url(#mat)"/><polygon points="120,0 270,0 360,220 30,220" fill="url(#spot)" opacity=".5"/><polygon points="20,0 70,0 190,220 -40,220" fill="url(#spot)" opacity=".22"/><polygon points="320,0 370,0 430,220 210,220" fill="url(#spot)" opacity=".22"/>
+        <g stroke-linecap="round" fill="none"><path d="M-10 150 L400 150" stroke="#c41e2f" stroke-width="5"/><path d="M-30 172 L420 172" stroke="#f4f6fa" stroke-width="5"/><path d="M-50 196 L440 196" stroke="#c41e2f" stroke-width="5"/></g>
+        <g fill="#c41e2f"><rect x="14" y="140" width="10" height="80" rx="3"/><rect x="366" y="140" width="10" height="80" rx="3"/></g>
+        <g fill="#000" opacity=".55"><circle cx="40" cy="214" r="9"/><circle cx="70" cy="218" r="9"/><circle cx="104" cy="213" r="9"/><circle cx="288" cy="215" r="9"/><circle cx="322" cy="213" r="9"/><circle cx="352" cy="217" r="9"/></g></svg>
       <div class="eyebrow">Ultimate Career RPG</div>
-      <h1 style="font-size:3.1rem;font-weight:900">WWE<br>Legacy</h1>
-      <p style="max-width:34ch;opacity:.85">Live a whole wrestling career. Every match, promo and promise is remembered.</p>
+      <h1 style="font-size:3.4rem;font-weight:900;text-shadow:0 2px 0 #c41e2f">WWE<br>Legacy</h1>
+      <p style="max-width:34ch;opacity:.9">Live a whole wrestling career. Every match, promo and promise is remembered.</p>
     </div>
     <div class="col">
       ${has ? `<button class="btn primary" data-action="continue" id="btn-continue">Continue Career</button>` : ''}
@@ -81,10 +94,11 @@ export function create(S) {
   } else if (step === 3) {
     body = `<div class="col"><div class="eyebrow">Entrance</div>${Object.entries(ENTRANCES).map(([id, e]) => `<button class="btn" data-action="cset" data-k="entrance" data-v="${id}" style="${c.entrance === id ? 'border-color:var(--rope);' : ''}"><span class="t"><b>${esc(e.label)}</b><small>${esc(e.desc)}</small></span></button>`).join('')}</div>
       <div class="col"><div class="eyebrow">Career goal</div><div class="chips">${opts.goals.map((g) => `<button class="chip ${c.goal === g ? 'on' : ''}" data-action="cset" data-k="goal" data-v="${esc(g)}">${esc(g)}</button>`).join('')}</div></div>
-      <div class="col"><div class="eyebrow">Start year</div><div class="chips">${opts.startYears.map((y) => `<button class="chip ${c.startYear === y ? 'on' : ''}" data-action="cset" data-k="startYear" data-v="${y}">${y}</button>`).join('')}</div><p class="muted">${esc(eraForYear(c.startYear).name)}: ${esc(eraForYear(c.startYear).desc)}</p></div>`;
+      <div class="col"><div class="eyebrow">Start year</div><div class="chips">${opts.startYears.map((y) => `<button class="chip ${c.startYear === y ? 'on' : ''}" data-action="cset" data-k="startYear" data-v="${y}">${y}</button>`).join('')}</div><p class="muted">${esc(eraForYear(c.startYear).name)}: ${esc(eraForYear(c.startYear).desc)}</p></div>
+      <div class="col"><div class="eyebrow">World</div><div class="chips"><button class="chip ${c.world !== 'fictional' ? 'on' : ''}" data-action="cset" data-k="world" data-v="real">Real names (approximate)</button><button class="chip ${c.world === 'fictional' ? 'on' : ''}" data-action="cset" data-k="world" data-v="fictional">Fully fictional</button></div><p class="muted">${c.world === 'fictional' ? 'An invented roster and an alternate history. Nothing here is presented as real.' : 'Real wrestler names with approximate rosters and results flagged as unverified. Everything that happens afterwards is simulated alternate history.'}</p></div>`;
   } else {
     body = `<div class="card"><h3>${esc(c.name || 'The Rookie')}</h3>
-      ${kv('Style', cap(c.style))}${kv('Alignment', cap(c.alignment))}${kv('Background', esc(bg.name))}${kv('Finisher', esc(c.finisher.name))}${kv('Signatures', esc(c.signatures.filter(Boolean).map((s) => s.name).join(', ') || 'Style defaults'))}${kv('Entrance', esc(ENTRANCES[c.entrance].label))}${kv('Start', `${c.startYear} (${esc(eraForYear(c.startYear).name)})`)}${kv('Goal', esc(c.goal || 'None yet'))}</div>`;
+      ${kv('Style', cap(c.style))}${kv('Alignment', cap(c.alignment))}${kv('Background', esc(bg.name))}${kv('Finisher', esc(c.finisher.name))}${kv('Signatures', esc(c.signatures.filter(Boolean).map((s) => s.name).join(', ') || 'Style defaults'))}${kv('Entrance', esc(ENTRANCES[c.entrance].label))}${kv('Start', `${c.startYear} (${esc(eraForYear(c.startYear).name)}${c.world === 'fictional' ? ', fictional world' : ''})`)}${kv('Goal', esc(c.goal || 'None yet'))}</div>`;
   }
   const titles = ['Who are you?', 'How do you fight?', 'Your signature moves', 'Presentation & goals', 'Ready for your debut?'];
   return `<main class="screen noTab">
@@ -144,7 +158,7 @@ export function home(S) {
 
 const oppCard = (o, sel) => `<div class="card" style="${sel || o.title || o.forced ? 'border-color:var(--rope)' : ''}">
   ${o.title ? `<div class="row"><span class="pill brass">${o.defense ? 'Title defense' : 'Title match'}</span><b>${esc(o.title.name)}</b></div>` : ''}${o.forced && !o.title ? '<div class="row"><span class="pill rope">Scripted match</span></div>' : ''}${o.rumbleShot ? '<div class="row"><span class="pill brass">Rumble winner\'s shot</span></div>' : ''}
-  <div class="row spread"><h3>${esc(o.name)}</h3><span class="pill ${o.alignment === 'heel' ? 'rope' : o.alignment === 'face' ? 'good' : ''}">${cap(o.alignment)}</span></div>
+  <div class="row spread"><div class="row">${avatar(o, 44)}<h3>${esc(o.name)}</h3></div><span class="pill ${o.alignment === 'heel' ? 'rope' : o.alignment === 'face' ? 'good' : ''}">${cap(o.alignment)}</span></div>
   <div class="row wrap"><span class="pill">${cap(o.style)}</span><span class="pill">OVR ${o.overall}</span><span class="pill">Pop ${o.popularity}</span><span class="pill">${esc(o.record)}</span>${o.rivalry ? `<span class="pill rope">Rivalry ${o.rivalry.heat}</span>` : ''}${o.tags.slice(0, 2).map((t) => `<span class="pill warn">${cap(t)}</span>`).join('')}</div>
   <div class="row"><button class="btn small grow" data-action="scout" data-id="${o.id}">Scout</button><button class="btn small primary grow" data-action="pickOpp" data-id="${o.id}" data-stakes="${o.stakes || ''}" data-type="${o.type || ''}">Face ${esc(o.name.split(' ')[0])}</button></div></div>`;
 
@@ -195,7 +209,7 @@ export function match(S) {
   if (over) {
     const r = g.engine.state.result;
     const won = r.winnerId === me;
-    panel = `<div class="card"><h2>${r.winnerSide === null ? 'Draw' : won ? 'Victory' : 'Defeat'}</h2><p class="muted">${esc(String(r.finish).replace(/_/g, ' '))} · ${mmss(r.durationSec)}</p><button class="btn primary" data-action="finishMatch" id="btn-finish">See the result</button></div>`;
+    panel = `<div class="card verdict ${r.winnerSide === null ? 'draw' : won ? 'won' : 'lost'}"><h2>${r.winnerSide === null ? 'Draw' : won ? 'Victory' : 'Defeat'}</h2><p class="muted">${esc(String(r.finish).replace(/_/g, ' '))} · ${mmss(r.durationSec)}</p><button class="btn primary" data-action="finishMatch" id="btn-finish">See the result</button></div>`;
   } else if (d) panel = decisionPanel(S, d, mv);
   const lines = S.feed.slice(-40);
   return `<div class="match" id="match">
@@ -233,7 +247,7 @@ function decisionPanel(S, d, mv) {
   } else if (d.kind === 'hold_h') {
     head = `<div class="prompt"><div class="eyebrow">Submission</div><h2>${esc(d.context.hold.moveName)} locked in</h2><div class="muted">Pressure ${Math.round(d.context.hold.sev)}</div></div>`;
   } else if (d.kind === 'hold_v') {
-    head = `<div class="prompt"><div class="eyebrow">Trapped</div><h2>Escape the ${esc(d.context.hold.moveName)}</h2><div class="muted">Pressure ${Math.round(d.context.hold.sev)}</div></div>`;
+    head = `<div class="prompt"><div class="eyebrow">Trapped</div><h2>Escape the ${esc(d.context.hold.moveName)}</h2><div class="muted">Pressure ${Math.round(d.context.hold.sev)} · the percentage is your chance to break free</div></div>`;
   } else if (d.kind === 'rise') {
     head = `<div class="prompt"><div class="eyebrow">Ten count</div><h2>Count: ${d.context.count.n}</h2></div>`;
   } else if (d.kind === 'apron') {
@@ -254,8 +268,8 @@ export function result(S) {
   const st = r.stats || {};
   const win = r.result === 'win';
   return `<main class="screen noTab">
-    <div class="banner"><div class="eyebrow">${esc(r.opponents.join(' & '))}</div><h1>${r.result === 'win' ? 'Victory' : r.result === 'loss' ? 'Defeat' : 'Draw'}</h1>
-      <div class="row spread"><span class="stars" aria-label="${r.rating.stars} stars">${stars(r.rating.stars)}</span><span class="num">${mmss(r.durationSec)}</span></div>
+    <div class="banner result-${r.result}"><div class="eyebrow">${esc(r.opponents.join(' & '))}</div><h1>${r.result === 'win' ? 'Victory' : r.result === 'loss' ? 'Defeat' : 'Draw'}</h1>
+      <div class="row spread"><span class="stars" aria-label="${r.rating.stars} stars">${stars(r.rating.stars)} <b class="num">${Number(r.rating.stars).toFixed(2)}</b></span><span class="num">${mmss(r.durationSec)}</span></div>
       <p style="opacity:.85">${esc(r.summary)}</p></div>
     ${r.unlocked.length ? `<div class="card" style="border-color:var(--brass-fill)"><h3>Achievements unlocked</h3>${r.unlocked.map((u) => `<div class="item"><span class="dot gold"></span><div class="col" style="gap:2px"><b>${esc(u.name)}</b><span class="muted" style="font-size:.85rem">${esc(u.explanation)}</span></div></div>`).join('')}</div>` : ''}
     <div class="card"><h3>Match stats</h3>
@@ -313,7 +327,7 @@ function recordBook(S) {
   const names = (id) => g.universe.get(id)?.name || (id === c.player.id ? c.player.name : id);
   const book = buildRecordBook(c, names);
   return `<main class="screen">${header('Record Book', `${book.player} · as of ${book.asOf}`, back('closeSub'))}
-    ${book.sections.map((s) => `<div class="card"><h3>${esc(s.title)}</h3>${s.items.length ? s.items.map((it, i) => `<div class="kv"><span>${esc(it.label)}</span><span class="v">${esc(it.value)} ${it.evidence && it.evidence.length ? `<button class="chip" style="margin:-9px 0;padding:1px 10px" data-action="evidence" data-sec="${s.id}" data-i="${i}">${it.evidence.length} ev.</button>` : ''}</span></div>`).join('') : '<div class="empty">Nothing yet.</div>'}</div>`).join('')}</main>`;
+    ${book.sections.map((s) => `<div class="card"><h3>${esc(s.title)}</h3>${s.items.length ? s.items.map((it, i) => `<div class="kv ${String(it.value) === '0' || it.value === '—' ? 'zero' : ''}"><span>${esc(it.label)}</span><span class="v">${esc(it.value)} ${it.evidence && it.evidence.length ? `<button class="chip" style="margin:-9px 0;padding:1px 10px" data-action="evidence" data-sec="${s.id}" data-i="${i}">${it.evidence.length} ev.</button>` : ''}</span></div>`).join('') : '<div class="empty">Nothing yet.</div>'}</div>`).join('')}</main>`;
 }
 
 // ---------------------------------------------------------------- calendar
@@ -336,7 +350,7 @@ export function roster(S) {
   const list = g.universe.list((w) => !q || w.name.toLowerCase().includes(q)).sort((a, b) => b.tier - a.tier || b.popularity - a.popularity);
   return `<main class="screen">${header('Roster', `${list.length} wrestlers`)}
     <input type="search" id="in-rq" placeholder="Search" value="${esc(S.ui.rq || '')}" aria-label="Search roster">
-    <div class="card"><div class="list">${list.map((w) => `<button class="item" data-action="profile" data-id="${w.id}" style="background:none;border:0;border-bottom:1px solid var(--line);text-align:left;width:100%;color:inherit;font:inherit;cursor:pointer"><span class="dot ${w.alignment === 'heel' ? 'rope' : w.alignment === 'face' ? 'win' : ''}"></span><span class="col grow" style="gap:0"><b>${esc(w.name)}</b><span class="muted">${cap(w.style)} · ${esc(w.brand)}</span></span><span class="num">${Math.round(g._overall(w))}</span></button>`).join('')}</div></div></main>`;
+    <div class="card"><div class="list">${list.map((w) => `<button class="item" data-action="profile" data-id="${w.id}" style="background:none;border:0;border-bottom:1px solid var(--line);text-align:left;width:100%;color:inherit;font:inherit;cursor:pointer">${avatar(w, 34)}<span class="col grow" style="gap:0"><b>${esc(w.name)}</b><span class="muted">${cap(w.style)} · ${esc(w.brand)}</span></span><span class="num">${Math.round(g._overall(w))}</span></button>`).join('')}</div></div></main>`;
 }
 
 export function profileSheet(S, id) {
@@ -344,7 +358,7 @@ export function profileSheet(S, id) {
   const card = g.opponentCard(w);
   const lines = g.scout(id).history;
   const rel = getRel(c.memory.world, c.player.id, id);
-  return `<div class="row spread"><h2>${esc(w.name)}</h2><button class="btn small ghost" data-action="closeSheet">Close</button></div>
+  return `<div class="row spread"><div class="row">${avatar(w, 52)}<h2>${esc(w.name)}</h2></div><button class="btn small ghost" data-action="closeSheet">Close</button></div>
     <div class="row wrap"><span class="pill">${cap(w.style)}</span><span class="pill">${cap(w.alignment)}</span><span class="pill">${esc(w.brand)}</span><span class="pill brass">OVR ${card.overall}</span></div>
     ${Object.entries(w.attrs).map(([k, v]) => `<div class="stat"><span>${cap(k)}</span>${bar(v)}<span class="num">${v}</span></div>`).join('')}
     ${kv('Finisher', esc(w.finisher?.name || '—'))}${kv('Your record', esc(card.record))}${kv('Relationship', rel.tags.length ? esc(rel.tags.map(cap).join(', ')) : 'Neutral')}
@@ -373,7 +387,7 @@ function achievements(S) {
   const total = list.length, got = list.filter((a) => a.unlocked).length;
   return `<main class="screen">${header('Achievements', `${got} of ${total} unlocked`, back('closeSub'))}
     <div class="chips">${['all', 'unlocked', 'progress', ...cats].map((x) => `<button class="chip ${f === x ? 'on' : ''}" data-action="achFilter" data-id="${x}">${cap(x)}</button>`).join('')}</div>
-    <div class="card"><div class="list">${sel.slice(0, 120).map((a) => `<button class="item" data-action="achDetail" data-id="${a.id}" style="background:none;border:0;border-bottom:1px solid var(--line);text-align:left;width:100%;color:inherit;font:inherit;cursor:pointer"><span class="dot ${a.unlocked ? 'gold' : ''}"></span><span class="col grow" style="gap:3px"><b>${esc(a.name)} ${a.unlocked ? '' : a.secret ? '<span class="pill">Secret</span>' : ''}</b><span class="muted" style="font-size:.88rem">${esc(a.desc)}</span>${!a.unlocked && a.progress ? `${bar(a.progress.value, a.progress.target, 'brass')}<span class="num muted">${Math.floor(a.progress.value)}/${a.progress.target}</span>` : ''}</span><span class="pill ${a.rarity === 'legendary' ? 'rope' : a.rarity === 'epic' || a.rarity === 'rare' ? 'brass' : ''}">${cap(a.rarity)}</span></button>`).join('')}</div></div></main>`;
+    <div class="card"><div class="list">${sel.slice(0, 120).map((a) => `<button class="item" data-action="achDetail" data-id="${a.id}" style="background:none;border:0;border-bottom:1px solid var(--line);text-align:left;width:100%;color:inherit;font:inherit;cursor:pointer"><span class="rarity ${a.rarity} ${a.unlocked ? 'got' : ''}" aria-hidden="true">${a.unlocked ? '★' : '☆'}</span><span class="col grow" style="gap:3px"><b>${esc(a.name)} ${a.unlocked ? '' : a.secret ? '<span class="pill">Secret</span>' : ''}</b><span class="muted" style="font-size:.88rem">${esc(a.desc)}</span>${!a.unlocked && a.progress ? `${bar(a.progress.value, a.progress.target, 'brass')}<span class="num muted">${Math.floor(a.progress.value)}/${a.progress.target}</span>` : ''}</span><span class="pill r-${a.rarity}">${cap(a.rarity)}</span></button>`).join('')}</div></div></main>`;
 }
 
 export function achievementSheet(S, id) {
@@ -381,7 +395,7 @@ export function achievementSheet(S, id) {
   const a = c.achievements.list().find((x) => x.id === id);
   const evs = a.record ? a.record.evidence.map((e) => c.memory.ledger.get(e)).filter(Boolean) : [];
   return `<div class="row spread"><h2>${esc(a.name)}</h2><button class="btn small ghost" data-action="closeSheet">Close</button></div>
-    <div class="row wrap"><span class="pill brass">${cap(a.rarity)}</span><span class="pill">${cap(a.category)}</span>${a.unlocked ? `<span class="pill good">Unlocked ${esc(a.record.date)}</span>` : ''}</div>
+    <div class="row wrap"><span class="pill r-${a.rarity}">${cap(a.rarity)}</span><span class="pill">${cap(a.category)}</span>${a.unlocked ? `<span class="pill good">Unlocked ${esc(a.record.date)}</span>` : ''}</div>
     <p>${esc(a.desc)}</p>
     ${a.unlocked ? `<div class="card"><h3>Why you earned it</h3><p>${esc(a.record.explanation)}</p>${evs.map((e) => `<div class="item"><span class="dot"></span><div class="col" style="gap:0"><span class="eyebrow">${esc(e.date)} · ${esc(cap(e.type))} · ${esc(e.id)}</span><span>${esc(e.summary)}</span></div></div>`).join('')}</div>` : a.progress ? `<div class="card"><h3>Progress</h3>${bar(a.progress.value, a.progress.target, 'brass')}<span class="num">${Math.floor(a.progress.value)} / ${a.progress.target}</span></div>` : ''}`;
 }
@@ -391,7 +405,7 @@ function rivalries(S) {
   const rvs = Object.values(c.memory.world.rivalries).filter((r) => r.a === me || r.b === me).sort((a, b) => b.heat - a.heat);
   const nm = (r) => S.g.universe.get(r.a === me ? r.b : r.a)?.name || '?';
   return `<main class="screen">${header('Rivalries', `${rvs.length} on record`, back('closeSub'))}
-    ${rvs.map((r) => `<div class="card"><div class="row spread"><h3>${esc(nm(r))}</h3><span class="pill ${r.status === 'active' ? 'rope' : ''}">${cap(r.status)}</span></div>${bar(r.heat, 100, 'rope')}${kv('Heat', Math.round(r.heat))}${kv('Matches', r.matches)}${kv('Wins', `${r.wins[me] || 0} - ${r.wins[r.a === me ? r.b : r.a] || 0}`)}<button class="btn small ghost" data-action="profile" data-id="${r.a === me ? r.b : r.a}">Open profile</button></div>`).join('') || '<div class="empty">No rivalries yet. Beat someone, insult someone, or just make noise.</div>'}</main>`;
+    ${rvs.map((r) => `<div class="card"><div class="row spread"><div class="row">${avatar(S.g.universe.get(r.a === me ? r.b : r.a), 36)}<h3>${esc(nm(r))}</h3></div><span class="pill ${r.status === 'active' ? 'rope' : ''}">${cap(r.status)}</span></div>${bar(r.heat, 100, 'rope')}${kv('Heat', Math.round(r.heat))}${kv('Matches', r.matches)}${kv('Wins', `${r.wins[me] || 0} - ${r.wins[r.a === me ? r.b : r.a] || 0}`)}<button class="btn small ghost" data-action="profile" data-id="${r.a === me ? r.b : r.a}">Open profile</button></div>`).join('') || '<div class="empty">No rivalries yet. Beat someone, insult someone, or just make noise.</div>'}</main>`;
 }
 
 function relationships(S) {

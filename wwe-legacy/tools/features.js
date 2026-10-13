@@ -27,7 +27,7 @@ export const FEATURES = [
   { id: 'u_calendar', area: 'universe', label: 'Weekly shows + PLE calendar by era (brand split, NXT)', status: 'complete', probe: () => has('src/universe/calendar.js', /PLE_DEFS/) },
   { id: 'u_ai', area: 'universe', label: 'Independent AI universe (AI-vs-AI matches, feuds, alliances, betrayals, injuries, title reigns)', status: 'complete', probe: () => has('src/universe/sim.js', /class UniverseSim/) },
   { id: 'u_titles', area: 'universe', label: 'Singles/midcard championships with lineage validation', status: 'complete', probe: () => has('src/universe/universe.js', /lineageProblems/) },
-  { id: 'u_tagtitles', area: 'universe', label: 'Tag-team championships', status: 'unimplemented' },
+  { id: 'u_tagtitles', area: 'universe', label: 'Tag-team championships (AI defenses and changes; player can challenge and defend with a partner)', status: 'complete', probe: () => has('src/universe/sim.js', /_playTagTitle/) },
   { id: 'u_factions', area: 'universe', label: 'Factions (formation, membership, leader, betrayal mechanics)', status: 'partial', note: 'Alliances and betrayals exist; factions are scenario/memory concepts only.' },
   { id: 'u_history', area: 'universe', label: 'Verified historical data (real rosters, title lineages, PLE results)', status: 'partial', note: 'Roster/titles are approximate and flagged approx:true; NOT verified against sources.' },
   { id: 'u_modes', area: 'universe', label: 'Historical / modern modes with separation of fictional results', status: 'complete', probe: () => has('src/universe/universe.js', /historical/) },

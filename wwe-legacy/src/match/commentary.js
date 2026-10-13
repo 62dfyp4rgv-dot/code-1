@@ -50,7 +50,7 @@ export function narrate(state, ev) {
   const art = (adj) => (plural ? adj : `${/^[aeiou]/i.test(adj) ? 'an' : 'a'} ${adj}`);
   const [, , posA, selfA] = pron(state, ev.actor);
   // cycle through variants for repeated event types so the same line never appears twice in a row
-  const cyc = (arr, salt) => arr[(H(q, salt) + earlier(state, ev, (e) => e.type === ev.type, 600)) % arr.length];
+  const cyc = (arr, salt) => arr[(H(0, salt) + earlier(state, ev, (e) => e.type === ev.type, 600)) % arr.length];
   const late = state.timeLimit ? (ev.t || 0) / state.timeLimit > 0.7 : false;
   switch (ev.type) {
     case 'move_connected': {

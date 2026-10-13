@@ -29,6 +29,15 @@ export function runAIMatch(u, a, b, { type = 'singles', seed, title = null, ple 
   return { winner, loser: winner ? (winner === a ? b : a) : null, finish: r.finish, durationSec: r.durationSec, rating: rating.stars, injuries: [a, b].map((w) => ({ id: w.id, inj: e.state.fighters[w.id].injuriesNew })), draw: !winner, finisherUsed: e.state.fighters[(winner || a).id].stats.usedFinisher };
 }
 
+/** AI tag match between two teams; returns the winning side's wrestlers. */
+export function runAITagMatch(u, teamA, teamB, { seed, ple = false } = {}) {
+  const e = new MatchEngine({ seed, type: 'tag', sides: [teamA.map(profileOf), teamB.map(profileOf)], playerId: null, difficulty: 0.5, timeLimit: ple ? 28 : 22 }, { human: [] });
+  const r = e.state.result;
+  const winners = r.winnerSide === 0 ? teamA : r.winnerSide === 1 ? teamB : null;
+  return { winners, losers: winners ? (winners === teamA ? teamB : teamA) : null, finish: r.finish, durationSec: r.durationSec, rating: rateMatch(e.state).stars, draw: !winners,
+    injuries: [...teamA, ...teamB].map((w) => ({ id: w.id, inj: e.state.fighters[w.id].injuriesNew })) };
+}
+
 const ovr = (w) => { const v = Object.values(w.attrs); return v.reduce((x, y) => x + y, 0) / v.length; };
 
 /** Statistical resolution for low-stakes undercard matches. Full engine matches are reserved for
@@ -105,7 +114,7 @@ export class UniverseSim {
     const matches = [];
     const used = new Set();
     // 1. title defenses due
-    for (const t of u.titlesList().filter((x) => (key === 'dev' ? x.scope === 'dev' : key === 'second' ? x.scope === 'second' : x.scope === 'main') && x.holder && x.holder !== me)) {
+    for (const t of u.titlesList().filter((x) => (key === 'dev' ? x.scope === 'dev' : key === 'second' ? x.scope === 'second' : x.scope === 'main') && x.holder && x.holder !== me && x.cls !== 'tag')) {
       const champ = u.get(t.holder);
       if (!champ || champ.status !== 'active' || champ.injuredUntil > day || used.has(champ.id) || busy.has(champ.id)) continue;
       const due = day - t.lastDefenseDay >= (ple ? 14 : 24) + rng.int(0, 10);
@@ -116,6 +125,23 @@ export class UniverseSim {
       if (!ch) continue;
       used.add(champ.id); used.add(ch.id);
       matches.push({ a: champ, b: ch, title: t });
+    }
+    // 1b. tag team championship defenses
+    for (const t of u.titlesList('tag').filter((x) => (key === 'second' ? x.scope === 'second' : key === 'main' ? x.scope === 'main' : false) && x.holder)) {
+      const team = [u.get(t.holder), u.get(t.holder2)];
+      if (team.some((w) => !w || w.status !== 'active' || w.injuredUntil > day || used.has(w.id) || busy.has(w.id) || w.id === me)) continue;
+      const due = day - t.lastDefenseDay >= (ple ? 14 : 28) + rng.int(0, 12);
+      if (!due && !(ple && rng.chance(0.6))) continue;
+      const others = free.filter((w) => w.gender === t.gender && !used.has(w.id) && !team.some((m) => m.id === w.id));
+      let chal = null;
+      for (const al of Object.values(u.alliances)) {
+        const a = others.find((w) => w.id === al.a), b = others.find((w) => w.id === al.b);
+        if (a && b) { chal = [a, b]; break; }
+      }
+      if (!chal) { const r2 = others.filter((w) => w.tier >= 1 || others.length < 6).sort((a, b) => b.momentum + b.popularity / 4 - (a.momentum + a.popularity / 4)); if (r2.length >= 2) chal = [r2[0], r2[1]]; }
+      if (!chal) continue;
+      for (const w of [...team, ...chal]) used.add(w.id);
+      matches.push({ tagTitle: t, team, chal });
     }
     // 2. feuds
     for (const f of Object.values(u.feuds).filter((x) => x.status === 'active').sort((a, b) => b.heat - a.heat)) {
@@ -136,7 +162,34 @@ export class UniverseSim {
       const b = rest.splice(j, 1)[0];
       matches.push({ a, b });
     }
-    for (const m of matches) this._playMatch(m, day, ev, rng);
+    for (const m of matches) m.tagTitle ? this._playTagTitle(m, day, ev, rng) : this._playMatch(m, day, ev, rng);
+  }
+
+  /** a tag championship match between the champions and a challenging team (full engine) */
+  _playTagTitle({ tagTitle: t, team, chal }, day, ev, rng) {
+    const u = this.u;
+    const ple = ev.kind === 'ple';
+    const seed = parseInt(`${team[0].id.length}${chal[0].id.length}${day}`, 10) + Math.floor(rng.next() * 1e6);
+    const res = runAITagMatch(u, team, chal, { seed, ple });
+    this.stats.matches += 1; this.stats.fullEngine += 1; this.stats.tagTitleMatches = (this.stats.tagTitleMatches || 0) + 1;
+    for (const w of [...team, ...chal]) w.lastMatchDay = day;
+    for (const x of res.injuries) for (const inj of x.inj) {
+      const w = u.get(x.id); const days = inj.severity === 2 ? 45 + rng.int(0, 30) : 10 + rng.int(0, 14);
+      w.injuredUntil = Math.max(w.injuredUntil, day + days); this.stats.injuries += 1;
+    }
+    if (res.draw) { u.recordDefense(t.id, day); return; }
+    for (const w of res.winners) { w.record.w += 1; w.momentum = clamp(w.momentum + 7, 0, 100); w.popularity = clamp(w.popularity + 0.15 * (ple ? 2 : 1), 1, 99); }
+    for (const w of res.losers) { w.record.l += 1; w.momentum = clamp(w.momentum - 5, 0, 100); }
+    const decisive = ['pinfall', 'submission', 'objective', 'ten_count', 'falls'].includes(res.finish);
+    const reignDays = day - t.since;
+    const champsWon = res.winners === team;
+    const changes = !champsWon && decisive && rng.chance(reignDays < 90 ? 0.3 : reignDays < 180 ? 0.55 : 0.85);
+    if (changes) {
+      u.setChampion(t.id, res.winners[0].id, day, { by: res.losers[0].id, partner: res.winners[1].id });
+      this.stats.titleChanges += 1;
+      u.note(day, 'title_change', `${res.winners.map((w) => w.name).join(' & ')} defeated ${res.losers.map((w) => w.name).join(' & ')} for the ${t.name}.`, [...res.winners, ...res.losers].map((w) => w.id));
+      this._ledgerWorld(day, 'world_title_change', `${res.winners.map((w) => w.name).join(' & ')} won the ${t.name}.`, [...res.winners, ...res.losers].map((w) => w.id), { titleId: t.id, titleName: t.name, from: res.losers[0].id, to: res.winners[0].id });
+    } else u.recordDefense(t.id, day);
   }
 
   _playMatch(m, day, ev, rng) {
@@ -297,7 +350,10 @@ export class UniverseSim {
       u._syncBrandNames();
       // vacated titles get a new champion
       u.ensureTitles(year, day);
-      for (const t of u.titlesList()) if (!t.holder) {
+      for (const t of u.titlesList()) if (!t.holder && t.cls === 'tag') {
+        const team = u.pickTagTeam(t.scope === 'dev' ? 'dev' : t.scope, t.gender, [this.c.player.id]);
+        if (team) u.setChampion(t.id, team[0].id, day, { by: 'vacancy', partner: team[1].id });
+      } else if (!t.holder) {
         const cand = u.available(day, (w) => w.gender === t.gender && w.brandKey === (t.scope === 'dev' ? 'dev' : t.scope) && !u._holdsTitle(w.id) && w.id !== this.c.player.id).sort((a, b) => u._classRank(t.cls, b) - u._classRank(t.cls, a))[0];
         if (cand) u.setChampion(t.id, cand.id, day, { by: 'vacancy' });
       }

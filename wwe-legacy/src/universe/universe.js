@@ -16,6 +16,9 @@ export const TITLE_SLOTS = [
   { id: 'secondary_b', cls: 'secondary', gender: 'M', scope: 'second', from: 2003, names: [[2003, 2100, 'United States Championship']], minPop: 35 },
   { id: 'womens_a', cls: 'womens', gender: 'F', scope: 'main', from: 1998, names: [[1998, 2009, "Women's Championship"], [2010, 2015, 'Divas Championship'], [2016, 2100, "Women's Championship"]], minPop: 40 },
   { id: 'womens_b', cls: 'womens', gender: 'F', scope: 'second', from: 2016, names: [[2016, 2100, "Women's Championship"]], minPop: 40 },
+  { id: 'tag_a', cls: 'tag', gender: 'M', scope: 'main', from: 1985, names: [[1985, 2001, 'WWF Tag Team Championship'], [2002, 2100, 'World Tag Team Championship']], minPop: 25 },
+  { id: 'tag_b', cls: 'tag', gender: 'M', scope: 'second', from: 2002, names: [[2002, 2100, 'WWE Tag Team Championship']], minPop: 25 },
+  { id: 'tag_w', cls: 'tag', gender: 'F', scope: 'main', from: 2019, names: [[2019, 2100, "Women's Tag Team Championship"]], minPop: 25 },
   { id: 'dev_a', cls: 'developmental', gender: 'M', scope: 'dev', from: 2012, names: [[2012, 2100, 'NXT Championship']], minPop: 15 },
   { id: 'dev_b', cls: 'developmental', gender: 'M', scope: 'dev', from: 2018, names: [[2018, 2100, 'NXT North American Championship']], minPop: 10 },
   { id: 'dev_w', cls: 'developmental', gender: 'F', scope: 'dev', from: 2013, names: [[2013, 2100, "NXT Women's Championship"]], minPop: 12 },
@@ -144,31 +147,49 @@ export class Universe {
       if (!t) {
         t = this.titles[slot.id] = { id: slot.id, slot: slot.id, cls: slot.cls, gender: slot.gender, scope: slot.scope, name: this.titleName(slot, year), minPop: slot.minPop, holder: null, since: day, defenses: 0, lastDefenseDay: day, reigns: [] };
         const key = slot.scope === 'dev' ? 'dev' : slot.scope;
+        if (slot.cls === 'tag') {
+          const team = this.pickTagTeam(key, slot.gender);
+          if (team) this.setChampion(slot.id, team[0].id, day, { initial: true, partner: team[1].id });
+          continue;
+        }
         const pool = this.list((w) => w.gender === slot.gender && w.brandKey === key && !this._holdsTitle(w.id)).sort((a, b) => this._classRank(slot.cls, b) - this._classRank(slot.cls, a));
         if (pool.length) this.setChampion(slot.id, pool[0].id, day, { initial: true });
       } else t.name = this.titleName(slot, year);
     }
   }
   _classRank(cls, w) {
-    const want = { world: 4, secondary: 2, womens: 3, developmental: 0 }[cls] ?? 2;
+    const want = { world: 4, secondary: 2, womens: 3, developmental: 0, tag: 2 }[cls] ?? 2;
     return -Math.abs(w.tier - want) * 20 + w.popularity / 10 + w.momentum / 25;
   }
-  _holdsTitle(id) { return Object.values(this.titles).some((t) => t.holder === id); }
+  _holdsTitle(id) { return Object.values(this.titles).some((t) => t.holder === id || t.holder2 === id); }
+  /** a tag team for a brand: a standing alliance if one fits, otherwise the two best-matched free wrestlers */
+  pickTagTeam(brandKey, gender, exclude = []) {
+    const free = (w) => w.gender === gender && w.brandKey === brandKey && !this._holdsTitle(w.id) && !exclude.includes(w.id);
+    const pool = this.list(free);
+    for (const al of Object.values(this.alliances)) {
+      const a = this.roster[al.a], b = this.roster[al.b];
+      if (a && b && a.status === 'active' && b.status === 'active' && free(a) && free(b)) return [a, b];
+    }
+    const ranked = pool.filter((w) => w.tier >= 1 || pool.length < 6).sort((x, y) => (y.popularity + y.momentum / 2) - (x.popularity + x.momentum / 2));
+    return ranked.length >= 2 ? [ranked[0], ranked[1]] : null;
+  }
   titlesList(cls) { return Object.values(this.titles).filter((t) => !cls || t.cls === cls); }
-  titlesOf(id) { return Object.values(this.titles).filter((t) => t.holder === id); }
+  titlesOf(id) { return Object.values(this.titles).filter((t) => t.holder === id || t.holder2 === id); }
+  teamOf(titleId) { const t = this.titles[titleId]; return t && t.holder ? [t.holder, t.holder2].filter(Boolean) : []; }
 
   setChampion(titleId, holderId, day, meta = {}) {
     const t = this.titles[titleId];
-    const prev = t.holder;
+    const prev = t.holder, prev2 = t.holder2 || null;
     if (prev && t.reigns.length) {
       const r = t.reigns[t.reigns.length - 1];
       r.to = day; r.days = day - r.from;
-      const w = this.roster[prev]; if (w) w.titleDays += r.days;
+      for (const id of [prev, prev2]) { const w = id && this.roster[id]; if (w) w.titleDays += r.days; }
     }
-    t.holder = holderId; t.since = day; t.defenses = 0; t.lastDefenseDay = day;
+    t.holder = holderId; t.holder2 = holderId && t.cls === 'tag' ? (meta.partner || null) : null;
+    t.since = day; t.defenses = 0; t.lastDefenseDay = day;
     if (holderId) {
-      t.reigns.push({ holder: holderId, from: day, to: null, defenses: 0, initial: !!meta.initial, by: meta.by || null });
-      const w = this.roster[holderId]; if (w) w.reigns += 1;
+      t.reigns.push({ holder: holderId, partner: t.holder2, from: day, to: null, defenses: 0, initial: !!meta.initial, by: meta.by || null });
+      for (const id of [holderId, t.holder2]) { const w = id && this.roster[id]; if (w) w.reigns += 1; }
     }
     return { title: t, from: prev, to: holderId };
   }
@@ -191,6 +212,8 @@ export class Universe {
       }
       const last = t.reigns[t.reigns.length - 1];
       if (t.holder && (!last || last.holder !== t.holder || last.to != null)) out.push(`${t.id}: holder does not match last reign`);
+      if (t.cls === 'tag' && t.holder && (!t.holder2 || t.holder2 === t.holder)) out.push(`${t.id}: tag title needs two different holders`);
+      if (t.cls !== 'tag' && t.holder2) out.push(`${t.id}: non-tag title has a second holder`);
       if (!t.holder && last && last.to == null) out.push(`${t.id}: vacant but last reign is open`);
     }
     return out;

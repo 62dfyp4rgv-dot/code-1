@@ -17,7 +17,7 @@ function loadSettings() {
 }
 const defaultCreate = () => ({
   step: 0, name: 'Rising Star', alignment: 'face', background: 'prospect', style: 'allrounder', bonus: {}, signatures: [], finisher: { tpl: 'fin_ddt', name: 'Final Verdict' },
-  entrance: 'classic', goal: 'Win the World Championship', startYear: 2024, gender: 'M',
+  entrance: 'classic', goal: 'Win the World Championship', startYear: 2024, gender: 'M', world: 'real',
 });
 
 const S = {
@@ -36,6 +36,7 @@ function applySettings() {
 async function refreshSlots() { try { S.slots = await saves.list(); } catch { S.slots = []; } }
 
 function toast(text, kind = '') {
+  if (S.screen === 'match' && kind === 'ach') return; // unlocks are listed on the result screen; a toast would cover the scoreboard
   S.toast = { text, kind };
   clearTimeout(toast.t);
   toast.t = setTimeout(() => { S.toast = null; render(); }, kind === 'ach' ? 3600 : 2600);
@@ -130,7 +131,7 @@ const A = {
     syncCreate();
     const c = S.create;
     try {
-      S.g.newCareer({ name: c.name, alignment: c.alignment, background: c.background, style: c.style, bonus: c.bonus, signatures: c.signatures.filter(Boolean), finisher: c.finisher, entrance: c.entrance, goal: c.goal, startYear: c.startYear, gender: c.gender, seed: c.seed });
+      S.g.newCareer({ name: c.name, alignment: c.alignment, background: c.background, style: c.style, bonus: c.bonus, signatures: c.signatures.filter(Boolean), finisher: c.finisher, entrance: c.entrance, goal: c.goal, startYear: c.startYear, gender: c.gender, seed: c.seed, mode: c.world === 'fictional' ? 'custom' : undefined });
       S.screen = 'main'; S.tab = 'home'; S.sub = null; S.notifSeen = 0; S.feed = [];
       checkAchievementToasts();
       await autosave(); render();
@@ -196,7 +197,7 @@ const A = {
       if (S.g.career.flags.phase === 'prematch') S.g.career.flags.phase = 'home'; // re-book with new choices
       S.g.prepareMatch({ opponentId: S.ui.oppId, type: p.type, plan: p.plan, entrance: p.entrance, stakes: S.ui.stakes || null });
       S.g.startMatch();
-      S.feed = [{ seq: 0, type: 'bell', text: 'The bell rings.' }]; S.ui.group = 'Top'; S.choices = 0; S.screen = 'match'; S.sub = null;
+      S.toast = null; S.feed = [{ seq: 0, type: 'bell', text: 'The bell rings.' }]; S.ui.group = 'Top'; S.choices = 0; S.screen = 'match'; S.sub = null;
       render();
     } catch (e) { err(e); }
   },

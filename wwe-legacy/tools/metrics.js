@@ -1,6 +1,7 @@
 // Metric collection for the Gauntlet. Everything here is *measured* from tests, simulations and
 // audits - no number is typed in by hand. Scores are derived from these in rubric.js.
 import { spawnSync } from 'node:child_process';
+import zlib from 'node:zlib';
 import fs from 'node:fs';
 import path from 'node:path';
 import { MatchEngine } from '../src/match/engine.js';
@@ -239,6 +240,7 @@ export function uiMetrics({ runE2E = false } = {}) {
   let results = null;
   try { results = JSON.parse(fs.readFileSync(file, 'utf8')); } catch { /* none */ }
   const bundle = (() => { try { return fs.statSync(path.join(root, 'dist/artifact.html')).size; } catch { return null; } })();
+  const bundleGz = (() => { try { return zlib.gzipSync(fs.readFileSync(path.join(root, 'dist/artifact.html'))).length; } catch { return null; } })();
   const views = (() => { try { return fs.readFileSync(path.join(root, 'ui/views.js'), 'utf8'); } catch { return ''; } })();
   const screenFns = ['home', 'career', 'matches', 'calendar', 'roster', 'rivalries', 'media', 'achievements', 'recordBook', 'relationships', 'settingsView'];
   const found = screenFns.filter((f) => new RegExp(`function ${f}\\(`).test(views)).length;
@@ -247,7 +249,7 @@ export function uiMetrics({ runE2E = false } = {}) {
   const proto = Game.prototype;
   const prep = { plans: Object.keys(PLANS).length, entrances: Object.keys(ENTRANCES).length, training: Object.keys(TRAINING).length, stipulations: Object.keys(STIPULATION_HEAT).length,
     postMatch: typeof proto.postMatchChoose === 'function', promo: typeof proto.deliverPromo === 'function' || typeof proto.promoOptions === 'function', scenarios: typeof proto.resolveScenario === 'function', rumble: typeof proto.startRumble === 'function' };
-  return { prep, screens: { found, total: 11 }, a11y, eras: Object.keys(ERAS || {}).length, startConfigs: (() => { const o = Game.creationOptions(); return Object.keys(o.styles).length * Object.keys(o.backgrounds).length * o.startYears.length * o.alignments.length * 2; })(), ran: !!res, e2e: results ? { at: results.at, total: results.results.length, passed: results.results.filter((r) => r.ok).length, overflowChecks: results.results.filter((r) => /overflow/.test(r.name)).length, tapAudit: results.tapAudit ?? null } : null, bundleBytes: bundle, textSizes: 4, themes: 3 };
+  return { prep, screens: { found, total: 11 }, a11y, eras: Object.keys(ERAS || {}).length, startConfigs: (() => { const o = Game.creationOptions(); return Object.keys(o.styles).length * Object.keys(o.backgrounds).length * o.startYears.length * o.alignments.length * 2; })(), ran: !!res, e2e: results ? { at: results.at, total: results.results.length, passed: results.results.filter((r) => r.ok).length, overflowChecks: results.results.filter((r) => /overflow/.test(r.name)).length, tapAudit: results.tapAudit ?? null } : null, bundleBytes: bundle, bundleGzBytes: bundleGz, textSizes: 4, themes: 3 };
 }
 
 export function reviewMetrics() {

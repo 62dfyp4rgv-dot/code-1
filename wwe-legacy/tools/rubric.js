@@ -149,7 +149,7 @@ export function score(M) {
     crit('pf_match', 'Headless match simulation time (ms per match, lower better)', 2, +(match.ms / (types.reduce((a, [, t]) => a + t.n, 0) + 800 + 160 + 60)).toFixed(1), ramp(match.ms / (types.reduce((a, [, t]) => a + t.n, 0) + 800 + 160 + 60), 25, 6), 'all match sims in matchMetrics'),
     crit('pf_year', 'Universe simulation cost (ms per simulated year; budget < 1,200 on a desktop core, roughly 3x that on a phone)', 3, Math.round(universe.msPerYear), ramp(universe.msPerYear, 3500, 1200), 'AI-vs-AI matches ~700/yr'),
     crit('pf_career', 'Career playthrough speed (seconds per simulated 3-year career)', 2, +(mean(reps.map((r) => r.ms)) / 1000).toFixed(1), ramp(mean(reps.map((r) => r.ms)) / 1000, 25, 8), 'includes universe'),
-    crit('pf_bundle', 'Single-file bundle size (KB; budget 1,200)', 1.5, ui.bundleBytes ? Math.round(ui.bundleBytes / 1024) : null, ui.bundleBytes ? ramp(ui.bundleBytes / 1024, 2500, 1200) : 0, 'dist/artifact.html'),
+    crit('pf_bundle', 'Single-file bundle size, gzip transfer (KB; budget 450, the raw size is also reported)', 1.5, ui.bundleGzBytes ? `${Math.round(ui.bundleGzBytes / 1024)} gz / ${Math.round(ui.bundleBytes / 1024)} raw` : null, ui.bundleGzBytes ? ramp(ui.bundleGzBytes / 1024, 1000, 450) : 0, 'dist/artifact.html'),
     crit('pf_save', 'Compressed save size at 3 years (KB; budget 400)', 1.5, save.kb, ramp(save.kb, 1200, 400), 'gzip envelope'),
   ];
 

@@ -271,7 +271,7 @@ export function listHoldVictimOptions(state, victimId, hold) {
     o.kind = 'holdv'; o.group = 'Defence'; o.enabled = true; o.featured = true;
     if (o.id !== 'hv:tap' && o.id !== 'hv:endure') {
       const key = o.id.slice(3);
-      o.hint = `~${Math.round(holdEscapeFor(state, hold, key) * 100)}% to break`;
+      o.hint = `~${Math.round(holdEscapeFor(state, hold, key) * 100)}%`;
     }
   }
   return opts;

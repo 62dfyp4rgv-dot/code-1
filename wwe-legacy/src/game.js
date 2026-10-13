@@ -280,6 +280,17 @@ export class Game {
     // 2. championship opportunities (as challenger or as champion)
     for (const t of u.titlesList()) {
       if (!this._titleApplies(t)) continue;
+      if (t.cls === 'tag') {
+        // tag gold: defend with your partner, or challenge a team with someone you can partner with
+        if (t.holder === me.id || t.holder2 === me.id) {
+          if (c.day - t.lastDefenseDay >= 21) {
+            const mate = t.holder === me.id ? t.holder2 : t.holder;
+            const ch = pool.filter((w) => w.gender === t.gender && w.id !== mate && w.tier >= 1).sort((a, b) => b.momentum + b.popularity / 3 - (a.momentum + a.popularity / 3))[0];
+            if (ch && pool.length >= 3) add(ch, { title: this._titleInfo(t), stakes: 'title', defense: true, type: 'tag' });
+          }
+        } else if (t.holder && t.holder2 && this._shotEligible(t) && this._hasTagPartner(t)) add(u.get(t.holder), { title: this._titleInfo(t), stakes: 'title', type: 'tag' });
+        continue;
+      }
       if (t.holder === me.id) {
         if (c.day - t.lastDefenseDay >= 21) {
           const ch = pool.filter((w) => w.gender === t.gender && w.tier >= (t.cls === 'world' ? 2 : t.cls === 'secondary' ? 1 : 0)).sort((a, b) => b.momentum + b.popularity / 3 - (a.momentum + a.popularity / 3))[0];
@@ -294,12 +305,17 @@ export class Game {
   }
   _titleApplies(t) {
     const me = this.c.player, u = this.universe;
-    if (t.gender !== me.gender && t.cls === 'womens') return false;
+    if (t.gender !== me.gender && (t.cls === 'womens' || t.cls === 'tag')) return false;
     if (t.cls === 'womens' && me.gender !== 'F') return false;
     if (t.cls !== 'womens' && me.gender === 'F' && t.gender === 'M') return false;
     return t.scope === u.keyOfShow(me.brand) || (t.scope === 'main' && u.keyOfShow(me.brand) === 'main');
   }
-  _titleInfo(t) { return { id: t.id, name: t.name, cls: t.cls, label: CLASS_LABEL[t.cls], holder: t.holder }; }
+  _titleInfo(t) { return { id: t.id, name: t.name, cls: t.cls, label: CLASS_LABEL[t.cls], holder: t.holder, holder2: t.holder2 || null }; }
+  /** is there a free same-brand wrestler the player could team with against this champion pair? */
+  _hasTagPartner(t) {
+    const c = this.c, u = this.universe, me = c.player;
+    return u.available(c.day, (w) => w.id !== me.id && w.id !== t.holder && w.id !== t.holder2 && u.sameBrand(w, me.brand) && w.gender === me.gender).length >= 1;
+  }
   _shotEligible(t) {
     const c = this.c, me = c.player;
     const last = c.flags.lastTitleShot ?? -999;
@@ -354,21 +370,23 @@ export class Game {
     const stips = this.availableStipulations(opponentId);
     const forced = c.flags.forcedMatch && c.flags.forcedMatch.who === opponentId ? c.flags.forcedMatch : null;
     if (forced) { type = forced.type || type; stakes = forced.stakes || stakes; }
-    if (type !== 'singles' && !forced && !stips.find((s) => s.id === type)?.unlocked) throw new Error(`${type} is not unlocked against this opponent yet`);
     let title = null;
     if (stakes === 'title') {
-      title = this.universe.titlesList().find((t) => this._titleApplies(t) && (t.holder === opponentId || (t.holder === c.player.id && (this.suggestOpponents().some((o) => o.id === opponentId && o.defense) || forced))));
+      title = this.universe.titlesList().find((t) => this._titleApplies(t) && (forced || (type === 'tag') === (t.cls === 'tag')) && (t.holder === opponentId || t.holder2 === opponentId || ((t.holder === c.player.id || t.holder2 === c.player.id) && (this.suggestOpponents().some((o) => o.id === opponentId && o.defense && o.title && o.title.id === t.id) || forced))));
       // a Royal Rumble winner may challenge for a title of either brand at WrestleMania
       const shot = c.flags.maniaShot, shotTitle = shot && ev.id === 'wrestlemania' && shot.year === c.year ? this.universe.titles[shot.titleId] : null;
       if (!title && shotTitle && shotTitle.holder === opponentId) title = shotTitle;
       if (!title && forced) { stakes = null; /* the scripted title stakes lapsed (title changed hands): book it as a non-title match */ }
       else if (!title) throw new Error('no championship is available against this opponent');
       title = title ? this._titleInfo(title) : null;
+      if (title && title.cls === 'tag') type = 'tag';
     }
+    if (type === 'tag' && !(title && title.cls === 'tag') && !forced) throw new Error('tag matches are booked through tag championships or story situations');
+    if (type !== 'singles' && type !== 'tag' && !forced && !stips.find((s) => s.id === type)?.unlocked) throw new Error(`${type} is not unlocked against this opponent yet`);
     if (!PLANS[plan]) throw new Error('unknown plan');
     const ent = entrance || c.player.entrance.style;
     let partners = [], oppPartners = [];
-    if (type === 'tag') ({ partners, oppPartners } = this._tagPartners(w));
+    if (type === 'tag') ({ partners, oppPartners } = this._tagPartners(w, title && title.cls === 'tag' ? this.universe.titles[title.id] : null));
     const booking = makeBooking(c, [w], {
       partners, opponentPartners: oppPartners,
       type, show: ev.displayName || ev.name, ppv: ev.kind === 'ple' ? ev.displayName : null, ppvTier: ev.kind === 'ple' ? ev.tier : 0,
@@ -382,16 +400,24 @@ export class Game {
     return booking;
   }
   /** Pick tag partners: the player's best ally (or a compatible same-brand wrestler) and the opponent's partner. */
-  _tagPartners(opp) {
+  _tagPartners(opp, tagTitle = null) {
     const c = this.c, u = this.universe, me = c.player;
     const asProfile = (w) => ({ id: w.id, name: w.name, style: w.style, alignment: w.alignment, attrs: w.attrs, gender: w.gender, popularity: w.popularity, signatures: w.signatures, finisher: w.finisher, personality: w.personality, difficulty: 0.35 + (w.tier ?? 1) * 0.13 });
-    const pool = u.available(c.day, (w) => w.id !== me.id && w.id !== opp.id && u.sameBrand(w, me.brand));
+    const defendingT = tagTitle && (tagTitle.holder === me.id || tagTitle.holder2 === me.id);
+    const otherChampId = tagTitle && !defendingT ? (tagTitle.holder === opp.id ? tagTitle.holder2 : tagTitle.holder) : null;
+    const pool = u.available(c.day, (w) => w.id !== me.id && w.id !== opp.id && w.id !== otherChampId && u.sameBrand(w, me.brand));
     const allies = pool.filter((w) => { const r = getRel(c.memory.world, me.id, w.id); return r.tags.includes('ally') || r.tags.includes('mentor'); });
-    const mine = (allies[0] || pool.filter((w) => w.alignment === me.alignment).sort((a, b) => Math.abs(this._overall(a) - c.overall()) - Math.abs(this._overall(b) - c.overall()))[0] || pool[0]);
+    // defending champions team with their title partner; challengers face the champion pair
+    const defending = tagTitle && (tagTitle.holder === me.id || tagTitle.holder2 === me.id);
+    const mateId = defending ? (tagTitle.holder === me.id ? tagTitle.holder2 : tagTitle.holder) : null;
+    const mate = mateId && pool.find((w) => w.id === mateId);
+    const mine = (mate || allies[0] || pool.filter((w) => w.alignment === me.alignment).sort((a, b) => Math.abs(this._overall(a) - c.overall()) - Math.abs(this._overall(b) - c.overall()))[0] || pool[0]);
     if (!mine) throw new Error('no tag partner is available');
     const rest = pool.filter((w) => w.id !== mine.id);
     const alliance = Object.values(u.alliances).find((a) => (a.a === opp.id || a.b === opp.id) && rest.some((w) => w.id === (a.a === opp.id ? a.b : a.a)));
-    const theirs = (alliance && u.get(alliance.a === opp.id ? alliance.b : alliance.a)) || rest.filter((w) => w.alignment === opp.alignment).sort((a, b) => Math.abs(this._overall(a) - this._overall(opp)) - Math.abs(this._overall(b) - this._overall(opp)))[0] || rest[0];
+    const champPartnerId = tagTitle && !defending ? (tagTitle.holder === opp.id ? tagTitle.holder2 : tagTitle.holder) : null;
+    const champPartner = champPartnerId && u.get(champPartnerId);
+    const theirs = (champPartner || alliance && u.get(alliance.a === opp.id ? alliance.b : alliance.a)) || rest.filter((w) => w.alignment === opp.alignment).sort((a, b) => Math.abs(this._overall(a) - this._overall(opp)) - Math.abs(this._overall(b) - this._overall(opp)))[0] || rest[0];
     if (!theirs) throw new Error('no opposing tag partner is available');
     return { partners: [asProfile(mine)], oppPartners: [asProfile(theirs)] };
   }
@@ -461,7 +487,7 @@ export class Game {
     gainPop(me, sum.won ? 6 : 0.4 * sum.eliminations + (sum.finalTwo ? 2 : 0.3));
     me.fatigue = clamp(me.fatigue + 35, 0, 100); me.money += 2500 + sum.eliminations * 400 + (sum.won ? 25000 : 0);
     if (sum.won) {
-      const t = this.universe.titlesList('world').find((x) => this._titleApplies(x) && x.holder) || this.universe.titlesList().find((x) => this._titleApplies(x) && x.cls !== 'developmental' && x.holder);
+      const t = this.universe.titlesList('world').find((x) => this._titleApplies(x) && x.holder) || this.universe.titlesList().find((x) => this._titleApplies(x) && x.cls !== 'developmental' && x.cls !== 'tag' && x.holder);
       if (t) c.flags.maniaShot = { year: c.year, titleId: t.id };
     }
     checkRecords(c);
@@ -571,20 +597,23 @@ export class Game {
     const ev = out.event, d = ev.data;
     const decisive = ['pinfall', 'submission', 'objective', 'ten_count', 'falls'].includes(d.finish);
     const mk = (type, data, summary) => c.record({ key: `${ev.key}:${type}`, category: 'career', type, refs: [ev.id], participants: [me, ...d.opponents], summary, importance: 4, data: { titleId: t.id, titleName: t.name, titleClass: t.cls, era: c.era, ppvTier: d.ppvTier, ...data } });
-    if (t.holder === me) {
+    const isTag = t.cls === 'tag';
+    const mate = isTag && booking.partners[0] ? booking.partners[0].id : null;
+    const oppMate = isTag && booking.opponentPartners[0] ? booking.opponentPartners[0].id : null;
+    const teamNames = (n, m) => (isTag && m ? `${n} & ${this.universe.get(m)?.name || m}` : n);
+    if (t.holder === me || t.holder2 === me) {
       if (d.result === 'loss' && decisive) {
-        u.setChampion(t.id, d.opponents[0], c.day, { by: me });
-        mk('title_loss', { to: d.opponents[0] }, `${c.player.name} lost the ${t.name} to ${booking.opponents[0].name}.`);
+        u.setChampion(t.id, d.opponents[0], c.day, { by: me, partner: oppMate });
+        mk('title_loss', { to: d.opponents[0], toPartner: oppMate, partner: isTag ? (t.holder === me ? t.holder2 : t.holder) : null }, `${c.player.name} lost the ${t.name} to ${teamNames(booking.opponents[0].name, oppMate)}.`);
         return 'lost';
       }
-      const success = d.result !== 'loss' || !decisive;
       u.recordDefense(t.id, c.day);
-      mk('title_defense', { success: true, defenseNumber: t.defenses, opponent: d.opponents[0], retainedBy: d.finish }, `${c.player.name} retained the ${t.name} (defense #${t.defenses}).`);
+      mk('title_defense', { success: true, defenseNumber: t.defenses, opponent: d.opponents[0], retainedBy: d.finish, partner: mate }, `${c.player.name} retained the ${t.name} (defense #${t.defenses}).`);
       return 'retained';
     }
     if (d.result === 'win' && decisive) {
-      u.setChampion(t.id, me, c.day, { by: d.opponents[0] });
-      mk('title_win', { from: d.opponents[0], wmWin: d.ppvTier >= 2 }, `${c.player.name} won the ${t.name} from ${booking.opponents[0].name}!`);
+      u.setChampion(t.id, me, c.day, { by: d.opponents[0], partner: mate });
+      mk('title_win', { from: d.opponents[0], wmWin: d.ppvTier >= 2, partner: mate }, `${c.player.name}${isTag && mate ? ` and ${this.universe.get(mate)?.name || mate}` : ''} won the ${t.name} from ${teamNames(booking.opponents[0].name, oppMate)}!`);
       return 'won';
     }
     return 'no-change';
