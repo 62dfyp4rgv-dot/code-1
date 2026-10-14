@@ -10,7 +10,7 @@ import { memoryLines } from './dialogue.js';
 
 export const POST_TONES = {
   gratitude: { label: 'Thank the fans', desc: 'Warm and simple. Safe for faces, a little off-brand for heels.', needsTarget: false, fit: { face: 9, heel: -7, tweener: 2 },
-    lines: ['Still can\'t believe how loud it was tonight. Thank you, every one of you.', 'To everyone who bought a ticket, drove through traffic, held up a sign: this one\'s for you.', 'Signed 200 autographs and my hand still works. Barely. Thank you.', 'You pay attention to the small stuff. I notice. Thank you.', 'Nobody does this alone. Thank you for being part of it.'] },
+    lines: ['Still can\'t believe how loud it has been lately. Thank you, every one of you.', 'To everyone who bought a ticket, drove through traffic, held up a sign: this one\'s for you.', 'Signed 200 autographs and my hand still works. Barely. Thank you.', 'You pay attention to the small stuff. I notice. Thank you.', 'Nobody does this alone. Thank you for being part of it.'] },
   hype: { label: 'Hype the next show', desc: 'Build the card and sell the match.', needsTarget: false, fit: { face: 4, heel: 4, tweener: 4 },
     lines: ['{event} is coming. Clear your calendar and charge your phone.', 'Tickets are moving for {event}. If you want a story to tell, be there.', 'Weeks of prep, one night to prove it. {event}.', 'Whatever you think happens at {event}, you are wrong. Come find out why.', 'I do not make promises I cannot film. {event}: watch.'] },
   training: { label: 'Share a training clip', desc: 'Show the work. Always lands a little.', needsTarget: false, fit: { face: 5, heel: 3, tweener: 5 },
@@ -26,7 +26,7 @@ export const POST_TONES = {
   behind: { label: 'Behind the scenes', desc: 'Backstage candid. Fans love access.', needsTarget: false, fit: { face: 4, heel: 2, tweener: 5 },
     lines: ['Catering is not what you think it is. It is worse. Send help.', 'Eleven hours on a bus, one hour in the ring. Worth every mile.', 'Found my old boots in the bag. They have seen things.', 'The locker room is quieter than you would guess before the bell. Then it is not.', 'Ring crew puts in the hardest shift of anyone. Say thanks next time you see one.'] },
   community: { label: 'Community & charity', desc: 'Do some good and let people see it.', needsTarget: false, fit: { face: 8, heel: -4, tweener: 3 },
-    lines: ['Spent the afternoon at the children\'s hospital. They gave me more than I gave them.', 'Donating tonight\'s merch money to the local gym kids. Go be loud for them.', 'Met a fan who has been watching since the first show. Made my week.', 'Free training session for kids this weekend. Bring a friend.', 'Reminder: the best part of this job is the people at the barricade.'] },
+    lines: ['Spent the afternoon at the children\'s hospital. They gave me more than I gave them.', 'Donating this week\'s merch money to the local gym kids. Go be loud for them.', 'Met a fan who has been watching since the first show. Made my week.', 'Free training session for kids this weekend. Bring a friend.', 'Reminder: the best part of this job is the people at the barricade.'] },
 };
 
 /** follower count as a smooth function of popularity (popularity is 0-100) */
@@ -71,6 +71,7 @@ export function postToSocial(career, { tone, targetId = null, nextEvent = null }
   const tdef = POST_TONES[tone];
   if (!tdef) throw new Error(`unknown post tone ${tone}`);
   if (tdef.needsTarget && !targetId) throw new Error(`${tone} needs a target`);
+  if (tone === 'respect' && !((career.stats.s.opponents[targetId] || {}).matches)) throw new Error('You can only salute someone you have actually faced.');
   const opt = socialOptions(career);
   if (!opt.canPost) throw new Error(opt.why);
   const p = career.player, target = targetId ? (career.universe ? career.universe.get(targetId) : null) || { name: String(targetId) } : null;
@@ -120,6 +121,7 @@ const FAN = {
   title_loss: ['{p} lost the {t}. It happens to the best. Come back stronger.'],
   promo: ['That {p} promo was lights out.', '{p} just said what everyone was thinking.', 'Whoever writes {p}\'s promos deserves a raise. (They write their own. Wow.)'],
   promo_bad: ['{p} promo did not land tonight. Next time.', 'Mic work was rough from {p}. Great in the ring, though.'],
+  interview_bad: ['The {p} interview was a little stiff. Hopefully a better night next time.', 'Not {p}\'s best interview, but a rough question is a rough question.', 'Wanted more from {p} on the couch. They are better in the ring.', 'That {p} interview went nowhere. Let us move on.', 'Awkward one from {p}. Everyone has an off day on camera.'],
   interview: ['Watching the {p} interview. Honest and sharp.', '{p} on the couch with the host is the most interesting thing on TV this week.'],
 };
 for (const k of Object.keys(FAN)) FAN[k] = [...(SP.fan[k] || []), ...FAN[k]]; // authored pack first, the original short pools stay as extra variety
@@ -150,7 +152,7 @@ export function socialFeed(career, { limit = 14, nameOf = (id) => id } = {}) {
     } else if (e.type === 'title_win') { mkey = 'title'; pool = FAN.title; kind = 'fan'; m.t = d.titleName || d.name || 'title'; }
     else if (e.type === 'title_loss') { mkey = 'title_loss'; pool = FAN.title_loss; kind = 'fan'; m.t = d.titleName || d.name || 'title'; }
     else if (e.type === 'promo_delivered') { mkey = 'promo'; pool = (d.quality ?? 50) >= 55 ? FAN.promo : FAN.promo_bad; kind = 'fan'; }
-    else if (e.type === 'interview') { pool = FAN.interview; kind = 'fan'; }
+    else if (e.type === 'interview') { pool = (d.quality ?? 50) >= 55 ? FAN.interview : FAN.interview_bad; kind = 'fan'; }
     if (!pool) continue;
     // every fourth reaction comes from a media account instead, as a headline
     const media = parseInt(hash53(`m${e.id}`), 36) % 4 === 0 && e.type !== 'interview' && !!mkey;
@@ -165,8 +167,11 @@ export function socialFeed(career, { limit = 14, nameOf = (id) => id } = {}) {
     if (!lines.length) continue;
     const ref = lines[0].refs[lines[0].refs.length - 1];
     const ev = ref && L.get(ref);
-    items.push({ id: `rival:${other}:${ref}`, day: career.day - 1, date: '', kind: 'rival', author: { name: nameOf(other), handle: 'rival', id: other }, text: lines[0].text, likes: likeBase(`${other}:${ref}`, 1.5), refs: lines[0].refs });
+    items.push({ id: `rival:${other}:${ref}`, day: ev ? ev.day + 1 : career.day - 1, date: ev ? ev.date : '', kind: 'rival', author: { name: nameOf(other), handle: 'rival', id: other }, text: lines[0].text, likes: likeBase(`${other}:${ref}`, 1.5), refs: lines[0].refs });
   }
-  items.sort((a, b) => b.day - a.day || (a.id < b.id ? 1 : -1));
-  return items.slice(0, limit);
+  const byDay = (a, b) => b.day - a.day || (a.id < b.id ? 1 : -1);
+  // rival shots point at old history, so they would always sort below the newest reactions: reserve room for them
+  const rivalItems = items.filter((x) => x.kind === 'rival').sort(byDay).slice(0, 2);
+  const rest = items.filter((x) => x.kind !== 'rival').sort(byDay).slice(0, Math.max(0, limit - rivalItems.length));
+  return [...rest, ...rivalItems].sort(byDay);
 }

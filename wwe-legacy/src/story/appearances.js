@@ -67,23 +67,25 @@ export function candidateQuestions(c, extras = {}) {
     const nm = nameOf(c, other);
     // a reporter states a FACT from the record (never a made-up quote) and cites the events behind it
     const fact = factAbout(hooks(c.memory, me, other), nm);
-    qs.push({ id: 'rival', ctx: 'rival', subject: other, refs: [...(fact ? fact.refs : []), ...rivals[0].events.slice(-1)].filter(Boolean), text: `You and ${nm} have shared the ring ${rivals[0].matches} time${rivals[0].matches === 1 ? '' : 's'}.${fact ? ` ${fact.text}` : ''} How do you see this rivalry?` });
+    qs.push({ id: 'rival', ctx: 'rival', subject: other, refs: [...(fact ? fact.refs : []), ...rivals[0].events.slice(-1)].filter(Boolean), text: `You and ${nm} ${rivals[0].matches ? `have shared the ring ${rivals[0].matches} time${rivals[0].matches === 1 ? '' : 's'}` : 'have been trading shots in public'}.${fact ? ` ${fact.text}` : ''} How do you see this rivalry?` });
   }
   const broken = brokenPromises(c.memory.world, me).filter((p) => !p.acknowledged);
   if (broken.length) {
     const p = broken[broken.length - 1];
     qs.push({ id: 'broken_promise', ctx: 'broken_promise', promiseId: p.id, refs: [p.madeEvent, p.resolvedEvent].filter(Boolean), text: `You said "${p.text}". It did not happen. Why should anyone believe you now?` });
   }
-  const open = openPromises(c.memory.world, me);
+  // a promise past its deadline is no longer 'running the clock': it is simply waiting to be judged
+  const open = openPromises(c.memory.world, me).filter((p) => p.deadlineDay == null || p.deadlineDay >= c.day);
   if (open.length) {
     const p = open[open.length - 1];
     qs.push({ id: 'open_promise', ctx: 'open_promise', refs: [p.madeEvent], text: `You promised "${p.text}". The clock is running. How confident are you?` });
   }
   const held = U(c).titlesOf ? U(c).titlesOf(me) : [];
   if (held.length) qs.push({ id: 'title', holder: true, ctx: 'title', refs: c.memory.ledger.ofType('title_win').slice(-1).map((e) => e.id), text: `You are the ${held[0].name} holder. Who is the next real threat, and are you ready for them?` });
+  else if (c.stats.s.titles.won > 0) qs.push({ id: 'title', ctx: 'title', refs: c.memory.ledger.ofType('title_win').slice(-1).map((e) => e.id), text: `You have held championship gold before and you do not hold it now. What does it take to get back to the top?`, canGuarantee: 'win_title' });
   else if (c.stats.s.matches >= 6) qs.push({ id: 'title', ctx: 'title', refs: [], text: `You have wrestled ${c.stats.s.matches} matches and you are still chasing gold. When do you get your shot?`, canGuarantee: 'win_title' });
   const inj = c.player.injuries.filter((i) => i.daysLeft > 0).sort((a, b) => b.daysLeft - a.daysLeft)[0];
-  if (inj) qs.push({ id: 'injury', ctx: 'injury', refs: inj.eventId ? [inj.eventId] : [], text: `You are working through a ${inj.severity === 2 ? 'serious' : 'minor'} ${inj.part} injury. How bad is it, really?` });
+  if (inj) qs.push({ id: 'injury', ctx: 'injury', fx: { part: inj.part, severity: inj.severity || 1, cause: inj.cause || ((c.memory.ledger.get(inj.eventId) || {}).data || {}).cause || 'match' }, refs: inj.eventId ? [inj.eventId] : [], text: `You are working through a ${inj.severity === 2 ? 'serious' : 'minor'} ${inj.part} injury. How bad is it, really?` });
   const next = extras.nextEvent;
   if (next && next.day - c.day <= 14 && next.day >= c.day) qs.push({ id: 'upcoming', ctx: 'upcoming', refs: [], text: `${next.displayName || next.name} is ${next.day === c.day ? 'tonight' : `${next.day - c.day} day${next.day - c.day === 1 ? '' : 's'} away`}. What should the fans expect from you?`, canGuarantee: 'win_streak' });
   if (c.player.popularity >= 40 || c.stats.s.matches >= 20) qs.push({ id: 'fans', ctx: 'fans', refs: [], text: `The fans are ${c.player.popularity >= 60 ? 'chanting your name' : 'starting to notice you'}. What do they mean to you?` });
@@ -262,9 +264,12 @@ export function answerAppearance(c, answerId, extras = {}) {
   const packTopic = q.id === 'title' && q.holder ? 'title_holder' : q.id === 'last_match' && q.ctx !== 'last_match_win' ? (q.draw ? 'last_match_draw' : 'last_match_loss') : q.id; // the authored last_match lines assume a win
   const pack = (packTopic === 'title_holder' ? TITLE_HOLDER[answerId] || [] : (ANSWER_PACK[answerId] || {})[packTopic] || []).map((l) => fillAnswer(l, facts, subj));
   // lines that talk about 'tonight' or 'last night' only fit a match that really was that recent
-  const fresh = (l) => !(/\b(tonight|last night|this evening)\b/i.test(l)) || (q.fx && q.fx.days <= 1);
+  // injury lines must fit the injury: 'another leg' only for a leg, 'whoever did this' only for a match injury, 'worse than I said' only for a serious one
+  const iq = q.id === 'injury' && q.fx ? q.fx : null;
+  const injFit = (l) => !iq || ((iq.part === 'legs' || !/\bleg|legs\b/i.test(l)) && (iq.cause === 'match' || !/whoever did this/i.test(l)) && (iq.severity >= 2 || !/worse than i have (said|told)/i.test(l)));
+  const fresh = (l) => injFit(l) && (!/\b(tonight|last night|this evening)\b/i.test(l) || !!(q.fx && q.fx.days <= 1));
   // the single hand-written line assumes a clear win or loss: after a draw (or an 'honest' answer to a win) only the authored pool fits
-  const legacyFits = !(q.id === 'last_match' && (q.draw || (answerId === 'honest' && facts.won)));
+  const legacyFits = injFit(legacy) && !(q.id === 'last_match' && (q.draw || (answerId === 'honest' && facts.won)));
   const pool = [...pack.filter(fresh), ...(legacyFits || !pack.length ? [legacy] : [])];
   const text = pool[parseInt(hash53(`${s.seed}:${q.id}:${answerId}:say`), 36) % pool.length];
   const sr0 = REACT_STANCE[answerId] ? REACT_STANCE[answerId][tier(quality)] : REACT[tier(quality)];

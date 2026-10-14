@@ -172,8 +172,10 @@ export class Career {
     const events = [out.event];
     if (!out.duplicate) {
       for (const inj of f.injuriesNew) events.push(this.recordInjury(inj, out.event));
-      if (f.stats.respectShown && opponents.length) {
-        const r = this.record({ key: `${key}:respect`, category: 'relationship', type: 'respect_shown', participants: [me, ...opponents], refs: [out.event.id], summary: `${this.player.name} showed respect to ${oppNames} during the match.`, importance: 2, data: { matchId: booking.matchId } });
+      // respect only counts for the wrestler it was shown to, and not when they answered it with a cheap shot
+      const respected = [...new Set(st.events.filter((e) => e.type === 'respect_shown' && e.actor === me).map((e) => e.target))].filter((id) => opponents.includes(id));
+      if (respected.length) {
+        const r = this.record({ key: `${key}:respect`, category: 'relationship', type: 'respect_shown', participants: [me, ...respected], refs: [out.event.id], summary: `${this.player.name} showed respect to ${oppNames} during the match.`, importance: 2, data: { matchId: booking.matchId } });
         events.push(r.event);
       }
       // Money in the Bank: the engine grants nothing mechanical - the briefcase is recorded as a ledger fact only

@@ -41,7 +41,7 @@ export class CareerStats {
         s.totalDurationSec += d.durationSec || 0;
         if (d.rating != null) { s.matchesRated++; s.ratingSum += d.rating; y.ratingSum += d.rating; y.rated++; if (d.rating >= 5) s.fiveStar++; }
         if (!s.bestMatch || d.rating > s.bestMatch.rating) s.bestMatch = { id: ev.id, rating: d.rating, opponents: d.opponents };
-        if (d.ppv) { s.pleMatches++; y.ple++; const p = (s.ple[d.ppv] ||= { matches: 0, wins: 0, ids: [] }); p.matches++; p.ids.push(ev.id); if (d.result === 'win') p.wins++; first('ple'); }
+        if (d.ppv) { s.pleMatches++; y.ple++; const p = (s.ple[d.ppv] ||= { matches: 0, wins: 0, draws: 0, ids: [] }); p.matches++; p.ids.push(ev.id); if (d.result === 'win') p.wins++; else if (d.result === 'draw') p.draws = (p.draws || 0) + 1; first('ple'); }
         if (d.ppvTier >= 2) s.wmMatches++;
         if (d.mainEvent) { s.mainEvents++; first('mainEvent'); }
         if (d.show) first(`show:${d.show}`);

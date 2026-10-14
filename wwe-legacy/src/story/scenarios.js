@@ -208,6 +208,8 @@ export function bindCast(t, ctx, seedKey) {
           if (rel.a !== ctx.me.id && rel.b !== ctx.me.id) continue;
           const other = rel.a === ctx.me.id ? rel.b : rel.a;
           if (taken.has(other) || !rel.tags.includes(spec.tag)) continue;
+          // someone the player betrayed and never made up with is not a warm ally, whatever tags they still carry
+          if (rel.betrayals.length && !rel.tags.includes('reconciled') && !['betrayal', 'reconciled', 'insulted_by', 'humiliated_by'].includes(spec.tag)) continue;
           const w = ctx.u.get(other); if (w && w.status === 'active') cands.push(w);
         }
         if (cands.length) pick = hashPick(preferDistinct(cands, bind), `${seedKey}:${role}`);

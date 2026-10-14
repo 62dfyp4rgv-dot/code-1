@@ -2,10 +2,13 @@
 // changes of world state (relationships, rivalries, promises, obligations). No randomness and
 // no narration here - past events influence the future only through these rules.
 import { hash53 } from '../core/util.js';
+import { pairOutcome } from './outcome.js';
 import {
   adjustRel, addTag, recordBetrayal, reconcile, bumpRivalry, addPromise, addObligation, getRel, getRivalry, pairKey, decayWorld,
 } from './world.js';
 
+/** a settled matter stops generating scenes: close pending obligations of these kinds owed by `from` */
+function settle(world, from, kinds) { for (const ob of world.obligations) if (ob.status === 'pending' && ob.from === from && kinds.includes(ob.kind)) ob.status = 'resolved'; }
 const jitter = (ev, lo, hi) => lo + (parseInt(hash53(ev.id), 36) % (hi - lo + 1));
 
 /** Standard promise kinds and how an event resolves them. Returns 'kept' | 'broken' | null */
@@ -14,7 +17,9 @@ const PROMISE_JUDGES = {
     // the target must have been an OPPONENT: winning a tag match alongside them proves nothing
     if (ev.type !== 'match_result' || !(ev.data.opponents || []).includes(p.target)) return null;
     if (p.by !== ctx.playerId) return null;
-    return ev.data.result === 'win' ? 'kept' : ev.data.result === 'loss' ? 'broken' : null;
+    // a loss in a multi-way match to a third wrestler is not a loss to the target
+    const po = pairOutcome(ev.data, p.target);
+    return po === 'win' ? 'kept' : po === 'loss' ? 'broken' : null;
   },
   win_title(p, ev) {
     if (ev.type === 'title_win' && (!p.params?.titleId || p.params.titleId === ev.data.titleId)) return 'kept';
@@ -34,7 +39,7 @@ const PROMISE_JUDGES = {
     if (ev.type !== 'match_result') return null;
     const n = p.params?.n || 5;
     if (ev.data.result === 'win') { p.streak = (p.streak || 0) + 1; return p.streak >= n ? 'kept' : null; }
-    if (ev.data.result === 'loss') return 'broken';
+    if (ev.data.result === 'loss' || ev.data.result === 'draw') return 'broken'; // a draw ends a streak, as the record book counts it
     return null;
   },
 };
@@ -66,11 +71,13 @@ const RULES = {
     for (const o of opps) {
       // a newer meeting settles an old grudge: the "last match" the rival wants to avenge is no longer the last match
       for (const ob of world.obligations) if (ob.status === 'pending' && ob.kind === 'grudge_rematch' && ob.from === o && ob.source !== ev.id) ob.status = 'superseded';
+      settle(world, o, ['answer_challenge']); // meeting them answers the challenge
       const heat = 6 + (d.titleOnLine ? 8 : 0) + (dirty ? 10 : 0) + (d.rating >= 4 ? 4 : 0);
       const rv = bumpRivalry(world, me, o, { heat, eventId: ev.id, day: ev.day });
       rv.matches += 1;
       // credit only the wrestler who actually won (a triple threat lost to C must not credit A and B alike)
-      if (win) rv.wins[me] = (rv.wins[me] || 0) + 1; else if (loss && d.winner === o) rv.wins[o] = (rv.wins[o] || 0) + 1;
+      const po = pairOutcome(d, o); // same definition as every other surface (team result; only the winner in a multi-way match)
+      if (po === 'win') rv.wins[me] = (rv.wins[me] || 0) + 1; else if (po === 'loss') rv.wins[o] = (rv.wins[o] || 0) + 1;
       if (win) {
         adjustRel(world, o, me, { respect: d.clean ? 4 : 1, fear: d.dominant ? 4 : 1 }, ev.id, ev.day);
         // repeated clean defeats: the opponent studies the player and eventually becomes reluctant
@@ -145,6 +152,7 @@ const RULES = {
         case 'apology': {
           const had = getRel(world, me, t).tags.includes('insulted_by') || getRel(world, me, t).heat > 20;
           adjustRel(world, t, me, { heat: -10, respect: had ? 3 : 0, trust: 3 }, ev.id, ev.day);
+          settle(world, t, ['confront_backstage']);
           break;
         }
         default: break;
@@ -182,7 +190,7 @@ const RULES = {
       if (r.respect[i] >= 30) addTag(world, t, me, 'alliance_possible', ev.id);
     }
   },
-  reconciliation(world, ev) { const [a, b] = ev.participants; reconcile(world, a, b, ev.id); adjustRel(world, a, b, { respect: 5 }, ev.id, ev.day); adjustRel(world, b, a, { respect: 5 }, ev.id, ev.day); },
+  reconciliation(world, ev) { const [a, b] = ev.participants; reconcile(world, a, b, ev.id); settle(world, a, ['seek_revenge', 'confront_backstage']); settle(world, b, ['seek_revenge', 'confront_backstage']); adjustRel(world, a, b, { respect: 5 }, ev.id, ev.day); adjustRel(world, b, a, { respect: 5 }, ev.id, ev.day); },
   mentorship(world, ev, ctx) { const [first, second] = ev.participants; const [m, s] = ev.data.byPlayer === false ? [second, first] : [first, second]; addTag(world, m, s, m === (ctx && ctx.playerId) ? 'mentee' : 'mentor', ev.id); /* 'mentor': they mentor the player; 'mentee': the player mentors them */ adjustRel(world, s, m, { respect: 10, trust: 10 }, ev.id, ev.day); adjustRel(world, m, s, { trust: 6, affinity: 5 }, ev.id, ev.day); },
   faction_formed(world, ev) {
     const d = ev.data;

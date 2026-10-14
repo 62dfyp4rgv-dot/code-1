@@ -10,7 +10,7 @@ export default [
     choices: [
       { id: 'accept', label: 'Shake on a quiet truce', risk: 'low', result: `The handshake is short and dry. For the first time in weeks the hallway stops going silent when you walk in.`, effects: [{ rivalry: { who: 'rival', heat: -12 } }, { rel: { who: 'rival', heat: -10, trust: 4 } }, { pop: -0.3 }, { conf: 1 }] },
       { id: 'private', label: 'Agree, but only in private', risk: 'med', outcomes: [
-        { weight: 2, bonus: { charisma: 0.5 }, text: `The deal holds. {rival.first} keeps quiet and the rumour mill gets nothing to chew on.`, effects: [{ rivalry: { who: 'rival', heat: -8 } }, { rel: { who: 'rival', respect: 4, trust: 3 } }] },
+        { weight: 2, bonus: { charisma: 0.5 }, text: `The deal holds. {rival.first} keeps quiet and the rumor mill gets nothing to chew on.`, effects: [{ rivalry: { who: 'rival', heat: -8 } }, { rel: { who: 'rival', respect: 4, trust: 3 } }] },
         { weight: 1, text: `Someone saw you two talking. By evening everyone says you went soft, and {rival.first} does nothing to correct it.`, effects: [{ pop: -0.5 }, { conf: -3 }, { rel: { who: 'rival', respect: -3 } }] } ] },
       { id: 'refuse', label: 'Refuse and keep the fire burning', risk: 'med', result: `"Not a chance," you say. {rival.first} nods slowly, like that was the answer {rival.they} expected. The feud stays hot, and so does the money.`, effects: [{ rivalry: { who: 'rival', heat: 8 } }, { rel: { who: 'rival', heat: 8, respect: 2 } }, { pop: 0.5 }, { fatigue: 3 }] },
       { id: 'ambush', label: 'Fake the truce and ambush at the show', risk: 'high', outcomes: [
@@ -21,7 +21,7 @@ export default [
   {
     id: 'riv_step_aside', category: 'rivalry', title: 'Step Aside, Says {rival.name}', weight: 2, cooldownDays: 100, maxPerCareer: 2,
     trigger: { stat: { popularity: { gte: 30 } }, eventWithin: { kind: 'ple', days: 45 } }, cast: { rival: { pick: 'rivalry', minHeat: 20 } }, memory: { role: 'rival', max: 1 },
-    slots: { offer: [`a favour you can cash in later`, `an envelope with real money in it`, `a spot on the better house shows`, `nothing but a hard stare`], deadline: [`by Friday`, `before the card is finalized`, `before tonight's show`, `before the contracts go out`] },
+    slots: { offer: [`an envelope with real money in it`, `a cut of the payday if you step aside`, `a spot on the better house shows and a bonus to match`, `a favor you can cash in later and a fat envelope to go with it`], deadline: [`by Friday`, `before the card is finalized`, `before tonight's show`, `before the contracts go out`] },
     body: [`The word in the back is that the office is weighing you for a big spot at the next premium event, and {rival.name} wants the same slot. {rival.first} is offering {offer} if you tell management you are not ready.`, `{rival.first} wants an answer {deadline}. Saying yes would be easy, and so would regretting it.`],
     choices: [
       { id: 'sell', label: 'Step aside and take the offer', risk: 'low', result: `You tell the office you would like more time. {rival.first} keeps the promise, and you carry the knowledge that you sold a slot.`, effects: [{ money: 12000 }, { conf: -6 }, { pop: -0.4 }, { rel: { who: 'rival', respect: -6, fear: -3 } }] },
@@ -34,9 +34,9 @@ export default [
   },
   {
     id: 'riv_hard_match_respect', category: 'rivalry', title: 'After the War with {rival.name}', weight: 3, cooldownDays: 60, maxPerCareer: 4, contexts: ['post_match'],
-    trigger: { mem: [{ role: 'rival', h2h: { matchesGte: 2 } }] }, cast: { rival: { pick: 'rivalry', minHeat: 15 } }, memory: { role: 'rival', max: 2 },
+    trigger: { mem: [{ role: 'rival', h2h: { matchesGte: 2 }, last: { within: 2 } }] }, cast: { rival: { pick: 'rivalry', minHeat: 15 } }, memory: { role: 'rival', max: 2 },
     slots: { setting: [`the gorilla position`, `the back of the ring truck`, `the trainers' room`, `the tunnel`], gesture: [`holds out a taped hand`, `offers you a towel without a word`, `nods once from across the room`, `pulls you into a short, hard hug`] },
-    body: [`The towels are bloody and the ribs are screaming. In {setting}, {rival.name} {gesture}, and the whole crew pretends not to see it.`, `Two people who have spent months trying to hurt each other just made something that the fans will remember. Whether you let it show is up to you.`],
+    body: [`The towels are bloody and the ribs are screaming. In {setting}, {rival.name} {gesture}, and the whole crew pretends not to see it.`, `Two people who have spent this feud trying to hurt each other just made something that the fans will remember. Whether you let it show is up to you.`],
     choices: [
       { id: 'respect', label: 'Return the respect, openly', risk: 'low', result: `You say it plainly: that was the best work either of you has done. {rival.first} nods and the tension in the room drops.`, effects: [{ rel: { who: 'rival', respect: 8, trust: 4, heat: -8 }  }, { tag: { who: 'rival', tag: 'respected_by' } }, { pop: 0.2 }, { rivalry: { who: 'rival', heat: -6 } }] },
       { id: 'stay_cold', label: 'Stay cold: the feud is not over', risk: 'med', result: `You take the towel and say nothing. The feud keeps its edge, and the next match will carry it.`, effects: [{ rivalry: { who: 'rival', heat: 6 } }, { rel: { who: 'rival', respect: 3, heat: 3 } }, { conf: 2 }] },
@@ -63,10 +63,10 @@ export default [
   {
     id: 'riv_old_rival_peace', category: 'rivalry', title: 'Making Peace with {rival.name}', weight: 2, cooldownDays: 120, maxPerCareer: 2,
     trigger: { rivalry: { minHeat: 15 }, stat: { careerYears: { gte: 1 } } }, cast: { rival: { pick: 'rivalry', minHeat: 15 } }, memory: { role: 'rival', max: 2 },
-    slots: { place: [`a hospital waiting room`, `an airport gate at 5 a.m.`, `a diner two hours from the arena`, `the empty ring before doors`], news: [`a mutual friend's retirement`, `a bad night of injuries on the card`, `the first anniversary of your first match`, `a long delay that stranded the whole roster`] },
+    slots: { place: [`a hospital waiting room`, `an airport gate at 5 a.m.`, `a diner two hours from the arena`, `the empty ring before doors`], news: [`a mutual friend's retirement`, `a bad night of injuries on the card`, `a storm that closed the roads`, `a long delay that stranded half the roster`] },
     body: [`You and {rival.name} wind up alone in {place}, thrown together by {news}. For a minute, neither of you says anything.`, `Then {rival.first} speaks first. "I am tired of hating you. Are you?" It is not clear if this is an olive branch or a trap.`],
     choices: [
-      { id: 'forgive', label: 'Put the feud down for good', risk: 'low', result: `It is a quiet scene. You trade stories until the airport lights come up. By morning, the feud is a memory.`, effects: [{ event: { type: 'reconciliation', participants: ['rival'], summary: `Made peace with {rival.name} after a long feud.`, data: { formerRival: true } } }, { rivalry: { who: 'rival', heat: -20 } }, { pop: -0.3 }, { conf: 2 }] },
+      { id: 'forgive', label: 'Put the feud down for good', risk: 'low', result: `It is a quiet scene. You trade stories until the room starts to fill up around you. By morning, the feud is a memory.`, effects: [{ event: { type: 'reconciliation', participants: ['rival'], summary: `Made peace with {rival.name} after a long feud.`, data: { formerRival: true } } }, { rivalry: { who: 'rival', heat: -20 } }, { pop: -0.3 }, { conf: 2 }] },
       { id: 'cautious', label: 'Call a ceasefire, not a peace', risk: 'low', result: `You agree not to bring it up for now. It is a small, safe thing, and exactly as satisfying as it sounds.`, effects: [{ rivalry: { who: 'rival', heat: -8 } }, { rel: { who: 'rival', trust: 3, heat: -6 } }] },
       { id: 'test', label: 'Ask what the angle is', risk: 'med', outcomes: [
         { weight: 1, bonus: { charisma: 0.3 }, text: `{rival.first} laughs, honestly. "No angle." It breaks the ice, and the two of you talk for an hour.`, effects: [{ rel: { who: 'rival', respect: 5, trust: 5, heat: -10 } }, { tag: { who: 'rival', tag: 'reconciled' } }] },
@@ -78,15 +78,15 @@ export default [
     id: 'riv_ring_accident', category: 'rivalry', title: 'Something Went Wrong with {opp.name}', weight: 2, cooldownDays: 90, maxPerCareer: 3, contexts: ['post_match'],
     trigger: { daysSince: { match: { lte: 1 } } }, cast: { opp: { pick: 'roster', sameBrand: true } },
     slots: { move: [`a missed dive`, `a botched powerbomb`, `a chair shot that landed higher than planned`, `a slip off the second rope`], aftermath: [`is being helped to the back by two trainers`, `is sitting on the apron with a towel pressed to a cut`, `has gone very quiet in the trainers' room`, `is being checked by the doctor, who will not say a word`] },
-    body: [`The match ended early after {move}, and {opp.name} {aftermath}. You know exactly what you did, and you also know the replay will make it look worse.`, `The agent asks what happened. Everybody in the building is watching your face for the answer.`],
+    body: [`You and {opp.name} stayed behind after the show to run through next week's finish in the empty ring. The rehearsal ended early after {move}, and {opp.name} {aftermath}. You know exactly what you did, and you also know the story will grow in the retelling.`, `The agent asks what happened. Everybody still in the building is watching your face for the answer.`],
     choices: [
       { id: 'visit', label: 'Go check on {opp.them}, in front of everyone', risk: 'low', result: `You walk into the trainers' room with your head down. {opp.first} gives a small nod. It is the right thing, and costs you the rest of the night.`, effects: [{ rel: { who: 'opp', respect: 6, trust: 5, heat: -4 } }, { fatigue: 4 }, { conf: -1 }] },
       { id: 'own_it', label: 'Take the blame in front of the agent', risk: 'med', outcomes: [
         { weight: 2, bonus: { confidence: 0.4 }, text: `Management values the honesty. The incident is filed as an accident, and your name is clean.`, effects: [{ pop: 0.2 }, { rel: { who: 'opp', respect: 4, trust: 3 } }, { conf: 1 }] },
         { weight: 1, text: `It goes badly. The report names you, and for two weeks people check the knots in your boot laces when you walk by.`, effects: [{ pop: -0.5 }, { conf: -4 }, { rel: { who: 'opp', respect: 2 } }] } ] },
       { id: 'blame_gear', label: 'Blame the ring and stay quiet about the rest', risk: 'med', result: `The ring crew gets the lecture instead of you. Nobody can prove otherwise, but {opp.first} knows what really happened.`, effects: [{ conf: 2 }, { rel: { who: 'opp', trust: -6, respect: -3 } }, { tag: { who: 'opp', tag: 'reluctant' } }] },
-      { id: 'sell_it', label: 'Use it: call it a heel moment', risk: 'high', outcomes: [
-        { weight: 1, bonus: { charisma: 0.5 }, text: `You play the cold villain on camera. The audience eats it up, and the office loves the heat.`, effects: [{ pop: 0.9 }, { rel: { who: 'opp', heat: 14, respect: -4 } }, { rivalry: { who: 'opp', heat: 12 } }] },
+      { id: 'sell_it', label: 'Use it: play the cold villain next week', risk: 'high', outcomes: [
+        { weight: 1, bonus: { charisma: 0.5 }, text: `You play the cold villain on the next show, with a perfectly straight face. The audience eats it up, and the office loves the heat.`, effects: [{ pop: 0.9 }, { rel: { who: 'opp', heat: 14, respect: -4 } }, { rivalry: { who: 'opp', heat: 12 } }] },
         { weight: 2, text: `It reads as callous. The injured wrestler's friends do not forget it, and the fans do not forgive it.`, effects: [{ pop: -0.8 }, { conf: -3 }, { rel: { who: 'opp', heat: 12, respect: -6 } }] } ] },
     ],
   },
@@ -94,10 +94,10 @@ export default [
     id: 'riv_mind_games', category: 'rivalry', title: 'Mind Games Before the Big Night', weight: 2, cooldownDays: 70, maxPerCareer: 3, contexts: ['pre_show', 'show_day', 'weekly'],
     trigger: { rivalry: { minHeat: 25 }, stat: { losses: { gte: 1 } }, eventWithin: { kind: 'ple', days: 10 } }, cast: { rival: { pick: 'rivalry', minHeat: 25 } },
     slots: { stunt: [`taped a photo of your last loss inside your locker`, `moved your bags to the cold end of the hall`, `told the whole catering line you are limping`, `left a pair of knee pads wrapped as a gift on your bench`], bait: [`You were in a perfectly good mood this morning.`, `You had planned a quiet pre-show meal.`, `Your gear bag was already packed and zipped.`, `You had just started to feel loose.`] },
-    body: [`{rival.name} has been working on you since the arena doors opened. First {rival.they} {stunt}, and the whole locker room is waiting to see what you do. {bait}`, `It is a bad idea to react, and a worse idea to look like you did not notice.`],
+    body: [`{rival.name} has been working on you since the arena doors opened. First {rival.they} {stunt}, then calls across the hall to ask whether you slept well, and the whole locker room waits to see what you do. {bait}`, `It is a bad idea to react, and a worse idea to look like you did not notice.`],
     choices: [
       { id: 'ignore', label: 'Ignore it and keep your head down', risk: 'low', result: `You warm up in silence. {rival.first} does not get the reaction, and you get a better night than you expected.`, effects: [{ conf: 3 }, { fatigue: -2 }, { rel: { who: 'rival', respect: 2 } }] },
-      { id: 'mirror', label: 'Return the favour, harder', risk: 'high', outcomes: [
+      { id: 'mirror', label: 'Return the favor, harder', risk: 'high', outcomes: [
         { weight: 2, bonus: { charisma: 0.4 }, text: `Your counter is cruel and funny, and the whole hallway repeats it by midnight. {rival.first} stops grinning.`, effects: [{ pop: 0.5 }, { conf: 3 }, { rivalry: { who: 'rival', heat: 8 } }] },
         { weight: 1, text: `It lands wrong and the producer drags you both into the hallway. You look like the instigator.`, effects: [{ pop: -0.4 }, { conf: -3 }, { fatigue: 3 }, { rel: { who: 'rival', heat: 8 } }] } ] },
       { id: 'laugh', label: 'Laugh it off in front of the crew', risk: 'med', result: `You make a joke of it, and the crew laughs with you. The sting wears off, though you stay on edge for the main event.`, effects: [{ conf: 1 }, { pop: 0.2 }, { fatigue: 2 }] },
@@ -107,13 +107,13 @@ export default [
   {
     id: 'riv_card_position', category: 'rivalry', title: 'The Spot on the Card', weight: 2, cooldownDays: 60, maxPerCareer: 3,
     trigger: { stat: { popularity: { gte: 25 } } }, cast: { rival: { pick: 'rivalry', minHeat: 15 }, agent: { pick: 'staff', role: 'agent' } },
-    slots: { slot: [`opening the show`, `closing the first hour`, `the semi-main`, `the last match before intermission`], reason: [`a ratings dip`, `a sponsor request`, `a hot angle`, `a last-minute injury`] },
-    body: [`{agent.name} has the running order and a problem: because of {reason}, only one of you can have the spot {slot}. {rival.name} has already walked into the office to argue for it.`, `If you take it, you are the one in the light tonight. If you give it up, there will be a favour owed, one way or the other.`],
+    slots: { slot: [`the opener`, `the end-of-hour slot`, `the semi-main`, `the last slot before intermission`], reason: [`a ratings dip`, `a sponsor request`, `a hot angle`, `a last-minute injury`] },
+    body: [`{agent.name} has the running order and a problem: because of {reason}, only one of you can have {slot}. {rival.name} has already walked into the office to argue for it.`, `If you take it, you are the one in the light tonight. If you give it up, there will be a favor owed, one way or the other.`],
     choices: [
       { id: 'fight', label: 'Fight for the spot with the agent', risk: 'med', outcomes: [
         { weight: 2, bonus: { mic: 0.4, charisma: 0.3 }, text: `You make a clean case and {agent.name} gives you the slot. {rival.first} stalks out of the office.`, effects: [{ pop: 0.5 }, { rel: { who: 'rival', heat: 8, respect: -2 } }, { conf: 2 }] },
         { weight: 1, text: `{agent.name} sides with {rival.first} and tells you your pitch was loud but empty.`, effects: [{ conf: -3 }, { rel: { who: 'rival', respect: 3 } }, { pop: -0.2 }] } ] },
-      { id: 'give', label: 'Give the spot, ask for a favour back', risk: 'low', result: `You let {rival.first} have it. The agent notes that you are easy to work with, and {rival.first} knows exactly how much it cost.`, effects: [{ rel: { who: 'rival', respect: 5, trust: 4, heat: -6 } }, { conf: -1 }, { pop: -0.2 }, { money: 2000 }] },
+      { id: 'give', label: 'Give the spot, ask for a favor back', risk: 'low', result: `You let {rival.first} have it. The agent notes that you are easy to work with, and {rival.first} knows exactly how much it cost.`, effects: [{ rel: { who: 'rival', respect: 5, trust: 4, heat: -6 } }, { conf: -1 }, { pop: -0.2 }, { money: 2000 }] },
       { id: 'split', label: 'Suggest a spot swap next week', risk: 'low', result: `A compromise the agent can live with. Neither of you is thrilled, but the show goes on.`, effects: [{ rel: { who: 'rival', heat: -3 } }, { conf: 1 }] },
       { id: 'sabotage_slot', label: 'Leak that your rival is nursing an injury', risk: 'high', result: `The agent pulls {rival.first} off the spot and gives it to you. When {rival.they} finds out who talked, it will not stay quiet.`, effects: [{ pop: 0.4 }, { conf: 1 }, { rel: { who: 'rival', heat: 14, trust: -10 } }, { rivalry: { who: 'rival', heat: 12 } }, { obligation: { kind: 'confront_backstage', who: 'rival', inDays: 6 } }] },
     ],
@@ -121,7 +121,7 @@ export default [
   {
     id: 'riv_champ_deal', category: 'rivalry', title: 'A Deal from the Champion', weight: 2, cooldownDays: 100, maxPerCareer: 2,
     trigger: { stat: { popularity: { gte: 40 }, overall: { gte: 55 } }, holdsTitle: false }, cast: { champ: { pick: 'champion', class: 'world' } },
-    slots: { venue: [`the champion's private locker room`, `a rented office behind the arena`, `the production truck`, `a hotel suite`], price: [`a clean loss in your first match`, `a future favour on a night of the champion's choosing`, `a slice of your merchandise income`] },
+    slots: { venue: [`the champion's private locker room`, `a rented office behind the arena`, `the production truck`, `a hotel suite`], price: [`a clean loss when we first meet`, `a favor on a night of my choosing`, `a slice of your merchandise income`] },
     body: [`{champ.name} invites you to {venue} and gets straight to it. "You are on your way up, and I can open the door. In return, I want {price}."`, `It is a straightforward business offer from the most powerful person on the roster. You can also hear what it says about what {champ.they} thinks of you.`],
     choices: [
       { id: 'take', label: 'Take the deal', risk: 'med', result: `You shake on it. The door does open, but you owe now, and {champ.first} reminds you with a look every time you meet.`, effects: [{ pop: 0.8 }, { money: 8000 }, { conf: -2 }, { rel: { who: 'champ', trust: -3, respect: 2 } }, { flag: 'owes_champion' }] },
@@ -135,7 +135,7 @@ export default [
   {
     id: 'riv_cocky_prospect', category: 'rivalry', title: 'The Rookie Who Will Not Back Down', weight: 2, cooldownDays: 70, maxPerCareer: 3,
     trigger: { stat: { overall: { gte: 50 } } }, cast: { kid: { pick: 'roster', tier: { lte: 1 }, sameBrand: true } },
-    slots: { trigger_line: [`told a podcast host that you are living off old moves`, `kept calling you by the wrong name in the locker room`, `pinned a photo of you with a clown nose on the board`, `interrupted your warm-up to ask for a match`], witness: [`a table of veterans`, `the entire production crew`, `three NXT hopefuls`, `an agent who is also watching`] },
+    slots: { trigger_line: [`told a reporter that you are living off old moves`, `kept calling you by the wrong name in the locker room`, `pinned a photo of you with a clown nose on the board`, `interrupted your warm-up to ask for a match`], witness: [`a table of veterans`, `the entire production crew`, `three developmental hopefuls`, `an agent who is also watching`] },
     body: [`{kid.name} has been loud lately. Today {kid.they} {trigger_line} in front of {witness}, and now the room is waiting to see what you do.`, `You have two options: crush the kid or help the kid. Neither one will be forgotten.`],
     choices: [
       { id: 'humble', label: 'Put the rookie in {kid.their} place, quietly', risk: 'med', outcomes: [
@@ -149,14 +149,14 @@ export default [
   {
     id: 'riv_legend_grudge', category: 'rivalry', title: 'The Legend Who Dislikes You', weight: 2, cooldownDays: 120, maxPerCareer: 2,
     trigger: { stat: { popularity: { gte: 35 }, careerYears: { gte: 1 } } }, cast: { legend: { pick: 'roster', tier: { gte: 3 }, sameBrand: true } },
-    slots: { slight: [`thinks you skipped too many steps`, `disliked how you handled a jobber the other night`, `heard you complain about a spot`, `just does not like your style`], arena: [`in the ring after the show`, `in the middle of catering`, `at a hotel breakfast`, `outside the Gorilla position`] },
+    slots: { slight: [`thinks you skipped too many steps`, `dislikes how you handled a jobber the other night`, `has heard you complain about a spot`, `just does not like your style`], arena: [`in the ring after the show`, `in the middle of catering`, `at a hotel breakfast`, `outside the gorilla position`] },
     body: [`{legend.name} stops you {arena}. The veteran {slight}, and says so in a voice that carries well beyond the two of you.`, `There is history in this room that you were not a part of. {legend.first} is waiting for a response, and so is everyone else.`],
     choices: [
       { id: 'listen', label: 'Listen and ask what you should change', risk: 'low', outcomes: [
         { weight: 2, bonus: { overall: 0.3, charisma: 0.3 }, text: `{legend.first} is thrown by the humility, then gives you a real answer. You walk away with a list and a half-friend.`, effects: [{ rel: { who: 'legend', respect: 6, trust: 4, heat: -6 } }, { attr: { name: 'psychology', delta: 1 } }, { conf: -1 }] },
         { weight: 1, text: `{legend.first} treats it as weakness and lectures you for ten minutes with an audience.`, effects: [{ conf: -4 }, { pop: -0.2 }, { rel: { who: 'legend', respect: -1 } }] } ] },
       { id: 'push_back', label: 'Push back politely but firmly', risk: 'med', result: `You make your case without raising your voice. {legend.first} does not agree, but some of the locker room does.`, effects: [{ conf: 3 }, { rel: { who: 'legend', respect: 1, heat: 6 } }, { pop: 0.2 }] },
-      { id: 'prove', label: 'Challenge {legend.them} to prove it in the ring', risk: 'high', result: `The old man smiles for the first time. The office is delighted and the match is made.`, effects: [{ booking: { who: 'legend', type: 'singles' } }, { rivalry: { who: 'legend', heat: 16 } }, { pop: 0.8 }, { fatigue: 5 }] },
+      { id: 'prove', label: 'Challenge {legend.them} to prove it in the ring', risk: 'high', result: `{legend.first} smiles for the first time. The office is delighted and the match is made.`, effects: [{ booking: { who: 'legend', type: 'singles' } }, { rivalry: { who: 'legend', heat: 16 } }, { pop: 0.8 }, { fatigue: 5 }] },
       { id: 'avoid', label: 'Avoid {legend.them} and stay out of the way', risk: 'low', result: `It works for a while. {legend.first} takes it as proof that you have no answer.`, effects: [{ rel: { who: 'legend', respect: -4 } }, { conf: -2 }, { fatigue: -1 }] },
     ],
   },
@@ -164,7 +164,7 @@ export default [
     id: 'riv_loss_gloat', category: 'rivalry', title: '{rival.name} Gloats After the Loss', weight: 3, cooldownDays: 45, maxPerCareer: 4, contexts: ['post_match', 'weekly'],
     trigger: { daysSince: { match: { lte: 3 } }, mem: [{ role: 'rival', last: { result: 'loss', within: 3 } }] }, cast: { rival: { pick: 'rivalry', minHeat: 15 } }, memory: { role: 'rival', max: 2, allow: ['you_beat_me', 'clean_losses', 'controversial_finish', 'old_insult', 'you_betrayed_me', 'i_betrayed_you', 'broken_promise'] },
     slots: { how: [`leaving a tube of hand cream in your bag`, `holding an imaginary microphone`, `clapping slowly from the monitor`, `sending a mocking note on the catering menu`], audience: [`a crowd of crew members`, `two agents`, `three younger wrestlers`, `an interviewer with a camera`] },
-    body: [`The loss still stings, and {rival.name} cannot leave it alone. {rival.first} is enjoying it by {how} in front of {audience}.`, `You can respond now, or turn it into fuel. Anything you say will travel.`],
+    body: [`The loss still stings, and {rival.name} cannot leave it alone. "Tough break," {rival.they} says, enjoying it by {how} in front of {audience}.`, `You can respond now, or turn it into fuel. Anything you say will travel.`],
     choices: [
       { id: 'cut_down', label: 'Cut {rival.first} down with one line', risk: 'med', outcomes: [
         { weight: 2, bonus: { mic: 0.7 }, text: `Your line is quoted for days. The gloat dies on {rival.first}'s face.`, effects: [{ pop: 0.6 }, { conf: 3 }, { rivalry: { who: 'rival', heat: 8 } }] },
@@ -191,15 +191,15 @@ export default [
   {
     id: 'riv_apology_trap', category: 'rivalry', title: 'Is {rival.name} Sorry, or Setting a Trap?', weight: 2, cooldownDays: 90, maxPerCareer: 2,
     trigger: { rivalry: { minHeat: 30 } }, cast: { rival: { pick: 'rivalry', minHeat: 30 } }, memory: { role: 'rival', max: 2 },
-    slots: { how: [`a handwritten note`, `a long voicemail`, `a face-to-face in the parking garage`, `a message passed through a trainer`], where: [`behind the venue`, `in a deserted hallway`, `in the empty ring`, `at an after-hours diner`] },
-    body: [`The apology arrives by way of {how}, and it asks you to meet {where} after the show. {rival.name} sounds sincere. {rival.first} also sounds like a person who knows how to sound sincere.`, `If it's real, it ends a feud. If it's a trap, it wins one.`],
+    slots: { how: [`a handwritten note`, `a long voicemail`, `a card left on your bench`, `a message passed through a trainer`], where: [`behind the venue`, `in a deserted hallway`, `in the empty ring`, `at an after-hours diner`] },
+    body: [`The apology arrives by way of {how}, and it asks you to meet {where} after the show. {rival.name} sounds sincere. {rival.first} also sounds like a person who knows how to sound sincere.`, `If it is real, it ends a feud. If it is a trap, it wins one.`],
     choices: [
       { id: 'go_alone', label: 'Go alone and hear {rival.them} out', risk: 'high', outcomes: [
-        { weight: 1, bonus: { confidence: 0.3 }, text: `It's real. {rival.first} admits it all and the feud loses its teeth.`, effects: [{ event: { type: 'reconciliation', participants: ['rival'], summary: `{rival.name} apologised and the feud ended in a quiet talk.`, data: { formerRival: true } } }, { rivalry: { who: 'rival', heat: -18 } }, { conf: 3 }] },
+        { weight: 1, bonus: { confidence: 0.3 }, text: `It is real. {rival.first} admits it all and the feud loses its teeth.`, effects: [{ event: { type: 'reconciliation', participants: ['rival'], summary: `{rival.name} apologized and the feud ended in a quiet talk.`, data: { formerRival: true } } }, { rivalry: { who: 'rival', heat: -18 } }, { conf: 3 }] },
         { weight: 1, text: `It was a trap. Two of {rival.first}'s friends step out of the dark. You get out of there with a bruised pride and a split lip.`, effects: [{ fatigue: 6 }, { conf: -4 }, { rivalry: { who: 'rival', heat: 14 } }, { rel: { who: 'rival', heat: 12 } }, { injury: { part: 'arms', severity: 1, days: 6 } }] } ] },
       { id: 'bring_witness', label: 'Go, but bring a trusted witness', risk: 'low', result: `With a witness at your side, nothing bad happens, and nothing good does either. Both of you keep your cards close.`, effects: [{ rel: { who: 'rival', trust: 2, heat: -5 } }, { conf: 1 }] },
       { id: 'public', label: 'Demand the apology on live television', risk: 'med', result: `{rival.first} refuses. The crowd shrugs, but you get your chance to look like the bigger person.`, effects: [{ pop: 0.5 }, { rel: { who: 'rival', heat: 8, respect: -2 } }, { rivalry: { who: 'rival', heat: 6 } }] },
-      { id: 'ignore', label: 'Ignore it completely', risk: 'low', result: `You throw the note away. Nobody gets hurt and nothing gets resolved.`, effects: [{ conf: 1 }, { rel: { who: 'rival', heat: 3 } }] },
+      { id: 'ignore', label: 'Ignore it completely', risk: 'low', result: `You let it go unanswered. Nobody gets hurt and nothing gets resolved.`, effects: [{ conf: 1 }, { rel: { who: 'rival', heat: 3 } }] },
     ],
   },
   {
@@ -209,9 +209,9 @@ export default [
     body: [`The crowd in {town} is half-full and fully drunk, and the night has {twist}. {rival.name} is across the ring, grinning, waiting to see how you handle it.`, `No cameras and no boss, only a few hundred people who will tell the story forever.`],
     choices: [
       { id: 'play_up', label: 'Play to the crowd and lean into it', risk: 'med', outcomes: [
-        { weight: 2, bonus: { charisma: 0.5 }, text: `You turn it into theatre. The crowd roars, the rival gives in, and the finish gets a standing ovation.`, effects: [{ pop: 0.7 }, { conf: 2 }, { fatigue: 4 }] },
+        { weight: 2, bonus: { charisma: 0.5 }, text: `You turn it into theater. The crowd roars, the rival gives in, and the finish gets a standing ovation.`, effects: [{ pop: 0.7 }, { conf: 2 }, { fatigue: 4 }] },
         { weight: 1, text: `The more you push, the more the crowd roars back. You finish the match flustered.`, effects: [{ pop: -0.2 }, { conf: -2 }, { fatigue: 5 }] } ] },
-      { id: 'protect', label: 'Protect the match and hit your spots', risk: 'low', result: `You shut out the noise and work the plan. It's a pro job, and a quiet one.`, effects: [{ rel: { who: 'rival', respect: 4 } }, { conf: 2 }, { fatigue: 3 }] },
+      { id: 'protect', label: 'Protect the match and hit your spots', risk: 'low', result: `You shut out the noise and work the plan. It is a pro job, and a quiet one.`, effects: [{ rel: { who: 'rival', respect: 4 } }, { conf: 2 }, { fatigue: 3 }] },
       { id: 'break_script', label: 'Break script and settle the score', risk: 'high', result: `You go off the plan and put hands on {rival.first}. The match ends badly and the promoter's face is tight.`, effects: [{ rivalry: { who: 'rival', heat: 14 } }, { rel: { who: 'rival', heat: 10, trust: -8 } }, { pop: 0.3 }, { money: -3000 }] },
       { id: 'cut_short', label: 'Cut the match short with a quick pin', risk: 'low', result: `You end it in four minutes. Nobody is thrilled, but nobody is hurt.`, effects: [{ pop: -0.3 }, { fatigue: -2 }, { rel: { who: 'rival', respect: -1 } }] },
     ],
@@ -221,10 +221,10 @@ export default [
     id: 'bet_title_shot_partner', category: 'betrayal', title: 'A Title Shot, at {partner.name}\'s Expense', weight: 3, major: true, cooldownDays: 120, maxPerCareer: 2,
     trigger: { stat: { popularity: { gte: 30 } }, holdsTitle: false }, cast: { partner: { pick: 'tag', tag: 'ally' } }, memory: { role: 'partner', max: 2 },
     slots: { offer: [`a title shot at the next premium show`, `a guaranteed singles push for the next few months`, `a main-event slot on the biggest card of the quarter`], source: [`a quiet word from an executive`, `a creative meeting that ran late`, `a hallway hint from the GM`] },
-    body: [`{source} brings an offer: {offer}. There is one catch. The office wants {partner.name} written out of the picture, and they want the cleanest way to do it to be you.`, `{partner.first} has been your closest ally for months. {partner.they} also has no idea this is happening.`],
+    body: [`{source} brings an offer: {offer}. There is one catch. The office wants {partner.name} written out of the picture, and they want the cleanest way to do it to be you.`, `{partner.first} has been in your corner, and {partner.they} has no idea this is happening.`],
     choices: [
       { id: 'betray', label: 'Take the offer and turn on your partner', risk: 'high', result: `You do it on live television. The crowd gasps, the office applauds, and {partner.first} stares at you from the mat as though meeting you for the first time.`, effects: [{ event: { type: 'betrayal', participants: ['partner'], summary: `Betrayed {partner.name} for a bigger opportunity.`, importance: 4, data: { context: 'tag_partner', byPlayer: true } } }, { pop: 1.2 }, { money: 10000 }, { conf: -3 }, { flag: 'turned_on_partner' }] },
-      { id: 'refuse', label: 'Refuse to hurt your partner', risk: 'low', result: `The exec's smile thins out. You keep a friend and lose a favour, and {partner.first} hears from someone that you passed.`, effects: [{ rel: { who: 'partner', trust: 8, respect: 6, affinity: 5 } }, { conf: 3 }, { pop: -0.3 }] },
+      { id: 'refuse', label: 'Refuse to hurt your partner', risk: 'low', result: `The office's smile thins out. You keep a friend and lose a favor, and {partner.first} hears from someone that you passed.`, effects: [{ rel: { who: 'partner', trust: 8, respect: 6, affinity: 5 } }, { conf: 3 }, { pop: -0.3 }] },
       { id: 'share', label: 'Insist that the shot be shared', risk: 'med', outcomes: [
         { weight: 2, bonus: { charisma: 0.5, mic: 0.3 }, text: `After a long negotiation, the office agrees to put you both in the picture. Your partner owes you, and knows it.`, effects: [{ pop: 0.6 }, { rel: { who: 'partner', trust: 6, respect: 4 } }, { money: 3000 }] },
         { weight: 1, text: `The office takes the refusal as disloyalty to them. The shot goes to someone else, and your partner is left puzzled about why you are both in a cold spell.`, effects: [{ pop: -0.4 }, { conf: -2 }, { rel: { who: 'partner', trust: 2 } }] } ] },
@@ -234,7 +234,7 @@ export default [
   {
     id: 'bet_faction_leader_cross', category: 'betrayal', title: 'The Leader\'s Back Is Turned', weight: 2, major: true, cooldownDays: 120, maxPerCareer: 2,
     trigger: { stat: { popularity: { gte: 25 } } }, cast: { boss: { pick: 'tag', tag: 'ally' }, exec: { pick: 'staff', role: 'executive' } }, memory: { role: 'boss', max: 1 },
-    slots: { crew: [`the stable`, `the group`, `the whole clique`], promise: [`a spot as their own champion`, `a bigger percentage of the merchandise`, `a seat at the bookers' table`] },
+    slots: { crew: [`the group you run with`, `the crew around {boss.them}`, `the whole clique`], promise: [`a spot as their own champion`, `a bigger percentage of the merchandise`, `a seat at the bookers' table`] },
     body: [`{exec.name} takes you to a quiet office and says what nobody has said out loud: {boss.name} is holding {crew} back. Take {boss.their} place at the head of the table, and the office will back you with {promise}.`, `You have been loyal to {boss.first}. {boss.they} has also been taking more than a fair cut for a long time.`],
     choices: [
       { id: 'overthrow', label: 'Overthrow the leader on live TV', risk: 'high', result: `The attack comes after a tag match, with the entire crew watching. {boss.first} goes down, and the fans erupt.`, effects: [{ event: { type: 'betrayal', participants: ['boss'], summary: `Overthrew {boss.name} as leader of the stable.`, importance: 4, data: { context: 'faction', byPlayer: true } } }, { pop: 1.0 }, { money: 8000 }, { conf: 2 }, { flag: 'seized_stable' }] },
@@ -248,8 +248,8 @@ export default [
   {
     id: 'bet_friend_blindside', category: 'betrayal', title: '{friend.name} Went Behind Your Back', weight: 3, major: true, cooldownDays: 90, maxPerCareer: 3,
     trigger: { stat: { popularity: { gte: 20 } } }, cast: { friend: { pick: 'tag', tag: 'ally' } }, memory: { role: 'friend', max: 2 },
-    slots: { act: [`pitched your finisher as {friend.theirs} to the writers`, `asked for your television spot in a private meeting`, `told the agent you were "not reliable"`, `took credit for your idea in front of the producer`], learned: [`from the receptionist`, `from an overheard phone call`, `from a screenshot a cameraman sent you`, `from an agent who had a conscience`] },
-    body: [`You find out {learned}: {friend.name} {act}. Months of rides, meals and shared hotel rooms, and it only took one meeting.`, `Nobody saw you find out. You get to decide what happens next, and how much of it is public.`],
+    slots: { act: [`pitched your finisher as {friend.theirs} to the writers`, `asked for your television spot in a private meeting`, `told the agent you were "not reliable"`, `took credit for your idea in front of the producer`], learned: [`from the receptionist`, `from an overheard phone call`, `from a photocopy a cameraman sent you`, `from an agent who had a conscience`] },
+    body: [`You find out {learned}: {friend.name} {act}. All those rides, meals and shared hotel rooms, and it only took one meeting.`, `Nobody saw you find out. You get to decide what happens next, and how much of it is public.`],
     choices: [
       { id: 'confront', label: 'Confront {friend.them} in private', risk: 'med', outcomes: [
         { weight: 2, bonus: { confidence: 0.4 }, text: `{friend.first} cracks quickly and admits everything. It does not fix it, but you leave with an apology and the truth.`, effects: [{ rel: { who: 'friend', trust: -4, respect: 4, fear: 3 } }, { conf: 3 }, { tag: { who: 'friend', tag: 'betrayal' } }] },
@@ -262,7 +262,7 @@ export default [
   {
     id: 'bet_leaked_plans', category: 'betrayal', title: 'Your Plans Were Leaked', weight: 2, cooldownDays: 80, maxPerCareer: 3,
     trigger: { rivalry: { minHeat: 20 } }, cast: { rival: { pick: 'rivalry', minHeat: 20 }, spy: { pick: 'roster', sameBrand: true } },
-    slots: { plan: [`your finish for Sunday`, `the surprise you have been saving for the title match`, `a new entrance you had worked on for weeks`, `a spot you only told your agent about`], clue: [`a crew member who looked sheepish`, `a stray comment from a camera operator`, `a suspiciously identical countermove during rehearsal`] },
+    slots: { plan: [`your finish for the next show`, `the surprise you have been saving for the title match`, `a new entrance you had worked on for weeks`, `a spot you only told your agent about`], clue: [`a crew member who looked sheepish`, `a stray comment from a camera operator`, `a suspiciously identical countermove during rehearsal`] },
     body: [`{rival.name} ruined {plan}, and {rival.they} did it too neatly to be luck. {clue} points toward {spy.name}, who has been seen chatting with {rival.first} lately.`, `You have no proof. All you have is a bad feeling and a long list of people who knew.`],
     choices: [
       { id: 'accuse', label: 'Accuse {spy.first} to {spy.their} face', risk: 'high', outcomes: [
@@ -272,7 +272,7 @@ export default [
         { weight: 2, bonus: { overall: 0.4 }, text: `The fake plan reaches {rival.first} within a day. On the night, you do something entirely different and look like a genius.`, effects: [{ pop: 0.8 }, { conf: 4 }, { rel: { who: 'rival', respect: 3, fear: 3 } }] },
         { weight: 1, text: `The trick takes too long to pay off. The leak was just a coincidence, and you have wasted a week.`, effects: [{ conf: -1 }, { fatigue: 3 }] } ] },
       { id: 'report', label: 'Report the leak to the agent', risk: 'low', result: `The agent says they will "look into it" and does nothing visible. {spy.first} hears about it all the same.`, effects: [{ rel: { who: 'spy', heat: 6, trust: -4 } }, { conf: 1 }] },
-      { id: 'adapt', label: 'Stop trusting anyone and change everything', risk: 'low', result: `You throw out the old plan and work out a new one alone. It's lonely, and it's tiring, but it's safe.`, effects: [{ fatigue: 5 }, { conf: 2 }, { pop: 0.2 }, { rel: { who: 'spy', trust: -2 } }] },
+      { id: 'adapt', label: 'Stop trusting anyone and change everything', risk: 'low', result: `You throw out the old plan and work out a new one alone. It is lonely, and it is tiring, but it is safe.`, effects: [{ fatigue: 5 }, { conf: 2 }, { pop: 0.2 }, { rel: { who: 'spy', trust: -2 } }] },
     ],
   },
   {
@@ -285,15 +285,15 @@ export default [
         { weight: 2, bonus: { overall: 0.3 }, text: `You lie to the GM straight-faced. Your partner is grateful beyond words.`, effects: [{ rel: { who: 'partner', trust: 12, respect: 6 } }, { fatigue: 3 }, { conf: 1 }] },
         { weight: 1, text: `The GM sees through it and holds a grudge. The secret holds, but it costs you a spot.`, effects: [{ rel: { who: 'partner', trust: 8 } }, { pop: -0.4 }, { conf: -2 }] } ] },
       { id: 'tell_gm', label: 'Tell the GM and take the credit', risk: 'high', result: `The GM thanks you and tightens the leash on your partner. When {partner.first} figures out who talked, the friendship ends cold.`, effects: [{ event: { type: 'betrayal', participants: ['partner'], summary: `Betrayed {partner.name}'s confidence to the GM.`, importance: 3, data: { context: 'tag_partner', byPlayer: true } } }, { pop: 0.4 }, { money: 4000 }, { conf: -2 }] },
-      { id: 'talk_out', label: 'Talk {partner.them} out of leaving', risk: 'med', result: `You make the case for staying. By the end of the night {partner.first} has not decided, but the offer sits in the glovebox for now.`, effects: [{ rel: { who: 'partner', trust: 4, affinity: 3 } }, { fatigue: 2 }, { tag: { who: 'partner', tag: 'reluctant' } }] },
+      { id: 'talk_out', label: 'Talk {partner.them} out of leaving', risk: 'med', result: `You make the case for staying. By the end of the night {partner.first} has not decided, but the offer sits in a drawer for now.`, effects: [{ rel: { who: 'partner', trust: 4, affinity: 3 } }, { fatigue: 2 }, { tag: { who: 'partner', tag: 'reluctant' } }] },
       { id: 'encourage', label: 'Encourage {partner.them} to take the offer', risk: 'low', result: `"Go," you say. "I would." It costs you a partner, but earns you a friend for life.`, effects: [{ rel: { who: 'partner', trust: 8, respect: 8, affinity: 6 } }, { conf: -2 }, { pop: -0.3 }] },
     ],
   },
   {
     id: 'bet_second_chance', category: 'betrayal', title: '{former.name} Asks for a Second Chance', weight: 2, cooldownDays: 120, maxPerCareer: 2,
     trigger: { mem: [{ role: 'former', betrayal: true }] }, cast: { former: { pick: 'tag', tag: 'betrayal' } }, memory: { role: 'former', max: 3 },
-    slots: { how: [`a long, awkward message`, `a coffee that appears on your bench`, `a late-night knock on your hotel door`, `an apology via the trainer`], reason: [`facing a bad run of injuries`, `finally losing {former.their} place in the stable`, `watching the same thing happen to {former.them}`, `tired of what the crew says about {former.them}`] },
-    body: [`{former.name} shows up with {how}. {former.they} is {reason}, and is asking for another chance.`, `The betrayal sits between you like a third person in the room. Forgiving would be hard; refusing would be easy.`],
+    slots: { how: [`a long, awkward message`, `a coffee left on your bench`, `a late-night knock on your hotel door`, `an apology passed through a trainer`], reason: [`facing a bad run of injuries`, `finally losing {former.their} place in the stable`, `being betrayed by a new partner`, `tired of what the crew says about {former.them}`] },
+    body: [`The first sign is {how}, and it is from {former.name}. {former.they} is {reason}, and is asking for another chance.`, `The betrayal sits between you like a third person in the room. Forgiving would be hard; refusing would be easy.`],
     choices: [
       { id: 'forgive', label: 'Forgive {former.them}, and say so publicly', risk: 'med', result: `You say it on camera. The crowd applauds, and {former.first} cannot look at you for several minutes.`, effects: [{ event: { type: 'reconciliation', participants: ['former'], summary: `Forgave {former.name} after the betrayal.`, data: { formerRival: true } } }, { pop: 0.5 }, { conf: 2 }, { tag: { who: 'former', tag: 'reconciled' } }] },
       { id: 'prove_it', label: 'Make {former.them} earn it, slowly', risk: 'low', result: `You set terms. {former.first} agrees to all of them, and you start the long climb back to trust.`, effects: [{ rel: { who: 'former', trust: 5, respect: 4 } }, { conf: 1 }] },
@@ -306,8 +306,8 @@ export default [
   {
     id: 'bet_loyalty_test', category: 'betrayal', title: 'The GM Tests Your Loyalty', weight: 2, cooldownDays: 150, maxPerCareer: 2,
     trigger: { stat: { popularity: { gte: 35 } } }, cast: { gm: { pick: 'staff', role: 'gm' }, rival: { pick: 'roster', tier: { gte: 2 }, sameBrand: true } },
-    slots: { bait: [`a rumoured offer from a rival promotion`, `a "friendly" tip about a roster cut`, `a question about who in the locker room is unhappy`], tone: [`casual and relaxed`, `unusually warm`, `quiet and a little too interested`] },
-    body: [`{gm.name} drops by catering, {tone}, and mentions {bait}. It sounds like small talk until you notice that {gm.they} is watching your face and not the food.`, `{rival.name}, two tables over, pretends not to listen. Whatever you say will land in two places by the end of the night.`],
+    slots: { bait: [`a rumored offer from a rival promotion`, `a "friendly" tip about a roster cut`, `a question about who in the locker room is unhappy`], tone: [`casual and relaxed`, `unusually warm`, `quiet and a little too interested`] },
+    body: [`{gm.name} drops by catering, {tone}, and mentions {bait}. It sounds like small talk until you notice that {gm.name} is watching your face and not the food.`, `{rival.name}, two tables over, pretends not to listen. Whatever you say will land in two places by the end of the night.`],
     choices: [
       { id: 'loyal', label: 'Affirm your loyalty, loudly', risk: 'low', result: `You say you are happy here, and the GM smiles. The loyalty is rewarded with a small reminder of who owes whom.`, effects: [{ pop: 0.3 }, { conf: 1 }, { rel: { who: 'rival', respect: -2 } }] },
       { id: 'name_names', label: 'Name someone who is unhappy', risk: 'high', result: `You give the GM {rival.name}'s name. It earns you a pat on the shoulder and a reputation as a snitch.`, effects: [{ event: { type: 'betrayal', participants: ['rival'], summary: `Named {rival.name} to the GM as a malcontent.`, importance: 3, data: { context: 'tag_partner', byPlayer: true } } }, { money: 3000 }, { pop: 0.3 }, { rel: { who: 'rival', heat: 14, trust: -10 } }] },
@@ -324,7 +324,7 @@ export default [
     body: [`{thief.name} did {stolen} {where}, down to the last detail, and the crowd popped for it. It was your idea, and it was good enough to steal.`, `Nobody can own a move, but everyone knows whose it was.`],
     choices: [
       { id: 'confront', label: 'Confront {thief.first} backstage', risk: 'med', outcomes: [
-        { weight: 2, bonus: { confidence: 0.4 }, text: `{thief.first} apologises awkwardly and agrees to stop. The room notices who has the upper hand.`, effects: [{ rel: { who: 'thief', respect: 4, fear: 4, heat: 3 } }, { conf: 3 }] },
+        { weight: 2, bonus: { confidence: 0.4 }, text: `{thief.first} apologizes awkwardly and agrees to stop. The room notices who has the upper hand.`, effects: [{ rel: { who: 'thief', respect: 4, fear: 4, heat: 3 } }, { conf: 3 }] },
         { weight: 1, text: `{thief.first} says "everyone does it" and walks away. You look petty.`, effects: [{ conf: -2 }, { rel: { who: 'thief', heat: 8 } }, { pop: -0.2 }] } ] },
       { id: 'one_up', label: 'Do it better on the next show', risk: 'med', outcomes: [
         { weight: 2, bonus: { overall: 0.4, charisma: 0.3 }, text: `You perform it with improvements, and the crowd treats {thief.first}'s version as a cheap copy.`, effects: [{ pop: 0.7 }, { conf: 3 }, { rel: { who: 'thief', heat: 6 } }, { fatigue: 3 }] },
@@ -342,7 +342,7 @@ export default [
       { id: 'sign', label: 'Sign off and take the push', risk: 'high', result: `You agree. {partner.first} finds out three weeks later and does not say a word to you, which is worse than yelling.`, effects: [{ event: { type: 'betrayal', participants: ['partner'], summary: `Signed off on writing {partner.name} out of the story.`, importance: 3, data: { context: 'tag_partner', byPlayer: true } } }, { pop: 0.9 }, { money: 6000 }, { conf: -2 }] },
       { id: 'refuse', label: 'Refuse. Your partner stays', risk: 'low', result: `{creative.name} sighs and files the idea away. You keep the friendship and keep the weaker storyline.`, effects: [{ rel: { who: 'partner', trust: 6, respect: 4 } }, { pop: -0.3 }, { conf: 2 }] },
       { id: 'counter', label: 'Offer a story that includes both', risk: 'med', outcomes: [
-        { weight: 2, bonus: { charisma: 0.4, mic: 0.3 }, text: `Your counter-pitch wins the writer over. It's a bigger story than either of you pitched.`, effects: [{ pop: 0.6 }, { rel: { who: 'partner', respect: 4, trust: 3 } }, { fatigue: 3 }] },
+        { weight: 2, bonus: { charisma: 0.4, mic: 0.3 }, text: `Your counter-pitch wins the writer over. It is a bigger story than either of you pitched.`, effects: [{ pop: 0.6 }, { rel: { who: 'partner', respect: 4, trust: 3 } }, { fatigue: 3 }] },
         { weight: 1, text: `{creative.name} just stares at you. "That is not the assignment." You leave with nothing.`, effects: [{ pop: -0.2 }, { conf: -2 }] } ] },
       { id: 'tell_partner', label: 'Tell {partner.first} everything', risk: 'med', result: `{partner.first} thanks you and quietly lobbies the office. The pitch gets shelved. The writer notices where the leak came from.`, effects: [{ rel: { who: 'partner', trust: 10, respect: 5 } }, { pop: -0.2 }, { conf: 1 }] },
     ],
@@ -350,22 +350,22 @@ export default [
   {
     id: 'bet_who_started_it', category: 'betrayal', title: 'The Agent Wants a Name', weight: 2, cooldownDays: 70, maxPerCareer: 3,
     trigger: {}, cast: { agent: { pick: 'staff', role: 'agent' }, culprit: { pick: 'roster', sameBrand: true } },
-    slots: { incident: [`a fight in the parking lot`, `a broken window in the dressing room`, `a missing gear bag`, `a prank that went bad and ruined a costume`], cost: [`a fine for the whole locker room`, `a suspended spot for whoever is guilty`, `a note in every file`] },
+    slots: { incident: [`a fight in the parking lot`, `a broken window in the dressing room`, `a missing gear bag`, `a prank that went bad and ruined a costume`], cost: [`a fine`, `a docked day of pay`, `a deduction from everyone's next check`] },
     body: [`{agent.name} lines everyone up after {incident}. "Somebody is going to tell me who did this, or the entire roster takes {cost}."`, `You saw it, and the culprit is {culprit.name}. Nobody else knows you saw.`],
     choices: [
       { id: 'tell', label: 'Give the agent the name', risk: 'med', result: `{culprit.first} takes the punishment, and the agent files your name under "reliable". The locker room goes cold for a few days.`, effects: [{ pop: 0.2 }, { rel: { who: 'culprit', heat: 12, trust: -10 } }, { money: 2000 }, { conf: 1 }] },
-      { id: 'cover', label: 'Cover for {culprit.them} and say you saw nothing', risk: 'med', result: `Nobody talks and everyone takes the fine. {culprit.first} owes you one.`, effects: [{ rel: { who: 'culprit', trust: 8, respect: 3 } }, { money: -3000 }, { conf: 1 }] },
+      { id: 'cover', label: 'Cover for {culprit.them} and say you saw nothing', risk: 'med', result: `Nobody talks and everyone takes the hit. {culprit.first} owes you one.`, effects: [{ rel: { who: 'culprit', trust: 8, respect: 3 } }, { money: -3000 }, { conf: 1 }] },
       { id: 'confess_for', label: 'Take the blame yourself', risk: 'high', result: `You raise your hand. The punishment lands on you alone. {culprit.first} will not forget what you did.`, effects: [{ rel: { who: 'culprit', trust: 14, respect: 10 } }, { money: -5000 }, { pop: -0.2 }, { conf: -2 }, { tag: { who: 'culprit', tag: 'ally' } }] },
       { id: 'fix_it', label: 'Make the culprit confess, quietly', risk: 'low', outcomes: [
         { weight: 2, bonus: { charisma: 0.4 }, text: `After a short talk, {culprit.first} walks into the office and owns it. The agent notices who arranged it.`, effects: [{ rel: { who: 'culprit', respect: 4, trust: 4 } }, { conf: 2 }, { pop: 0.2 }] },
-        { weight: 1, text: `{culprit.first} refuses and the deadline passes. Everybody takes the fine, and you take the heat for stalling.`, effects: [{ money: -3000 }, { conf: -2 }, { rel: { who: 'culprit', heat: 4 } }] } ] },
+        { weight: 1, text: `{culprit.first} refuses and the deadline passes. Everybody takes the hit, and you take the heat for stalling.`, effects: [{ money: -3000 }, { conf: -2 }, { rel: { who: 'culprit', heat: 4 } }] } ] },
     ],
   },
   {
     id: 'bet_planned_double_cross', category: 'betrayal', title: 'The Turn on {partner.name}', weight: 3, major: true, cooldownDays: 120, maxPerCareer: 2,
     trigger: { any: [{ flag: 'planned_turn' }, { rivalry: { minHeat: 25 } }] }, cast: { partner: { pick: 'rivalry', minHeat: 10 }, creative: { pick: 'staff', role: 'creative' } }, memory: { role: 'partner', max: 1 },
     slots: { moment: [`during the post-match celebration`, `after the bell at the premium show`, `when the lights go out`, `in the middle of a title defense`], hook: [`with a chair`, `with a low blow`, `with a suddenly thrown elbow`] },
-    body: [`{creative.name} has the finish: you and {partner.name} are teaming up, and {moment} you turn on {partner.them} {hook}. It's the kind of turn that people retell.`, `{partner.first} has agreed to take it. What {partner.they} has not agreed to is how you do it.`],
+    body: [`{creative.name} has the finish: you and {partner.name} are teaming up, and {moment} you turn on {partner.them} {hook}. It is the sort of turn that people retell.`, `{partner.first} has agreed to take it. What {partner.they} has not agreed to is how you do it.`],
     choices: [
       { id: 'hard', label: 'Sell it as hard as you can', risk: 'high', outcomes: [
         { weight: 2, bonus: { charisma: 0.5, overall: 0.3 }, text: `The turn lands like a bomb. {partner.first} sells it perfectly, and the fans hate you in the best possible way.`, effects: [{ event: { type: 'betrayal', participants: ['partner'], summary: `Turned on {partner.name} in a storyline double-cross.`, importance: 4, data: { context: 'tag_partner', byPlayer: true } } }, { pop: 1.0 }, { rivalry: { who: 'partner', heat: 12 } }, { clearFlag: 'planned_turn' }] },
@@ -383,8 +383,8 @@ export default [
     choices: [
       { id: 'ask', label: 'Ask {friend.first} directly', risk: 'low', outcomes: [
         { weight: 2, bonus: { charisma: 0.3 }, text: `{friend.first} laughs, mortified, and says it was taken out of context. You decide to believe it.`, effects: [{ rel: { who: 'friend', trust: 4, affinity: 2 } }, { conf: 1 }] },
-        { weight: 1, text: `{friend.first} goes quiet. That's an answer, and not a good one.`, effects: [{ rel: { who: 'friend', trust: -8, heat: 6 } }, { conf: -3 }, { tag: { who: 'friend', tag: 'betrayal' } }] } ] },
-      { id: 'return', label: 'Return the favour in public', risk: 'high', result: `You pay it back in kind where the same people can hear. {friend.first} hears about it by lunch, and the friendship cools to ice.`, effects: [{ pop: 0.3 }, { rel: { who: 'friend', heat: 12, respect: -6, trust: -10 } }, { conf: 1 }] },
+        { weight: 1, text: `{friend.first} goes quiet. That is an answer, and not a good one.`, effects: [{ rel: { who: 'friend', trust: -8, heat: 6 } }, { conf: -3 }, { tag: { who: 'friend', tag: 'betrayal' } }] } ] },
+      { id: 'return', label: 'Return the favor in public', risk: 'high', result: `You pay it back in kind where the same people can hear. {friend.first} hears about it by lunch, and the friendship cools to ice.`, effects: [{ pop: 0.3 }, { rel: { who: 'friend', heat: 12, respect: -6, trust: -10 } }, { conf: 1 }] },
       { id: 'test', label: 'Set a trap to see if it is true', risk: 'med', outcomes: [
         { weight: 1, bonus: { overall: 0.5 }, text: `Your trap works perfectly and the truth comes out. {source.first} was right, and {friend.first} knows you know.`, effects: [{ rel: { who: 'friend', trust: -10, fear: 4, respect: 2 } }, { conf: 3 }, { tag: { who: 'friend', tag: 'betrayal' } }] },
         { weight: 1, text: `The trap falls flat, and {friend.first} is exactly who you hoped {friend.they} was. You owe an apology.`, effects: [{ rel: { who: 'friend', trust: -3 } }, { conf: -2 }] } ] },
@@ -394,14 +394,14 @@ export default [
   {
     id: 'bet_payback_chance', category: 'betrayal', title: 'A Chance to Get Even with {rival.name}', weight: 3, cooldownDays: 80, maxPerCareer: 3,
     trigger: { rivalry: { minHeat: 30 } }, cast: { rival: { pick: 'rivalry', minHeat: 30 } }, memory: { role: 'rival', max: 2 },
-    slots: { setup: [`left a gear bag unattended at ringside`, `fallen asleep in the lounge`, `forgotten a pre-show interview`, `walked in alone on the wrong night`], tool: [`a bucket of ice water`, `a stack of paper plates`, `a marker pen`, `a phone full of embarrassing photos`] },
+    slots: { setup: [`left a gear bag unattended at ringside`, `fallen asleep in the lounge`, `forgotten a pre-show interview`, `walked in alone on the wrong night`], tool: [`a bucket of ice water`, `a stack of paper plates`, `a marker pen`, `a camera full of embarrassing photos`] },
     body: [`{rival.name} has {setup}, and you are alone with {tool}. It is the sort of petty revenge you spent weeks fantasising about.`, `You could also do the grown-up thing. The grown-up thing has never felt less satisfying.`],
     choices: [
       { id: 'do_it', label: 'Do it. Make it public', risk: 'med', outcomes: [
-        { weight: 2, bonus: { charisma: 0.3 }, text: `It's the funniest thing anyone has seen in weeks. {rival.first} has to laugh, eventually, through clenched teeth.`, effects: [{ pop: 0.5 }, { rivalry: { who: 'rival', heat: 8 } }, { rel: { who: 'rival', heat: 8 } }, { conf: 2 }] },
+        { weight: 2, bonus: { charisma: 0.3 }, text: `It is the funniest thing anyone has seen in weeks. {rival.first} has to laugh, eventually, through clenched teeth.`, effects: [{ pop: 0.5 }, { rivalry: { who: 'rival', heat: 8 } }, { rel: { who: 'rival', heat: 8 } }, { conf: 2 }] },
         { weight: 1, text: `The prank goes wrong and costs {rival.first} a bruised wrist and a ruined bag. The agents are not amused.`, effects: [{ pop: -0.4 }, { rel: { who: 'rival', heat: 14, trust: -5 } }, { conf: -2 }, { money: -2000 }] } ] },
       { id: 'walk', label: 'Walk away. You are better than that', risk: 'low', result: `You leave the room unwatched. The satisfaction is smaller than you wanted, but the self-respect is bigger.`, effects: [{ conf: 2 }, { rel: { who: 'rival', respect: 2 } }] },
-      { id: 'tell', label: 'Wake {rival.them} and give a warning instead', risk: 'low', result: `{rival.first} is baffled, then wary. A rival who owes you a debt is worth more than one who owes you a laugh.`, effects: [{ rel: { who: 'rival', respect: 5, trust: 3, heat: -4 } }, { pop: 0.1 }] },
+      { id: 'tell', label: 'Warn {rival.them} instead of striking', risk: 'low', result: `{rival.first} is baffled, then wary. A rival who owes you a debt is worth more than one who owes you a laugh.`, effects: [{ rel: { who: 'rival', respect: 5, trust: 3, heat: -4 } }, { pop: 0.1 }] },
       { id: 'real_payback', label: 'Wreck something that matters instead', risk: 'high', result: `You sabotage {rival.their} promo notes. The segment goes badly for {rival.first}, and the question of who did it is left unanswered.`, effects: [{ rivalry: { who: 'rival', heat: 14 } }, { rel: { who: 'rival', heat: 14, trust: -10 } }, { pop: 0.3 }, { conf: -2 }, { obligation: { kind: 'seek_revenge', who: 'rival', inDays: 12 } }] },
     ],
   },
@@ -409,7 +409,7 @@ export default [
     id: 'bet_pre_match_shoot', category: 'betrayal', title: 'Warning of a Double-Cross from {opp.name}', weight: 3, cooldownDays: 80, maxPerCareer: 3, contexts: ['pre_show', 'show_day'],
     trigger: { stat: { popularity: { gte: 20 } } }, cast: { opp: { pick: 'roster', sameBrand: true, alignment: ['heel', 'tweener'] }, agent: { pick: 'staff', role: 'agent' } },
     slots: { source: [`a trainer who overheard it`, `a make-up artist`, `the referee`, `a cameraman`], plan: [`go off-script in the third minute`, `refuse to take the finish`, `lay in a few shots that were not agreed`] },
-    body: [`{source} warns you that {opp.name} plans to {plan} tonight. {agent.name} has no reason to know, and you have only one rumour to go on.`, `If you do nothing, you could be made to look bad on live television. If you act, you might be wrong.`],
+    body: [`{source} warns you that {opp.name} plans to {plan} tonight. {agent.name} has no reason to know, and you have only one rumor to go on.`, `If you do nothing, you could be made to look bad on live television. If you act, you might be wrong.`],
     choices: [
       { id: 'tell_agent', label: 'Tell {agent.name} before the match', risk: 'low', result: `{agent.name} takes it seriously and has a word with {opp.first}. The match goes by the book, and nobody knows who raised the flag.`, effects: [{ rel: { who: 'opp', heat: 6, trust: -3 } }, { conf: 2 }, { pop: 0.1 }] },
       { id: 'strike_first', label: 'Strike first when the bell rings', risk: 'high', outcomes: [
@@ -418,22 +418,22 @@ export default [
       { id: 'confront', label: 'Look {opp.first} in the eye before the match', risk: 'med', outcomes: [
         { weight: 2, bonus: { confidence: 0.5 }, text: `{opp.first} shifts uneasily, says nothing, and works the match by the book. The message lands.`, effects: [{ rel: { who: 'opp', respect: 4, fear: 4 } }, { conf: 3 }] },
         { weight: 1, text: `{opp.first} turns it around and tells the agent you are paranoid. The agent is not impressed.`, effects: [{ conf: -3 }, { pop: -0.2 }, { rel: { who: 'opp', heat: 6 } }] } ] },
-      { id: 'trust', label: 'Trust the rumour is wrong and go out there', risk: 'med', result: `You work the match with one eye open. Nothing happens, and you feel a little foolish and a lot tired.`, effects: [{ fatigue: 4 }, { conf: -1 }, { rel: { who: 'opp', respect: 1 } }] },
+      { id: 'trust', label: 'Trust the rumor is wrong and go out there', risk: 'med', result: `You work the match with one eye open. Nothing happens, and you feel a little foolish and a lot tired.`, effects: [{ fatigue: 4 }, { conf: -1 }, { rel: { who: 'opp', respect: 1 } }] },
     ],
   },
   // ===================================================================== ALLIANCE
   {
     id: 'ali_tag_pitch', category: 'alliance', title: '{mate.name} Pitches a Tag Team', weight: 3, cooldownDays: 90, maxPerCareer: 3,
     trigger: { stat: { popularity: { gte: 15 } }, noFlag: 'allied_recently' }, cast: { mate: { pick: 'roster', sameBrand: true, tier: { gte: 1, lte: 3 } } },
-    slots: { place: [`the gym`, `a late-night diner`, `the back seat of a rental van`, `the airport lounge`], hook: [`a pairing of opposites that writes itself`, `matching gear and a shared entrance`, `a heel-face double act the crowd will not see coming`, `a two-man army built on speed`] },
-    body: [`In {place}, {mate.name} slides over with a proposal: join forces as a tag team. {mate.they} already has {hook} sketched out on a napkin.`, `The napkin is not bad. The question is whether you want your career attached to someone else's.`],
+    slots: { place: [`the gym`, `a late-night diner`, `the back seat of a rental van`, `the airport lounge`], hook: [`a pairing of opposites that writes itself`, `matching gear and a shared entrance`, `a heel-face double act the crowd will not see coming`, `a pair built entirely on speed`] },
+    body: [`In {place}, {mate.name} slides over with a proposal: join forces as a tag team. "Hear me out," {mate.they} says, and {mate.they} already has {hook} sketched out on the back of a call sheet.`, `The sketch is not bad. The question is whether you want your career attached to someone else's.`],
     choices: [
       { id: 'accept', label: 'Say yes and shake on it', risk: 'low', result: `The deal is made in thirty seconds. By Monday the office has a plan, and {mate.first} has a nickname for the team.`, effects: [{ event: { type: 'alliance_formed', participants: ['mate'], summary: `Formed a tag team with {mate.name}.`, data: {} } }, { flag: 'allied_recently' }, { pop: 0.3 }, { fatigue: 2 }] },
       { id: 'trial', label: 'Agree to a trial match first', risk: 'med', result: `You book a tag match to see if it clicks. If it does, you will know. If it does not, you will both be polite about it.`, effects: [{ booking: { who: 'mate', type: 'tag' } }, { rel: { who: 'mate', respect: 3, trust: 1 } }, { tag: { who: 'mate', tag: 'alliance_possible' } }, { fatigue: 3 }] },
       { id: 'terms', label: 'Accept, but hold the better spots', risk: 'med', outcomes: [
         { weight: 2, bonus: { charisma: 0.4 }, text: `{mate.first} grudgingly agrees to your conditions. The deal holds, but a small note of resentment hovers.`, effects: [{ event: { type: 'alliance_formed', participants: ['mate'], summary: `Formed a tag team with {mate.name} on strict terms.`, data: {} } }, { rel: { who: 'mate', trust: -3, respect: 3 } }, { flag: 'allied_recently' }, { pop: 0.4 }] },
         { weight: 1, text: `{mate.first} balks and walks away. The idea was good, but your price was not.`, effects: [{ rel: { who: 'mate', respect: -2 } }, { conf: -1 }] } ] },
-      { id: 'decline', label: 'Decline and stay a solo act', risk: 'low', result: `You tell {mate.first} you work alone. The napkin goes in the bin, and your independence stays intact.`, effects: [{ conf: 2 }, { rel: { who: 'mate', trust: -1 } }, { pop: -0.1 }] },
+      { id: 'decline', label: 'Decline and stay a solo act', risk: 'low', result: `You tell {mate.first} you work alone. The call sheet goes in the bin, and your independence stays intact.`, effects: [{ conf: 2 }, { rel: { who: 'mate', trust: -1 } }, { pop: -0.1 }] },
     ],
   },
   {
@@ -445,15 +445,15 @@ export default [
       { id: 'commit', label: 'Commit to a full training block', risk: 'med', outcomes: [
         { weight: 2, bonus: { overall: 0.4 }, text: `Three weeks in, you notice the change. You are stronger, sharper and a little more tired than you have ever been.`, effects: [{ attr: { name: 'endurance', delta: 1 } }, { fatigue: 10 }, { rel: { who: 'mate', trust: 5, affinity: 4 } }, { tag: { who: 'mate', tag: 'ally' } }] },
         { weight: 1, text: `You overdo it and tweak something in your back. The partnership is fine; your body is not.`, effects: [{ fatigue: 14 }, { conf: -2 }, { injury: { part: 'torso', severity: 1, days: 7 } }, { rel: { who: 'mate', trust: 3 } }] } ] },
-      { id: 'light', label: 'Agree to one session a week', risk: 'low', result: `It's not the full block, but it's something. {mate.first} nods, and you both mean it.`, effects: [{ fatigue: 4 }, { rel: { who: 'mate', trust: 2, affinity: 2 } }, { attr: { name: 'technical', delta: 1 } }] },
+      { id: 'light', label: 'Agree to one session a week', risk: 'low', result: `It is not the full block, but it is something. {mate.first} nods, and you both mean it.`, effects: [{ fatigue: 4 }, { rel: { who: 'mate', trust: 2, affinity: 2 } }, { attr: { name: 'technical', delta: 1 } }] },
       { id: 'swap', label: 'Swap training secrets instead', risk: 'med', result: `Each of you teaches the other something. It is a fair trade and a quiet one.`, effects: [{ attr: { name: 'psychology', delta: 1 } }, { rel: { who: 'mate', respect: 4, trust: 3 } }, { fatigue: 3 }] },
-      { id: 'pass', label: 'Pass: you work better alone', risk: 'low', result: `You thank {mate.first} and go back to your own routine. It's efficient, and it's lonely.`, effects: [{ fatigue: -2 }, { conf: 1 }, { rel: { who: 'mate', respect: -1 } }] },
+      { id: 'pass', label: 'Pass: you work better alone', risk: 'low', result: `You thank {mate.first} and go back to your own routine. It is efficient, and it is lonely.`, effects: [{ fatigue: -2 }, { conf: 1 }, { rel: { who: 'mate', respect: -1 } }] },
     ],
   },
   {
     id: 'ali_travel_confidence', category: 'alliance', title: 'A Confidence on the Road', weight: 2, cooldownDays: 60, maxPerCareer: 4,
     trigger: { stat: { matches: { gte: 15 } } }, cast: { mate: { pick: 'roster', sameBrand: true } },
-    slots: { ride: [`a night drive between two towns`, `a delayed flight`, `a bus ride through a thunderstorm`, `a shared hotel breakfast`], worry: [`a fear that the next injury will end the career`, `a rumour of being released`, `serious money trouble`, `doubts about whether to keep wrestling at all`] },
+    slots: { ride: [`a night drive between two towns`, `a delayed flight`, `a bus ride through a thunderstorm`, `a shared hotel breakfast`], worry: [`a fear that the next injury will end the career`, `a rumor of being released`, `serious money trouble`, `doubts over whether to keep wrestling at all`] },
     body: [`During {ride}, {mate.name} goes quiet, then tells you about {worry}. It is not the sort of thing people say out loud in this business.`, `You are the only person who has heard it. How you respond will decide whether it is the beginning of a friendship or a slip of the tongue.`],
     choices: [
       { id: 'listen', label: 'Listen all night and say little', risk: 'low', result: `You give {mate.first} the only thing that helps, which is your attention. By dawn it feels like a weight has shifted.`, effects: [{ rel: { who: 'mate', trust: 10, affinity: 6 } }, { tag: { who: 'mate', tag: 'ally' } }, { fatigue: 4 }] },
@@ -467,56 +467,56 @@ export default [
   {
     id: 'ali_lose_for_ally', category: 'alliance', title: '{ally.name} Asks You to Lose', weight: 2, cooldownDays: 90, maxPerCareer: 3,
     trigger: { stat: { popularity: { gte: 30 } } }, cast: { ally: { pick: 'tag', tag: 'ally' } }, memory: { role: 'ally', max: 1 },
-    slots: { pitch: [`a push the office is thinking about`, `a stretch of poor numbers that needs a spark`, `a contract talk that might end this month`, `a comeback from a long layoff`], payment: [`a favour owed`, `a cut of {ally.their} next bonus`, `a place in {ally.their} next big story`] },
-    body: [`{ally.name} asks you, quietly, to take a clean loss in your next match. {ally.they} says it will help {pitch}, and offers {payment} in return.`, `It is a fair ask between friends. It's also the kind of loss that stays on the record.`],
+    slots: { pitch: [`a push the office is thinking about`, `a stretch of poor numbers that needs a spark`, `a contract talk that might end this month`, `a comeback from a long layoff`], payment: [`a favor owed`, `a cut of {ally.their} next bonus`, `a place in {ally.their} next big story`] },
+    body: [`{ally.name} asks you, quietly, to take a clean loss to {ally.them} the next time you meet. {ally.they} says it will help with {pitch}, and offers {payment} in return.`, `It is a fair ask between friends. It is also the kind of loss that stays on the record.`],
     choices: [
       { id: 'lose', label: 'Agree and put {ally.them} over', risk: 'med', result: `You lose clean and sell it generously. {ally.first} owes you one, and the fans notice that you did not have to.`, effects: [{ rel: { who: 'ally', trust: 10, respect: 8, affinity: 4 } }, { pop: -0.4 }, { conf: -2 }, { money: 4000 }] },
       { id: 'refuse', label: 'Refuse: you need your own wins', risk: 'low', result: `{ally.first} says {ally.they} understands. The friendship cools a few degrees.`, effects: [{ rel: { who: 'ally', trust: -6, respect: 1 } }, { conf: 2 }] },
       { id: 'compromise', label: 'Offer a draw, or a dirty finish', risk: 'med', outcomes: [
         { weight: 2, bonus: { overall: 0.4 }, text: `The finish keeps you both strong. {ally.first} is grateful and impressed, and the crowd is left wanting more.`, effects: [{ rel: { who: 'ally', trust: 5, respect: 5 } }, { pop: 0.3 }] },
         { weight: 1, text: `The finish confuses the audience, and the office wonders why it was changed.`, effects: [{ pop: -0.4 }, { conf: -1 }, { rel: { who: 'ally', trust: 2 } }] } ] },
-      { id: 'sell_it', label: 'Agree to lose, but ask for the bigger favour', risk: 'high', result: `You name your price. {ally.first} pays it, but the air between you has a new edge.`, effects: [{ rel: { who: 'ally', trust: -3, respect: -2 } }, { money: 9000 }, { pop: -0.3 }, { conf: -1 }] },
+      { id: 'sell_it', label: 'Agree to lose, but ask for the bigger favor', risk: 'high', result: `You name your price. {ally.first} pays it, but the air between you has a new edge.`, effects: [{ rel: { who: 'ally', trust: -3, respect: -2 } }, { money: 9000 }, { pop: -0.3 }, { conf: -1 }] },
     ],
   },
   {
     id: 'ali_loan_request', category: 'alliance', title: '{ally.name} Needs a Loan', weight: 2, cooldownDays: 100, maxPerCareer: 2,
     trigger: { stat: { money: { gte: 20000 } } }, cast: { ally: { pick: 'tag', tag: 'ally' } },
     slots: { need: [`a medical bill`, `a down payment on a house`, `a second-hand truck`, `a gym lease that is about to lapse`], tone: [`embarrassed`, `proud and tense`, `flat and rehearsed`] },
-    body: [`{ally.name} finds you after the show, {tone}, and asks for a loan to cover {need}. {ally.they} has never asked for anything before.`, `The amount is real, though not ruinous. Whether you can ever collect is another question.`],
+    body: [`{ally.name} finds you after the show, {tone}, and asks for a loan to cover {need}. {ally.they} is not someone who asks for things.`, `The amount is real, though not ruinous. Whether you can ever collect is another question.`],
     choices: [
-      { id: 'give', label: 'Lend the full amount, no questions', risk: 'med', result: `You write the cheque. {ally.first} is overcome, and the story is kept between the two of you.`, effects: [{ money: -10000 }, { rel: { who: 'ally', trust: 14, respect: 6, affinity: 8 } }, { conf: 2 }] },
-      { id: 'half', label: 'Lend half and set a repayment date', risk: 'low', result: `You make it a business deal. It's practical, and a little cold, and {ally.first} pays the first instalment early.`, effects: [{ money: -5000 }, { rel: { who: 'ally', trust: 6, respect: 5 } }] },
-      { id: 'decline', label: 'Decline: you do not mix money and friends', risk: 'low', result: `{ally.first} nods, a bit stiffly. You've kept your money and some of your illusions.`, effects: [{ rel: { who: 'ally', trust: -6, affinity: -3 } }, { conf: 1 }] },
-      { id: 'for_favour', label: 'Lend it, but call it a favour owed', risk: 'med', result: `{ally.first} accepts, and understands the terms. Neither of you likes it, but both of you know it's fair.`, effects: [{ money: -8000 }, { rel: { who: 'ally', trust: 1, respect: -1 } }, { pop: 0.1 }] },
+      { id: 'give', label: 'Lend the full amount, no questions', risk: 'med', result: `You write the check. {ally.first} is overcome, and the story is kept between the two of you.`, effects: [{ money: -10000 }, { rel: { who: 'ally', trust: 14, respect: 6, affinity: 8 } }, { conf: 2 }] },
+      { id: 'half', label: 'Lend half and set a repayment date', risk: 'low', result: `You make it a business deal. It is practical, and a little cold, and {ally.first} pays the first instalment early.`, effects: [{ money: -5000 }, { rel: { who: 'ally', trust: 6, respect: 5 } }] },
+      { id: 'decline', label: 'Decline: you do not mix money and friends', risk: 'low', result: `{ally.first} nods, a bit stiffly. You have kept your money and some of your illusions.`, effects: [{ rel: { who: 'ally', trust: -6, affinity: -3 } }, { conf: 1 }] },
+      { id: 'for_favour', label: 'Lend it, but call it a favor owed', risk: 'med', result: `{ally.first} accepts, and understands the terms. Neither of you likes it, but both of you know it is fair.`, effects: [{ money: -8000 }, { rel: { who: 'ally', trust: 1, respect: -1 } }, { pop: 0.1 }] },
     ],
   },
   {
     id: 'ali_jealous_ally', category: 'alliance', title: '{ally.name} Resents Your Push', weight: 2, cooldownDays: 90, maxPerCareer: 2,
     trigger: { stat: { popularity: { gte: 45 } }, recent: { winsGte: 3 } }, cast: { ally: { pick: 'tag', tag: 'ally' } }, memory: { role: 'ally', max: 1 },
-    slots: { sign: [`stopped saving you a seat in catering`, `started answering in single syllables`, `has been "busy" every time you suggest dinner`, `made an offhand joke about "the star"`], timing: [`this week`, `since you won last time out`, `since the posters went up`] },
+    slots: { sign: [`stopped saving you a seat in catering`, `started answering in single syllables`, `been "busy" every time you suggest dinner`, `made an offhand joke about "the star"`], timing: [`this week`, `since you won last time out`, `since the posters went up`] },
     body: [`{ally.name} has {sign} {timing}. It is hard to hold against a friend who is stuck while you move, but the chill is real.`, `You can feel the friendship slipping, and the room is paying attention.`],
     choices: [
       { id: 'talk', label: 'Say it out loud, over a meal', risk: 'low', outcomes: [
-        { weight: 2, bonus: { charisma: 0.4 }, text: `It's awkward, then honest. {ally.first} admits to the envy, and you both laugh at how stupid it all is.`, effects: [{ rel: { who: 'ally', trust: 8, respect: 4 } }, { conf: 1 }] },
+        { weight: 2, bonus: { charisma: 0.4 }, text: `It is awkward, then honest. {ally.first} admits to the envy, and you both laugh at how stupid it all is.`, effects: [{ rel: { who: 'ally', trust: 8, respect: 4 } }, { conf: 1 }] },
         { weight: 1, text: `{ally.first} insists nothing is wrong, and eats in silence. The meal ends badly.`, effects: [{ rel: { who: 'ally', trust: -3 } }, { conf: -2 }] } ] },
-      { id: 'share', label: 'Use your leverage to open a door for {ally.them}', risk: 'med', result: `You put in a word with the agent. {ally.first} gets a spot on the next card, and you spend a favour.`, effects: [{ rel: { who: 'ally', trust: 8, respect: 6, affinity: 4 } }, { pop: -0.1 }, { conf: 1 }] },
+      { id: 'share', label: 'Use your leverage to open a door for {ally.them}', risk: 'med', result: `You put in a word with the agent. {ally.first} gets a spot on the next card, and you spend a favor.`, effects: [{ rel: { who: 'ally', trust: 8, respect: 6, affinity: 4 } }, { pop: -0.1 }, { conf: 1 }] },
       { id: 'give_space', label: 'Give {ally.them} space and stay polite', risk: 'low', result: `You keep the door open and stay out of the way. Over time, the distance holds, and so does the friendship.`, effects: [{ rel: { who: 'ally', trust: -2 } }, { fatigue: -1 }] },
-      { id: 'cut', label: 'Cut the dead weight loose', risk: 'high', result: `You end it politely and quickly. It's clean, and it's cold, and it's remembered.`, effects: [{ rel: { who: 'ally', trust: -12, respect: -4, heat: 6 } }, { conf: 2 }, { pop: -0.2 }] },
+      { id: 'cut', label: 'Cut the dead weight loose', risk: 'high', result: `You end it politely and quickly. It is clean, and it is cold, and it is remembered.`, effects: [{ rel: { who: 'ally', trust: -12, respect: -4, heat: 6 } }, { conf: 2 }, { pop: -0.2 }] },
     ],
   },
   {
     id: 'ali_tag_title_help', category: 'alliance', title: 'The Tag Champions Make an Offer', weight: 2, cooldownDays: 120, maxPerCareer: 2,
     trigger: { stat: { popularity: { gte: 25 } } }, cast: { champ: { pick: 'champion', class: 'tag' }, mate: { pick: 'roster', sameBrand: true } },
-    slots: { terms: [`a shot at the belts in return for a favour`, `a fill-in partner for a title defense`, `a few weeks as an insurance policy`], pace: [`before the next show`, `by Friday`, `by the end of the tour`] },
-    body: [`The tag champions, led by {champ.name}, need a favour: {terms}. They want an answer {pace}.`, `{mate.name} overhears and offers to step in if you decline. That's not the same as a guarantee, but it's a quiet push.`],
+    slots: { terms: [`a shot at the belts in return for a favor`, `a fill-in partner for a title defense`, `a few weeks as an insurance policy`], pace: [`before the next show`, `by Friday`, `by the end of the tour`] },
+    body: [`The tag champions, led by {champ.name}, need a favor: {terms}. They want an answer {pace}.`, `{mate.name} overhears and offers to step in if you decline. That is not the same as a guarantee, but it is a quiet push.`],
     choices: [
       { id: 'team', label: 'Team up with the champions', risk: 'med', outcomes: [
         { weight: 2, bonus: { overall: 0.3, charisma: 0.3 }, text: `You fit the system perfectly. The champions hold their belts and you get a rub from the whole run.`, effects: [{ pop: 0.7 }, { rel: { who: 'champ', respect: 6, trust: 4 } }, { fatigue: 6 }] },
-        { weight: 1, text: `The chemistry is wrong. You get blamed for a lost fall and spend the week apologising.`, effects: [{ pop: -0.3 }, { conf: -3 }, { rel: { who: 'champ', respect: -2 } }, { fatigue: 6 }] } ] },
+        { weight: 1, text: `The chemistry is wrong. You get blamed for a lost fall and spend the week apologizing.`, effects: [{ pop: -0.3 }, { conf: -3 }, { rel: { who: 'champ', respect: -2 } }, { fatigue: 6 }] } ] },
       { id: 'pass_to_mate', label: 'Recommend {mate.first} instead', risk: 'low', result: `You get {mate.first} the shot. {mate.they} is touched, and the champions barely notice who you are.`, effects: [{ rel: { who: 'mate', trust: 8, respect: 4 } }, { pop: -0.1 }, { tag: { who: 'mate', tag: 'ally' } }] },
-      { id: 'ask_title', label: 'Ask for the belts, not the favour', risk: 'high', outcomes: [
+      { id: 'ask_title', label: 'Ask for the belts, not the favor', risk: 'high', outcomes: [
         { weight: 1, bonus: { confidence: 0.4 }, text: `{champ.first} laughs, then takes you seriously. A title match is added to the next card.`, effects: [{ booking: { who: 'champ', type: 'tag', stakes: 'title' } }, { pop: 0.6 }, { rel: { who: 'champ', respect: 3 } }] },
-        { weight: 2, text: `The answer is no. The champions think you're getting above your station.`, effects: [{ rel: { who: 'champ', respect: -4, heat: 6 } }, { conf: -2 }] } ] },
+        { weight: 2, text: `The answer is no. The champions think you are getting above your station.`, effects: [{ rel: { who: 'champ', respect: -4, heat: 6 } }, { conf: -2 }] } ] },
       { id: 'decline', label: 'Decline and keep your options open', risk: 'low', result: `You leave it with a polite thanks. The champions find someone else.`, effects: [{ conf: 1 }, { rel: { who: 'champ', respect: -1 } }] },
     ],
   },
@@ -537,15 +537,15 @@ export default [
   {
     id: 'ali_rumble_pact', category: 'alliance', title: 'A Pact Before the Rumble', weight: 3, cooldownDays: 200, maxPerCareer: 2,
     trigger: { eventWithin: { id: 'royal_rumble', days: 21 }, stat: { popularity: { gte: 25 } } }, cast: { mate: { pick: 'roster', sameBrand: true, tier: { gte: 1 } } },
-    slots: { terms: [`never eliminate each other until the very end`, `watch each other's backs for the first ten minutes`, `swap numbers and call the winner`], place: [`the locker room`, `the weight room`, `the arena stairwell`] },
+    slots: { terms: [`never eliminate each other until the very end`, `watch each other's backs for the first ten minutes`, `eliminate the same target first`], place: [`the locker room`, `the weight room`, `the arena stairwell`] },
     body: [`In {place}, {mate.name} proposes a pact for the Rumble: {terms}. "Two sets of eyes," {mate.they} says.`, `Pacts are common before the match and rare after the bell. Everybody in the entry list has a reason to forget one.`],
     choices: [
       { id: 'swear', label: 'Swear to the pact and mean it', risk: 'med', result: `You shake hands. If either of you breaks it, the whole locker room will know.`, effects: [{ event: { type: 'alliance_formed', participants: ['mate'], summary: `Made a Royal Rumble pact with {mate.name}.`, data: {} } }, { rel: { who: 'mate', trust: 8, respect: 4 } }, { promise: { kind: 'win_rumble', text: `I will make the Rumble count`, deadlineDays: 40 } }] },
       { id: 'lie', label: 'Agree, and plan to break it', risk: 'high', outcomes: [
         { weight: 2, bonus: { overall: 0.4 }, text: `You smile, shake and plan. On the night, you turn on {mate.first} at the perfect moment, and it works.`, effects: [{ pop: 0.7 }, { rel: { who: 'mate', trust: -12, heat: 10 } }, { conf: 2 }] },
         { weight: 1, text: `{mate.first} was planning the same thing. You both get eliminated at once, in the most embarrassing way.`, effects: [{ pop: -0.4 }, { conf: -3 }, { rel: { who: 'mate', heat: 6 } }] } ] },
-      { id: 'no_pact', label: 'Decline: every man for himself', risk: 'low', result: `You keep it clean. The match is yours alone to survive.`, effects: [{ conf: 2 }, { rel: { who: 'mate', respect: 1 } }] },
-      { id: 'counter_pact', label: 'Counter: a pact to gang up on the favourite', risk: 'med', result: `You pick a target and a plan. The idea spreads through the locker room, and half a dozen others join in.`, effects: [{ pop: 0.4 }, { rel: { who: 'mate', trust: 4, respect: 3 } }, { fatigue: 3 }] },
+      { id: 'no_pact', label: 'Decline: every wrestler for themselves', risk: 'low', result: `You keep it clean. The match is yours alone to survive.`, effects: [{ conf: 2 }, { rel: { who: 'mate', respect: 1 } }] },
+      { id: 'counter_pact', label: 'Counter: a pact to gang up on the favorite', risk: 'med', result: `You pick a target and a plan. The idea spreads through the locker room, and half a dozen others join in.`, effects: [{ pop: 0.4 }, { rel: { who: 'mate', trust: 4, respect: 3 } }, { fatigue: 3 }] },
     ],
   },
   {
@@ -561,7 +561,7 @@ export default [
       { id: 'push_rest', label: 'Convince {ally.them} to rest voluntarily', risk: 'low', outcomes: [
         { weight: 2, bonus: { charisma: 0.5 }, text: `{ally.first} agrees and takes the weekend. The injury turns out to be less bad than it could have been.`, effects: [{ rel: { who: 'ally', trust: 8, respect: 4 } }, { conf: 1 }] },
         { weight: 1, text: `{ally.first} insists {ally.they} is fine and works the show anyway. You can only watch.`, effects: [{ rel: { who: 'ally', trust: -2 } }, { fatigue: 2 }] } ] },
-      { id: 'take_load', label: 'Take {ally.their} spot on the card yourself', risk: 'med', result: `You volunteer to cover. It's a heavy week and a big favour, and {ally.first} will not forget either.`, effects: [{ fatigue: 12 }, { rel: { who: 'ally', trust: 10, respect: 8, affinity: 5 } }, { pop: 0.3 }] },
+      { id: 'take_load', label: 'Take {ally.their} spot on the card yourself', risk: 'med', result: `You volunteer to cover. It is a heavy week and a big favor, and {ally.first} will not forget either.`, effects: [{ fatigue: 12 }, { rel: { who: 'ally', trust: 10, respect: 8, affinity: 5 } }, { pop: 0.3 }] },
     ],
   },
   {
@@ -579,16 +579,16 @@ export default [
     ],
   },
   {
-    id: 'ali_cross_brand_favour', category: 'alliance', title: 'A Favour from {mate.name}', weight: 2, cooldownDays: 80, maxPerCareer: 3,
+    id: 'ali_cross_brand_favour', category: 'alliance', title: 'A Favor from {mate.name}', weight: 2, cooldownDays: 80, maxPerCareer: 3,
     trigger: { stat: { popularity: { gte: 30 } } }, cast: { mate: { pick: 'roster', tier: { gte: 1, lte: 3 } }, gm: { pick: 'staff', role: 'gm' } },
-    slots: { favor: [`a word to the GM about a better spot`, `a spot on your show for a one-off`, `a shot at a mid-card match`, `a ride to the airport and an introduction`], reason: [`sinking numbers on another brand`, `a creative reboot`, `a personality clash with a boss`] },
-    body: [`{mate.name} asks you for {favor}. It's connected to {reason}, and {mate.they} would otherwise never have asked.`, `Putting in a good word costs you nothing but credit with {gm.name}. The only question is whether {mate.they} deserves it.`],
+    slots: { favor: [`a word to the GM about a better spot`, `a one-off spot on your show`, `a shot at a mid-card match`, `a ride to the airport and an introduction`], reason: [`sinking numbers on another brand`, `a creative reboot`, `a personality clash with a boss`] },
+    body: [`{mate.name} asks you for {favor}. It is connected to {reason}, and {mate.they} would otherwise never have asked.`, `Putting in a good word costs you nothing but credit with {gm.name}. The only question is whether {mate.they} deserves it.`],
     choices: [
       { id: 'vouch', label: 'Vouch for {mate.first} wholeheartedly', risk: 'med', outcomes: [
         { weight: 2, bonus: { charisma: 0.4 }, text: `{gm.name} listens and agrees. {mate.first} gets the opening, and you gain an ally on the other side.`, effects: [{ rel: { who: 'mate', trust: 8, respect: 5 } }, { tag: { who: 'mate', tag: 'ally' } }, { pop: 0.1 }] },
         { weight: 1, text: `{gm.name} has other plans and takes your word as a sign you are meddling.`, effects: [{ rel: { who: 'mate', trust: 3 } }, { pop: -0.3 }, { conf: -1 }] } ] },
       { id: 'lukewarm', label: 'Mention it lightly and leave it there', risk: 'low', result: `You mention it in passing. Nothing happens, but nobody is annoyed.`, effects: [{ rel: { who: 'mate', trust: 1 } }] },
-      { id: 'price', label: 'Do it, for a price', risk: 'med', result: `{mate.first} pays you back in cash and a promise. The favour works, but it cheapens the relationship.`, effects: [{ money: 5000 }, { rel: { who: 'mate', trust: -2, respect: -2 } }, { conf: -1 }] },
+      { id: 'price', label: 'Do it, for a price', risk: 'med', result: `{mate.first} pays you back in cash and a promise. The favor works, but it cheapens the relationship.`, effects: [{ money: 5000 }, { rel: { who: 'mate', trust: -2, respect: -2 } }, { conf: -1 }] },
       { id: 'refuse', label: 'Refuse. You do not trade credit', risk: 'low', result: `You turn {mate.first} down politely. It does not make a friend, but it saves the credit.`, effects: [{ rel: { who: 'mate', trust: -3 } }, { conf: 1 }] },
     ],
   },
@@ -596,11 +596,11 @@ export default [
     id: 'ali_corner_offer', category: 'alliance', title: '{ally.name} Wants to Be in Your Corner', weight: 2, cooldownDays: 90, maxPerCareer: 3,
     trigger: { eventWithin: { kind: 'ple', days: 12 }, stat: { popularity: { gte: 30 } } }, cast: { ally: { pick: 'tag', tag: 'ally' }, rival: { pick: 'rivalry', minHeat: 15 } },
     slots: { reason: [`to keep the rival's allies honest`, `because you need a second pair of eyes`, `to make a statement to the office`], risk: [`the referee might not like it`, `a distraction could cost you the match`, `the bookers may use it for a swerve`] },
-    body: [`{ally.name} volunteers to stand at ringside for your match with {rival.name} {reason}. "I owe you," {ally.they} says, and it is not an empty promise.`, `It's a good gesture, and a complication: {risk}.`],
+    body: [`{ally.name} volunteers to stand at ringside for your next showdown with {rival.name} {reason}. "I owe you," {ally.they} says, and it is not an empty promise.`, `It is a good gesture, and a complication: {risk}.`],
     choices: [
-      { id: 'accept', label: 'Accept the corner man', risk: 'low', result: `{ally.first} walks you out. The crowd pops, and so does the rival's temper.`, effects: [{ pop: 0.4 }, { rel: { who: 'ally', trust: 6, respect: 4 } }, { rel: { who: 'rival', heat: 5 } }] },
+      { id: 'accept', label: 'Accept the ringside help', risk: 'low', result: `{ally.first} walks you out. The crowd pops, and so does the rival's temper.`, effects: [{ pop: 0.4 }, { rel: { who: 'ally', trust: 6, respect: 4 } }, { rel: { who: 'rival', heat: 5 } }] },
       { id: 'swerve', label: 'Accept, and plan a swerve', risk: 'high', outcomes: [
-        { weight: 2, bonus: { overall: 0.4 }, text: `You turn it on its head: {ally.first} neutralises the rival's helper at the perfect moment. The finish earns a roar.`, effects: [{ pop: 0.9 }, { rel: { who: 'ally', trust: 3 } }, { rivalry: { who: 'rival', heat: 6 } }] },
+        { weight: 2, bonus: { overall: 0.4 }, text: `You turn it on its head: {ally.first} neutralizes the rival's helper at the perfect moment. The finish earns a roar.`, effects: [{ pop: 0.9 }, { rel: { who: 'ally', trust: 3 } }, { rivalry: { who: 'rival', heat: 6 } }] },
         { weight: 1, text: `{ally.first} misses the cue. The match is a mess and the booker is not impressed.`, effects: [{ pop: -0.5 }, { conf: -3 }, { rel: { who: 'ally', trust: -2 } }] } ] },
       { id: 'decline', label: 'Decline: this one is yours alone', risk: 'low', result: `You face {rival.first} by yourself. The crowd respects it, and so does the rival.`, effects: [{ conf: 3 }, { rel: { who: 'rival', respect: 3 } }, { rel: { who: 'ally', trust: -1 } }] },
       { id: 'send_away', label: 'Send {ally.them} to watch the rival\'s corner instead', risk: 'med', result: `{ally.first} agrees. The assignment keeps the other side honest, and it is dull work.`, effects: [{ rel: { who: 'ally', trust: 3, respect: 2 } }, { rel: { who: 'rival', respect: -2 } }, { conf: 1 }] },
@@ -614,7 +614,7 @@ export default [
     choices: [
       { id: 'reunite', label: 'Reunite for one night', risk: 'low', result: `You step into the ring together. Neither of you says a word, because the crowd says it for you.`, effects: [{ event: { type: 'alliance_formed', participants: ['ex'], summary: `Reunited with {ex.name} for a special night.`, data: {} } }, { pop: 0.8 }, { rel: { who: 'ex', trust: 6, affinity: 6 } }, { fatigue: 4 }] },
       { id: 'build', label: 'Ask for more than a one-off', risk: 'med', outcomes: [
-        { weight: 1, bonus: { charisma: 0.4 }, text: `{ex.first} agrees. It's the beginning of a longer run, and a softer relationship than before.`, effects: [{ pop: 0.6 }, { rel: { who: 'ex', trust: 8, respect: 4 } }, { flag: 'allied_recently' }] },
+        { weight: 1, bonus: { charisma: 0.4 }, text: `{ex.first} agrees. It is the beginning of a longer run, and a softer relationship than before.`, effects: [{ pop: 0.6 }, { rel: { who: 'ex', trust: 8, respect: 4 } }, { flag: 'allied_recently' }] },
         { weight: 1, text: `{ex.first} wanted a night, not a season. The talk ends politely and coldly.`, effects: [{ rel: { who: 'ex', trust: -3 } }, { conf: -1 }] } ] },
       { id: 'decline', label: 'Decline: it cannot be undone', risk: 'low', result: `You thank {ex.first} and mean it. The scars are still too fresh, and the offer goes quietly away.`, effects: [{ rel: { who: 'ex', trust: -2, respect: 1 } }, { conf: 1 }] },
       { id: 'twist', label: 'Pitch a swerve instead of a reunion', risk: 'high', result: `You put a twist on it. {ex.first} is not pleased, but the booking team loves it.`, effects: [{ pop: 0.8 }, { rel: { who: 'ex', trust: -8, heat: 8 } }, { rivalry: { who: 'ex', heat: 10 } }] },
@@ -636,17 +636,17 @@ export default [
     ],
   },
   {
-    id: 'fac_face_coalition', category: 'faction', title: 'A Coalition of Good Guys', weight: 2, cooldownDays: 150, maxPerCareer: 2,
+    id: 'fac_face_coalition', category: 'faction', title: 'A Coalition of Babyfaces', weight: 2, cooldownDays: 150, maxPerCareer: 2,
     trigger: { alignment: ['face'], stat: { popularity: { gte: 30 } }, noFlag: 'in_stable' }, cast: { lead: { pick: 'roster', tier: { gte: 2 }, sameBrand: true, alignment: 'face' }, mate: { pick: 'roster', sameBrand: true, alignment: 'face' } },
     slots: { threat: [`a stable of heels that keeps ambushing the babyfaces`, `the champion's gang of bullies`, `management's pet faction`], form: [`a union of equals`, `a "round table" with a symbolic seat for each member`, `a number-one-contender pact`] },
     body: [`{lead.name} calls a meeting about {threat}. The plan: {form}, with {mate.name} and you in the front row.`, `Fans will love it. The real danger is that every member of a coalition is also a competitor for the same spots.`],
     choices: [
-      { id: 'join', label: 'Join and show up on camera', risk: 'low', result: `You walk out together, and the building roars. It's easy to forget that every face in the group has their own agenda.`, effects: [{ event: { type: 'faction_formed', participants: ['lead', 'mate'], summary: `Helped form a coalition with {lead.name} and {mate.name}.`, importance: 4, data: { factionId: 'coalition_united', name: 'The Open Hands', leader: '@lead', leaderIsPlayer: false } } }, { flag: 'in_stable' }, { pop: 0.8 }, { rel: { who: 'lead', trust: 4, respect: 3 } }, { tag: { who: 'lead', tag: 'ally' } }] },
+      { id: 'join', label: 'Join and show up on camera', risk: 'low', result: `You walk out together, and the building roars. It is easy to forget that every face in the group has their own agenda.`, effects: [{ event: { type: 'faction_formed', participants: ['lead', 'mate'], summary: `Helped form a coalition with {lead.name} and {mate.name}.`, importance: 4, data: { factionId: 'coalition_united', name: 'The Open Hands', leader: '@lead', leaderIsPlayer: false } } }, { flag: 'in_stable' }, { pop: 0.8 }, { rel: { who: 'lead', trust: 4, respect: 3 } }, { tag: { who: 'lead', tag: 'ally' } }] },
       { id: 'lead', label: 'Offer to lead the group yourself', risk: 'high', outcomes: [
         { weight: 1, bonus: { popularity: 0.4, charisma: 0.4 }, text: `Your pitch wins the room. The coalition is yours to run, with all of the work and headaches that come with it.`, effects: [{ event: { type: 'faction_formed', participants: ['lead', 'mate'], summary: `Led a face coalition with {lead.name} and {mate.name}.`, importance: 4, data: { factionId: 'coalition_united', name: 'The Open Hands', leader: 'player', leaderIsPlayer: true } } }, { flag: 'in_stable' }, { pop: 0.9 }, { fatigue: 5 }, { rel: { who: 'lead', respect: -2 } }, { tag: { who: 'mate', tag: 'ally' } }] },
         { weight: 2, text: `{lead.first} laughs gently. "You're green. Sit down." You get a seat, but a long way from the head of the table.`, effects: [{ conf: -3 }, { rel: { who: 'lead', respect: -2 } }, { pop: -0.2 }] } ] },
-      { id: 'independent', label: 'Support them from a distance', risk: 'low', result: `You offer back-up if it comes to it but keep your independence. It's a good arrangement, if a little cold.`, effects: [{ rel: { who: 'lead', respect: 3 } }, { pop: 0.2 }, { conf: 1 }] },
-      { id: 'decline', label: 'Decline: coalitions never last', risk: 'low', result: `You tell {lead.first} you'll watch from the sideline. The coalition goes ahead without you.`, effects: [{ conf: 1 }, { rel: { who: 'lead', respect: -2 } }, { pop: -0.2 }] },
+      { id: 'independent', label: 'Support them from a distance', risk: 'low', result: `You offer back-up if it comes to it but keep your independence. It is a good arrangement, if a little cold.`, effects: [{ rel: { who: 'lead', respect: 3 } }, { pop: 0.2 }, { conf: 1 }] },
+      { id: 'decline', label: 'Decline: coalitions never last', risk: 'low', result: `You tell {lead.first} you will watch from the sideline. The coalition goes ahead without you.`, effects: [{ conf: 1 }, { rel: { who: 'lead', respect: -2 } }, { pop: -0.2 }] },
     ],
   },
   {
@@ -666,11 +666,11 @@ export default [
   {
     id: 'fac_loyalty_demand', category: 'faction', title: '{boss.name} Demands Proof of Loyalty', weight: 3, cooldownDays: 90, maxPerCareer: 3,
     trigger: { flag: 'in_stable' }, cast: { boss: { pick: 'tag', tag: 'ally' }, target: { pick: 'roster', sameBrand: true } },
-    slots: { test: [`stand in the ring and watch while a member is dismantled`, `skip a friend's match and help the stable instead`, `give a public speech about the stable's greatness`, `hand over your bonus cheque for the "stable fund"`], stakes: [`your place in the group`, `your next push`, `how the others treat you`] },
-    body: [`{boss.name} tells you that things have to change. To prove you are still one of them, {boss.they} wants you to {test}. {target.name} is the one on the receiving end.`, `It puts {stakes} on the line. You know exactly what you are being asked to prove.`],
+    slots: { test: [`stand at ringside and watch while {target.name} is dismantled`, `skip a friend's match to help the stable ambush {target.name}`, `cut a public promo burying {target.name}`, `lead the stable's attack on {target.name} in the next match`], stakes: [`your place in the group`, `your next push`, `how the others treat you`] },
+    body: [`{boss.name} tells you that things have to change. To prove you are still one of them, {boss.they} wants you to {test}.`, `It puts {stakes} on the line. You know exactly what you are being asked to prove.`],
     choices: [
       { id: 'comply', label: 'Comply without comment', risk: 'med', result: `You do it, and nobody in the group meets your eye afterwards. The boss nods once, which is worth more than it should be.`, effects: [{ rel: { who: 'boss', trust: 8, respect: 3 } }, { rel: { who: 'target', heat: 8, trust: -6 } }, { pop: 0.2 }, { conf: -2 }] },
-      { id: 'refuse_open', label: 'Refuse and say why', risk: 'high', result: `The room goes quiet. {boss.first} stares at you for a long beat, then smiles without humour. "We'll see."`, effects: [{ event: { type: 'refusal_to_help', participants: ['boss'], summary: `Refused {boss.name}'s demand for a loyalty test.`, importance: 3, data: { factionId: 'stable_crimson' } } }, { rel: { who: 'target', respect: 6, trust: 5 } }, { conf: 3 }, { pop: 0.3 }] },
+      { id: 'refuse_open', label: 'Refuse and say why', risk: 'high', result: `The room goes quiet. {boss.first} stares at you for a long beat, then smiles without humor. "We'll see."`, effects: [{ event: { type: 'refusal_to_help', participants: ['boss'], summary: `Refused {boss.name}'s demand for a loyalty test.`, importance: 3, data: { factionId: 'stable_crimson' } } }, { rel: { who: 'target', respect: 6, trust: 5 } }, { conf: 3 }, { pop: 0.3 }] },
       { id: 'negotiate', label: 'Negotiate a lighter version', risk: 'med', outcomes: [
         { weight: 2, bonus: { charisma: 0.5 }, text: `You make a compromise that lets everyone save face. {boss.first} is satisfied, and so is your conscience.`, effects: [{ rel: { who: 'boss', trust: 3, respect: 3 } }, { rel: { who: 'target', trust: 1 } }, { conf: 1 }] },
         { weight: 1, text: `{boss.first} takes the negotiation as a refusal and starts watching you closely.`, effects: [{ rel: { who: 'boss', trust: -6, heat: 4 } }, { conf: -2 }] } ] },
@@ -680,7 +680,7 @@ export default [
   {
     id: 'fac_member_solo', category: 'faction', title: '{mate.name} Wants to Go Solo', weight: 2, cooldownDays: 100, maxPerCareer: 2,
     trigger: { flag: 'player_leads_stable' }, cast: { mate: { pick: 'tag', tag: 'ally' }, creative: { pick: 'staff', role: 'creative' } }, memory: { role: 'mate', max: 1 },
-    slots: { sign: [`a stack of fan mail`, `a handful of solo offers`, `an unexpected pop from the crowd`, `a producer's pat on the back`], tone: [`gently`, `with practised ease`, `after three failed attempts to say it`] },
+    slots: { sign: [`a stack of fan mail`, `a handful of solo offers`, `an unexpected pop from the crowd`, `a producer's pat on the back`], tone: [`gently`, `with practiced ease`, `after three failed attempts to say it`] },
     body: [`{mate.name} tells you {tone} that {mate.they} wants to go solo, having seen {sign} lately. {mate.they} has been your most reliable member.`, `{creative.name} is already drafting a story that would turn the departure into a feud, if you let it.`],
     choices: [
       { id: 'bless', label: 'Give your blessing and a send-off', risk: 'low', result: `You hand {mate.first} a gift and a farewell speech. The send-off draws applause, and the stable gets a goodbye story.`, effects: [{ event: { type: 'faction_left', participants: ['mate'], summary: `{mate.name} left the stable with the leader's blessing.`, importance: 3, data: { factionId: 'stable_player', member: '@mate' } } }, { rel: { who: 'mate', trust: 10, respect: 8, affinity: 6 } }, { pop: 0.3 }] },
@@ -702,7 +702,7 @@ export default [
         { weight: 1, text: `It goes wrong and you take a beating alongside {mate.first}. The loyalty is noted; the bruises are felt.`, effects: [{ rel: { who: 'mate', trust: 8 } }, { fatigue: 9 }, { conf: -2 }, { pop: -0.2 }] } ] },
       { id: 'refuse', label: 'Refuse. You have your own problems', risk: 'low', result: `You turn {mate.first} down. The stable notes it, and the group trust drops.`, effects: [{ event: { type: 'refusal_to_help', participants: ['mate'], summary: `Refused to back up {mate.name}.`, importance: 3, data: { factionId: 'stable_crimson' } } }, { conf: 1 }, { fatigue: -2 }] },
       { id: 'delegate', label: 'Send someone else to help', risk: 'low', result: `You find a substitute. {mate.first} accepts, but the gesture feels half-hearted.`, effects: [{ rel: { who: 'mate', trust: 1, respect: -1 } }, { fatigue: 1 }] },
-      { id: 'negotiate', label: 'Help in exchange for a favour', risk: 'med', result: `{mate.first} agrees to owe you. You step in with a plan that works, and a debt on the books.`, effects: [{ rel: { who: 'mate', trust: 3, respect: 3 } }, { fatigue: 5 }, { money: 2500 }, { pop: 0.2 }] },
+      { id: 'negotiate', label: 'Help in exchange for a favor', risk: 'med', result: `{mate.first} agrees to owe you. You step in with a plan that works, and a debt on the books.`, effects: [{ rel: { who: 'mate', trust: 3, respect: 3 } }, { fatigue: 5 }, { money: 2500 }, { pop: 0.2 }] },
     ],
   },
   {
@@ -744,8 +744,8 @@ export default [
         { weight: 1, text: `You stumble halfway through. {boss.first} lets you finish, but the badge is handed over without ceremony.`, effects: [{ rel: { who: 'boss', respect: -2 } }, { conf: -3 }, { fatigue: 6 }, { flag: 'initiated' }] } ] },
       { id: 'talk', label: 'Talk your way out of it', risk: 'med', outcomes: [
         { weight: 1, bonus: { charisma: 0.6 }, text: `You charm the room until the boss laughs and drops it. Some people respect the move; others do not.`, effects: [{ rel: { who: 'boss', respect: 2 } }, { pop: 0.3 }, { flag: 'initiated' }] },
-        { weight: 1, text: `The boss isn't amused. You've got a worse test coming, and a worse reputation.`, effects: [{ rel: { who: 'boss', respect: -4 } }, { conf: -2 }] } ] },
-      { id: 'refuse', label: 'Refuse the trial', risk: 'high', result: `You tell {boss.first} that you don't do ceremonies. The group goes quiet. You keep your dignity and put your membership in question.`, effects: [{ rel: { who: 'boss', trust: -8, respect: -2 } }, { conf: 2 }, { pop: -0.1 }] },
+        { weight: 1, text: `The boss is not amused. You have a worse test coming, and a worse reputation.`, effects: [{ rel: { who: 'boss', respect: -4 } }, { conf: -2 }] } ] },
+      { id: 'refuse', label: 'Refuse the trial', risk: 'high', result: `You tell {boss.first} that you do not do ceremonies. The group goes quiet. You keep your dignity and put your membership in question.`, effects: [{ rel: { who: 'boss', trust: -8, respect: -2 } }, { conf: 2 }, { pop: -0.1 }] },
       { id: 'raise', label: 'Raise the stakes and propose a harder trial', risk: 'high', result: `You propose something worse. The boss grins. You survive, and the legend of your first week is born.`, effects: [{ rel: { who: 'boss', respect: 10, trust: 4 } }, { fatigue: 12 }, { injury: { part: 'torso', severity: 1, days: 6 } }, { pop: 0.5 }, { flag: 'initiated' }] },
     ],
   },
@@ -753,11 +753,11 @@ export default [
     id: 'fac_attack_champion', category: 'faction', title: '{boss.name} Orders an Attack', weight: 2, cooldownDays: 100, maxPerCareer: 2,
     trigger: { flag: 'in_stable' }, cast: { boss: { pick: 'tag', tag: 'ally' }, champ: { pick: 'champion', class: 'world' } },
     slots: { how: [`from behind, during the entrance`, `at ringside, as the champion's back is turned`, `in the parking lot with a camera crew`, `in the middle of the champion's promo`], reason: [`to send a message`, `to take a shot at the title`, `because the champion insulted the stable`] },
-    body: [`{boss.name} wants the stable to ambush {champ.name} {how}, {reason}. You are expected to bring the weapons, or at least the nerve.`, `It's high-profile and high-risk. The champion is not someone you want as an enemy.`],
+    body: [`{boss.name} wants the stable to ambush {champ.name} {how}, {reason}. You are expected to bring the weapons, or at least the nerve.`, `It is high-profile and high-risk. The champion is not someone you want as an enemy.`],
     choices: [
       { id: 'attack', label: 'Lead the ambush', risk: 'high', outcomes: [
         { weight: 2, bonus: { confidence: 0.4, popularity: 0.3 }, text: `You hit hard and fast, and the crowd erupts. The champion goes down and the stable steps into the spotlight.`, effects: [{ pop: 1.0 }, { rivalry: { who: 'champ', heat: 16 } }, { rel: { who: 'boss', respect: 6, trust: 4 } }, { fatigue: 5 }] },
-        { weight: 1, text: `The champion fights back. You're the one who gets stretchered, and the boss blames the plan on you.`, effects: [{ pop: 0.3 }, { fatigue: 10 }, { injury: { part: 'arms', severity: 1, days: 8 } }, { rel: { who: 'boss', respect: -2 } }, { rivalry: { who: 'champ', heat: 12 } }] } ] },
+        { weight: 1, text: `The champion fights back. You are the one who gets stretchered, and the boss blames the plan on you.`, effects: [{ pop: 0.3 }, { fatigue: 10 }, { injury: { part: 'arms', severity: 1, days: 8 } }, { rel: { who: 'boss', respect: -2 } }, { rivalry: { who: 'champ', heat: 12 } }] } ] },
       { id: 'hang_back', label: 'Hang back and let others do it', risk: 'low', result: `You stay at the edge. The others do the work and get the credit, and the boss notices who stood at the edge.`, effects: [{ rel: { who: 'boss', respect: -4, trust: -2 } }, { conf: -1 }, { fatigue: -1 }] },
       { id: 'warn_champ', label: 'Warn the champion and sell it anyway', risk: 'high', result: `You make sure the champion is ready. The ambush looks perfect and the champion owes you for the heads-up.`, effects: [{ rel: { who: 'champ', respect: 6, trust: 5 } }, { rel: { who: 'boss', trust: -1 } }, { pop: 0.6 }, { fatigue: 4 }] },
       { id: 'refuse', label: 'Refuse. It will cost the stable more than it wins', risk: 'med', result: `{boss.first} argues, then reluctantly changes the plan. You get credit as the smart one, and a lecture on loyalty.`, effects: [{ conf: 3 }, { rel: { who: 'boss', respect: 2, trust: -3 } }, { pop: -0.1 }] },
@@ -766,7 +766,7 @@ export default [
   {
     id: 'fac_expel_vote', category: 'faction', title: 'A Vote to Expel {mate.name}', weight: 2, cooldownDays: 100, maxPerCareer: 2,
     trigger: { flag: 'player_leads_stable' }, cast: { mate: { pick: 'tag', tag: 'ally' }, voter: { pick: 'roster', sameBrand: true } },
-    slots: { crime: [`missing three shows in a row`, `bad-mouthing the leader in a podcast clip`, `a dirty finish that cost the group a title match`, `dropping the stable name from {mate.their} promo`], mood: [`bitter`, `tense`, `unusually quiet`] },
+    slots: { crime: [`missing three shows in a row`, `bad-mouthing the leader in a magazine interview`, `a dirty finish that cost the group a title match`, `dropping the stable name from {mate.their} promo`], mood: [`bitter`, `tense`, `unusually quiet`] },
     body: [`The stable is {mood}. {voter.name} brings a formal motion to expel {mate.name} for {crime}, and you hold the deciding vote.`, `{mate.first} is in the room, saying nothing. The silence is its own argument.`],
     choices: [
       { id: 'expel', label: 'Vote to expel', risk: 'med', result: `The vote passes. {mate.first} walks out without a word, and the rest of the group tightens ranks.`, effects: [{ event: { type: 'faction_left', participants: ['mate'], summary: `{mate.name} was expelled from the stable.`, importance: 3, data: { factionId: 'stable_player', member: '@mate' } } }, { rel: { who: 'mate', heat: 12, trust: -12 } }, { rel: { who: 'voter', trust: 6, respect: 4 } }, { conf: 1 }] },
@@ -780,15 +780,15 @@ export default [
   {
     id: 'fac_merch_split', category: 'faction', title: 'Who Gets What from the Merchandise', weight: 2, cooldownDays: 120, maxPerCareer: 2,
     trigger: { flag: 'in_stable', stat: { popularity: { gte: 35 } } }, cast: { boss: { pick: 'tag', tag: 'ally' }, agent: { pick: 'staff', role: 'agent' } },
-    slots: { item: [`a stable T-shirt`, `a new championship-style belt replica`, `a limited-edition poster`, `a branded jacket`], share: [`a flat fee`, `an even five-way split`, `a larger cut for the leader`] },
-    body: [`The company wants {item}, and the question of the split is raised by {agent.name}. {boss.name} suggests {share}, though your name is on the biggest-selling design.`, `It's not the most dramatic argument you've had in the stable, but it's the one that could easily end it.`],
+    slots: { item: [`a stable T-shirt`, `a new championship-style belt replica`, `a limited-edition poster`, `a branded jacket`], share: [`a flat fee`, `an even split`, `a larger cut for the leader`] },
+    body: [`The company wants {item}, and the question of the split is raised by {agent.name}. {boss.name} suggests {share}, though your name is on the biggest-selling design.`, `It is not the most dramatic argument you have had in the stable, but it is the one that could easily end it.`],
     choices: [
       { id: 'accept', label: 'Accept the boss\'s split', risk: 'low', result: `You sign without a fight. {boss.first} is pleased, and you feel your share shrink.`, effects: [{ rel: { who: 'boss', trust: 4, respect: 1 } }, { money: 2000 }, { conf: -2 }] },
       { id: 'demand', label: 'Demand a bigger cut', risk: 'high', outcomes: [
         { weight: 2, bonus: { popularity: 0.4, charisma: 0.3 }, text: `{agent.name} sides with you on the numbers. The boss gives in, and the others stew.`, effects: [{ money: 12000 }, { rel: { who: 'boss', trust: -6, heat: 6 } }, { conf: 2 }] },
         { weight: 1, text: `The boss digs in. You get the same split as before and a lasting reputation as greedy.`, effects: [{ money: 1000 }, { rel: { who: 'boss', trust: -8, heat: 8 } }, { conf: -2 }, { pop: -0.2 }] } ] },
-      { id: 'share_even', label: 'Propose an even split for all', risk: 'low', result: `It's the fair choice and the stable loves you for it. It costs you in the wallet.`, effects: [{ rel: { who: 'boss', respect: 3 } }, { money: -1000 }, { conf: 2 }, { pop: 0.2 }] },
-      { id: 'go_agent', label: 'Cut a private deal with the agent', risk: 'high', result: `You quietly sign a solo contract on the side. It pays, but it's the kind of thing that leaks.`, effects: [{ money: 8000 }, { rel: { who: 'boss', trust: -10, respect: -2 } }, { pop: 0.1 }] },
+      { id: 'share_even', label: 'Propose an even split for all', risk: 'low', result: `It is the fair choice and the stable loves you for it. It costs you in the wallet.`, effects: [{ rel: { who: 'boss', respect: 3 } }, { money: -1000 }, { conf: 2 }, { pop: 0.2 }] },
+      { id: 'go_agent', label: 'Cut a private deal with the agent', risk: 'high', result: `You quietly sign a solo contract on the side. It pays, but it is the kind of thing that leaks.`, effects: [{ money: 8000 }, { rel: { who: 'boss', trust: -10, respect: -2 } }, { pop: 0.1 }] },
     ],
   },
   {
@@ -798,7 +798,7 @@ export default [
     body: [`{head.name}'s group {move}. {aftermath} {ally.name} was with you and is ready to fight back.`, `You could escalate, or you could use it to your advantage. The fans have been waiting for a war.`],
     choices: [
       { id: 'war', label: 'Declare war on the stable', risk: 'high', result: `You grab the microphone and issue a challenge. The fans scream for blood.`, effects: [{ rivalry: { who: 'head', heat: 18 } }, { promise: { kind: 'win_match', who: 'head', text: `I will end {head.name}'s stable`, deadlineDays: 60 } }, { pop: 0.9 }, { rel: { who: 'ally', respect: 4 } }, { fatigue: 5 }] },
-      { id: 'report', label: 'Report it to management', risk: 'low', result: `The office promises to deal with it. They won't. But you're on record as the reasonable one.`, effects: [{ pop: 0.2 }, { rel: { who: 'head', heat: 4 } }, { conf: -1 }] },
+      { id: 'report', label: 'Report it to management', risk: 'low', result: `The office promises to deal with it. It will not. But you are on record as the reasonable one.`, effects: [{ pop: 0.2 }, { rel: { who: 'head', heat: 4 } }, { conf: -1 }] },
       { id: 'recruit', label: 'Recruit allies for a counter-strike', risk: 'med', outcomes: [
         { weight: 2, bonus: { charisma: 0.4 }, text: `A few friendly faces join in, and the counter-strike looks professional.`, effects: [{ rel: { who: 'ally', trust: 5, respect: 4 } }, { rivalry: { who: 'head', heat: 12 } }, { pop: 0.7 }] },
         { weight: 1, text: `Nobody wants to be involved. You are left holding the idea, and the stable laughs.`, effects: [{ conf: -3 }, { rel: { who: 'head', respect: 2 } }, { pop: -0.2 }] } ] },
@@ -809,7 +809,7 @@ export default [
     id: 'fac_stable_ends', category: 'faction', title: 'The Stable Falls Apart', weight: 2, major: true, cooldownDays: 200, maxPerCareer: 1,
     trigger: { flag: 'in_stable', recent: { lossesGte: 3 } }, cast: { boss: { pick: 'tag', tag: 'ally' }, creative: { pick: 'staff', role: 'creative' } }, memory: { role: 'boss', max: 2 },
     slots: { cause: [`three straight losses`, `a ratings dip the office blames on the group`, `a leadership fight nobody can contain`], finale: [`a final tag match`, `a locker room brawl`, `a tearful speech`] },
-    body: [`After {cause}, {creative.name} has decided the stable is done. {boss.name} wants one last stand: {finale}, with you at the centre.`, `Nobody is sure whether this is an ending or a bargaining chip.`],
+    body: [`After {cause}, {creative.name} has decided the stable is done. {boss.name} wants one last stand: {finale}, with you at the center.`, `Nobody is sure whether this is an ending or a bargaining chip.`],
     choices: [
       { id: 'last_stand', label: 'Go out swinging together', risk: 'med', result: `The final show is raw and emotional, and the crowd chants for the group long after the lights come up.`, effects: [{ event: { type: 'faction_left', participants: ['boss'], summary: `The stable with {boss.name} ended with a final stand.`, importance: 3, data: { factionId: 'stable_crimson', member: 'player' } } }, { clearFlag: 'in_stable' }, { rel: { who: 'boss', trust: 8, respect: 6 } }, { pop: 0.6 }, { fatigue: 6 }] },
       { id: 'turn', label: 'Turn on the boss as a closer', risk: 'high', result: `You turn on {boss.first} in the finale. The crowd is stunned, and so is the dressing room.`, effects: [{ event: { type: 'betrayal', participants: ['boss'], summary: `Turned on {boss.name} to end the stable.`, importance: 4, data: { context: 'faction', byPlayer: true } } }, { event: { type: 'faction_left', participants: ['boss'], summary: `The stable ended when you turned on {boss.name}.`, importance: 3, data: { factionId: 'stable_crimson', member: 'player' } } }, { clearFlag: 'in_stable' }, { pop: 1.0 }, { rivalry: { who: 'boss', heat: 16 } }] },
@@ -823,96 +823,96 @@ export default [
   {
     id: 'men_upstart_asks', category: 'mentor', title: '{kid.name} Wants to Learn from You', weight: 3, cooldownDays: 80, maxPerCareer: 3,
     trigger: { stat: { popularity: { gte: 25 }, careerYears: { gte: 1 } } }, cast: { kid: { pick: 'roster', tier: { lte: 1 }, sameBrand: true } },
-    slots: { ask: [`catches you by the tunnel curtain`, `waits for you outside the arena`, `sends a nervous note via the trainer`, `shows up at your gym at dawn`], want: [`how to read a crowd`, `how to work a long match`, `how to cut a promo without a script`, `how to take a bump and stay on the card`] },
-    body: [`{kid.name} {ask} and asks, awkwardly but clearly, for help with {want}. The kid has talent and the habits of someone who has not yet been punished for them.`, `Every veteran who helped you did it on their own time. The question now is whether you are willing to return that favour.`],
+    slots: { ask: [`catches you by the tunnel curtain`, `waits for you outside the arena`, `finds you in catering`, `shows up at your gym at dawn`], want: [`how to read a crowd`, `how to work a long match`, `how to cut a promo without a script`, `how to take a bump and stay on the card`] },
+    body: [`{kid.name} {ask} and asks, awkwardly but clearly, to be taught {want}. The kid has talent and the habits of someone who has not yet been punished for them.`, `"I will do the early mornings, I will carry the bags," {kid.they} adds. Every veteran who helped you did it on their own time, and the question now is whether you are willing to return that favor.`],
     choices: [
       { id: 'mentor', label: 'Take {kid.first} under your wing', risk: 'med', result: `You commit. The next few weeks of early mornings pay off for both of you, and word gets around that you are a fair teacher.`, effects: [{ event: { type: 'mentorship', participants: ['kid'], summary: `Took {kid.name} under {player.their} wing.`, importance: 3, data: { byPlayer: true } } }, { rel: { who: 'kid', trust: 8, respect: 8 } }, { fatigue: 6 }, { pop: 0.3 }] },
-      { id: 'one_lesson', label: 'Offer one lesson and nothing more', risk: 'low', result: `You give the kid an hour. It's clear, concise and non-binding, and {kid.first} leaves with more than expected.`, effects: [{ rel: { who: 'kid', respect: 5, trust: 2 } }, { fatigue: 2 }, { pop: 0.1 }, { tag: { who: 'kid', tag: 'respected_by' } }] },
+      { id: 'one_lesson', label: 'Offer one lesson and nothing more', risk: 'low', result: `You give the kid an hour. It is clear, concise and non-binding, and {kid.first} leaves with more than expected.`, effects: [{ rel: { who: 'kid', respect: 5, trust: 2 } }, { fatigue: 2 }, { pop: 0.1 }, { tag: { who: 'kid', tag: 'respected_by' } }] },
       { id: 'price', label: 'Teach, but make the kid earn it', risk: 'med', outcomes: [
         { weight: 2, bonus: { confidence: 0.4 }, text: `{kid.first} carries your bags, studies tape and works the early mornings. By the end, the lessons stick.`, effects: [{ event: { type: 'mentorship', participants: ['kid'], summary: `Took on {kid.name} as a hard-working student.`, importance: 3, data: { byPlayer: true } } }, { rel: { who: 'kid', trust: 6, respect: 10 } }, { pop: 0.2 }, { fatigue: 4 }] },
-        { weight: 1, text: `The kid quits after two weeks and tells everyone you're a tyrant. Some believe it.`, effects: [{ rel: { who: 'kid', respect: -4, heat: 6 } }, { pop: -0.3 }, { conf: -2 }] } ] },
-      { id: 'decline', label: 'Decline: you have enough on your plate', risk: 'low', result: `You tell {kid.first} to ask someone else. It's honest and a little cold, and it saves you the energy.`, effects: [{ rel: { who: 'kid', respect: -2 } }, { fatigue: -2 }, { conf: 1 }] },
+        { weight: 1, text: `The kid quits after two weeks and tells everyone you are a tyrant. Some believe it.`, effects: [{ rel: { who: 'kid', respect: -4, heat: 6 } }, { pop: -0.3 }, { conf: -2 }] } ] },
+      { id: 'decline', label: 'Decline: you have enough on your plate', risk: 'low', result: `You tell {kid.first} to ask someone else. It is honest and a little cold, and it saves you the energy.`, effects: [{ rel: { who: 'kid', respect: -2 } }, { fatigue: -2 }, { conf: 1 }] },
     ],
   },
   {
     id: 'men_vet_offers', category: 'mentor', title: '{vet.name} Offers to Mentor You', weight: 3, cooldownDays: 100, maxPerCareer: 2,
     trigger: { stat: { careerYears: { lte: 4 }, popularity: { lte: 60 } } }, cast: { vet: { pick: 'roster', tier: { gte: 3 }, sameBrand: true } },
     slots: { sign: [`watched your last three matches`, `noticed your habit of rushing the finish`, `heard you ask smart questions in a seminar`, `seen a younger self in your early work`], setting: [`a quiet corner of the trainer's room`, `the front seat of a car`, `a sports bar near the arena`] },
-    body: [`In {setting}, {vet.name} says {vet.they} has {sign} and would like to teach you. "I'm not doing this for charity," the veteran adds. "I'm doing it because I want somebody to remember it."`, `It is the sort of offer that gets careers moving. It also puts you under someone's eye, and someone's shadow.`],
+    body: [`In {setting}, {vet.name} says {vet.they} has {sign} and would like to teach you. "I'm not doing this for charity," the veteran adds. "I'm doing it because I want somebody to remember it."`, `An offer like this gets careers moving, and it also puts you under someone's eye, and someone's shadow.`],
     choices: [
-      { id: 'accept', label: 'Accept eagerly', risk: 'low', result: `You shake on it. Over the next months, you pick up habits you'll keep for the rest of your career.`, effects: [{ event: { type: 'mentorship', participants: ['vet'], summary: `Accepted {vet.name}'s mentorship.`, importance: 3, data: { byPlayer: false } } }, { attr: { name: 'psychology', delta: 1 } }, { rel: { who: 'vet', trust: 6, respect: 6 } }, { pop: 0.2 }, { fatigue: 4 }] },
+      { id: 'accept', label: 'Accept eagerly', risk: 'low', result: `You shake on it. Over the next months, you pick up habits you will keep for the rest of your career.`, effects: [{ event: { type: 'mentorship', participants: ['vet'], summary: `Accepted {vet.name}'s mentorship.`, importance: 3, data: { byPlayer: false } } }, { attr: { name: 'psychology', delta: 1 } }, { rel: { who: 'vet', trust: 6, respect: 6 } }, { pop: 0.2 }, { fatigue: 4 }] },
       { id: 'terms', label: 'Accept, but keep your own style', risk: 'med', outcomes: [
         { weight: 2, bonus: { confidence: 0.4 }, text: `{vet.first} grunts approval. "Good. I'd rather work with someone who argues." The balance holds.`, effects: [{ event: { type: 'mentorship', participants: ['vet'], summary: `Accepted {vet.name}'s mentorship, on your own terms.`, importance: 3, data: { byPlayer: false } } }, { rel: { who: 'vet', respect: 6, trust: 3 } }, { conf: 2 }] },
         { weight: 1, text: `{vet.first} frowns. "Then you don't want a mentor, you want an audience." The offer is withdrawn.`, effects: [{ rel: { who: 'vet', respect: -3 } }, { conf: -2 }] } ] },
-      { id: 'test', label: 'Ask what the veteran wants in return', risk: 'med', result: `{vet.first} laughs, then names a price: a favour to be called in later. You'll have to decide whether that's fair.`, effects: [{ rel: { who: 'vet', respect: 2 } }, { flag: 'owes_veteran' }, { attr: { name: 'psychology', delta: 1 } }] },
+      { id: 'test', label: 'Ask what the veteran wants in return', risk: 'med', result: `{vet.first} laughs, then names a price: a favor to be called in later. You will have to decide whether that is fair.`, effects: [{ rel: { who: 'vet', respect: 2 } }, { flag: 'owes_veteran' }, { attr: { name: 'psychology', delta: 1 } }] },
       { id: 'decline', label: 'Decline politely: you will find your own way', risk: 'low', result: `The vet shrugs. "Fair enough." The door stays open, but only just.`, effects: [{ conf: 2 }, { rel: { who: 'vet', respect: -1 } }, { pop: 0.1 }] },
     ],
   },
   {
     id: 'men_lesson_price', category: 'mentor', title: 'A Lesson with a Price Tag', weight: 2, cooldownDays: 90, maxPerCareer: 3,
     trigger: { stat: { money: { gte: 10000 } } }, cast: { vet: { pick: 'roster', tier: { gte: 3 }, sameBrand: true } },
-    slots: { lesson: [`a finishing move that never fails`, `a bulletproof way to sell`, `the art of the comeback`, `a talking-heads routine for promos`], price: [`a thousand dollars`, `a long dinner and the cheque`, `your match bonus this week`, `a weekend of driving {vet.them} around`] },
-    body: [`{vet.name} knows something you need: {lesson}. It's been in the family for years, and {vet.they} is willing to sell it for {price}.`, `It could be the best investment of your career. It could also be a clever way to get paid for something that costs nothing.`],
+    slots: { lesson: [`a finishing move that never fails`, `a bulletproof way to sell`, `the art of the comeback`, `a promo routine that never gets old`], price: [`a hefty fee in cash`, `a fee and a long dinner on top`, `your match bonus this week`, `most of a month's savings`] },
+    body: [`{vet.name} knows something you need: {lesson}. It has been in the family for years, and {vet.they} is willing to sell it for {price}.`, `It could be the best investment of your career. It could also be a clever way to get paid for something that costs nothing.`],
     choices: [
       { id: 'pay', label: 'Pay and learn it properly', risk: 'low', outcomes: [
         { weight: 3, bonus: { overall: 0.3 }, text: `The lesson is worth every cent. You leave with a technique you will use for years.`, effects: [{ money: -6000 }, { attr: { name: 'technical', delta: 1 } }, { rel: { who: 'vet', respect: 3, trust: 3 } }, { conf: 2 }] },
-        { weight: 1, text: `The lesson is thinner than advertised. You've learned one useful thing and you feel a bit foolish.`, effects: [{ money: -6000 }, { conf: -1 }, { rel: { who: 'vet', respect: -2 } }] } ] },
-      { id: 'barter', label: 'Offer a favour instead of money', risk: 'med', result: `{vet.first} thinks it over, then agrees. You owe a favour that you will not like.`, effects: [{ attr: { name: 'psychology', delta: 1 } }, { rel: { who: 'vet', trust: 2 } }, { flag: 'owes_veteran' }, { fatigue: 3 }] },
+        { weight: 1, text: `The lesson is thinner than advertised. You learned one useful thing and you feel a bit foolish.`, effects: [{ money: -6000 }, { conf: -1 }, { rel: { who: 'vet', respect: -2 } }] } ] },
+      { id: 'barter', label: 'Offer a favor instead of money', risk: 'med', result: `{vet.first} thinks it over, then agrees. You owe a favor that you will not like.`, effects: [{ attr: { name: 'psychology', delta: 1 } }, { rel: { who: 'vet', trust: 2 } }, { flag: 'owes_veteran' }, { fatigue: 3 }] },
       { id: 'haggle', label: 'Haggle hard', risk: 'med', outcomes: [
         { weight: 1, bonus: { charisma: 0.5 }, text: `You talk the price down by half and earn a grudging grin. "You'll go far."`, effects: [{ money: -2500 }, { attr: { name: 'technical', delta: 1 } }, { rel: { who: 'vet', respect: 4 } }] },
         { weight: 1, text: `{vet.first} scowls and rescinds the offer. "Information is not a market stall."`, effects: [{ rel: { who: 'vet', respect: -3 } }, { conf: -1 }] } ] },
-      { id: 'refuse', label: 'Decline: nothing worth knowing is for sale', risk: 'low', result: `You walk away. Some of the veterans respect the principle; some think you've missed a gift.`, effects: [{ conf: 1 }, { rel: { who: 'vet', respect: 1 } }] },
+      { id: 'refuse', label: 'Decline: nothing worth knowing is for sale', risk: 'low', result: `You walk away. Some of the veterans respect the principle; some think you missed a gift.`, effects: [{ conf: 1 }, { rel: { who: 'vet', respect: 1 } }] },
     ],
   },
   {
     id: 'men_haze_test', category: 'mentor', title: '{vet.name} Tests Your Nerve', weight: 3, cooldownDays: 90, maxPerCareer: 3,
     trigger: { stat: { careerYears: { lte: 3 } } }, cast: { vet: { pick: 'roster', tier: { gte: 3 }, sameBrand: true } },
     slots: { test: [`a stiff, no-warning chop in the first exchange`, `a sudden change of finish in the ring`, `a deliberately unfriendly crowd plant`, `a backstage rib that leaves you in a wet costume`], mood: [`a straight face`, `a hint of a smile`, `a long stare`] },
-    body: [`Before the match, {vet.name} sets {test}, and watches for your response with {mood}. It's an old initiation and everybody in the locker room knows it.`, `Take it wrong and you're marked as soft. Take it right and you may earn something money can't buy.`],
+    body: [`Tonight, {vet.name} springs {test} on you, and watches for your response with {mood}. This is an old initiation, and everybody in the locker room knows it.`, `Take it wrong and you are marked as soft. Take it right and you may earn something money cannot buy.`],
     choices: [
       { id: 'take_it', label: 'Take it and keep going', risk: 'med', outcomes: [
-        { weight: 2, bonus: { confidence: 0.5 }, text: `You ride it out without a word. At the end, {vet.first} offers a short nod. It's the first real respect you've earned.`, effects: [{ rel: { who: 'vet', respect: 8, trust: 4 } }, { conf: 4 }, { fatigue: 5 }, { tag: { who: 'vet', tag: 'respected_by' } }] },
+        { weight: 2, bonus: { confidence: 0.5 }, text: `You ride it out without a word. At the end, {vet.first} offers a short nod. It is the first real respect you have earned.`, effects: [{ rel: { who: 'vet', respect: 8, trust: 4 } }, { conf: 4 }, { fatigue: 5 }, { tag: { who: 'vet', tag: 'respected_by' } }] },
         { weight: 1, text: `It rattles you. The match comes unglued, and the vet watches without comment.`, effects: [{ conf: -4 }, { fatigue: 5 }, { rel: { who: 'vet', respect: -1 } }] } ] },
       { id: 'fire_back', label: 'Fire back harder', risk: 'high', outcomes: [
-        { weight: 1, bonus: { overall: 0.4, confidence: 0.3 }, text: `You return the favour with interest, and the veteran grins through a split lip. "Okay. Now we're talking."`, effects: [{ rel: { who: 'vet', respect: 10, heat: 3 } }, { conf: 4 }, { pop: 0.3 }, { fatigue: 6 }] },
-        { weight: 2, text: `You go too far and the vet shuts it down hard. You're in trouble with the agent and the locker room.`, effects: [{ rel: { who: 'vet', heat: 10, respect: -3 } }, { pop: -0.4 }, { conf: -2 }, { fatigue: 6 }] } ] },
+        { weight: 1, bonus: { overall: 0.4, confidence: 0.3 }, text: `You return the favor with interest, and the veteran grins through a split lip. "Okay. Now we're talking."`, effects: [{ rel: { who: 'vet', respect: 10, heat: 3 } }, { conf: 4 }, { pop: 0.3 }, { fatigue: 6 }] },
+        { weight: 2, text: `You go too far and the vet shuts it down hard. You are in trouble with the agent and the locker room.`, effects: [{ rel: { who: 'vet', heat: 10, respect: -3 } }, { pop: -0.4 }, { conf: -2 }, { fatigue: 6 }] } ] },
       { id: 'report', label: 'Report it to the agent', risk: 'low', result: `The agent frowns and leaves it at that. Your name goes onto a different list in the veteran's head.`, effects: [{ rel: { who: 'vet', respect: -6, trust: -3 } }, { conf: -1 }, { pop: -0.1 }] },
       { id: 'laugh', label: 'Laugh it off and ask for the next one', risk: 'low', result: `You hold up a hand and grin. The vet's face softens, and the rest of the locker room starts to like you.`, effects: [{ rel: { who: 'vet', respect: 4, affinity: 3 } }, { pop: 0.2 }, { conf: 1 }, { fatigue: 2 }] },
     ],
   },
   {
     id: 'men_pupil_outshines', category: 'mentor', title: 'The Student Steals the Show', weight: 2, cooldownDays: 100, maxPerCareer: 2,
-    trigger: { stat: { popularity: { gte: 35 } } }, cast: { pupil: { pick: 'tag', tag: 'mentor' } }, memory: { role: 'pupil', max: 2 },
+    trigger: { stat: { popularity: { gte: 35 } } }, cast: { pupil: { pick: 'tag', tag: 'mentee' } }, memory: { role: 'pupil', max: 2 },
     slots: { moment: [`a flawless promo`, `a high-risk dive`, `a roaring win over a former champion`, `a standing ovation in your home city`], reaction: [`the crew crowds around {pupil.them}`, `the producer shakes {pupil.their} hand`, `the front office starts using {pupil.their} name`] },
-    body: [`{pupil.name} has just landed {moment}, and {reaction}. You taught most of what made it work.`, `You're proud and a little jealous at once. You aren't the only one who's noticed.`],
+    body: [`{pupil.name} has just landed {moment}, and {reaction}. You taught most of what made it work.`, `You are proud and a little jealous at once. You are not the only one who has noticed.`],
     choices: [
       { id: 'celebrate', label: 'Celebrate loudly in front of everyone', risk: 'low', result: `You lead the applause. {pupil.first} blushes and the room warms to you both.`, effects: [{ rel: { who: 'pupil', trust: 8, respect: 6, affinity: 5 } }, { pop: 0.3 }, { conf: -1 }] },
       { id: 'take_credit', label: 'Remind the room who taught {pupil.them}', risk: 'med', outcomes: [
         { weight: 1, bonus: { popularity: 0.4 }, text: `Some people nod. The credit helps your standing, though {pupil.first} winces.`, effects: [{ pop: 0.4 }, { rel: { who: 'pupil', trust: -4, respect: -3 } }] },
         { weight: 2, text: `It sounds petty. The crowd turns on you and {pupil.first} stops returning your calls.`, effects: [{ pop: -0.5 }, { conf: -3 }, { rel: { who: 'pupil', trust: -8, respect: -6 } }] } ] },
-      { id: 'challenge', label: 'Challenge {pupil.them} to a match to see how far {pupil.they} has come', risk: 'high', result: `The pupil accepts, shaking a little. It's the right kind of nerves, and the office books it.`, effects: [{ booking: { who: 'pupil', type: 'singles' } }, { rel: { who: 'pupil', respect: 5 } }, { pop: 0.4 }, { fatigue: 4 }] },
-      { id: 'step_back', label: 'Step back and let {pupil.them} have the moment', risk: 'low', result: `You keep your distance and let the pupil enjoy it. It's gracious, and just a bit lonely.`, effects: [{ rel: { who: 'pupil', trust: 4, respect: 3 } }, { conf: 1 }] },
+      { id: 'challenge', label: 'Challenge {pupil.them} to a match to see how far {pupil.they} has come', risk: 'high', result: `The pupil accepts, shaking a little. It is the right kind of nerves, and the office books it.`, effects: [{ booking: { who: 'pupil', type: 'singles' } }, { rel: { who: 'pupil', respect: 5 } }, { pop: 0.4 }, { fatigue: 4 }] },
+      { id: 'step_back', label: 'Step back and let {pupil.them} have the moment', risk: 'low', result: `You keep your distance and let the pupil enjoy it. It is gracious, and just a bit lonely.`, effects: [{ rel: { who: 'pupil', trust: 4, respect: 3 } }, { conf: 1 }] },
     ],
   },
   {
     id: 'men_mentor_retires', category: 'mentor', title: '{mentor.name} Is Hanging It Up', weight: 3, major: true, cooldownDays: 200, maxPerCareer: 1,
     trigger: { stat: { popularity: { gte: 30 } } }, cast: { mentor: { pick: 'tag', tag: 'mentor' } }, memory: { role: 'mentor', max: 3 },
-    slots: { reason: [`a body that finally says no`, `a family at home`, `a coaching job at last`, `a long overdue need for a quiet life`], request: [`to carry on a tradition`, `to take over a favourite spot on the card`, `to deliver a speech at the farewell show`] },
-    body: [`{mentor.name} calls you aside and says it plainly: this is the last year. The reason is {reason}, and {mentor.they} wants you {request}.`, `It is the sort of ask that comes only once. How you answer says who you are.`],
+    slots: { reason: [`a body that finally says no`, `a family at home`, `a coaching job at last`, `a long overdue need for a quiet life`], request: [`to carry on a tradition`, `to take over a favorite spot on the card`, `to deliver a speech at the farewell show`] },
+    body: [`{mentor.name} calls you aside and says it plainly: this is the last year. The reason is {reason}, and {mentor.they} wants you {request}.`, `That kind of request comes only once. How you answer says who you are.`],
     choices: [
-      { id: 'honour', label: 'Accept the request with a full heart', risk: 'low', result: `You make the farewell speech. It's the best you've ever done, and half the locker room is in tears. {mentor.first} grips your shoulder.`, effects: [{ rel: { who: 'mentor', trust: 10, respect: 10, affinity: 8 } }, { pop: 0.6 }, { conf: 3 }, { fatigue: 4 }] },
+      { id: 'honour', label: 'Accept the request with a full heart', risk: 'low', result: `You make the farewell speech. It is the best you have ever done, and half the locker room is in tears. {mentor.first} grips your shoulder.`, effects: [{ rel: { who: 'mentor', trust: 10, respect: 10, affinity: 8 } }, { pop: 0.6 }, { conf: 3 }, { fatigue: 4 }] },
       { id: 'dissuade', label: 'Try to talk {mentor.them} out of retiring', risk: 'med', outcomes: [
         { weight: 1, bonus: { charisma: 0.5 }, text: `{mentor.first} postpones for a few months, thanking you for the faith. The retirement plan is only delayed.`, effects: [{ rel: { who: 'mentor', trust: 4 } }, { conf: 1 }, { pop: 0.2 }] },
         { weight: 2, text: `{mentor.first} stares at you, hurt. "I'm asking you to respect me." The request is withdrawn.`, effects: [{ rel: { who: 'mentor', respect: -4, trust: -2 } }, { conf: -2 }] } ] },
       { id: 'one_last', label: 'Ask for one last match against you', risk: 'med', result: `{mentor.first} laughs. "One last time, then." The office sells it as an event, and the crowd cries.`, effects: [{ booking: { who: 'mentor', type: 'singles' } }, { rel: { who: 'mentor', respect: 8, trust: 4 } }, { pop: 0.8 }, { fatigue: 5 }] },
-      { id: 'nod', label: 'Wish {mentor.them} well and leave it there', risk: 'low', result: `You shake hands and go. It's polite and brief, and neither of you says what you meant.`, effects: [{ rel: { who: 'mentor', trust: -2, respect: -2 } }, { conf: -2 }] },
+      { id: 'nod', label: 'Wish {mentor.them} well and leave it there', risk: 'low', result: `You shake hands and go. It is polite and brief, and neither of you says what you meant.`, effects: [{ rel: { who: 'mentor', trust: -2, respect: -2 } }, { conf: -2 }] },
     ],
   },
   {
     id: 'men_bad_advice', category: 'mentor', title: 'The Mentor\'s Advice Is Wrong', weight: 2, cooldownDays: 80, maxPerCareer: 3,
     trigger: { stat: { overall: { gte: 45 } } }, cast: { mentor: { pick: 'tag', tag: 'mentor' }, agent: { pick: 'staff', role: 'agent' } },
     slots: { advice: [`skip the rehearsal and trust your instincts`, `take more risks in the ring`, `never share a spot with a bigger star`, `turn down the office's next idea`], era: [`the way it was done back in the day`, `how the old school does it`, `the only way {mentor.they} ever learned`] },
-    body: [`{mentor.name} tells you to {advice}, "the way it was done." The advice is what {mentor.they} calls {era}, and it directly contradicts what {agent.name} said an hour ago.`, `You trust one of them for experience and the other for current information, and you can't do both.`],
+    body: [`{mentor.name} tells you to {advice}. {mentor.they} calls it {era}, and it directly contradicts what {agent.name} said an hour ago.`, `You trust one of them for experience and the other for current information, and you cannot do both.`],
     choices: [
       { id: 'mentor', label: 'Follow the mentor\'s advice', risk: 'med', outcomes: [
         { weight: 1, bonus: { overall: 0.4 }, text: `The old advice turns out to be right for once. The match is better than any rehearsal would have made it.`, effects: [{ pop: 0.6 }, { rel: { who: 'mentor', respect: 6, trust: 4 } }, { conf: 2 }] },
@@ -926,27 +926,27 @@ export default [
   },
   {
     id: 'men_pupil_trouble', category: 'mentor', title: '{pupil.name} Got Into Trouble', weight: 2, cooldownDays: 80, maxPerCareer: 3,
-    trigger: {}, cast: { pupil: { pick: 'tag', tag: 'mentor' }, gm: { pick: 'staff', role: 'gm' } },
-    slots: { slip: [`missed a flight to a big show`, `argued with a producer in front of the crew`, `showed up unprepared for a taped promo`, `got a social post wrong`], consequence: [`a fine and a warning`, `a suspended spot`, `a place on the "watch list"`] },
+    trigger: {}, cast: { pupil: { pick: 'tag', tag: 'mentee' }, gm: { pick: 'staff', role: 'gm' } },
+    slots: { slip: [`missed a flight to a big show`, `argued with a producer in front of the crew`, `showed up unprepared for a taped promo`, `got an interview answer badly wrong`], consequence: [`a fine and a warning`, `a short suspension`, `a place on the "watch list"`] },
     body: [`{pupil.name} {slip}, and {gm.name} is considering {consequence}. {pupil.first} comes to you for help.`, `You were once the one making similar mistakes. The difference is that someone covered for you.`],
     choices: [
       { id: 'vouch', label: 'Vouch for the pupil to {gm.first}', risk: 'med', outcomes: [
-        { weight: 2, bonus: { popularity: 0.4 }, text: `{gm.name} listens and softens the penalty. {pupil.first} is grateful, and you've spent some credit.`, effects: [{ rel: { who: 'pupil', trust: 8, respect: 6 } }, { pop: -0.1 }, { conf: 1 }] },
-        { weight: 1, text: `{gm.name} bristles. "I decide who gets a warning." The penalty stands, and you're added to the list.`, effects: [{ rel: { who: 'pupil', trust: 3 } }, { pop: -0.3 }, { conf: -2 }] } ] },
+        { weight: 2, bonus: { popularity: 0.4 }, text: `{gm.name} listens and softens the penalty. {pupil.first} is grateful, and you have spent some credit.`, effects: [{ rel: { who: 'pupil', trust: 8, respect: 6 } }, { pop: -0.1 }, { conf: 1 }] },
+        { weight: 1, text: `{gm.name} bristles. "I decide who gets a warning." The penalty stands, and you are added to the list.`, effects: [{ rel: { who: 'pupil', trust: 3 } }, { pop: -0.3 }, { conf: -2 }] } ] },
       { id: 'lesson', label: 'Let {pupil.them} take the consequence and learn', risk: 'low', result: `You support {pupil.them} from the sideline. It stings, but it sticks, and later {pupil.first} says it was the best thing you ever did.`, effects: [{ rel: { who: 'pupil', respect: 5, trust: 2 } }, { conf: 1 }, { pop: 0.1 }] },
       { id: 'cover', label: 'Take the blame yourself', risk: 'high', result: `You tell the GM it was your fault. The penalty lands on you, and the pupil never forgets it.`, effects: [{ rel: { who: 'pupil', trust: 14, respect: 10, affinity: 6 } }, { money: -4000 }, { pop: -0.2 }, { conf: -2 }] },
-      { id: 'distance', label: 'Distance yourself from the mess', risk: 'low', result: `You decide it isn't your fight. {pupil.first} feels abandoned, and you save the credit.`, effects: [{ rel: { who: 'pupil', trust: -8, respect: -4 } }, { conf: 1 }] },
+      { id: 'distance', label: 'Distance yourself from the mess', risk: 'low', result: `You decide it is not your fight. {pupil.first} feels abandoned, and you save the credit.`, effects: [{ rel: { who: 'pupil', trust: -8, respect: -4 } }, { conf: 1 }] },
     ],
   },
   {
     id: 'men_tape_session', category: 'mentor', title: 'A Night with the Tape', weight: 2, cooldownDays: 70, maxPerCareer: 4,
     trigger: { stat: { matches: { gte: 10 } } }, cast: { coach: { pick: 'staff', role: 'coach' }, vet: { pick: 'roster', tier: { gte: 3 }, sameBrand: true } },
     slots: { reel: [`your last three losses`, `the best match of your career`, `a classic from a legend`, `footage of your debut`], mood: [`in a dark production room`, `over cold pizza`, `with the volume low`] },
-    body: [`{coach.name} sets up a screening {mood}, with {vet.name} pulled up a chair beside you. The tape is {reel}.`, `Watching yourself work is a rare luxury. Watching with someone who sees what you can't is rarer still.`],
+    body: [`{coach.name} sets up a screening {mood}, with {vet.name} pulling up a chair beside you. The tape is {reel}.`, `Watching yourself work is a rare luxury. Watching with someone who sees what you cannot is rarer still.`],
     choices: [
-      { id: 'study', label: 'Take notes and ask questions all night', risk: 'low', result: `By dawn your notebook is full and your head is spinning. You've learned two real things and a dozen small ones.`, effects: [{ attr: { name: 'psychology', delta: 1 } }, { fatigue: 8 }, { rel: { who: 'vet', respect: 4 } }, { conf: 1 }] },
+      { id: 'study', label: 'Take notes and ask questions all night', risk: 'low', result: `By dawn your notebook is full and your head is spinning. You have learned two real things and a dozen small ones.`, effects: [{ attr: { name: 'psychology', delta: 1 } }, { fatigue: 8 }, { rel: { who: 'vet', respect: 4 } }, { conf: 1 }] },
       { id: 'argue', label: 'Argue every criticism', risk: 'med', outcomes: [
-        { weight: 1, bonus: { confidence: 0.4 }, text: `Your defence wins the room. {vet.first} concedes a point, and you get an unexpected laugh.`, effects: [{ rel: { who: 'vet', respect: 6 } }, { conf: 3 }, { fatigue: 4 }] },
+        { weight: 1, bonus: { confidence: 0.4 }, text: `Your defense wins the room. {vet.first} concedes a point, and you get an unexpected laugh.`, effects: [{ rel: { who: 'vet', respect: 6 } }, { conf: 3 }, { fatigue: 4 }] },
         { weight: 2, text: `You come across as defensive. {vet.first} stops talking, and {coach.first} ends the session early.`, effects: [{ rel: { who: 'vet', respect: -3 } }, { conf: -2 }, { fatigue: 3 }] } ] },
       { id: 'skip', label: 'Skip the second half and rest instead', risk: 'low', result: `You leave early to sleep. The vet shrugs, and your body thanks you for it.`, effects: [{ fatigue: -6 }, { rel: { who: 'vet', respect: -2 } }, { conf: 1 }] },
       { id: 'teach_back', label: 'Point out something the vet missed', risk: 'high', outcomes: [
@@ -958,37 +958,37 @@ export default [
     id: 'men_legend_story', category: 'mentor', title: 'A Story from the Old Days', weight: 2, cooldownDays: 90, maxPerCareer: 3,
     trigger: { stat: { careerYears: { lte: 6 } } }, cast: { legend: { pick: 'roster', tier: { gte: 4 } } },
     slots: { setting: [`a long bus ride`, `a quiet stretch in the hotel bar`, `a rain delay at the airport`, `the last hour before doors`], tale: [`the night the arena lost power and the match went on in the dark`, `the time a title run ended before it began`, `a feud that cost {legend.them} a friend`, `how a booker once saved {legend.their} career by firing {legend.them}`] },
-    body: [`During {setting}, {legend.name} starts telling a story about {tale}. It's not a lesson at first, just a story, but by the end you realise it was meant for you.`, `The veteran watches you the whole time, curious to see what you take from it.`],
+    body: [`During {setting}, {legend.name} starts telling a story about {tale}. It does not sound like a lesson at first, just a story, but by the end you realize it was meant for you.`, `The veteran watches you the whole time, curious to see what you take from it.`],
     choices: [
       { id: 'listen', label: 'Listen closely and take it in', risk: 'low', result: `You say little, and absorb a lot. Weeks later, you find yourself using what you learned without noticing.`, effects: [{ attr: { name: 'psychology', delta: 1 } }, { rel: { who: 'legend', respect: 4, trust: 3 } }, { conf: 1 }] },
       { id: 'question', label: 'Ask the hard question underneath it', risk: 'med', outcomes: [
-        { weight: 2, bonus: { charisma: 0.3 }, text: `{legend.first} pauses, then answers honestly. It's the truest thing you've heard all year.`, effects: [{ rel: { who: 'legend', respect: 8, trust: 6 } }, { attr: { name: 'psychology', delta: 1 } }, { conf: 2 }] },
+        { weight: 2, bonus: { charisma: 0.3 }, text: `{legend.first} pauses, then answers honestly. It is the truest thing you have heard all year.`, effects: [{ rel: { who: 'legend', respect: 8, trust: 6 } }, { attr: { name: 'psychology', delta: 1 } }, { conf: 2 }] },
         { weight: 1, text: `The question lands wrong. {legend.first} falls silent and stares out of the window.`, effects: [{ rel: { who: 'legend', respect: -2 } }, { conf: -2 }] } ] },
-      { id: 'share', label: 'Offer a story of your own in return', risk: 'med', result: `The two of you swap war stories until the sun comes up. It isn't a lesson, it's a friendship, and it's worth more than a lesson.`, effects: [{ rel: { who: 'legend', affinity: 8, trust: 6 } }, { tag: { who: 'legend', tag: 'respected_by' } }, { fatigue: 4 }, { pop: 0.1 }] },
+      { id: 'share', label: 'Offer a story of your own in return', risk: 'med', result: `The two of you swap war stories until one of you has to leave. It is not a lesson, it is the start of a friendship, and it is worth more than a lesson.`, effects: [{ rel: { who: 'legend', affinity: 8, trust: 6 } }, { tag: { who: 'legend', tag: 'respected_by' } }, { fatigue: 4 }, { pop: 0.1 }] },
       { id: 'cut_short', label: 'Make an excuse and slip away', risk: 'low', result: `You leave to prepare for your match. The legend pretends not to mind.`, effects: [{ rel: { who: 'legend', respect: -3 } }, { fatigue: -2 }, { conf: 1 }] },
     ],
   },
   {
     id: 'men_pupil_wants_win', category: 'mentor', title: '{pupil.name} Wants a Win from You', weight: 2, cooldownDays: 90, maxPerCareer: 2,
-    trigger: { stat: { popularity: { gte: 35 } } }, cast: { pupil: { pick: 'tag', tag: 'mentor' } }, memory: { role: 'pupil', max: 1 },
-    slots: { why: [`{pupil.their} contract is up for renewal`, `the office is deciding whether to push {pupil.them}`, `{pupil.they} is close to a breakthrough`, `a cold streak is wearing {pupil.them} down`], ask: [`asks you straight out`, `hints so hard it hurts`, `offers to return the favour`] },
-    body: [`{pupil.name} {ask}: a clean win over you in the next match. {why}, and one result could change a lot.`, `You have the position to give it, and the pride to dislike it. There's no neutral way to answer.`],
+    trigger: { stat: { popularity: { gte: 35 } } }, cast: { pupil: { pick: 'tag', tag: 'mentee' } }, memory: { role: 'pupil', max: 1 },
+    slots: { why: [`{pupil.their} contract is up for renewal`, `the office is deciding whether to push {pupil.them}`, `{pupil.they} is close to a breakthrough`, `a cold streak is wearing {pupil.them} down`], ask: [`asks you straight out`, `hints so hard it hurts`, `offers to return the favor`] },
+    body: [`{pupil.name} {ask}: a clean win over you in the next match. {why}, and one result could change a lot.`, `You have the position to give it, and the pride to dislike it. There is no neutral way to answer.`],
     choices: [
-      { id: 'give', label: 'Put {pupil.them} over, cleanly', risk: 'med', result: `You lose with grace. {pupil.first} can't hide the gratitude, and the office takes notice of {pupil.their} rise.`, effects: [{ rel: { who: 'pupil', trust: 12, respect: 8 } }, { pop: -0.4 }, { conf: -2 }, { money: -2000 }] },
-      { id: 'earn', label: 'Tell {pupil.them} to earn it', risk: 'low', result: `You offer a fair match, no gifts. {pupil.first} scowls, then nods. You both know it's the right call.`, effects: [{ booking: { who: 'pupil', type: 'singles' } }, { rel: { who: 'pupil', respect: 5 } }, { fatigue: 3 }, { pop: 0.2 }] },
-      { id: 'trade', label: 'Give the win in exchange for a future favour', risk: 'med', outcomes: [
-        { weight: 2, bonus: { charisma: 0.4 }, text: `The pupil agrees at once. The trade is kept quiet, and honoured.`, effects: [{ rel: { who: 'pupil', trust: 4, respect: 2 } }, { pop: -0.2 }, { conf: 1 }, { money: 3000 }] },
+      { id: 'give', label: 'Put {pupil.them} over, cleanly', risk: 'med', result: `You lose with grace. {pupil.first} cannot hide the gratitude, and the office takes notice of {pupil.their} rise.`, effects: [{ rel: { who: 'pupil', trust: 12, respect: 8 } }, { pop: -0.4 }, { conf: -2 }, { money: -2000 }] },
+      { id: 'earn', label: 'Tell {pupil.them} to earn it', risk: 'low', result: `You offer a fair match, no gifts. {pupil.first} scowls, then nods. You both know it is the right call.`, effects: [{ booking: { who: 'pupil', type: 'singles' } }, { rel: { who: 'pupil', respect: 5 } }, { fatigue: 3 }, { pop: 0.2 }] },
+      { id: 'trade', label: 'Give the win in exchange for a future favor', risk: 'med', outcomes: [
+        { weight: 2, bonus: { charisma: 0.4 }, text: `The pupil agrees at once. The trade is kept quiet, and honored.`, effects: [{ rel: { who: 'pupil', trust: 4, respect: 2 } }, { pop: -0.2 }, { conf: 1 }, { money: 3000 }] },
         { weight: 1, text: `The pupil is hurt that you made it a trade. The relationship has a small crack that does not heal quickly.`, effects: [{ rel: { who: 'pupil', trust: -6, respect: -2 } }, { conf: -1 }] } ] },
-      { id: 'refuse', label: 'Refuse. Wins are not a favour', risk: 'low', result: `You decline gently but firmly. The pupil understands but does not like it.`, effects: [{ rel: { who: 'pupil', trust: -4, respect: 1 } }, { conf: 2 }, { pop: 0.1 }] },
+      { id: 'refuse', label: 'Refuse. Wins are not a favor', risk: 'low', result: `You decline gently but firmly. The pupil understands but does not like it.`, effects: [{ rel: { who: 'pupil', trust: -4, respect: 1 } }, { conf: 2 }, { pop: 0.1 }] },
     ],
   },
   {
     id: 'men_training_school', category: 'mentor', title: 'Teach at the Training School', weight: 2, cooldownDays: 120, maxPerCareer: 2,
     trigger: { stat: { popularity: { gte: 35 }, careerYears: { gte: 2 } } }, cast: { coach: { pick: 'staff', role: 'coach' }, kid: { pick: 'roster', tier: { lte: 1 } } },
     slots: { shift: [`two mornings a week`, `a weekend each month`, `a full week during the off-season`], pay: [`a modest stipend`, `a gym membership`, `a seat on the staff payroll`] },
-    body: [`{coach.name} asks if you'd teach {shift} at the training school, for {pay}. {kid.name} is in the class and has asked for you by name.`, `It would be good for your reputation, though a drain on your own recovery.`],
+    body: [`{coach.name} asks whether you would teach {shift} at the training school, for {pay}. {kid.name} is in the class and has asked for you by name.`, `It would be good for your reputation, though a drain on your own recovery.`],
     choices: [
-      { id: 'teach', label: 'Teach the class properly', risk: 'med', result: `You commit. The students improve noticeably, and word gets back to management that you're a safe pair of hands.`, effects: [{ event: { type: 'mentorship', participants: ['kid'], summary: `Taught {kid.name} at the training school.`, importance: 3, data: { byPlayer: true } } }, { fatigue: 9 }, { money: 3000 }, { rel: { who: 'kid', respect: 8, trust: 5 } }, { pop: 0.3 }] },
+      { id: 'teach', label: 'Teach the class properly', risk: 'med', result: `You commit. The students improve noticeably, and word gets back to management that you are a safe pair of hands.`, effects: [{ event: { type: 'mentorship', participants: ['kid'], summary: `Taught {kid.name} at the training school.`, importance: 3, data: { byPlayer: true } } }, { fatigue: 9 }, { money: 3000 }, { rel: { who: 'kid', respect: 8, trust: 5 } }, { pop: 0.3 }] },
       { id: 'guest', label: 'Appear once as a guest instructor', risk: 'low', result: `You do a single session and leave. It looks good and costs little.`, effects: [{ fatigue: 3 }, { pop: 0.2 }, { rel: { who: 'kid', respect: 3 } }, { money: 500 }] },
       { id: 'pitch', label: 'Pitch yourself as the head trainer', risk: 'high', outcomes: [
         { weight: 1, bonus: { charisma: 0.4, popularity: 0.3 }, text: `{coach.name} is impressed by the ambition. You get a bigger role and a bigger paycheck.`, effects: [{ money: 8000 }, { fatigue: 10 }, { pop: 0.3 }, { rel: { who: 'kid', respect: 6 } }] },
@@ -1000,23 +1000,23 @@ export default [
     id: 'men_mentor_feud_agent', category: 'mentor', title: 'Caught Between Your Mentor and the Agent', weight: 2, cooldownDays: 100, maxPerCareer: 2,
     trigger: {}, cast: { mentor: { pick: 'tag', tag: 'mentor' }, agent: { pick: 'staff', role: 'agent' } },
     slots: { issue: [`how your finish should look`, `whether you should wear a new look`, `how much to rely on your signature move`, `how often you should work the house shows`], temper: [`a raised voice`, `icy politeness`, `a slammed door`] },
-    body: [`{mentor.name} and {agent.name} have been arguing about {issue}, and now there's {temper} in the hallway. Both want you on their side.`, `Each is right in some way. Each is also being petty in others.`],
+    body: [`{mentor.name} and {agent.name} have been arguing about {issue}, and now there is {temper} in the hallway. Both want you on their side.`, `Each is right in some way. Each is also being petty in others.`],
     choices: [
       { id: 'mentor', label: 'Back your mentor in public', risk: 'med', result: `{mentor.first} is moved by the loyalty. {agent.name} stays politely cold for a few weeks.`, effects: [{ rel: { who: 'mentor', trust: 8, respect: 4 } }, { pop: -0.2 }, { conf: 1 }] },
       { id: 'agent', label: 'Back the agent and tell the mentor why', risk: 'med', result: `You explain it carefully. {mentor.first} says nothing, but the wounded look stays with you.`, effects: [{ rel: { who: 'mentor', trust: -5, respect: 2 } }, { pop: 0.3 }, { conf: 1 }] },
       { id: 'mediate', label: 'Broker a deal between them', risk: 'low', outcomes: [
         { weight: 2, bonus: { charisma: 0.5 }, text: `After an hour in a locked room, they agree to split the difference. You are quietly credited with saving the peace.`, effects: [{ rel: { who: 'mentor', respect: 4, trust: 3 } }, { pop: 0.2 }, { fatigue: 4 }] },
         { weight: 1, text: `They stop speaking to each other, and to you.`, effects: [{ rel: { who: 'mentor', trust: -2 } }, { conf: -2 }, { fatigue: 4 }] } ] },
-      { id: 'stay_out', label: 'Stay out of it and do your job', risk: 'low', result: `You say nothing and focus on your work. Both of them note that you didn't take a side.`, effects: [{ conf: 1 }, { rel: { who: 'mentor', trust: -2 } }] },
+      { id: 'stay_out', label: 'Stay out of it and do your job', risk: 'low', result: `You say nothing and focus on your work. Both of them note that you did not take a side.`, effects: [{ conf: 1 }, { rel: { who: 'mentor', trust: -2 } }] },
     ],
   },
   {
     id: 'men_gear_gift', category: 'mentor', title: 'A Gift Worth More Than Money', weight: 2, cooldownDays: 150, maxPerCareer: 2,
     trigger: { stat: { popularity: { gte: 25 } } }, cast: { vet: { pick: 'roster', tier: { gte: 3 } } },
-    slots: { item: [`a worn leather jacket`, `a pair of boots with a famous scuff`, `a robe with a faded name stitched inside`, `a championship-style belt from a long-ago tour`], condition: [`"Don't sell it."`, `"Earn it."`, `"It's lucky, but not for the reasons you think."`] },
-    body: [`{vet.name} presents you with {item}, handed over in a quiet moment. {condition}`, `It's a gesture of trust. Also, in a business where everything is a trade, it's hard to know what's being traded.`],
+    slots: { item: [`a worn leather jacket`, `a pair of boots, famous scuff and all`, `a robe, faded name still stitched inside`, `a championship-style belt from a long-ago tour`], condition: [`"Don't sell it."`, `"Earn it."`, `"It's lucky, but not for the reasons you think."`] },
+    body: [`{vet.name} presents you with {item}, handed over in a quiet moment. {condition}`, `It is a gesture of trust, though in a business where everything is a trade, it is hard to know what is being traded.`],
     choices: [
-      { id: 'wear', label: 'Wear it to the ring, with pride', risk: 'low', result: `You wear it out and the veterans see it. For one night, you carry a lineage, and the crowd responds to something it can't name.`, effects: [{ pop: 0.5 }, { rel: { who: 'vet', respect: 6, affinity: 5 } }, { conf: 3 }] },
+      { id: 'wear', label: 'Wear it to the ring, with pride', risk: 'low', result: `You wear it out and the veterans see it. For one night, you carry a lineage, and the crowd responds to something it cannot name.`, effects: [{ pop: 0.5 }, { rel: { who: 'vet', respect: 6, affinity: 5 } }, { conf: 3 }] },
       { id: 'keep', label: 'Keep it safe and never wear it', risk: 'low', result: `You put it in a case. {vet.first} sees it there and says nothing, and you understand each other.`, effects: [{ rel: { who: 'vet', trust: 5 } }, { conf: 2 }] },
       { id: 'sell', label: 'Sell it to a collector', risk: 'high', outcomes: [
         { weight: 1, text: `The sale pays well, and nobody finds out. A small part of you wishes you had kept it.`, effects: [{ money: 15000 }, { conf: -2 }] },

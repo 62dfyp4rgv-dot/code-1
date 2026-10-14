@@ -55,7 +55,7 @@ export default [
     cast: { producer: { pick: 'staff', role: 'producer' } },
     trigger: { stat: { matches: { lte: 6 } }, minYear: 1993 },
     slots: { sign: ['a shaking leg', 'a dry mouth', 'a blank spot where the finish used to be', 'cold hands'], backstage: ['behind the curtain', 'beside the gorilla monitor', 'in the corner of the hallway', 'in a bathroom stall'] },
-    body: ['It is your first night on television and your body has decided to protest, starting with {sign}. You are {backstage}, with the arena hum rising on the other side of the wall.', '{producer.name} appears with a headset and a clipboard and reads your face in one second. "Longer out than in," {producer.they} says, tapping your sternum. "Ten minutes to the bell."'],
+    body: ['It is your first night on television and your body has decided to protest, starting with {sign}. You are {backstage}, with the arena hum rising on the other side of the wall.', '{producer.name} appears with a headset and a clipboard and reads your face in one second. "Longer out than in," {producer.first} says, tapping your sternum. "Ten minutes to the bell."'],
     choices: [
       { id: 'breathe', label: 'Slow your breathing and run the match in your head', risk: 'low', result: 'You walk the sequence twice in your head, beat for beat. By the time the music hits, the shaking has turned into focus.', effects: [{ conf: 3 }, { attr: { name: 'psychology', delta: 1 } }] },
       { id: 'tell', label: 'Admit it to {producer.name} and ask for guidance', risk: 'med', outcomes: [
@@ -70,7 +70,7 @@ export default [
     cast: { trainer: { pick: 'staff', role: 'trainer' } },
     trigger: { stat: { careerYears: { lte: 3 }, fatigue: { gte: 40 } } },
     slots: { drill: ['another hundred bumps', 'extra rounds of the conditioning circuit', 'repeating the same sequence until it is perfect', 'a double session on a day off'], reason: ['a gap in the card next week', 'an evaluation from the office', 'a bad day that nobody will explain', 'a bet with another trainer about your ceiling'] },
-    body: ['"Again," {trainer.name} says at the end of an already long day, and what {trainer.they} means is {drill}. The reason, mentioned in passing, is {reason}.', 'Your legs have gone from sore to numb and your breath comes in short bursts. Nobody else in the room has been asked to do the same.'],
+    body: ['"Again," {trainer.name} says at the end of an already long day, and what is meant is {drill}. The reason, mentioned in passing, is {reason}.', 'Your legs have gone from sore to numb and your breath comes in short bursts. Nobody else in the room has been asked to do the same.'],
     choices: [
       { id: 'comply', label: 'Say yes and push through it', risk: 'med', outcomes: [
         { weight: 2, bonus: { fatigue: -0.6 }, text: 'You do every rep. {trainer.name} lets you sit down at the end without comment, and a week later you are visibly sharper.', effects: [{ attr: { name: 'endurance', delta: 1 } }, { fatigue: 12 }, { conf: 2 }] },
@@ -164,7 +164,7 @@ export default [
     id: 'life_brk_merch_surge', category: 'breakout', title: 'Your {item} Sold Out at {venue}', weight: 1.5, cooldownDays: 150, maxPerCareer: 3, categoryCooldown: 8,
     cast: { exec: { pick: 'staff', role: 'executive' } },
     trigger: { stat: { popularity: { gte: 40, lte: 80 } } },
-    slots: { item: ['t-shirt', 'poster run', 'hooded sweatshirt', 'collectible figure'], venue: ['the arena merch stand', 'a fan convention', 'the travelling merch truck', 'a hometown signing'] },
+    slots: { item: ['t-shirt', 'poster run', 'hooded sweatshirt', 'collectible figure'], venue: ['the arena merch stand', 'a fan convention', 'the traveling merch truck', 'a hometown signing'] },
     body: ['Your {item} was gone by intermission at {venue}, and the stall had to hang a sign that said "sold out". {exec.name} calls you to a quiet office to talk numbers.', 'Merchandise percentages are small, but they add up. The company would like a bigger run, and it would like you to promote it.'],
     choices: [
       { id: 'big_run', label: 'Agree to a bigger run and a signing tour', risk: 'med', outcomes: [
@@ -194,11 +194,11 @@ export default [
     ],
   },
   {
-    id: 'life_brk_banner_fan', category: 'breakout', title: 'The Fan with the {banner}', weight: 1, cooldownDays: 120, maxPerCareer: 3, categoryCooldown: 8,
+    id: 'life_brk_banner_fan', category: 'breakout', title: 'The Fan at the Barricade', weight: 1, cooldownDays: 120, maxPerCareer: 3, categoryCooldown: 8,
     cast: { fan: { pick: 'media', kind: 'fan' } },
     trigger: { stat: { popularity: { gte: 25 } } },
     slots: { banner: ['hand-painted bedsheet', 'foam-board portrait', 'sign with a joke only you understand', 'poster with your catchphrase'], section: ['front row', 'hard camera section', 'last aisle', 'family seating'] },
-    body: ['A fan named {fan.name} has been in the {section} at the last three shows holding a {banner}. This time the fan is waiting at the barricade, hoping you will stop.', '"Just one second, please?" {fan.they} calls. It is a small thing, but the people who show up every week hold the building in their hands, and you have about a minute.'],
+    body: ['A fan named {fan.name} has been in the {section} at the last three shows holding a {banner}. This time the fan is waiting at the barricade, hoping you will stop.', '"Just one second, please?" {fan.first} calls. It is a small thing, but the people who show up every week hold the building in their hands, and you have about a minute.'],
     choices: [
       { id: 'sign', label: 'Stop and sign it, then take a photo', risk: 'low', result: '{fan.first} has the biggest grin of the night. Within a week the photo has been passed around the whole section, and a few more fans come looking for you.', effects: [{ pop: 0.4 }, { fatigue: 2 }] },
       { id: 'give', label: 'Trade a piece of your gear for it', risk: 'low', requires: { stat: { money: { gte: 300 } } }, result: 'You trade a worn wristband for it. The fan nearly cries and half the section applauds. It also leaves you without a spare.', effects: [{ pop: 0.8 }, { money: -300 }, { conf: 2 }] },
@@ -427,7 +427,7 @@ export default [
     cast: { gm: { pick: 'staff', role: 'gm' }, doc: { pick: 'staff', role: 'doctor' } },
     trigger: { injured: true, serious: false },
     slots: { reason: ['a sold-out show', 'a short roster', 'a rival gaining ground', 'a title angle'], tone: ['a friendly voice', 'an insistent tone', 'a casual tone', 'a heavy sigh'] },
-    body: ['{gm.name} calls to ask how the injury is coming along, in {tone}. "No pressure," {gm.they} says, and the real question is whether you can be back for {reason}.', '{doc.name} has not cleared you yet. The decision is partly medical and partly about what kind of colleague you want to be.'],
+    body: ['{gm.name} calls to ask how the injury is coming along, in {tone}. "No pressure," {gm.first} says, and the real question is whether you can be back for {reason}.', '{doc.name} has not cleared you yet. The decision is partly medical and partly about what kind of colleague you want to be.'],
     choices: [
       { id: 'hold_line', label: 'Hold firm until {doc.name} clears you', risk: 'low', result: 'You tell {gm.name} politely that the schedule will have to wait. It is honest and a little cold, and nobody argues.', effects: [{ fatigue: -8 }, { pop: -0.3 }, { conf: 1 }] },
       { id: 'return_early', label: 'Return early and take the spot', risk: 'high', outcomes: [
@@ -446,7 +446,7 @@ export default [
     slots: { visit: ['at your front door', 'in the training room', 'in the clinic waiting room', 'in the arena parking lot'], gift: ['a card signed by the roster', 'a bag of fruit', 'a stack of old match tapes', 'a bad joke wrapped in tissue paper'] },
     body: ['{rookie.name} visits you {visit}, holding {gift}. The kid has been covering the spots you left behind, and the reviews are better than expected.', '"Just keeping your place warm," {rookie.they} says, and means it. It is hard to sit at home while someone else is learning in your place, and just as hard to ignore how genuine the gesture is.'],
     choices: [
-      { id: 'mentor', label: 'Offer to coach {rookie.first} through your recovery', risk: 'low', result: 'You turn the downtime into class time. {rookie.first} improves and you remember how much you know.', effects: [{ rel: { who: 'rookie', respect: 6, trust: 6 } }, { tag: { who: 'rookie', tag: 'mentor' } }, { fatigue: 2 }, { conf: 2 }] },
+      { id: 'mentor', label: 'Offer to coach {rookie.first} through your recovery', risk: 'low', result: 'You turn the downtime into class time. {rookie.first} improves and you remember how much you know.', effects: [{ rel: { who: 'rookie', respect: 6, trust: 6 } }, { tag: { who: 'rookie', tag: 'mentee' } }, { fatigue: 2 }, { conf: 2 }] },
       { id: 'cool', label: 'Stay polite but keep your distance', risk: 'low', result: 'You say thanks, set the gift aside and show {rookie.first} out within the hour. It is not rude, but it is not warm either.', effects: [{ rel: { who: 'rookie', respect: -1, affinity: -3 } }, { fatigue: -3 }] },
       { id: 'compete', label: 'Tell {rookie.first} you will take the spot back soon', risk: 'med', outcomes: [
         { weight: 2, bonus: { confidence: 0.5 }, text: 'The challenge lands as a joke, and also as a promise. It motivates you for the rehab ahead.', effects: [{ conf: 4 }, { rel: { who: 'rookie', respect: 3 } }, { fatigue: 4 }] },
@@ -582,7 +582,7 @@ export default [
     cast: { coach: { pick: 'staff', role: 'coach' } },
     trigger: { recent: { lossesGte: 3 }, stat: { loseStreak: { gte: 3 } } },
     slots: { mood: ['patient', 'restless', 'sarcastic', 'silent'], feeling: ['doubt', 'anger', 'embarrassment', 'exhaustion'] },
-    body: ['Three losses in a row and the crowd has turned {mood}. The loudest voice is your own, full of {feeling}, every time you step out of the shower.', '{coach.name} pulls up a chair in the training room and does not tell you it will be okay. "Tell me what you think went wrong," {coach.they} says, "and then tell me what you are going to change." You are the only one who can write the next chapter.'],
+    body: ['Three losses in a row and the crowd has turned {mood}. The loudest voice is your own, full of {feeling}, every time you step out of the shower.', '{coach.name} pulls up a chair in the training room and does not tell you it will be okay. "Tell me what you think went wrong," {coach.first} says, "and then tell me what you are going to change." You are the only one who can write the next chapter.'],
     choices: [
       { id: 'overhaul', label: 'Overhaul your style with {coach.name}', risk: 'med', outcomes: [
         { weight: 2, bonus: { overall: 0.4, confidence: 0.4 }, text: 'The new approach clicks. You stop thinking, start reacting, and for the first time in weeks the match feels like yours.', effects: [{ attr: { name: 'technical', delta: 1 } }, { attr: { name: 'psychology', delta: 1 } }, { conf: 5 }, { fatigue: 8 }] },
@@ -738,7 +738,7 @@ export default [
     id: 'life_ret_second_career', category: 'retirement', title: 'Planning Life After the Ring', weight: 1.5, cooldownDays: 240, maxPerCareer: 2, categoryCooldown: 12,
     trigger: { stat: { careerYears: { gte: 9 } }, noFlag: 'has_second_career_plan' },
     slots: { spark: ['a friend\'s offer', 'a boring Tuesday', 'a magazine profile', 'an injury scare'], idea: ['coaching young talent', 'working a broadcast desk', 'opening a restaurant', 'auditioning for a film role'] },
-    body: ['It was {spark} that got you started. Now you keep imagining {idea} as the next chapter, and the thought will not leave.', 'Plans like these are easier before the body forces them on you. They also cost time and money you would rather spend on your current job.'],
+    body: ['It was {spark} that planted the thought. Now you keep imagining {idea} as the next chapter, and the thought will not leave.', 'Plans like these are easier before the body forces them on you. They also cost time and money you would rather spend on your current job.'],
     choices: [
       { id: 'coach', label: 'Start helping at a training school on days off', risk: 'low', result: 'Two afternoons a week, a rotation of students and a lot of patience. You discover that teaching is its own kind of performance.', effects: [{ flag: 'has_second_career_plan' }, { fatigue: 6 }, { conf: 3 }, { attr: { name: 'psychology', delta: 1 } }] },
       { id: 'broadcast', label: 'Take announcing classes and practice on tape', risk: 'low', requires: { stat: { money: { gte: 600 } } }, result: 'You learn about breath and pacing and practice calls on old matches. The voice you build will outlast the knees.', effects: [{ flag: 'has_second_career_plan' }, { money: -600 }, { mic: 1 }, { charisma: 1 }, { fatigue: 3 }] },
@@ -751,7 +751,7 @@ export default [
   {
     id: 'life_ret_family_ultimatum', category: 'retirement', title: 'The Talk at the {place}', weight: 2, major: true, cooldownDays: 240, maxPerCareer: 2, categoryCooldown: 15,
     trigger: { injured: true, stat: { careerYears: { gte: 8 } } },
-    slots: { place: ['kitchen table', 'hospital waiting room', 'airport gate', 'back porch'], who: ['your partner', 'your parents', 'your oldest friend', 'your grown child'] },
+    slots: { place: ['kitchen table', 'hospital waiting room', 'airport gate', 'back porch'], who: ['your partner', 'your mother', 'your oldest friend', 'your grown child'] },
     body: ['{who} sits you down at the {place} and says it plainly: the injuries are getting worse, the time at home is getting shorter, and they want you to stop.', 'No one is shouting. It would be easier if they were. This is love that is also fear, and it will not go away just because you deny it.'],
     choices: [
       { id: 'stop', label: 'Promise to retire and wrap things up well', risk: 'high', result: 'You say yes, and the relief on their face tells you how long they have been holding it in. You still have a few matches to finish, and a career to close on your terms.', effects: [{ event: { type: 'retirement', participants: [], summary: '{player.name} retired for the sake of family and health.', importance: 5, data: {} } }, { conf: 1 }, { pop: 0.8 }] },
@@ -766,7 +766,7 @@ export default [
     id: 'life_ret_last_match', category: 'retirement', title: 'Planning a Last Match in {venue}', weight: 2, major: true, cooldownDays: 365, maxPerCareer: 1, categoryCooldown: 20,
     cast: { producer: { pick: 'staff', role: 'producer' } },
     trigger: { stat: { careerYears: { gte: 18 }, popularity: { gte: 40 } } },
-    slots: { venue: ['your hometown', 'the biggest stage of the year', 'a small building where you started', 'a regular television taping'], opponent: ['a rookie', 'your oldest rival', 'a hand-picked friend', 'a surprise opponent'] },
+    slots: { venue: ['your hometown', 'the biggest show of the year', 'a small building where you started', 'a regular television taping'], opponent: ['a rookie', 'your oldest rival', 'a hand-picked friend', 'a surprise opponent'] },
     body: ['{producer.name} has a spot open in {venue} and asks if you want to make it special. A match against {opponent} would end a career in the way you picture it.', 'There are many ways to leave. Some wrestlers pick a date and some are chosen by a bad bump. You get to choose.'],
     choices: [
       { id: 'final', label: 'Make it your final match and retire', risk: 'high', result: 'You write the last page yourself. The match is long, emotional and a little slow, and the building loves every second of it.', effects: [{ event: { type: 'retirement', participants: [], summary: '{player.name} wrestled a final match and retired.', importance: 5, data: {} } }, { pop: 2.0 }, { conf: 4 }, { fatigue: 8 }] },
@@ -784,8 +784,8 @@ export default [
     id: 'life_leg_interview', category: 'legacy', title: 'A {format} About Your Legacy', weight: 2, cooldownDays: 180, maxPerCareer: 3, categoryCooldown: 10,
     cast: { host: { pick: 'media', kind: 'interviewer' } },
     trigger: { stat: { careerYears: { gte: 4 } }, any: [{ stat: { titleWins: { gte: 1 } } }, { stat: { careerYears: { gte: 6 } } }] },
-    slots: { format: ['sit-down interview', 'magazine profile', 'radio call-in', 'hall-of-fame video'], topic: ['your first match', 'the toughest night of your career', 'your greatest rival', 'what you would do differently'] },
-    body: ['{host.name} sets up for a {format}, and the first question is a hard one: {topic}. You can feel the weight of years behind the question.', 'Everything you say will be quoted. How you want to be remembered is partly up to you, and partly a matter of how you speak tonight.'],
+    slots: { format: ['sit-down interview', 'long-form conversation', 'career retrospective', 'tribute feature'], topic: ['your first match', 'the toughest night of your career', 'your greatest rival', 'what you would do differently'] },
+    body: ['{host.name} sets up for a {format}, and the first question is a hard one. It is about {topic}, and you can feel the weight of years behind it.', 'Everything you say will be quoted. How you want to be remembered is partly up to you, and partly a matter of how you speak tonight.'],
     choices: [
       { id: 'honest', label: 'Answer honestly, including the failures', risk: 'med', outcomes: [
         { weight: 3, bonus: { mic: 0.4, charisma: 0.4 }, text: 'You speak plainly and the piece gets better for it. People respect the vulnerability.', effects: [{ pop: 0.7 }, { conf: 3 }, { event: { type: 'interview', participants: ['host'], summary: 'Gave an honest legacy interview.', data: { quality: { base: 68, mic: 0.4, charisma: 0.3 }, viral: { minQuality: 88, chance: 0.3 } } } }] },
@@ -814,8 +814,8 @@ export default [
     id: 'life_leg_documentary', category: 'legacy', title: 'A Documentary Crew Wants Your Story', weight: 1.5, major: true, cooldownDays: 365, maxPerCareer: 1, categoryCooldown: 15,
     cast: { host: { pick: 'media', kind: 'host' } },
     trigger: { minYear: 2000, stat: { careerYears: { gte: 8 }, popularity: { gte: 50 } } },
-    slots: { angle: ['your rise from nothing', 'a bitter feud', 'a comeback story', 'the cost of fame'], crew: ['a small crew with a big idea', 'a cable network', 'a student film team', 'an international production house'] },
-    body: ['{host.name} leads {crew}, which is making a film about {angle}. They want access: your training, your home, your hardest memories.', 'A good documentary can define a career for decades. A bad one can follow you the same way.'],
+    slots: { angle: ['your rise from nothing', 'a bitter feud', 'a comeback story', 'the cost of fame'], crew: ['a small crew and a big idea', 'a cable network\'s camera crew', 'a student film team', 'a crew from an international production house'] },
+    body: ['{host.name} arrives with {crew}, making a film about {angle}. They want access: your training, your home, your hardest memories.', 'A good documentary can define a career for decades. A bad one can follow you the same way.'],
     choices: [
       { id: 'full_access', label: 'Give them full access', risk: 'high', outcomes: [
         { weight: 2, bonus: { charisma: 0.5, confidence: 0.4 }, text: 'The film is intimate and generous. Audiences cry in the right places and your name travels further than it has in years.', effects: [{ pop: 1.8 }, { conf: 4 }, { fatigue: 8 }] },
@@ -830,7 +830,7 @@ export default [
     cast: { exec: { pick: 'staff', role: 'executive' } },
     trigger: { stat: { titleWins: { gte: 2 }, careerYears: { gte: 12 } } },
     slots: { source: ['a hallway rumor', 'a quiet call from a friend', 'a sentence in a column', 'a question at a press event'], reaction: ['pride', 'embarrassment', 'impatience', 'a strange calm'] },
-    body: ['It first reaches you through {source}: your name is on a list for the Hall of Fame. The first thing you feel is {reaction}.', '{exec.name} says nothing official, with the careful look of someone who knows more than they are allowed to say.'],
+    body: ['It first reaches you through {source}: your name is on a list for the Hall of Fame. The first thing you feel is {reaction}.', '"I cannot comment on lists," {exec.name} says, with the careful look of someone who knows more than is allowed to be said.'],
     choices: [
       { id: 'quiet', label: 'Stay quiet and keep doing the work', risk: 'low', result: 'You say nothing and stay out of the way. When the day comes, the honor will mean more for it.', effects: [{ conf: 3 }, { pop: 0.2 }] },
       { id: 'campaign', label: 'Subtly lobby the people who vote', risk: 'high', outcomes: [
@@ -860,9 +860,9 @@ export default [
     cast: { fan: { pick: 'media', kind: 'fan' } },
     trigger: { stat: { popularity: { gte: 60 } } },
     slots: { art: ['logo', 'catchphrase', 'signature pose', 'face'], spot: ['on a forearm', 'across a back', 'on a calf', 'on a shoulder'] },
-    body: ['{fan.name} lifts a sleeve at the barricade and shows your {art} permanently inked {spot}. It looks well done, and a little bit frightening.', 'You are used to being cheered. Being worn is a different level of responsibility.'],
+    body: ['At the barricade, {fan.name} shows you your {art} permanently inked {spot}. It looks well done, and a little bit frightening.', '"It is forever," {fan.first} says. "I checked." You are used to being cheered, but being worn is a different level of responsibility.'],
     choices: [
-      { id: 'sign_photo', label: 'Sign near the ink and pose for a photo', risk: 'low', result: 'You sign above the tattoo and take the picture. The shot becomes a fan-page favorite.', effects: [{ pop: 0.6 }, { fatigue: 2 }, { conf: 2 }] },
+      { id: 'sign_photo', label: 'Sign near the ink and pose for a photo', risk: 'low', result: 'You sign above the tattoo and take the picture. The shot becomes a favorite among the regulars at the barricade.', effects: [{ pop: 0.6 }, { fatigue: 2 }, { conf: 2 }] },
       { id: 'caution', label: 'Gently tell {fan.first} to be careful about permanent choices', risk: 'low', result: '{fan.first} laughs and promises it was thought through. You feel better for having said it.', effects: [{ conf: 1 }, { pop: 0.1 }] },
       { id: 'gift_pass', label: 'Give {fan.first} backstage passes for the family', risk: 'low', requires: { stat: { money: { gte: 200 } } }, result: '{fan.first} brings the whole family and the story goes around the building for weeks.', effects: [{ money: -200 }, { pop: 0.9 }, { conf: 3 }, { fatigue: 3 }] },
       { id: 'brush_off', label: 'Smile, nod and keep walking', risk: 'low', result: 'You are late, tired and ready to go. The smile is real and brief.', effects: [{ fatigue: -2 }, { pop: -0.2 }] },
@@ -878,7 +878,7 @@ export default [
       { id: 'donate', label: 'Donate it to a museum exhibit', risk: 'low', result: 'It goes on public display with a small plaque. The press is kind and your accountant is not.', effects: [{ pop: 0.6 }, { conf: 3 }, { money: -500 }] },
       { id: 'fan', label: 'Give it to a fan who truly wants it', risk: 'med', outcomes: [
         { weight: 3, text: 'The fan\'s face does something you will not forget. The story spreads, and your reputation grows.', effects: [{ pop: 1.1 }, { conf: 4 }] },
-        { weight: 1, text: 'A week later it turns up on a resale site. The sentiment is spoiled, and you hear about it.', effects: [{ pop: -0.3 }, { conf: -2 }] } ] },
+        { weight: 1, text: 'A week later it turns up on a dealer\'s table at a collectors\' convention. The sentiment is spoiled, and you hear about it.', effects: [{ pop: -0.3 }, { conf: -2 }] } ] },
       { id: 'keep', label: 'Keep it for yourself and your family', risk: 'low', result: 'You keep it in a closet, wrapped in a towel. Nobody else will see it, but you will.', effects: [{ conf: 2 }, { money: -100 }] },
     ],
   },
@@ -887,7 +887,7 @@ export default [
     id: 'life_fin_tax_bill', category: 'finance', title: 'The Tax Bill: {problem}', weight: 2, cooldownDays: 300, maxPerCareer: 3, categoryCooldown: 10,
     cast: { agent: { pick: 'staff', role: 'agent' } },
     trigger: { month: [3, 4], stat: { money: { gte: 3000 }, careerYears: { gte: 1 } } },
-    slots: { problem: ['an unfiled quarterly payment', 'a missing folder of receipts', 'a state you forgot you worked in', 'an accountant who quit mid-season'], size: ['a modest bill', 'a hefty bill', 'a bill with penalties', 'a bill with a surprise audit letter'] },
+    slots: { problem: ['an unfiled quarterly payment', 'a missing folder of receipts', 'a state you forgot you worked in', 'returns your last accountant never filed'], size: ['a modest bill', 'a hefty bill', 'a bill padded with penalties', 'a bill and a surprise audit letter'] },
     body: ['The letter is about {problem}, and it ends with {size}. {agent.name} reads it twice and puts it down very gently.', 'Wrestlers cross a lot of borders and invoice a lot of people, and the paperwork rarely keeps up. You can pay, haggle or hope.'],
     choices: [
       { id: 'pay', label: 'Pay in full and sleep well', risk: 'low', requires: { stat: { money: { gte: 8000 } } }, result: 'It hurts to watch the number drop, and it is over. You know exactly where you stand.', effects: [{ money: -8000 }, { conf: 2 }, { fatigue: -3 }] },
@@ -919,7 +919,7 @@ export default [
     id: 'life_fin_sponsorship', category: 'finance', title: 'A Sponsor Wants You: {product}', weight: 2, cooldownDays: 150, maxPerCareer: 4, categoryCooldown: 8,
     cast: { agent: { pick: 'staff', role: 'agent' } },
     trigger: { stat: { popularity: { gte: 40 } } },
-    slots: { product: ['an energy drink', 'a gym chain', 'a boot company', 'a regional truck dealership'], terms: ['a flat fee', 'a bonus per appearance', 'free product and a smaller fee', 'a cut of sales'] },
+    slots: { product: ['a soft-drink company', 'a gym chain', 'a boot company', 'a regional truck dealership'], terms: ['a flat fee', 'a bonus per appearance', 'free product and a smaller fee', 'a cut of sales'] },
     body: ['The offer from {product} is on the table: {terms}, in exchange for your face and some of your time. {agent.name} thinks it is a decent deal, and also thinks you should read the small print.', 'Brand deals pay now and ask questions later. The audience can smell a sellout, and the audience can smell a bargain too.'],
     choices: [
       { id: 'exclusive', label: 'Sign the exclusive deal', risk: 'med', result: 'You sign and wear the logo wherever you go. The money is good, the freedom is lower, and some fans grumble.', effects: [{ money: 14000 }, { pop: -0.3 }, { fatigue: 4 }] },
@@ -931,17 +931,17 @@ export default [
     ],
   },
   {
-    id: 'life_fin_friend_loan', category: 'finance', title: 'A Friend Needs Money for {reason}', weight: 1.5, cooldownDays: 200, maxPerCareer: 2, categoryCooldown: 10,
+    id: 'life_fin_friend_loan', category: 'finance', title: 'A Colleague Needs Money for {reason}', weight: 1.5, cooldownDays: 200, maxPerCareer: 2, categoryCooldown: 10,
     cast: { friend: { pick: 'roster', tier: { lte: 2 } } },
     trigger: { stat: { money: { gte: 5000 } } },
-    slots: { reason: ['a medical bill', 'a failed business', 'a car repair', 'a wedding'], ask: ['a few thousand', 'a down payment', 'a one-time fix', 'an open-ended favor'] },
-    body: ['{friend.name} pulls you aside and asks for {ask}. The money is for {reason}, {friend.they} explains, and {friend.their} voice is steadier than {friend.their} face.', 'Friendship and money rarely mix cleanly. You can say yes, no, or something in between, and each one will cost you.'],
+    slots: { reason: ['a medical bill', 'a failed business', 'a car repair', 'a wedding'], ask: ['a few thousand', 'whatever you can spare', 'a one-time loan', 'an open-ended favor'] },
+    body: ['{friend.name} pulls you aside and asks for {ask}. The money is for {reason}, {friend.they} explains, and {friend.their} voice is steadier than {friend.their} face.', 'Money and the locker room rarely mix cleanly. You can say yes, no, or something in between, and each one will cost you.'],
     choices: [
       { id: 'lend', label: 'Lend the full amount, no questions', risk: 'med', requires: { stat: { money: { gte: 4000 } } }, outcomes: [
-        { weight: 2, text: '{friend.first} pays back part of it within months and swears the rest is coming. The bond deepens.', effects: [{ money: -2500 }, { rel: { who: 'friend', trust: 8, respect: 4, affinity: 6 } }, { conf: 2 }] },
+        { weight: 2, text: '{friend.first} pays back part of it within months and swears the rest is coming. The trust between you deepens.', effects: [{ money: -2500 }, { rel: { who: 'friend', trust: 8, respect: 4, affinity: 6 } }, { conf: 2 }] },
         { weight: 1, text: 'The money vanishes into the same problem that started it. {friend.first} becomes hard to find.', effects: [{ money: -4000 }, { rel: { who: 'friend', trust: -4 } }, { conf: -2 }] } ] },
       { id: 'gift', label: 'Give a smaller sum as a gift', risk: 'low', requires: { stat: { money: { gte: 1000 } } }, result: 'You give what you can spare and make it clear there is no loan. {friend.first} nods, relieved and a little proud.', effects: [{ money: -1000 }, { rel: { who: 'friend', respect: 4, affinity: 4 } }] },
-      { id: 'terms', label: 'Offer a loan with written terms', risk: 'low', result: 'It feels cold, and it is safe. {friend.first} signs and the money moves, though the friendship is a notch more formal.', effects: [{ money: -2000 }, { rel: { who: 'friend', trust: 2, affinity: -3 } }, { conf: 1 }] },
+      { id: 'terms', label: 'Offer a loan with written terms', risk: 'low', result: 'It feels cold, and it is safe. {friend.first} signs and the money moves, though things between you are a notch more formal.', effects: [{ money: -2000 }, { rel: { who: 'friend', trust: 2, affinity: -3 } }, { conf: 1 }] },
       { id: 'decline', label: 'Say no kindly and offer other help', risk: 'low', result: 'You offer to make introductions and write a reference instead. {friend.first} says thanks and means about half of it.', effects: [{ rel: { who: 'friend', affinity: -4, respect: 1 } }, { conf: 1 }] },
     ],
   },
@@ -949,8 +949,8 @@ export default [
     id: 'life_fin_broke', category: 'finance', title: '{crisis} and an Empty Account', weight: 2, cooldownDays: 120, maxPerCareer: 3, categoryCooldown: 8,
     cast: { gm: { pick: 'staff', role: 'gm' } },
     trigger: { stat: { money: { lte: 3000 }, careerYears: { gte: 1 } } },
-    slots: { crisis: ['A broken transmission', 'An overdue rent notice', 'A cancelled card', 'A surprise vet bill'], secret: ['a stack of unopened envelopes', 'a quiet fear you tell no one', 'a lie to your family about how it is going', 'a pawned watch'] },
-    body: ['{crisis} has landed at the worst possible time, and you are holding {secret}. The bank balance reads a number you did not know it could reach.', '{gm.name} might help if asked. Asking is the hard part.'],
+    slots: { crisis: ['A broken transmission', 'An overdue rent notice', 'A cancelled card', 'A surprise vet bill'], secret: ['a stack of unopened envelopes', 'a quiet fear you tell no one', 'a lie to your family about how it is going', 'a pawn ticket for your watch'] },
+    body: ['{crisis} has landed at the worst possible time, and you are holding {secret}. The bank balance reads a number you did not know it could reach.', '{gm.name} might help if asked. "My door is always open," {gm.first} tells everyone, and few people ever walk through it. Asking is the hard part.'],
     choices: [
       { id: 'extra_dates', label: 'Pick up every extra date you can', risk: 'med', outcomes: [
         { weight: 3, bonus: { fatigue: -0.5 }, text: 'The extra dates are rough and the pay is real. You get back to the black column in three weeks.', effects: [{ money: 5500 }, { fatigue: 12 }, { pop: 0.2 }] },
@@ -971,7 +971,7 @@ export default [
     choices: [
       { id: 'all_in', label: 'Go all in on the venture', risk: 'high', requires: { stat: { money: { gte: 9000 } } }, outcomes: [
         { weight: 1, text: 'The venture thrives. Within a year the check is triple and the friendship is stronger.', effects: [{ money: 25000 }, { rel: { who: 'vet', respect: 5, trust: 5 } }, { conf: 4 }] },
-        { weight: 2, text: 'The venture is badly managed and closes. You lose most of the stake, and the friendship takes a bruise.', effects: [{ money: -9000 }, { rel: { who: 'vet', trust: -4 } }, { conf: -4 }] } ] },
+        { weight: 2, text: 'The venture is badly managed and closes. You lose most of the stake, and the relationship takes a bruise.', effects: [{ money: -9000 }, { rel: { who: 'vet', trust: -4 } }, { conf: -4 }] } ] },
       { id: 'small_stake', label: 'Invest a small, affordable stake', risk: 'med', outcomes: [
         { weight: 2, text: 'It breaks even and pays a small dividend. You learned a lot for a modest price.', effects: [{ money: 1200 }, { rel: { who: 'vet', respect: 2 } }] },
         { weight: 1, text: 'The venture fails quietly. The loss is small and survivable.', effects: [{ money: -2000 }] } ] },
@@ -983,7 +983,7 @@ export default [
     id: 'life_fin_agent_cut', category: 'finance', title: 'Is Your Agent Worth {cut}?', weight: 1.5, cooldownDays: 240, maxPerCareer: 2, categoryCooldown: 10,
     cast: { agent: { pick: 'staff', role: 'agent' } },
     trigger: { stat: { popularity: { gte: 35 }, careerYears: { gte: 2 } } },
-    slots: { cut: ['10 percent', '15 percent', '20 percent', 'a growing slice'], event: ['a missed deal', 'a rival agency\'s pitch', 'a glowing reference from a friend', 'a long silence on your calls'] },
+    slots: { cut: ['10 percent', '15 percent', '20 percent', 'a growing slice'], event: ['a missed deal', 'a rival agency\'s pitch', 'a glowing reference for a rival agent', 'a long silence on your calls'] },
     body: ['{agent.name} takes {cut} of what you make, and after {event} you cannot stop running the numbers. The question is not whether the deals are good but whether you would have gotten them anyway.', 'Good representation can double a career. Bad representation can quietly halve one.'],
     choices: [
       { id: 'stay', label: 'Stay and ask for better service', risk: 'low', result: '{agent.name} hears the message and tightens the follow-up. Things improve, for a while.', effects: [{ conf: 1 }, { money: 800 }] },
@@ -999,7 +999,7 @@ export default [
   {
     id: 'life_fin_car', category: 'finance', title: 'Time for New Wheels', weight: 1.5, cooldownDays: 240, maxPerCareer: 2, categoryCooldown: 10,
     trigger: { stat: { money: { gte: 12000 } } },
-    slots: { car: ['restored classic', 'reliable truck', 'luxury sedan', 'used van with room for gear'], reason: ['a long haul tour', 'a reward for a hard year', 'a dead engine in the old one', 'a friend who just bought one'] },
+    slots: { car: ['restored classic', 'reliable truck', 'luxury sedan', 'used van with room for gear'], reason: ['a long-haul tour', 'a reward for a hard year', 'a dead engine in the old one', 'a friend who just bought one'] },
     body: ['You have been looking at a {car}, and the reason is {reason}. The dealer smiles with a very friendly kind of patience.', 'Cars are tools, treats and status in this business. Which one you pick says something, and so does what you spend.'],
     choices: [
       { id: 'splurge', label: 'Splurge on the one you actually want', risk: 'med', requires: { stat: { money: { gte: 14000 } } }, result: 'You drive it off the lot with the windows down. It is wonderful, and it will be a monthly reminder of the price.', effects: [{ money: -13000 }, { conf: 5 }, { pop: 0.3 }] },
@@ -1012,7 +1012,7 @@ export default [
   },
   // ======================= TRAINING =======================
   {
-    id: 'life_trn_montage', category: 'training', title: 'A Training Block on {place}', weight: 2.5, cooldownDays: 60, maxPerCareer: 6, categoryCooldown: 6,
+    id: 'life_trn_montage', category: 'training', title: 'A Training Block at {place}', weight: 2.5, cooldownDays: 60, maxPerCareer: 6, categoryCooldown: 6,
     trigger: { stat: { fatigue: { lte: 65 } } },
     slots: { place: ['a mountain trail', 'a boxing gym', 'a rented ring', 'a lakeside track'], focus: ['strength', 'speed', 'flexibility', 'mental sharpness'] },
     body: ['You have two free weeks and a plan for {place}: a block built around {focus}. The program sits on the fridge door in blue marker.', 'Training blocks reward consistency and punish overreach. What you work on shapes who you will be in the ring next month.'],
@@ -1026,7 +1026,7 @@ export default [
     ],
   },
   {
-    id: 'life_trn_new_coach', category: 'training', title: 'A New Coach with a {style} Approach', weight: 2, cooldownDays: 150, maxPerCareer: 3, categoryCooldown: 8,
+    id: 'life_trn_new_coach', category: 'training', title: 'A Coach with a {style} Approach', weight: 2, cooldownDays: 150, maxPerCareer: 3, categoryCooldown: 8,
     cast: { coach: { pick: 'staff', role: 'coach' } },
     trigger: { stat: { careerYears: { gte: 1 } } },
     slots: { style: ['traditional', 'science-heavy', 'storytelling-first', 'hard-conditioning'], offer: ['a three-month plan', 'a one-week trial', 'a private contract', 'a spot in a team program'] },
@@ -1045,7 +1045,7 @@ export default [
     cast: { partner: { pick: 'roster', tier: { lte: 3 } } },
     trigger: { stat: { careerYears: { gte: 1 }, fatigue: { lte: 70 } }, injured: false },
     slots: { type: ['a bigger opponent', 'a faster opponent', 'a smarter opponent', 'a stubborn veteran'], setting: ['the ring at dawn', 'a rented gym', 'the arena before doors', 'a backyard ring'] },
-    body: ['{partner.name} offers to work with you in {setting}, and the match-up is {type}. The sparring will not be on television, and it will be more honest than most of what is.', 'Anyone can look good in front of a crowd. Behind closed doors you can learn what you actually are.'],
+    body: ['{partner.name} offers to work with you in {setting}, and the match-up is {type}. "Do not hold back," {partner.they} says. The sparring will not be on television, and it will be more honest than most of what is.', 'Anyone can look good in front of a crowd. Behind closed doors you can learn what you actually are.'],
     choices: [
       { id: 'hard', label: 'Spar hard and accept the bruises', risk: 'med', outcomes: [
         { weight: 3, bonus: { fatigue: -0.4 }, text: 'You exchange punches, holds and respect. You are a better wrestler by the end.', effects: [{ attr: { name: 'toughness', delta: 1 } }, { rel: { who: 'partner', respect: 5 } }, { fatigue: 10 }, { conf: 2 }] },
@@ -1058,10 +1058,10 @@ export default [
     ],
   },
   {
-    id: 'life_trn_video_study', category: 'training', title: 'A Night with {tapes}', weight: 1.5, cooldownDays: 80, maxPerCareer: 4, categoryCooldown: 6,
+    id: 'life_trn_video_study', category: 'training', title: 'A Study Session with {tapes}', weight: 1.5, cooldownDays: 80, maxPerCareer: 4, categoryCooldown: 6,
     trigger: { stat: { careerYears: { gte: 1 } } },
     slots: { tapes: ['your own old matches', 'a legend\'s classics', 'footage of a rival', 'crowd reaction reels'], hours: ['an all-night session', 'a weekend binge', 'a week of lunch breaks', 'a single focused afternoon'] },
-    body: ['You have set aside {hours} for {tapes}, a notebook and a marker. The first twenty minutes are fun and the next two hours are work.', 'There is a lot to learn from tape and a lot to hide in it. What you take from it depends on what you are ready to see.'],
+    body: ['You have set aside {hours} with {tapes}, a notebook and a marker. The first twenty minutes are fun and the rest is work.', 'There is a lot to learn from tape and a lot to hide in it. What you take from it depends on what you are ready to see.'],
     choices: [
       { id: 'notes', label: 'Take detailed notes and build a plan', risk: 'low', result: 'The notes become a checklist and the checklist becomes a habit. Your next matches show it.', effects: [{ attr: { name: 'psychology', delta: 1 } }, { fatigue: 5 }, { conf: 1 }] },
       { id: 'steal', label: 'Pick out moves to try in the ring', risk: 'med', outcomes: [
@@ -1089,7 +1089,7 @@ export default [
     id: 'life_trn_plateau', category: 'training', title: 'The Plateau: {sign}', weight: 2, cooldownDays: 120, maxPerCareer: 3, categoryCooldown: 8,
     cast: { coach: { pick: 'staff', role: 'coach' } },
     trigger: { stat: { careerYears: { gte: 2 }, matches: { gte: 20 } } },
-    slots: { sign: ['the same drills', 'a flat feeling in the ring', 'no new ideas in months', 'a coach who stopped correcting you'], reaction: ['boredom', 'irritation', 'panic', 'quiet resignation'] },
+    slots: { sign: ['the same drills every week', 'a flat feeling in the ring', 'a stretch of months without a new idea', 'a week where nothing felt like progress'], reaction: ['boredom', 'irritation', 'panic', 'quiet resignation'] },
     body: ['It is {sign}, and the feeling that follows is {reaction}. You are not getting worse, which is almost worse, because you are not getting better either.', '{coach.name} noticed before you did. A plateau is a signal, and the signal is not subtle.'],
     choices: [
       { id: 'shake_up', label: 'Overhaul your routine from scratch', risk: 'high', outcomes: [
@@ -1109,7 +1109,7 @@ export default [
       { id: 'premium', label: 'Buy the best version you can find', risk: 'med', requires: { stat: { money: { gte: 5000 } } }, result: 'It arrives in boxes and takes a weekend to assemble. It also becomes the center of your week.', effects: [{ money: -5000 }, { attr: { name: 'power', delta: 1 } }, { attr: { name: 'technical', delta: 1 } }, { conf: 3 }, { fatigue: 5 }] },
       { id: 'budget', label: 'Build a budget version yourself', risk: 'low', result: 'Lumber, bolts and a borrowed drill. It wobbles and it works.', effects: [{ money: -900 }, { attr: { name: 'endurance', delta: 1 } }, { fatigue: 6 }, { conf: 1 }] },
       { id: 'gym_membership', label: 'Skip the build and pay for a top gym', risk: 'low', result: 'The gym is clean and stocked. It also takes a slice of your income every month.', effects: [{ money: -1500 }, { attr: { name: 'toughness', delta: 1 } }, { fatigue: 3 }] },
-      { id: 'save', label: 'Save the money for something else', risk: 'low', result: 'You close the shopping tabs and leave the garage as it was. It stays full of boxes and good intentions.', effects: [{ conf: 0 }, { fatigue: -2 }] },
+      { id: 'save', label: 'Save the money for something else', risk: 'low', result: 'You close the catalog and leave the garage as it was. It stays full of boxes and good intentions.', effects: [{ conf: 0 }, { fatigue: -2 }] },
     ],
   },
   // ======================= TRAVEL =======================
@@ -1121,7 +1121,7 @@ export default [
     choices: [
       { id: 'push', label: 'Push through and finish the run', risk: 'high', outcomes: [
         { weight: 2, bonus: { fatigue: -0.5, confidence: 0.3 }, text: 'You keep every date and nobody can tell what it cost. You collapse into the couch for a day after.', effects: [{ money: 3500 }, { pop: 0.3 }, { fatigue: 12 }] },
-        { weight: 2, text: 'On the last weekend you mistime a landing and land awkwardly. You finish the run but pay for it later.', effects: [{ money: 3500 }, { injury: { part: 'legs', severity: 1, days: 12 } }, { fatigue: 14 }, { conf: -3 }] } ] },
+        { weight: 2, text: 'On the last weekend you mistime a landing and come down awkwardly. You finish the run but pay for it later.', effects: [{ money: 3500 }, { injury: { part: 'legs', severity: 1, days: 12 } }, { fatigue: 14 }, { conf: -3 }] } ] },
       { id: 'trim_dates', label: 'Ask to skip two dates', risk: 'med', result: 'The office grumbles and then agrees. You gain two nights of sleep and lose two nights of pay.', effects: [{ fatigue: -12 }, { money: -1800 }, { pop: -0.2 }] },
       { id: 'upgrade_travel', label: 'Pay for a better hotel and a direct flight', risk: 'low', requires: { stat: { money: { gte: 1000 } } }, result: 'You trade money for rest. A quiet room and a straight line between two cities feel like a luxury.', effects: [{ money: -1000 }, { fatigue: -8 }, { conf: 1 }] },
       { id: 'carpool', label: 'Share rides and rest on the move', risk: 'low', result: 'You ride with two other wrestlers and sleep on the way. It is cheap and cramped and the stories are good.', effects: [{ fatigue: -4 }, { money: 200 }, { conf: 1 }] },
@@ -1131,7 +1131,7 @@ export default [
     id: 'life_trv_international_tour', category: 'travel', title: 'Wrestling Overseas: {tour}', weight: 2, major: true, cooldownDays: 240, maxPerCareer: 2, categoryCooldown: 12,
     cast: { gm: { pick: 'staff', role: 'gm' } },
     trigger: { minYear: 1990, stat: { popularity: { gte: 30 }, careerYears: { gte: 1 } } },
-    slots: { tour: ['an Asian tour', 'a European swing', 'an Australian run', 'a Latin American loop'], crowd: ['loud and generous', 'reserved but attentive', 'curious about a stranger', 'wary of outsiders'] },
+    slots: { tour: ['an Asian tour', 'a European swing', 'an Australian run', 'a Latin American loop'], crowd: ['loud and generous', 'reserved but attentive', 'curious about a visitor', 'wary of outsiders'] },
     body: ['{gm.name} has you on {tour}. You expect the crowds to be {crowd}, and you are right about half of it.', 'New cities mean new food, new rules and new ways to be misunderstood. It is also a chance to grow a fan base from scratch.'],
     choices: [
       { id: 'embrace', label: 'Embrace the local style and learn from it', risk: 'med', outcomes: [
@@ -1148,7 +1148,7 @@ export default [
     id: 'life_trv_missed_flight', category: 'travel', title: 'Stranded by {cause}', weight: 2, cooldownDays: 80, maxPerCareer: 4, categoryCooldown: 6,
     cast: { producer: { pick: 'staff', role: 'producer' } },
     trigger: { stat: { careerYears: { gte: 1 } } },
-    slots: { cause: ['a storm', 'a mechanical delay', 'a wrong gate', 'a cancelled connection'], stakes: ['a television taping', 'a house show', 'a title match', 'a signing'] },
+    slots: { cause: ['a storm', 'a mechanical delay', 'a wrong-gate mix-up', 'a cancelled connection'], stakes: ['a television taping', 'a house show', 'a title match', 'a signing'] },
     body: ['Because of {cause}, you are stuck in an airport with {stakes} in nine hours. {producer.name} is on the phone, and the voice on the line has already stopped being friendly.', 'Rebooking is a maze, the rental counters are empty and the departure board does not care about your problems.'],
     choices: [
       { id: 'drive', label: 'Rent a car and drive through the night', risk: 'med', outcomes: [
@@ -1173,14 +1173,14 @@ export default [
         { weight: 1, text: 'The words come out too rehearsed. The hometown crowd is kind and unconvinced.', effects: [{ pop: 0.2 }, { conf: -2 }] } ] },
       { id: 'tickets', label: 'Buy tickets for everyone who helped you', risk: 'low', requires: { stat: { money: { gte: 800 } } }, result: 'Thirty seats, one big family section and a lot of hugging afterward. It is the best money you have ever spent.', effects: [{ money: -800 }, { pop: 0.5 }, { conf: 4 }, { fatigue: 2 }] },
       { id: 'quiet_work', label: 'Work the match normally and enjoy it', risk: 'low', result: 'No special moment, just a strong match in front of people who love you. It feels like a victory lap.', effects: [{ pop: 0.6 }, { conf: 3 }, { fatigue: 3 }] },
-      { id: 'visit_after', label: 'Skip the party and visit your old gym', risk: 'low', result: 'The place is smaller than you remembered. An old coach pretends not to cry, and you pretend not to see.', effects: [{ conf: 4 }, { fatigue: 4 }, { pop: 0.1 }] },
+      { id: 'visit_after', label: 'Skip the after-party and visit your old gym', risk: 'low', result: 'The place is smaller than you remembered. An old coach pretends not to cry, and you pretend not to see.', effects: [{ conf: 4 }, { fatigue: 4 }, { pop: 0.1 }] },
     ],
   },
   {
     id: 'life_trv_van_ride', category: 'travel', title: 'A Long Ride: {drive}', weight: 1.5, cooldownDays: 60, maxPerCareer: 4, categoryCooldown: 6,
     trigger: { stat: { careerYears: { lte: 6 } } },
-    slots: { drive: ['a six-hour night drive', 'a winding mountain route', 'a desert highway', 'a rush-hour crawl'], crew: ['two rookies', 'a veteran who snores', 'a chatty tag team', 'the usual crew'] },
-    body: ['The ride tonight is {drive}, with {crew} in the back, and the radio has been stuck on one station for an hour. It is late, the coffee is cold, and the show is behind you.', 'Road trips give wrestlers time to talk, sleep, fight or plan. Tonight you can choose which.'],
+    slots: { drive: ['a six-hour night drive', 'a winding mountain route', 'a desert highway', 'a fog-bound crawl'], crew: ['two rookies', 'a veteran who snores', 'a chatty tag team', 'the usual crew'] },
+    body: ['The ride tonight is {drive}, with {crew} along, and the radio has been stuck on one station for an hour. It is late, the coffee is cold, and the show is behind you.', '"Pick a station or I will," someone mutters from the back seat. Road trips give wrestlers time to talk, sleep, fight or plan, and tonight you can choose which.'],
     choices: [
       { id: 'drive', label: 'Take the wheel so others can sleep', risk: 'med', result: 'You earn gratitude and tired eyes. Your passengers wake up rested, and you do not.', effects: [{ fatigue: 9 }, { conf: 2 }, { pop: 0.1 }] },
       { id: 'talk_shop', label: 'Talk shop and dissect the show', risk: 'low', result: 'The conversation covers pacing, finishes and all the ways the main event could have gone better. By dawn you have a notebook of ideas.', effects: [{ attr: { name: 'psychology', delta: 1 } }, { fatigue: 3 }, { conf: 1 }] },
@@ -1200,7 +1200,7 @@ export default [
       { id: 'complain', label: 'Complain to the manager and demand a new room', risk: 'low', outcomes: [
         { weight: 2, text: 'You are moved to a quiet floor and handed a coupon. The night is not ruined after all.', effects: [{ fatigue: -4 }, { conf: 1 }] },
         { weight: 1, text: 'The hotel is full. The manager shrugs, you grumble, and you lie awake the rest of the night.', effects: [{ fatigue: 5 }, { conf: -1 }] } ] },
-      { id: 'friend', label: 'Spend the night talking with {neighbor.first}', risk: 'low', result: 'You end up in the lobby with bad coffee and good stories. It is a friendship that began at 4 a.m.', effects: [{ rel: { who: 'neighbor', affinity: 6, respect: 3 } }, { fatigue: 4 }, { conf: 2 }] },
+      { id: 'friend', label: 'Spend the night talking with {neighbor.first}', risk: 'low', result: 'You end up in the lobby with bad coffee and good stories. It is the kind of friendship that starts at 4 a.m.', effects: [{ rel: { who: 'neighbor', affinity: 6, respect: 3 } }, { fatigue: 4 }, { conf: 2 }] },
       { id: 'upgrade', label: 'Pay for a better hotel for the night', risk: 'low', requires: { stat: { money: { gte: 400 } } }, result: 'A taxi, a bright lobby and a firm mattress. You will hate the receipt in the morning.', effects: [{ money: -400 }, { fatigue: -6 }] },
       { id: 'tough_it_out', label: 'Ignore the noise and focus on the match', risk: 'med', outcomes: [
         { weight: 2, bonus: { fatigue: -0.4 }, text: 'You stretch, hydrate and use the sleepless hours to think through the match. The adrenaline carries you through.', effects: [{ fatigue: 7 }, { attr: { name: 'psychology', delta: 1 } }, { conf: 2 }] },
@@ -1211,13 +1211,13 @@ export default [
     id: 'life_trv_airport_fan', category: 'travel', title: 'A Fan at {airport}', weight: 1, cooldownDays: 90, maxPerCareer: 4, categoryCooldown: 6,
     cast: { fan: { pick: 'media', kind: 'fan' } },
     trigger: { stat: { popularity: { gte: 30 } } },
-    slots: { airport: ['a regional airport', 'a busy hub', 'a train station', 'a ferry dock'], hour: ['5 a.m.', 'midnight', 'lunchtime', 'rush hour'] },
-    body: ['At {airport} at {hour}, a stranger approaches you. {fan.name} has followed your career for years and is trembling slightly with excitement.', 'You are tired, your luggage is heavy and your flight boards soon. Fans do not choose their moment, and neither do you.'],
+    slots: { airport: ['a regional airport', 'a baggage carousel', 'a crowded terminal', 'an airport gate'], hour: ['5 a.m.', 'midnight', 'lunchtime', 'rush hour'] },
+    body: ['Around {hour}, at {airport}, a stranger approaches you. {fan.name} has followed your career for years and is trembling slightly with excitement.', 'You are tired, your luggage is heavy and your flight boards soon. Fans do not choose their moment, and neither do you.'],
     choices: [
       { id: 'chat', label: 'Chat for ten minutes and take photos', risk: 'low', result: '{fan.first} glows. You miss the first boarding call but pick up an unusual story about the fan\'s favorite match.', effects: [{ pop: 0.6 }, { conf: 2 }, { fatigue: 3 }] },
       { id: 'quick', label: 'Sign one item and keep moving', risk: 'low', result: 'A signature, a handshake and a smile. Everyone leaves happy enough.', effects: [{ pop: 0.2 }, { fatigue: 1 }] },
       { id: 'buy_coffee', label: 'Treat {fan.first} to coffee and a real conversation', risk: 'med', outcomes: [
-        { weight: 2, text: 'The conversation is warm and surprising. {fan.first} posts about it for weeks.', effects: [{ pop: 0.9 }, { conf: 3 }, { money: -30 }, { fatigue: 4 }] },
+        { weight: 2, text: 'The conversation is warm and surprising. {fan.first} tells the story for weeks.', effects: [{ pop: 0.9 }, { conf: 3 }, { money: -30 }, { fatigue: 4 }] },
         { weight: 1, text: 'You miss your flight and sleep in a plastic chair. The coffee was good, though.', effects: [{ pop: 0.5 }, { fatigue: 9 }, { money: -250 }] } ] },
       { id: 'decline', label: 'Apologize and say you must run', risk: 'low', result: 'You are polite and brisk. {fan.first} takes it well, and an awkward moment ends.', effects: [{ fatigue: -2 }, { pop: -0.15 }] },
     ],
@@ -1271,30 +1271,30 @@ export default [
     id: 'life_per_rookie_advice', category: 'personal', title: 'A Rookie Needs Advice', weight: 1.5, cooldownDays: 90, maxPerCareer: 4, categoryCooldown: 6,
     cast: { rookie: { pick: 'roster', tier: { lte: 1 } } },
     trigger: { stat: { careerYears: { gte: 3 } } },
-    slots: { question: ['how to handle nerves', 'how to deal with a hard boss', 'how to manage money', 'how to get noticed'], place: ['the catering table', 'the bus', 'the hotel gym', 'the parking lot'] },
-    body: ['At {place}, {rookie.name} approaches you with a question: {question}. {rookie.they} looks at the floor while asking.', 'You remember asking someone the same thing once. What you say and how you say it will matter more than {rookie.they} lets on.'],
+    slots: { question: ['how to handle nerves', 'how to deal with a hard boss', 'how to manage money', 'how to get noticed'], place: ['the catering table', 'the loading dock', 'the hotel gym', 'the parking lot'] },
+    body: ['At {place}, {rookie.name} approaches you with a question about {question}. "Got a minute?" {rookie.they} asks, looking at the floor.', 'You remember asking someone the same thing once. What you say and how you say it will matter more than {rookie.they} lets on.'],
     choices: [
       { id: 'honest', label: 'Share what actually worked for you', risk: 'low', result: 'You tell the truth, including the mistakes. {rookie.first} writes it down. You will see the effects in the weeks ahead.', effects: [{ rel: { who: 'rookie', respect: 6, trust: 6 } }, { conf: 2 }, { fatigue: 2 }] },
       { id: 'tough_love', label: 'Give blunt, hard-edged advice', risk: 'med', outcomes: [
         { weight: 2, text: '{rookie.first} blinks, then nods slowly. A day later there is a nervous thank-you.', effects: [{ rel: { who: 'rookie', respect: 5, fear: 3 } }, { conf: 2 }] },
         { weight: 1, text: '{rookie.first} hears only the harshness and avoids you for a month.', effects: [{ rel: { who: 'rookie', trust: -4, respect: -2 } }, { conf: -1 }] } ] },
-      { id: 'mentor', label: 'Offer a regular weekly talk', risk: 'med', result: 'You set up a standing slot. It costs you an hour a week and pays you back in respect and perspective.', effects: [{ tag: { who: 'rookie', tag: 'mentor' } }, { event: { type: 'mentorship', participants: ['rookie'], summary: 'Took {rookie.name} under your wing.', data: { byPlayer: true } } }, { fatigue: 4 }, { conf: 2 }] },
+      { id: 'mentor', label: 'Offer a regular weekly talk', risk: 'med', result: 'You set up a standing slot. It costs you an hour a week and pays you back in respect and perspective.', effects: [{ tag: { who: 'rookie', tag: 'mentee' } }, { event: { type: 'mentorship', participants: ['rookie'], summary: 'Took {rookie.name} under your wing.', data: { byPlayer: true } } }, { fatigue: 4 }, { conf: 2 }] },
       { id: 'brush', label: 'Brush the question off, since you are busy', risk: 'low', result: 'You say it is not a good time. It never is. {rookie.first} finds someone else, and remembers who said no.', effects: [{ rel: { who: 'rookie', respect: -3, affinity: -3 } }, { fatigue: -2 }] },
     ],
   },
   {
-    id: 'life_per_old_friend', category: 'personal', title: 'An Old Friend Turns Up', weight: 1.5, cooldownDays: 150, maxPerCareer: 3, categoryCooldown: 10,
+    id: 'life_per_old_friend', category: 'personal', title: 'An Old Acquaintance Turns Up', weight: 1.5, cooldownDays: 150, maxPerCareer: 3, categoryCooldown: 10,
     cast: { friend: { pick: 'roster', tier: { lte: 1 } } },
     trigger: { stat: { popularity: { gte: 35 }, careerYears: { gte: 2 } } },
     slots: { need: ['a job', 'a place to stay', 'an introduction', 'forgiveness'], meet: ['at a diner near the arena', 'outside the stage door', 'through a message from a mutual friend', 'in a hotel lobby'] },
-    body: ['{friend.name} comes to you {meet}. You came up through the small shows together, and now you are on different rungs. {friend.they} is asking for {need}.', 'It is awkward in the way old friendships are awkward when one of you has done well. The things you used to share are harder to name.'],
+    body: ['{friend.name} comes to you {meet}. You worked some of the same small shows years ago, and now you are on different rungs. {friend.they} is asking for {need}.', 'It is awkward in the way old acquaintances are awkward when one of you has done well. The things you used to share are harder to name.'],
     choices: [
       { id: 'help_fully', label: 'Help in every way you can', risk: 'med', outcomes: [
         { weight: 2, text: '{friend.first} makes the most of the chance, and the old bond becomes stronger than before.', effects: [{ rel: { who: 'friend', trust: 8, respect: 5, affinity: 6 } }, { tag: { who: 'friend', tag: 'ally' } }, { conf: 3 }, { fatigue: 4 }] },
-        { weight: 1, text: '{friend.first} struggles to repay your effort and starts leaning on it. The friendship tightens, and not in a good way.', effects: [{ rel: { who: 'friend', trust: 1 } }, { conf: -2 }, { fatigue: 5 }] } ] },
+        { weight: 1, text: '{friend.first} struggles to repay your effort and starts leaning on it. The arrangement tightens, and not in a good way.', effects: [{ rel: { who: 'friend', trust: 1 } }, { conf: -2 }, { fatigue: 5 }] } ] },
       { id: 'small_help', label: 'Offer a small, clear piece of help', risk: 'low', result: 'A kind word to the right person and a modest gesture. It is useful and honest about its limits.', effects: [{ rel: { who: 'friend', respect: 3, affinity: 3 } }, { money: -200 }] },
       { id: 'honest_talk', label: 'Have a frank talk about how things have changed', risk: 'low', result: 'It is not easy, and it is cleansing. You leave with fewer illusions and more respect.', effects: [{ rel: { who: 'friend', respect: 4, trust: 3 } }, { conf: 2 }] },
-      { id: 'distance', label: 'Keep your distance politely', risk: 'low', result: 'You smile, promise to catch up soon, and do not. The friendship cools like a cup of coffee.', effects: [{ rel: { who: 'friend', affinity: -6, trust: -3 } }, { fatigue: -2 }] },
+      { id: 'distance', label: 'Keep your distance politely', risk: 'low', result: 'You smile, promise to catch up soon, and do not. The connection cools like a cup of coffee.', effects: [{ rel: { who: 'friend', affinity: -6, trust: -3 } }, { fatigue: -2 }] },
     ],
   },
   {
@@ -1310,7 +1310,7 @@ export default [
       { id: 'gift', label: 'Make it up with a lavish gift', risk: 'med', requires: { stat: { money: { gte: 1500 } } }, result: 'The gift is lovely and the point of it lands only halfway. It helps, though it is not the thing that was missing.', effects: [{ money: -1500 }, { conf: 1 }] },
       { id: 'promise', label: 'Promise things will get easier after this season', risk: 'high', outcomes: [
         { weight: 1, bonus: { confidence: 0.4 }, text: 'The promise is accepted and honored. You keep your word through a hard year.', effects: [{ conf: 3 }, { fatigue: 5 }] },
-        { weight: 2, text: 'It is the same promise you made last year. Everyone hears it for what it is.', effects: [{ conf: -4 }, { fatigue: 5 }] } ] },
+        { weight: 2, text: 'It is the promise every road warrior makes, and everyone hears it for what it is.', effects: [{ conf: -4 }, { fatigue: 5 }] } ] },
     ],
   },
   {
@@ -1349,7 +1349,7 @@ export default [
   {
     id: 'life_per_homesick_call', category: 'personal', title: 'A Call From {caller}', weight: 1.5, cooldownDays: 120, maxPerCareer: 3, categoryCooldown: 8,
     trigger: { stat: { careerYears: { lte: 4 }, fatigue: { gte: 30 } } },
-    slots: { caller: ['Your Mother', 'Your Old Coach', 'Your Best Friend', 'Your Younger Sibling'], news: ['good news you cannot celebrate', 'a bad week at home', 'a question you do not want to answer', 'a story about a neighbor who saw you on television'] },
+    slots: { caller: ['your mother', 'your old coach', 'your best friend', 'your younger sibling'], news: ['good news you cannot celebrate', 'a bad week at home', 'a question you do not want to answer', 'a story about a neighbor who saw you on television'] },
     body: ['{caller} rings during a lull at the arena, with {news}. The conversation runs longer than you planned and the hallway grows quieter around it.', 'You love the work. You also miss the places that are not part of it, and you are only starting to see how much.'],
     choices: [
       { id: 'talk_long', label: 'Skip warm-up and talk as long as it takes', risk: 'med', result: 'The call runs an hour. You miss your stretch and gain back a little of your own history.', effects: [{ conf: 4 }, { fatigue: 3 }, { pop: -0.1 }] },

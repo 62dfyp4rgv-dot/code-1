@@ -7,14 +7,14 @@ export default [
     cast: { producer: { pick: 'staff', role: 'producer' }, interviewer: { pick: 'media', kind: 'interviewer' } },
     trigger: { stat: { popularity: { gte: 40 }, careerYears: { gte: 1 } } },
     slots: { access: ['backstage access', 'a full season of your life', 'permission to follow you on the road', 'a corner of your locker room'], format: ['a cable network special', 'a prestige documentary series', 'a university film project', 'a regional TV news feature'] },
-    body: [`{interviewer.name} is directing {format}, and the pitch is simple: the crew wants {access}, lights, microphones and all. {producer.name} has already signed off on the footage rules, but nobody can promise what ends up on the cutting-room floor.`, `A camera sees what a crowd never does: the ice baths, the arguments in hallways, the quiet minutes before the curtain. You can shape how much of that gets seen, but not how it is edited.`],
+    body: [`{interviewer.name} is the on-camera interviewer for {format}, and the pitch is simple: the crew wants {access}, lights, microphones and all. {producer.name} has already signed off on the footage rules, but nobody can promise what ends up on the cutting-room floor.`, `"We stay out of your way, mostly," {interviewer.name} promises, which is what everyone with a camera promises. A camera sees what a crowd never does: the ice baths, the arguments in hallways, the quiet minutes before the curtain. You can shape how much of that gets seen, but not how it is edited.`],
     choices: [
       { id: 'open_doors', label: 'Open every door and let them film', risk: 'high', outcomes: [
         { weight: 3, bonus: { charisma: 0.6 }, text: `The footage is raw and human, and the finished cut makes you look like someone worth rooting for. Viewers write to the network asking for more.`, effects: [{ pop: 1.1 }, { conf: 3 }, { fatigue: 8 }, { event: { type: 'interview', participants: ['interviewer'], summary: 'Gave a documentary crew unrestricted access.', data: { quality: { base: 66, charisma: 0.5, noise: 12 }, viral: { minQuality: 82, chance: 0.35 } } } }] },
         { weight: 2, text: `The editors lean on a bad afternoon and a snapped sentence. You come across as colder than you are, and your peers notice the clip first.`, effects: [{ pop: -0.5 }, { conf: -4 }, { fatigue: 8 }] } ] },
       { id: 'controlled', label: 'Allow filming only on your terms', risk: 'low', result: `You hand over a schedule and a list of off-limits rooms. The crew grumbles but works within it, and the result is polished, safe and a little forgettable.`, effects: [{ pop: 0.3 }, { fatigue: 4 }] },
       { id: 'sell_exclusive', label: 'Demand a fee for the exclusive', risk: 'med', outcomes: [
-        { weight: 2, bonus: { charisma: 0.4 }, text: `The production company blinks and writes a cheque. The paycheck is nice, though a few colleagues mutter that you turned the locker room into a business line.`, effects: [{ money: 25000 }, { pop: 0.2 }, { conf: 1 }] },
+        { weight: 2, bonus: { charisma: 0.4 }, text: `The production company blinks and writes a check. The money is nice, though a few colleagues mutter that you turned the locker room into a business line.`, effects: [{ money: 25000 }, { pop: 0.2 }, { conf: 1 }] },
         { weight: 1, text: `They walk, and the story gets around that you priced yourself out of free publicity.`, effects: [{ pop: -0.3 }, { conf: -2 }] } ] },
       { id: 'refuse', label: 'Turn it down and protect your privacy', risk: 'low', result: `Nobody films your hallway arguments. You keep your peace, and the spotlight goes to someone else's story.`, effects: [{ conf: 2 }, { pop: -0.3 }] },
     ],
@@ -24,11 +24,11 @@ export default [
     cast: { journalist: { pick: 'media', kind: 'journalist' } },
     trigger: { stat: { popularity: { gte: 55 } } },
     slots: { mag: ['a glossy lifestyle monthly', 'a fitness magazine', 'a national sports weekly', 'a fashion quarterly'], concept: ['shot in a hushed black-and-white studio', 'posed with a vintage championship belt', 'in a formal suit you would never pick', 'in a staged brawl with a stunt double'] },
-    body: [`{journalist.name} calls with news: {mag} wants you on its cover, {concept}. The shoot would run eleven hours and the fee is modest, but a cover reaches people who have never watched a match.`, `Your agent says to take it. The cover line they have in mind, though, is not exactly the story you would tell about yourself.`],
+    body: [`{journalist.name} calls with news: {mag} wants you on its cover, {concept}. The shoot would run eleven hours and the fee is modest, but a cover reaches people who have never watched a match.`, `"Take it," your agent says. "Nobody ever turned down a cover and got a better one." The cover line they have in mind, though, is not exactly the story you would tell about yourself.`],
     choices: [
       { id: 'full_commit', label: 'Commit to the shoot and the interview', risk: 'med', outcomes: [
         { weight: 3, bonus: { charisma: 0.7 }, text: `You nail it. The photographer says the final frame is the best of the day, and the issue sells out at airport newsstands.`, effects: [{ pop: 1.2 }, { money: 8000 }, { fatigue: 10 }] },
-        { weight: 1, text: `Hour nine of the shoot is a blur. The chosen cover shot has you blinking, and the internet does the rest.`, effects: [{ pop: 0.2 }, { money: 8000 }, { fatigue: 12 }, { conf: -3 }] } ] },
+        { weight: 1, text: `Hour nine of the shoot is a blur. The chosen cover shot has you blinking, and the whole locker room has seen it by lunch.`, effects: [{ pop: 0.2 }, { money: 8000 }, { fatigue: 12 }, { conf: -3 }] } ] },
       { id: 'creative_control', label: 'Insist on picking the angle and the headline', risk: 'med', outcomes: [
         { weight: 2, bonus: { mic: 0.5 }, text: `The editor agrees to your headline. It reads sharper than anything they would have chosen, and the piece gets quoted.`, effects: [{ pop: 0.6 }, { conf: 3 }, { fatigue: 6 }] },
         { weight: 2, text: `They hold the line and run their headline anyway. You took the time and still lost the argument.`, effects: [{ pop: 0.1 }, { fatigue: 6 }, { conf: -2 }] } ] },
@@ -41,7 +41,7 @@ export default [
     cast: { host: { pick: 'media', kind: 'host' } },
     trigger: { minYear: 2000, stat: { popularity: { gte: 50 }, charisma: { gte: 45 } } },
     slots: { programme: ['a late-night comedy show', 'a daytime talk show', 'a celebrity game show', 'a late-night chat hour'], bit: ['a cooking segment', 'a lie-detector gag', 'a trivia quiz against a pop star', 'a straight sit-down chat'] },
-    body: [`{host.name} wants you on {programme}, and the producers have built the whole slot around {bit}. The audience is mostly people who would walk past you in an airport without knowing why you look familiar.`, `Five minutes of television will be watched by more people than a sold-out arena. It can also be replayed forever.`],
+    body: [`{host.name} wants you on {programme}, and the producers have built the whole slot around {bit}. The audience is mostly people who would walk past you in an airport without knowing why you look familiar.`, `"We'll keep it fun, I promise," {host.first} says. Five minutes of television will be watched by more people than a sold-out arena, and it can be replayed forever.`],
     choices: [
       { id: 'play_along', label: 'Play along and lean into the joke', risk: 'med', outcomes: [
         { weight: 3, bonus: { charisma: 0.8 }, text: `You land the first punchline and the audience turns warm. By the commercial break the host is asking for your autograph.`, effects: [{ pop: 1.2 }, { conf: 3 }, { event: { type: 'interview', participants: ['host'], summary: 'Charmed a mainstream talk-show audience.', data: { quality: { base: 68, charisma: 0.6, mic: 0.3, noise: 10 }, viral: { minQuality: 84, chance: 0.4 } } } }] },
@@ -58,14 +58,14 @@ export default [
     cast: { host: { pick: 'media', kind: 'host' } },
     trigger: { stat: { popularity: { gte: 30 } } },
     slots: { station: ['rock radio', 'sports talk', 'country radio', 'college radio'], twist: ['a 5 a.m. call time', 'a live remote from a car dealership', 'a prank phone-in segment', 'a rapid-fire quiz with the crew'] },
-    body: [`The {station} morning show has booked you with {twist}. {host.name} is known for chaotic energy and for asking whatever the producers slip under the door.`, `Your alarm is set for an hour that should not exist. If you are sharp, the audience gets a funny and honest slot; if not, they get a clip.`],
+    body: [`The {station} morning show has booked you with {twist}. {host.name} is known for chaotic energy and for asking whatever the producers slip under the door.`, `"Don't worry, we only bite on air," {host.first} says. Your alarm is set for an hour that should not exist. If you are sharp, the audience gets a funny and honest slot; if not, they get a clip.`],
     choices: [
       { id: 'bring_energy', label: 'Bring full energy despite the hour', risk: 'med', outcomes: [
         { weight: 3, bonus: { charisma: 0.5 }, text: `By the second segment you and {host.first} are trading jokes like old friends. The call-ins light up the board.`, effects: [{ pop: 0.7 }, { fatigue: 8 }, { conf: 2 }] },
         { weight: 1, text: `You miss two cues and say something you cannot unsay on a live mic. The apology takes ten minutes.`, effects: [{ pop: -0.4 }, { fatigue: 8 }, { conf: -3 }] } ] },
       { id: 'low_key', label: 'Keep it relaxed and low-key', risk: 'low', result: `Pleasant, a bit sleepy, over by quarter past six. The hosts say thank you, and the audience has forgotten you by noon.`, effects: [{ pop: 0.2 }, { fatigue: 3 }] },
       { id: 'take_the_bit', label: 'Go along with the prank at your own expense', risk: 'high', outcomes: [
-        { weight: 2, bonus: { charisma: 0.6 }, text: `You take the joke on the chin and give it back. Listeners vote it the segment of the week.`, effects: [{ pop: 1.0 }, { fatigue: 6 }, { event: { type: 'interview', participants: ['host'], summary: 'Took a radio prank in good humour.', data: { quality: { base: 62, charisma: 0.5, noise: 12 }, viral: { minQuality: 80, chance: 0.3 } } } }] },
+        { weight: 2, bonus: { charisma: 0.6 }, text: `You take the joke on the chin and give it back. Listeners vote it the segment of the week.`, effects: [{ pop: 1.0 }, { fatigue: 6 }, { event: { type: 'interview', participants: ['host'], summary: 'Took a radio prank in good humor.', data: { quality: { base: 62, charisma: 0.5, noise: 12 }, viral: { minQuality: 80, chance: 0.3 } } } }] },
         { weight: 1, text: `The prank goes too far and the clip is edited into something meaner than it was.`, effects: [{ pop: -0.4 }, { conf: -4 }, { fatigue: 6 }] } ] },
       { id: 'cancel', label: 'Cancel at the last minute for sleep', risk: 'low', result: `You sleep, but the producers will not forget that you bailed. The slot goes to a bodybuilder.`, effects: [{ fatigue: -8 }, { pop: -0.3 }] },
     ],
@@ -77,7 +77,7 @@ export default [
     body: [`Someone has posted {clip}, and it has been picked up by {spread}. Within two hours it has more views than your last three matches combined.`, `The comments split into laughing, cheering and a few people who want to explain what you were really thinking. Your phone has not stopped buzzing.`],
     choices: [
       { id: 'lean_in', label: 'Lean in and make a joke of it', risk: 'med', outcomes: [
-        { weight: 3, bonus: { charisma: 0.7 }, text: `Your reply is quick, generous and self-aware. The clip becomes a running joke fans share in your favour.`, effects: [{ pop: 1.1 }, { conf: 3 }, { event: { type: 'social_post', participants: [], summary: 'Turned an unintended clip into a running joke.', data: { quality: { base: 66, charisma: 0.6, mic: 0.2, noise: 14 }, viral: { minQuality: 80, chance: 0.5 } } } }] },
+        { weight: 3, bonus: { charisma: 0.7 }, text: `Your reply is quick, generous and self-aware. The clip becomes a running joke fans share in your favor.`, effects: [{ pop: 1.1 }, { conf: 3 }, { event: { type: 'social_post', participants: [], summary: 'Turned an unintended clip into a running joke.', data: { quality: { base: 66, charisma: 0.6, mic: 0.2, noise: 14 }, viral: { minQuality: 80, chance: 0.5 } } } }] },
         { weight: 2, text: `The joke arrives a day late and reads as trying too hard. The pile-on gets louder.`, effects: [{ pop: -0.3 }, { conf: -3 }] } ] },
       { id: 'explain', label: 'Post a calm explanation of what happened', risk: 'low', result: `A short, honest paragraph. The loudest voices move on and the supportive ones thank you for it.`, effects: [{ pop: 0.2 }, { conf: 1 }, { fatigue: 2 }] },
       { id: 'ask_takedown', label: 'Ask the poster to take it down', risk: 'med', outcomes: [
@@ -87,15 +87,15 @@ export default [
     ],
   },
   {
-    id: 'med_misquote', category: 'media', title: 'Your Words, Twisted by {outlet}', weight: 1.5, cooldownDays: 90, maxPerCareer: 4,
+    id: 'med_misquote', category: 'media', title: 'Your Words, Twisted in Print', weight: 1.5, cooldownDays: 90, maxPerCareer: 4,
     cast: { journalist: { pick: 'media', kind: 'journalist' } },
     trigger: { stat: { popularity: { gte: 35 }, promos: { gte: 3 } } },
-    slots: { outlet: ['a wrestling newsletter', 'a national newspaper', 'a gossip site', 'a trade magazine'], quote: ['called the champion washed', 'dismissed the fans in the cheap seats', 'blamed the creative team for a flat segment', 'laughed off a rival\'s injury'] },
-    body: [`{outlet} is running a story in which you supposedly {quote}. {journalist.name} wrote it, and it leans hard on a sentence you remember saying very differently.`, `Colleagues are already texting you screenshots. Whether you want a retraction or a shrug, someone will have to answer for it.`],
+    slots: { form: ['a profile', 'a column', 'a news item', 'a feature'], quote: ['called the champion washed', 'dismissed the fans in the cheap seats', 'blamed the creative team for a flat segment', 'laughed off a rival\'s injury'] },
+    body: [`{journalist.name} is running {form} in which you supposedly {quote}. It leans hard on a sentence you remember saying very differently.`, `Colleagues are already waving copies at you in the hallway, and one of them asks, "Did you really say that?" Whether you want a retraction or a shrug, someone will have to answer for it.`],
     choices: [
       { id: 'demand_correction', label: 'Demand a formal correction', risk: 'med', outcomes: [
         { weight: 2, text: `A correction appears in small print, and {journalist.first} stays cold for months. The story is fixed for the people who read the correction.`, effects: [{ conf: 2 }, { pop: 0.1 }] },
-        { weight: 2, text: `The outlet digs in and publishes the full tape. It supports them more than you.`, effects: [{ pop: -0.6 }, { conf: -4 }] } ] },
+        { weight: 2, text: `{journalist.first} digs in and publishes the full tape. It supports them more than you.`, effects: [{ pop: -0.6 }, { conf: -4 }] } ] },
       { id: 'own_voice', label: 'Tell your own side in a short video', risk: 'med', outcomes: [
         { weight: 3, bonus: { mic: 0.6 }, text: `Straight to camera, no script. The video does the work, and the original story looks sloppy next to it.`, effects: [{ pop: 0.7 }, { conf: 3 }, { fatigue: 6 }, { event: { type: 'interview', participants: ['journalist'], summary: 'Corrected a misquote directly with fans.', data: { quality: { base: 65, mic: 0.6, noise: 10 }, handled: true, controversy: true } } }] },
         { weight: 1, text: `You come across as defensive, and the outlet repeats the original quote in the next piece.`, effects: [{ pop: -0.4 }, { conf: -3 }] } ] },
@@ -107,8 +107,8 @@ export default [
     id: 'med_streak_interview', category: 'media', title: 'Questions About the Streak', weight: 2, cooldownDays: 70, maxPerCareer: 4,
     cast: { interviewer: { pick: 'media', kind: 'interviewer' } },
     trigger: { stat: { winStreak: { gte: 5 } } },
-    slots: { streak: ['your unbeaten run', 'your hot streak', 'your winning habit', 'the run everyone is watching'], setting: ['a TV panel segment', 'a one-on-one print interview', 'a streamed fireside chat', 'a locker-room walk-and-talk'] },
-    body: [`{interviewer.name} has booked {setting} to discuss {streak}. The numbers are hard to ignore, and every wrestler in the building has noticed them too.`, `The questions start flattering and get sharper: is the run luck, is the booking being kind, and who is allowed to be the one to end it?`],
+    slots: { streak: ['your unbeaten run', 'your hot streak', 'your winning habit', 'the run everyone is watching'], setting: ['a TV panel segment', 'a one-on-one print interview', 'a radio fireside chat', 'a locker-room walk-and-talk'] },
+    body: [`{interviewer.name} has booked {setting} to discuss {streak}. The numbers are hard to ignore, and every wrestler in the building has noticed them too.`, `"So who beats you?" {interviewer.first} asks, smiling. The questions start flattering and get sharper: is the run luck, is the booking being kind, and who is allowed to be the one to end it?`],
     choices: [
       { id: 'confident', label: 'Own it: say you are not planning to lose', risk: 'med', outcomes: [
         { weight: 3, bonus: { confidence: 0.6 }, text: `The room goes quiet at the right moment. You sound like someone who believes it, and the quote travels.`, effects: [{ pop: 0.8 }, { conf: 3 }, { event: { type: 'interview', participants: ['interviewer'], summary: 'Spoke confidently about a long winning streak.', data: { quality: { base: 66, mic: 0.5, conf: 0.3, noise: 10 }, viral: { minQuality: 85, chance: 0.3 } } } }, { promise: { kind: 'win_streak', text: 'I am not planning to lose', params: { n: 3 }, deadlineDays: 60 } }] },
@@ -122,8 +122,8 @@ export default [
     id: 'med_losing_interview', category: 'media', title: 'Questions About the Slump', weight: 2, cooldownDays: 70, maxPerCareer: 4,
     cast: { reporter: { pick: 'media', kind: 'reporter' } },
     trigger: { stat: { loseStreak: { gte: 4 } } },
-    slots: { slump: ['your losing streak', 'your cold spell', 'your rough patch', 'the slide'], mood: ['a sympathetic profile', 'a hard-edged column', 'a livestreamed Q&A', 'a backstage ambush'] },
-    body: [`{reporter.name} is working on {mood} about {slump}. The list of questions includes whether you are being buried on purpose, whether your body is breaking down, and whether you have lost the room.`, `You have answered nothing so far. The silence is starting to answer for you.`],
+    slots: { slump: ['your losing streak', 'your cold spell', 'your rough patch', 'the slide'], mood: ['a sympathetic profile', 'a hard-edged column', 'a call-in Q&A', 'a backstage ambush'] },
+    body: [`{reporter.name} is working on {mood} about {slump}. The list of questions includes whether you are being buried on purpose, whether your body is breaking down, and whether you have lost the room.`, `"One question," {reporter.name} calls after you in the hallway. "Just one." You have answered nothing so far, and the silence is starting to answer for you.`],
     choices: [
       { id: 'face_it', label: 'Face it: speak plainly about the slump', risk: 'med', outcomes: [
         { weight: 3, bonus: { mic: 0.5, confidence: 0.4 }, text: `You name the losses, the mistakes, and the work you are doing to fix them. The respect that follows is genuine.`, effects: [{ pop: 0.5 }, { conf: 4 }, { event: { type: 'interview', participants: ['reporter'], summary: 'Spoke candidly about a losing streak.', data: { quality: { base: 64, mic: 0.5, conf: 0.3, noise: 10 }, handled: true } } }] },
@@ -139,7 +139,7 @@ export default [
     id: 'med_title_reign_interview', category: 'media', title: 'A Champion Profile', weight: 2, cooldownDays: 90, maxPerCareer: 4,
     cast: { interviewer: { pick: 'media', kind: 'interviewer' } },
     trigger: { holdsTitle: true, stat: { daysChampion: { gte: 60 } } },
-    slots: { reign: ['Sixty Days In', 'The Reign So Far', 'Carrying the Gold', 'Life With the Belt'], angle: ['whether you are a transitional champion', 'who can actually take the title', 'how heavy the title feels', 'whether the fans still believe in you'] },
+    slots: { reign: ['Months at the Top', 'The Reign So Far', 'Carrying the Gold', 'Life With the Belt'], angle: ['whether you are a transitional champion', 'who can actually take the title', 'how heavy the title feels', 'whether the fans still believe in you'] },
     body: [`{interviewer.name} sits you down for a long profile under the heading "{reign}". The main thread of the questions is {angle}, which is a polite way of asking whether your time is almost up.`, `The belt sits on the table between you. It looks small in daylight, and everyone in the studio is aware of it.`],
     choices: [
       { id: 'dominant', label: 'Project total dominance', risk: 'med', outcomes: [
@@ -147,18 +147,18 @@ export default [
         { weight: 1, text: `It reads as arrogance, and the next challenger uses your quote as a rallying cry.`, effects: [{ pop: 0.1 }, { conf: 1 }, { fatigue: 2 }] } ] },
       { id: 'humble', label: 'Speak with humility about the responsibility', risk: 'low', result: `A warm, measured conversation. Fans see a champion worth following, though a few miss the swagger.`, effects: [{ pop: 0.4 }, { conf: 1 }] },
       { id: 'open_challenge', label: 'Issue an open challenge to the whole roster', risk: 'high', result: `Your answer goes on the board and the entire locker room reads it. Every ambitious name now has a reason to come after you.`, effects: [{ pop: 0.9 }, { conf: 2 }, { fatigue: 5 }, { promise: { kind: 'retain_title', text: 'I will beat anyone who wants the title', params: { defenses: 2 }, deadlineDays: 90 } }] },
-      { id: 'tired', label: 'Admit the reign has been exhausting', risk: 'med', result: `The honesty humanises you. It also tells the roster you might be vulnerable.`, effects: [{ pop: 0.3 }, { conf: -2 }, { fatigue: -4 }] },
+      { id: 'tired', label: 'Admit the reign has been exhausting', risk: 'med', result: `The honesty humanizes you. It also tells the roster you might be vulnerable.`, effects: [{ pop: 0.3 }, { conf: -2 }, { fatigue: -4 }] },
     ],
   },
   {
     id: 'med_colleague_comment', category: 'media', title: 'A Colleague\'s Comment Reaches the Press', weight: 2, cooldownDays: 80, maxPerCareer: 4,
     cast: { peer: { pick: 'roster', tier: { gte: 2 } }, reporter: { pick: 'media', kind: 'reporter' } },
     trigger: { stat: { popularity: { gte: 35 } } },
-    slots: { topic: ['the business was tougher in the old days', 'new talent has not earned its spot', 'fans only cheer for spectacle now', 'the title picture is decided before the season starts'], venue: ['a hallway scrum', 'a surprise phone call', 'a live Q&A on the arena concourse', 'a rapid-fire text exchange'] },
+    slots: { topic: ['the business was tougher in the old days', 'new talent has not earned its spot', 'fans only cheer for spectacle now', 'the title picture is decided before the season starts'], venue: ['a hallway scrum', 'a corner of catering', 'a live Q&A on the arena concourse', 'the lobby of your hotel'] },
     body: [`{peer.name} has told a magazine that {topic}, and the quote is making the rounds. {reporter.name} has now caught you in {venue} to ask what you make of it.`, `You have worked next to {peer.first} and you have a view. Whatever you say will be quoted back at both of you.`],
     choices: [
       { id: 'agree', label: 'Agree and back {peer.first} publicly', risk: 'med', outcomes: [
-        { weight: 2, text: `{peer.first} hears about it within the hour and sends a thank-you text. A few of the younger wrestlers are cooler to you after that.`, effects: [{ rel: { who: 'peer', trust: 6, respect: 4 } }, { pop: 0.1 }, { conf: 1 }] },
+        { weight: 2, text: `{peer.first} hears about it within the hour and sends a thank-you note. A few of the younger wrestlers are cooler to you after that.`, effects: [{ rel: { who: 'peer', trust: 6, respect: 4 } }, { pop: 0.1 }, { conf: 1 }] },
         { weight: 1, text: `The backlash is bigger than the original comment. You spend the evening answering for words that were never yours.`, effects: [{ rel: { who: 'peer', trust: 3 } }, { pop: -0.6 }, { conf: -3 }] } ] },
       { id: 'disagree', label: 'Disagree, and say why', risk: 'high', outcomes: [
         { weight: 2, bonus: { mic: 0.6 }, text: `Your reasoning is clear and fair. Fans see someone who thinks for themselves, and {peer.first} knows it.`, effects: [{ pop: 0.8 }, { rel: { who: 'peer', respect: 2, heat: 8 } }, { event: { type: 'interview', participants: ['reporter', 'peer'], summary: 'Publicly disagreed with {peer.name}.', data: { quality: { base: 64, mic: 0.5, noise: 12 }, controversy: true, viral: { minQuality: 84, chance: 0.3 } } } }] },
@@ -171,14 +171,14 @@ export default [
     id: 'med_commentary_criticism', category: 'media', title: 'The Commentary Booth Takes Aim', weight: 1.5, cooldownDays: 100, maxPerCareer: 3,
     cast: { commentator: { pick: 'media', kind: 'commentator' } },
     trigger: { stat: { matches: { gte: 15 }, rating: { lte: 70 } } },
-    slots: { complaint: ['sloppy transitions', 'a lack of urgency', 'a recycled move set', 'overselling'], forum: ['on a live broadcast', 'on a post-show podcast', 'in a newspaper column', 'in a viral clip'] },
-    body: [`{commentator.name} has criticised your in-ring work {forum}, naming {complaint} specifically. It is the kind of critique that stings because it is half right.`, `Your trainer has not mentioned it. The silence from the production truck is louder.`],
+    slots: { complaint: ['sloppy transitions', 'a lack of urgency', 'a recycled move set', 'overselling'], forum: ['on a live broadcast', 'on a post-show radio hour', 'in a call-in segment', 'in a pre-show interview'] },
+    body: [`{commentator.name} has criticized your in-ring work {forum}, naming {complaint} specifically. It is the kind of critique that stings because it is half right.`, `"{commentator.first} had a point," a stagehand mutters at catering, not meaning anything by it. Your trainer has not mentioned it, and the silence from the production truck is louder.`],
     choices: [
       { id: 'work_on_it', label: 'Take the note and drill it in the ring', risk: 'low', result: `Three extra sessions a week and a long talk with your trainer. It costs energy, but the next tape looks sharper.`, effects: [{ attr: { name: 'technical', delta: 1 } }, { fatigue: 12 }, { conf: 1 }] },
       { id: 'confront', label: 'Confront {commentator.first} face to face', risk: 'high', outcomes: [
         { weight: 2, bonus: { charisma: 0.4, mic: 0.4 }, text: `You talk like a professional and walk out with a mutual respect that surprises both of you.`, effects: [{ pop: 0.4 }, { conf: 3 }] },
         { weight: 2, text: `It becomes an argument within the first minute. Someone in the corridor records the last fifteen seconds.`, effects: [{ pop: -0.4 }, { conf: -3 }] } ] },
-      { id: 'fire_back', label: 'Fire back with a line on social or air', risk: 'med', outcomes: [
+      { id: 'fire_back', label: 'Fire back with a line on the air', risk: 'med', outcomes: [
         { weight: 2, bonus: { mic: 0.6 }, text: `Your reply is crisp and the crowd roars. Commentators suddenly treat you with a bit more care.`, effects: [{ pop: 0.7 }, { conf: 2 }] },
         { weight: 1, text: `The reply is clumsy and the commentator reads it out live to enjoy the reaction.`, effects: [{ pop: -0.5 }, { conf: -3 }] } ] },
       { id: 'shrug', label: 'Shrug it off as the price of attention', risk: 'low', result: `You do not give them the satisfaction. The story ends, but the criticism sits in the back of your head.`, effects: [{ conf: -2 }] },
@@ -188,8 +188,8 @@ export default [
     id: 'med_hometown_profile', category: 'media', title: 'The Hometown Paper Calls', weight: 1.2, cooldownDays: 160, maxPerCareer: 2,
     cast: { journalist: { pick: 'media', kind: 'journalist' } },
     trigger: { stat: { popularity: { gte: 40 }, careerYears: { gte: 2 } } },
-    slots: { angle: ['the local kid who made good', 'the long road from small-town gyms', 'your family\'s reaction to the lifestyle', 'a hometown parade nobody asked for'], hook: ['a Sunday supplement', 'a regional TV spot', 'a school newsletter', 'a radio call-in'] },
-    body: [`{journalist.name} is writing a piece for {hook} on {angle}. The editor says the town has been waiting years for a reason to be proud, and a few neighbours have already written in with stories about you.`, `The invitation includes a visit to your old school gym. Home asks for a different version of you than the one on the screen.`],
+    slots: { angle: ['the local kid who made good', 'the long road from small-town gyms', 'your family\'s reaction to the lifestyle', 'a hometown parade nobody asked for'], hook: ['a Sunday supplement', 'the regional daily', 'a school alumni newsletter', 'the town weekly'] },
+    body: [`{journalist.name} is writing a piece for {hook} on {angle}. The editor says the town has been waiting years for a reason to be proud, and a few neighbors have already written in with stories about you.`, `The invitation includes a visit to your old school gym. Home asks for a different version of you than the one on the screen.`],
     choices: [
       { id: 'go_home', label: 'Go home and give the town a full day', risk: 'low', result: `Handshakes at every corner shop, a surprise from your old coach and a cake in the shape of a ring. It is tiring and it fills you up.`, effects: [{ pop: 0.6 }, { conf: 4 }, { fatigue: 10 }] },
       { id: 'phone_it', label: 'Do the interview by phone only', risk: 'low', result: `Twenty minutes between airports. The piece is fine, and your mother asks why you could not visit.`, effects: [{ pop: 0.2 }, { conf: -1 }] },
@@ -205,7 +205,7 @@ export default [
     cast: { rival: { pick: 'rivalry', minHeat: 15 }, host: { pick: 'media', kind: 'host' } },
     memory: { role: 'rival', max: 1 },
     trigger: { minYear: 2008, stat: { popularity: { gte: 25 }, careerYears: { gte: 0.5 } } },
-    slots: { show: ['a long-form interview show', 'a wrestling-fan roundtable', 'a comedy podcast', 'a shock-jock morning show'], angle: ['whether the feud is real', 'who needs whom more', 'whose finish is better', 'whether anybody is the good guy'] },
+    slots: { show: ['a long-form interview show', 'a wrestling-fan roundtable', 'a comedy podcast', 'a shock-jock morning show'], angle: ['whether the feud is real', 'who needs whom more', 'whose finish is better', 'whether either of you is the hero'] },
     body: [`You are two hours into {show} and {host.name} finally gets to the question everyone listening wants answered: {angle}. {host.first} leans into the microphone and lets you speak first.`, `{rival.name} is sure to hear the episode, probably before the weekend. A single good sentence could trend; a bad one will be quoted at you for months.`],
     choices: [
       { id: 'take_apart', label: 'Take {rival.first} apart with a sharp critique', risk: 'high', outcomes: [
@@ -221,7 +221,7 @@ export default [
     cast: { host: { pick: 'media', kind: 'host' } },
     trigger: { minYear: 2008, stat: { popularity: { gte: 30 }, careerYears: { gte: 0.5 } } },
     slots: { show: ['a rookie-focused podcast', 'a fan-run weekly show', 'a retired-wrestlers\' roundtable', 'a business-of-wrestling show'], goal: ['the main event', 'a championship', 'an iron-clad contract', 'a place in the history books'] },
-    body: [`{host.name} on {show} asks you the question that sounds simple: what do you actually want from this career? The producers have a tag line ready, and you can see the countdown clock on the wall.`, `{goal} is the answer most guests give. The listeners are curious whether you will say it out loud.`],
+    body: [`{host.name} on {show} asks you the question that sounds simple: what do you actually want from this career? The producers have a tag line ready, and you can see the countdown clock on the wall.`, `"Do not give me the usual answer," {host.first} says with a grin. {goal} is the answer most guests give. The listeners are curious whether you will say it out loud.`],
     choices: [
       { id: 'big_promise', label: 'Name a bold, public goal', risk: 'high', result: `You say it plainly, on record, with a timeline. The fans like the ambition, and now there is a clock on it.`, effects: [{ promise: { kind: 'win_title', text: 'I will win a championship', deadlineDays: 240 } }, { pop: 0.7 }, { conf: 3 }, { event: { type: 'goal_set', participants: ['host'], summary: 'Declared a public career goal on a podcast.', data: {} } }] },
       { id: 'work_the_craft', label: 'Say you just want to be the best at the craft', risk: 'low', result: `A modest answer from someone who plainly cares. It does not make headlines, but it earns respect from veterans who are listening.`, effects: [{ pop: 0.2 }, { conf: 2 }] },
@@ -239,7 +239,7 @@ export default [
     body: [`{host.name} brings up your worst injury {tone} during {format}. The first caller has already given a play-by-play of the moment from the cheap seats.`, `You never intended to talk about it in public. Now a few thousand people are waiting for your side of it.`],
     choices: [
       { id: 'honest', label: 'Tell the full story, pain included', risk: 'med', outcomes: [
-        { weight: 3, bonus: { charisma: 0.5 }, text: `Your voice stays steady, and the silence on the line says everything. Young wrestlers write in to say they needed to hear it.`, effects: [{ pop: 0.8 }, { conf: 2 }, { fatigue: 3 }, { event: { type: 'podcast', participants: ['host'], summary: 'Talked openly about a career-threatening injury.', data: { quality: { base: 66, charisma: 0.6, noise: 10 }, viral: { minQuality: 84, chance: 0.3 } } } }] },
+        { weight: 3, bonus: { charisma: 0.5 }, text: `Your voice stays steady, and the silence afterwards says everything. Young wrestlers write in to say they needed to hear it.`, effects: [{ pop: 0.8 }, { conf: 2 }, { fatigue: 3 }, { event: { type: 'podcast', participants: ['host'], summary: 'Talked openly about a career-threatening injury.', data: { quality: { base: 66, charisma: 0.6, noise: 10 }, viral: { minQuality: 84, chance: 0.3 } } } }] },
         { weight: 1, text: `Revisiting the memory costs you more than you expected. You get through the hour but feel hollow afterwards.`, effects: [{ pop: 0.3 }, { conf: -4 }, { fatigue: 6 }] } ] },
       { id: 'play_down', label: 'Play it down and change the subject', risk: 'low', result: `You laugh it off and talk about the comeback. The host takes the hint, though a couple of listeners accuse you of hiding something.`, effects: [{ pop: -0.1 }, { conf: 1 }] },
       { id: 'promote_recovery', label: 'Use the story to promote your recovery plan', risk: 'low', result: `You give out the name of your physio and the routine. A small sponsor reaches out afterwards.`, effects: [{ money: 4000 }, { pop: 0.2 }, { fatigue: 2 }] },
@@ -250,13 +250,13 @@ export default [
     id: 'pod_hot_take_champion', category: 'podcast', title: 'A Hot Take About {champ.name}', weight: 2, cooldownDays: 70, maxPerCareer: 5,
     cast: { champ: { pick: 'champion', class: 'world' }, host: { pick: 'media', kind: 'host' } },
     trigger: { minYear: 2008, holdsTitle: false, stat: { popularity: { gte: 40 } } },
-    slots: { show: ['a prediction special', 'a rapid-fire hot-takes episode', 'a pre-show betting segment', 'a live fan Q&A'], angle: ['a clean win', 'a bloody upset', 'a finish nobody sees coming', 'a count-out controversy'] },
-    body: [`On {show}, {host.name} asks you point-blank about {champ.name}, the current champion. The last question of the hour is whether you could take the title, and how it would end: {angle}?`, `Whatever you say, {champ.first} will see the clip before breakfast. Your answer also gets stored for a later day, when someone will ask you how it turned out.`],
+    slots: { show: ['a prediction special', 'a rapid-fire hot-takes episode', 'a pre-show preview segment', 'a live fan Q&A'], angle: ['a clean win', 'a bloody upset', 'a finish nobody sees coming', 'a count-out controversy'] },
+    body: [`On {show}, {host.name} asks you point-blank about {champ.name}, the current champion. The last question of the hour is whether you could take the title, and how it would end: {angle}?`, `"No hedging, please," {host.first} says. Whatever you say, {champ.first} will see the clip before breakfast. Your answer also gets stored for a later day, when someone will ask you how it turned out.`],
     choices: [
       { id: 'predict_win', label: 'Predict a win over {champ.first} and name a date', risk: 'high', result: `A confident, specific prediction. The fans love the nerve, {champ.first} bristles, and now you have to deliver.`, effects: [{ promise: { kind: 'win_match', who: 'champ', text: 'I will beat {champ.name}', deadlineDays: 90 } }, { pop: 0.8 }, { conf: 2 }, { rel: { who: 'champ', heat: 8 } }, { event: { type: 'podcast', participants: ['host', 'champ'], summary: 'Predicted a win over {champ.name} on a podcast.', data: { quality: { base: 64, mic: 0.5, noise: 12 }, viral: { minQuality: 84, chance: 0.4 } } } }] },
       { id: 'predict_title', label: 'Promise to take the world title this year', risk: 'high', result: `A grander promise than anyone expected. The audience lights up, and the booker adds a note to a file.`, effects: [{ promise: { kind: 'win_title', who: 'champ', text: 'I will win the world title', deadlineDays: 200 } }, { pop: 1.0 }, { conf: 3 }, { rel: { who: 'champ', heat: 10 } }] },
       { id: 'praise', label: 'Praise {champ.first} and call it a fair fight', risk: 'low', result: `A gracious, balanced answer. {champ.first} sends a note of thanks, and the segment fades quickly.`, effects: [{ rel: { who: 'champ', respect: 4 } }, { pop: 0.1 }, { conf: -1 }] },
-      { id: 'dodge', label: 'Refuse to predict and talk about the work instead', risk: 'low', result: `You play the long game. The host groans, but several people on the call like that you did not make empty noise.`, effects: [{ conf: 1 }, { pop: -0.1 }] },
+      { id: 'dodge', label: 'Refuse to predict and talk about the work instead', risk: 'low', result: `You play the long game. The host groans, but several people on the panel like that you did not make empty noise.`, effects: [{ conf: 1 }, { pop: -0.1 }] },
     ],
   },
   {
@@ -264,8 +264,8 @@ export default [
     cast: { rival: { pick: 'rivalry', minHeat: 30 }, host: { pick: 'media', kind: 'host' } },
     memory: { role: 'rival', max: 1 },
     trigger: { minYear: 2012, stat: { popularity: { gte: 25 }, careerYears: { gte: 0.5 } } },
-    slots: { claim: ['you have been coasting for months', 'your best match was a fluke', 'you owe the locker room an apology', 'you only got the spot because of a favour'], clip: ['an unedited rant', 'a polished eight-minute cold open', 'a late-night live stream', 'a guest appearance on a friendly podcast'] },
-    body: [`{rival.name} used {clip} to tell the world that {claim}. {host.name} gave it a full segment, so the episode has been downloaded tens of thousands of times in a day, and your phone is full of people asking whether you saw it.`, `{rival.first} is clearly pleased with the reaction. A reply from you, or the lack of one, becomes part of the story.`],
+    slots: { claim: ['you have been coasting for months', 'your best match was a fluke', 'you owe the locker room an apology', 'you only got the spot because of a favor'], clip: ['an unedited rant', 'a polished eight-minute cold open', 'a late-night live stream', 'a guest appearance on a friendly podcast'] },
+    body: [`{rival.name} used {clip} to tell the world that {claim}. {host.name} replayed it in a full segment, and the episode has been downloaded tens of thousands of times in a day, so your phone is full of people asking whether you saw it.`, `{rival.first} is clearly pleased with the reaction. A reply from you, or the lack of one, becomes part of the story.`],
     choices: [
       { id: 'counter_stream', label: 'Answer back on your own channel tonight', risk: 'med', outcomes: [
         { weight: 3, bonus: { mic: 0.7 }, text: `You rebut every point with calm precision, and a few jokes. By midnight the replies are firmly on your side.`, effects: [{ pop: 0.9 }, { rivalry: { who: 'rival', heat: 8 } }, { conf: 3 }, { fatigue: 4 }, { event: { type: 'social_post', participants: ['rival'], summary: 'Answered {rival.name}\'s podcast attack.', data: { quality: { base: 66, mic: 0.6, noise: 12 }, viral: { minQuality: 82, chance: 0.45 } } } }] },
@@ -280,7 +280,7 @@ export default [
     cast: { host: { pick: 'media', kind: 'host' } },
     trigger: { minYear: 2012, stat: { popularity: { gte: 35 } } },
     slots: { caller: ['a teenager who skipped school', 'an angry long-time season-ticket holder', 'a retired schoolteacher', 'a drunk but harmless regular'], ask: ['why you changed your style', 'whether you are overpaid', 'if the business is rigged', 'what you would say to your younger self'] },
-    body: [`The last twenty minutes of the taping are open lines, and {host.name} puts {caller} on the air. The question is {ask}, and the caller has been waiting for a very long time.`, `The producer in the glass gives you a thumbs-up and a look that says: be careful, this one is live.`],
+    body: [`The last twenty minutes of the taping are open lines, and {host.name} puts {caller} on the air. The question is {ask}, and the caller has been waiting for a very long time.`, `"Line three," {host.first} whispers off-mic. "You will like this one." The producer in the glass gives you a thumbs-up and a look that says: be careful, this one is live.`],
     choices: [
       { id: 'be_real', label: 'Answer from the heart, without spin', risk: 'med', outcomes: [
         { weight: 3, bonus: { charisma: 0.6 }, text: `You speak to the caller as a person, not a fan. The line goes quiet, and the host thanks you for it twice.`, effects: [{ pop: 0.7 }, { conf: 2 }, { event: { type: 'podcast', participants: ['host'], summary: 'Gave a heartfelt answer to a caller.', data: { quality: { base: 66, charisma: 0.6, noise: 10 }, viral: { minQuality: 84, chance: 0.25 } } } }] },
@@ -296,14 +296,14 @@ export default [
     id: 'pod_early_clip', category: 'podcast', title: 'A Clip From Your Early Days', weight: 1.2, cooldownDays: 150, maxPerCareer: 2,
     cast: { host: { pick: 'media', kind: 'host' } },
     trigger: { minYear: 2008, stat: { careerYears: { gte: 3 }, popularity: { gte: 40 } } },
-    slots: { clip: ['a cringe-worthy first promo', 'an awkward ring entrance', 'a match where nothing went right', 'a half-hearted mic stumble'], reaction: ['plays it on air', 'dissects it frame by frame', 'puts it on a social feed', 'plays it for a studio audience'] },
+    slots: { clip: ['a cringe-worthy first promo', 'an awkward ring entrance', 'a match where nothing went right', 'a half-hearted mic stumble'], reaction: ['plays it on air', 'dissects it frame by frame', 'puts it in a highlight reel', 'plays it for a studio audience'] },
     body: [`{host.name} has found {clip} from your first years and {reaction}. It is rougher than you remember, and the laughter in the room is not unkind.`, `You have grown a lot since then. The question is whether you want to say so, or let the footage speak for itself.`],
     choices: [
       { id: 'laugh', label: 'Laugh along and roast your younger self', risk: 'low', result: `You take the footage apart yourself, line by line. The audience appreciates a wrestler with no fear of the past.`, effects: [{ pop: 0.5 }, { conf: 2 }] },
       { id: 'teach', label: 'Use it to show how far you have come', risk: 'med', outcomes: [
-        { weight: 3, bonus: { mic: 0.4, charisma: 0.4 }, text: `You walk through each mistake and what it taught you. The segment becomes a favourite among younger talent.`, effects: [{ pop: 0.6 }, { conf: 3 }, { event: { type: 'podcast', participants: ['host'], summary: 'Reflected on early-career mistakes.', data: { quality: { base: 64, mic: 0.4, charisma: 0.4, noise: 10 } } } }] },
+        { weight: 3, bonus: { mic: 0.4, charisma: 0.4 }, text: `You walk through each mistake and what it taught you. The segment becomes a favorite among younger talent.`, effects: [{ pop: 0.6 }, { conf: 3 }, { event: { type: 'podcast', participants: ['host'], summary: 'Reflected on early-career mistakes.', data: { quality: { base: 64, mic: 0.4, charisma: 0.4, noise: 10 } } } }] },
         { weight: 1, text: `It turns into a lecture, and the host is forced to cut it short.`, effects: [{ pop: -0.1 }, { conf: -1 }] } ] },
-      { id: 'angry', label: 'Demand the host stop playing it', risk: 'med', result: `The host agrees and apologises, but the drop in warmth in the room is noticeable.`, effects: [{ conf: -2 }, { pop: -0.4 }] },
+      { id: 'angry', label: 'Demand the host stop playing it', risk: 'med', result: `The host agrees and apologizes, but the drop in warmth in the room is noticeable.`, effects: [{ conf: -2 }, { pop: -0.4 }] },
       { id: 'sell_nostalgia', label: 'Offer a personal commentary track for a fee', risk: 'low', result: `The host loves the idea, and the commentary is released as a paid bonus. A bit of cash and a small loss of dignity.`, effects: [{ money: 3500 }, { conf: -1 }, { pop: 0.1 }] },
     ],
   },
@@ -326,8 +326,8 @@ export default [
     id: 'pod_backstage_gossip', category: 'podcast', title: 'The Host Wants Locker-Room Secrets', weight: 1.5, cooldownDays: 90, maxPerCareer: 4,
     cast: { host: { pick: 'media', kind: 'host' }, peer: { pick: 'roster', tier: { gte: 1 } } },
     trigger: { minYear: 2010, stat: { popularity: { gte: 40 } } },
-    slots: { rumour: ['a rumoured argument with a producer', 'who gets the best locker-room spot', 'a heated meeting about pay', 'a prank that went too far'], show: ['a gossip-heavy show', 'a late-night call-in program', 'a rowdy streaming panel', 'a quiet one-on-one conversation'] },
-    body: [`On {show}, {host.name} pushes you for details on {rumour}. The story has {peer.name}'s name attached, and {host.first} knows you were in the room.`, `The audience loves a leak. The locker room, however, has long memories and no sense of humour about betrayals.`],
+    slots: { rumour: ['a rumored argument with a producer', 'who gets the best locker-room spot', 'a heated meeting about pay', 'a prank that went too far'], show: ['a gossip-heavy show', 'a late-night call-in program', 'a rowdy online panel', 'a quiet one-on-one conversation'] },
+    body: [`On {show}, {host.name} pushes you for details on {rumour}. The story has {peer.name}'s name attached, and {host.first} knows you were in the room.`, `The audience loves a leak. The locker room, however, has long memories and no sense of humor about betrayals.`],
     choices: [
       { id: 'spill', label: 'Give them the story, names included', risk: 'high', outcomes: [
         { weight: 2, bonus: { charisma: 0.4 }, text: `The tale is so well told that the audience forgives you for telling it. The episode is a smash, and {peer.first} is furious.`, effects: [{ pop: 0.9 }, { rel: { who: 'peer', trust: -10, heat: 10 } }, { event: { type: 'podcast', participants: ['host', 'peer'], summary: 'Leaked locker-room gossip on a podcast.', data: { quality: { base: 64, charisma: 0.4, noise: 12 }, controversy: true, viral: { minQuality: 82, chance: 0.4 } } } }] },
@@ -342,7 +342,7 @@ export default [
     cast: { host: { pick: 'media', kind: 'host' }, dream: { pick: 'roster', tier: { gte: 3 } } },
     trigger: { minYear: 2008, stat: { popularity: { gte: 40 } } },
     slots: { show: ['a legends-of-the-ring special', 'a modern-era roundtable', 'a fantasy booking episode', 'a podcast for lapsed fans'], stakes: ['in a stadium show', 'in a title match', 'in a hardcore bout', 'in a grudge rematch'] },
-    body: [`On {show}, {host.name} asks you to name one match you would give anything to have, and the producer slides a card across the desk with {dream.name}'s face on it. They mean {stakes}, and the audience wants an answer.`, `Wrestlers are encouraged to dream big on air. Management has been known to listen.`],
+    body: [`On {show}, {host.name} asks you to name one match you would give anything to have, and the producer slides a card across the desk with {dream.name}'s face on it. The host wants the match {stakes}, and the audience wants an answer.`, `Wrestlers are encouraged to dream big on air. Management has been known to listen.`],
     choices: [
       { id: 'name_dream', label: 'Name {dream.first} and make your case', risk: 'med', outcomes: [
         { weight: 2, bonus: { mic: 0.5 }, text: `Your pitch is vivid and specific, and {dream.first} hears it with obvious interest. Fans start posting mock-ups.`, effects: [{ pop: 0.6 }, { rel: { who: 'dream', respect: 4 } }, { conf: 2 }] },
@@ -356,7 +356,7 @@ export default [
     id: 'pod_live_taping', category: 'podcast', title: 'A Live Taping With a Loud Crowd', weight: 1.2, cooldownDays: 100, maxPerCareer: 3,
     cast: { host: { pick: 'media', kind: 'host' } },
     trigger: { minYear: 2012, stat: { popularity: { gte: 45 }, mic: { gte: 45 } } },
-    slots: { venue: ['a packed comedy club', 'a convention hotel ballroom', 'an old theatre', 'a brewery taproom'], crowd: ['rowdy and drunk', 'respectful and quiet', 'divided between fans and rivals', 'full of children and parents'] },
+    slots: { venue: ['a packed comedy club', 'a convention hotel ballroom', 'an old theater', 'a brewery taproom'], crowd: ['rowdy and drunk', 'respectful and quiet', 'divided between fans and rivals', 'full of children and parents'] },
     body: [`{host.name} has set up a live taping in {venue}, with a crowd that is {crowd}. The planning sheet calls for a half-hour of conversation and fifteen minutes of questions.`, `Nothing is rehearsed and nobody has a script. The room is yours if you want it.`],
     choices: [
       { id: 'work_room', label: 'Work the crowd like it is a ring entrance', risk: 'med', outcomes: [
@@ -379,7 +379,7 @@ export default [
       { id: 'honest', label: 'Give the honest answer, wounds and all', risk: 'med', outcomes: [
         { weight: 3, bonus: { charisma: 0.5 }, text: `The conversation turns real and gentle. Fans write that they never saw the human side, and a trainer calls to check in.`, effects: [{ pop: 0.7 }, { conf: 2 }, { fatigue: -6 }, { event: { type: 'podcast', participants: ['host'], summary: 'Spoke openly about the toll of the schedule.', data: { quality: { base: 66, charisma: 0.5, noise: 10 }, viral: { minQuality: 85, chance: 0.2 } } } }] },
         { weight: 1, text: `A quote about being worn out is clipped and used by a rival to suggest you are done.`, effects: [{ pop: -0.3 }, { conf: -3 }, { fatigue: -3 }] } ] },
-      { id: 'tough_guy', label: 'Play the tough guy and say you love every mile', risk: 'low', result: `You perform the part well. The host smiles politely, and your body does not believe a word.`, effects: [{ conf: 1 }, { fatigue: 4 }, { pop: 0.2 }] },
+      { id: 'tough_guy', label: 'Play the hard case and say you love every mile', risk: 'low', result: `You perform the part well. The host smiles politely, and your body does not believe a word.`, effects: [{ conf: 1 }, { fatigue: 4 }, { pop: 0.2 }] },
       { id: 'ask_for_time', label: 'Say publicly you need a lighter schedule', risk: 'high', result: `The remark reaches the office faster than you expected. They respect it, and they also take note.`, effects: [{ fatigue: -14 }, { conf: 2 }, { pop: -0.2 }] },
       { id: 'change_topic', label: 'Laugh it off and move to the next question', risk: 'low', result: `You deflect the question with a joke. The audience never sees the tiredness, and neither do you.`, effects: [{ fatigue: 3 }, { conf: -1 }] },
     ],
@@ -389,7 +389,7 @@ export default [
     cast: { host: { pick: 'media', kind: 'host' }, exec: { pick: 'staff', role: 'executive' } },
     trigger: { minYear: 2010, contract: { lte: 150 }, stat: { popularity: { gte: 45 } } },
     slots: { show: ['a business-of-wrestling show', 'a fan-run weekly', 'a financial-news podcast', 'a talk show hosted by a former wrestler'], figure: ['a comparison with a rival\'s salary', 'a leaked pay chart', 'a poll of the fans', 'a number floated by an anonymous source'] },
-    body: [`{host.name} on {show} opens the episode with {figure}, and then asks whether you think you are being paid fairly. {exec.name} from the front office is certain to hear it.`, `Your contract is closer to its end than to its start. Anything you say will either help you at the table or get you locked out of it.`],
+    body: [`{host.name} on {show} opens the episode with {figure}, and then asks whether you think you are being paid fairly. {exec.name} from the front office is certain to hear it.`, `"I tell every guest the same thing," {host.first} says. "Nobody ever got rich by being polite." Your contract is closer to its end than to its start. Anything you say will either help you at the table or get you locked out of it.`],
     choices: [
       { id: 'demand', label: 'State clearly that you deserve more', risk: 'high', outcomes: [
         { weight: 2, bonus: { mic: 0.4, confidence: 0.4 }, text: `Calm, factual, without bitterness. Fans take your side, and the front office senses a negotiation coming.`, effects: [{ pop: 0.6 }, { conf: 3 }, { event: { type: 'podcast', participants: ['host'], summary: 'Publicly argued for a higher salary.', data: { quality: { base: 62, mic: 0.4, conf: 0.3, noise: 12 }, controversy: true } } }] },
@@ -404,8 +404,8 @@ export default [
     id: 'prs_gotcha_question', category: 'press', title: 'A Gotcha Question at the Podium', weight: 2, cooldownDays: 70, maxPerCareer: 5,
     cast: { reporter: { pick: 'media', kind: 'reporter' } },
     trigger: { stat: { popularity: { gte: 40 } } },
-    slots: { event: ['a title-match announcement', 'a pre-show media day', 'a tour kickoff', 'a sponsor unveiling'], question: ['a rumour you were about to be released', 'whether you are the booker\'s favourite', 'a comment you made months ago that has aged badly', 'whether the champion is better than you'] },
-    body: [`The press room after {event} is full, and {reporter.name} waits until the last question to ask about {question}. The camera operators turn toward you at the same moment.`, `A friendly answer is expected. A real answer, on the record, is what makes the clip.`],
+    slots: { event: ['a title-match announcement', 'a pre-show media day', 'a tour kickoff', 'a sponsor unveiling'], question: ['a rumor you were about to be released', 'whether you are the booker\'s favorite', 'a comment you made months ago that has aged badly', 'whether the champion is better than you'] },
+    body: [`The press room after {event} is full, and {reporter.name} waits until the last question to ask about {question}. The camera operators turn toward you at the same moment.`, `"Quick one," {reporter.first} says, pen already moving. A friendly answer is expected, but a real answer, on the record, is what makes the clip.`],
     choices: [
       { id: 'straight', label: 'Answer straight and take the heat', risk: 'med', effects: [{ fatigue: 4 }], outcomes: [
         { weight: 3, bonus: { mic: 0.5, confidence: 0.4 }, text: `You do not blink and you do not hide. The reporters scribble, and a producer in the back nods approvingly.`, effects: [{ pop: 0.6 }, { conf: 3 }, { event: { type: 'press_conference', participants: ['reporter'], summary: 'Took a gotcha question head-on at a press conference.', data: { quality: { base: 64, mic: 0.5, conf: 0.4, noise: 10 }, handled: true, viral: { minQuality: 86, chance: 0.3 } } } }] },
@@ -436,8 +436,8 @@ export default [
     id: 'prs_contract_rumour', category: 'press', title: 'Reporters Ask About Your Future', weight: 2, cooldownDays: 90, maxPerCareer: 4,
     cast: { reporter: { pick: 'media', kind: 'reporter' }, exec: { pick: 'staff', role: 'executive' } },
     trigger: { contract: { lte: 120 }, stat: { popularity: { gte: 40 } } },
-    slots: { rumour: ['a move to a rival company', 'a leave of absence for film work', 'retirement', 'a sudden brand transfer'], outlet: ['a trade newsletter', 'a national paper', 'a broadcast news desk', 'a viral social account'] },
-    body: [`{outlet} reports that you are close to {rumour}. {reporter.name} wants a statement from you before it runs, and {exec.name} is expecting you to say nothing at all.`, `Some of it is true, some of it is rumour, and you are the only one who knows which. The story will get written regardless.`],
+    slots: { rumour: ['a move to a rival company', 'a leave of absence for film work', 'retirement', 'a sudden brand transfer'], outlet: ['a trade newsletter', 'a national paper', 'a broadcast news desk', 'a gossip column'] },
+    body: [`{outlet} reports that you are close to {rumour}. {reporter.name} wants a statement from you before it runs, and {exec.name} is expecting you to say nothing at all.`, `Some of it is true, some of it is rumor, and you are the only one who knows which. The story will get written regardless.`],
     choices: [
       { id: 'deny', label: 'Deny it flatly', risk: 'med', outcomes: [
         { weight: 2, text: `The denial holds. {exec.first} is grateful, and the story drops from the news cycle.`, effects: [{ conf: 1 }, { pop: 0.1 }] },
@@ -451,15 +451,15 @@ export default [
     id: 'prs_injury_status', category: 'press', title: 'When Are You Coming Back?', weight: 2, cooldownDays: 60, maxPerCareer: 5,
     cast: { reporter: { pick: 'media', kind: 'reporter' } },
     trigger: { injured: true },
-    slots: { place: ['outside the rehab clinic', 'at an autograph signing', 'on a live stream', 'in the arena parking lot'], pressure: ['a sponsor hoping for a return date', 'a fan petition', 'a rumour that you are done', 'a rival mocking your absence'] },
-    body: [`{reporter.name} catches you {place} with the question that is on every message board: when are you coming back? There is {pressure} behind the question, and you know it.`, `The honest answer is that your body will decide. The convenient answer is whatever sells tickets.`],
+    slots: { place: ['outside the rehab clinic', 'at an autograph signing', 'on a radio call-in', 'in the arena parking lot'], pressure: ['a sponsor hoping for a return date', 'a fan petition', 'a rumor that you are done', 'a rival mocking your absence'] },
+    body: [`{reporter.name} catches you {place} with the question that is on every message board: when are you coming back? There is {pressure} behind the question, and you know it.`, `"Give us a date," someone shouts from the back. The honest answer is that your body will decide. The convenient answer is whatever sells tickets.`],
     choices: [
       { id: 'honest', label: 'Be honest: no date, and no rushing it', risk: 'low', result: `The reporter accepts it, and fans leave supportive comments. The doctors are quietly pleased.`, effects: [{ pop: 0.3 }, { conf: 1 }, { fatigue: -4 }] },
       { id: 'early_date', label: 'Name an early date to excite the fans', risk: 'high', result: `The crowd erupts. You have given yourself a deadline, and your physio does not look happy.`, effects: [{ pop: 0.9 }, { conf: 2 }, { fatigue: 8 }, { promise: { kind: 'win_match', text: 'I will be back by the next big show', deadlineDays: 60 } }] },
       { id: 'show_rehab', label: 'Invite the cameras into rehab', risk: 'med', outcomes: [
         { weight: 3, bonus: { charisma: 0.4 }, text: `The footage of you grinding through drills is more moving than any press release. Fans share it for days.`, effects: [{ pop: 0.7 }, { conf: 2 }, { fatigue: 5 }] },
         { weight: 1, text: `A bad day on camera makes it look like you are struggling. Your rivals pounce.`, effects: [{ pop: -0.2 }, { conf: -3 }, { fatigue: 5 }] } ] },
-      { id: 'private', label: 'Say nothing and recover in private', risk: 'low', result: `Radio silence. The rumour mill runs on its own, but nobody can prove it wrong.`, effects: [{ pop: -0.3 }, { fatigue: -6 }] },
+      { id: 'private', label: 'Say nothing and recover in private', risk: 'low', result: `Radio silence. The rumor mill runs on its own, but nobody can prove it wrong.`, effects: [{ pop: -0.3 }, { fatigue: -6 }] },
     ],
   },
   {
@@ -467,14 +467,14 @@ export default [
     cast: { reporter: { pick: 'media', kind: 'reporter' } },
     trigger: { flag: 'apology_pending' },
     slots: { mode: ['a live TV interview', 'a written statement', 'a sit-down video', 'a press-room appearance'], pressure: ['a sponsor demanding a statement', 'a stack of angry messages', 'a quiet word from a veteran', 'a front-office memo'] },
-    body: [`The fallout from what you posted refuses to die down. {reporter.name} is offering {mode}, and there is {pressure} on your desk.`, `You can say sorry and mean it, say sorry and not mean it, or dig in. Each has its own cost.`],
+    body: [`The fallout from what you posted refuses to die down. {reporter.name} is offering {mode}, and you have {pressure} to weigh.`, `You can say sorry and mean it, say sorry and not mean it, or dig in. Each has its own cost.`],
     choices: [
-      { id: 'sincere', label: 'Apologise sincerely and take the consequences', risk: 'med', outcomes: [
+      { id: 'sincere', label: 'Apologize sincerely and take the consequences', risk: 'med', outcomes: [
         { weight: 3, bonus: { charisma: 0.5, mic: 0.4 }, text: `No excuses, no spin. The apology is simple and it lands. By the weekend the story has moved on.`, effects: [{ pop: 0.4 }, { conf: -1 }, { clearFlag: 'apology_pending' }, { event: { type: 'interview', participants: ['reporter'], summary: 'Gave a sincere public apology.', data: { quality: { base: 64, mic: 0.4, charisma: 0.5, noise: 10 }, handled: true } } }] },
         { weight: 1, text: `You stumble through it, and the sincerity does not read. A few people call it forced.`, effects: [{ pop: -0.2 }, { conf: -3 }, { clearFlag: 'apology_pending' }] } ] },
-      { id: 'non_apology', label: 'Issue a carefully worded non-apology', risk: 'low', result: `"If anyone was offended". The lawyers love it. The critics do not, and the story continues quietly.`, effects: [{ pop: -0.4 }, { conf: -2 }, { clearFlag: 'apology_pending' }] },
-      { id: 'double_down', label: 'Refuse to apologise and stand by it', risk: 'high', outcomes: [
-        { weight: 2, bonus: { confidence: 0.5 }, text: `Your supporters rally and the story turns into a culture-war talking point. You lose a sponsor and gain a fan base.`, effects: [{ pop: 0.9 }, { money: -4000 }, { conf: 3 }, { clearFlag: 'apology_pending' }, { event: { type: 'press_conference', participants: ['reporter'], summary: 'Refused to apologise for a controversial post.', data: { quality: { base: 58, mic: 0.4, noise: 14 }, controversy: true } } }] },
+      { id: 'non_apology', label: 'Issue a carefully worded non-apology', risk: 'low', result: `The key phrase is "if anyone was offended". The lawyers love it. The critics do not, and the story continues quietly.`, effects: [{ pop: -0.4 }, { conf: -2 }, { clearFlag: 'apology_pending' }] },
+      { id: 'double_down', label: 'Refuse to apologize and stand by it', risk: 'high', outcomes: [
+        { weight: 2, bonus: { confidence: 0.5 }, text: `Your supporters rally and the story turns into a culture-war talking point. You lose a sponsor and gain a fan base.`, effects: [{ pop: 0.9 }, { money: -4000 }, { conf: 3 }, { clearFlag: 'apology_pending' }, { event: { type: 'press_conference', participants: ['reporter'], summary: 'Refused to apologize for a controversial post.', data: { quality: { base: 58, mic: 0.4, noise: 14 }, controversy: true } } }] },
         { weight: 2, text: `Nobody rallies. The silence is read as arrogance, and a promoter cancels your appearance.`, effects: [{ pop: -0.9 }, { money: -5000 }, { conf: -3 }, { clearFlag: 'apology_pending' }] } ] },
       { id: 'quiet_charity', label: 'Let your actions speak: donate and say little', risk: 'low', result: `A donation, a short note and no cameras. It works slowly, and the money does not come back.`, effects: [{ money: -8000 }, { pop: 0.3 }, { conf: 1 }, { clearFlag: 'apology_pending' }] },
     ],
@@ -484,7 +484,7 @@ export default [
     cast: { reporter: { pick: 'media', kind: 'reporter' } },
     trigger: { holdsTitle: true, stat: { daysChampion: { lte: 14 } } },
     slots: { room: ['a hotel ballroom', 'a packed arena press room', 'the arena concourse', 'a studio with a gold backdrop'], first_question: ['how it feels', 'who you want to face first', 'what you will change', 'what you said to your family'] },
-    body: [`You walk into {room} with the belt over your shoulder, and the cameras take a full ten seconds to settle. {reporter.name} asks the first question: {first_question}?`, `The moment will be replayed for years, so you want to say the right thing. Most of the words you rehearsed have vanished.`],
+    body: [`You walk into {room} with the belt over your shoulder, and the cameras take a full ten seconds to settle. {reporter.name} opens with a question about {first_question}.`, `The moment will be replayed for years, so you want to say the right thing. Most of the words you rehearsed have vanished.`],
     choices: [
       { id: 'emotional', label: 'Speak from the heart and thank everyone', risk: 'low', result: `Your voice wavers, and the crowd of reporters goes quiet. It is the most human moment of the night.`, effects: [{ pop: 0.7 }, { conf: 3 }, { event: { type: 'press_conference', participants: ['reporter'], summary: 'Gave an emotional title-win press conference.', data: { quality: { base: 68, charisma: 0.5, noise: 8 }, viral: { minQuality: 86, chance: 0.25 } } } }] },
       { id: 'challenge_all', label: 'Throw down an open challenge to all comers', risk: 'high', result: `The line gets the biggest cheer of the day. Every contender in the building has just been put on notice.`, effects: [{ pop: 0.9 }, { conf: 3 }, { fatigue: 4 }, { promise: { kind: 'retain_title', text: 'I will defend this title against anyone', params: { defenses: 2 }, deadlineDays: 100 } }] },
@@ -498,8 +498,8 @@ export default [
     id: 'prs_post_loss_scrum', category: 'press', title: 'The Scrum After a Hard Night', weight: 2, cooldownDays: 60, maxPerCareer: 5, contexts: ['post_show', 'weekly'],
     cast: { reporter: { pick: 'media', kind: 'reporter' } },
     trigger: { recent: { lossesGte: 2 }, stat: { popularity: { gte: 35 } } },
-    slots: { mood: ['grim', 'raw', 'weary', 'a little angry'], cause: ['a bad finish', 'an interference spot', 'a stumble in the third act', 'a sloppy near-fall'] },
-    body: [`The locker-room door opens on a {mood} scene, and {reporter.name} is in the hallway with a recorder. The question is about {cause}, and two more outlets are close behind.`, `You are still in your gear and your ears are ringing. You could say a lot of things, and most of them are mistakes.`],
+    slots: { mood: ['grim', 'raw', 'weary', 'tense'], cause: ['a bad finish', 'an interference spot', 'a stumble in the third act', 'a sloppy near-fall'] },
+    body: [`The locker-room door opens on a {mood} scene, and {reporter.name} is in the hallway with a recorder. The question is about {cause}, and two more outlets are close behind.`, `"Anything to say about the finish?" {reporter.first} asks, recorder out. You are still in your gear and your ears are ringing. You could say a lot of things, and most of them are mistakes.`],
     choices: [
       { id: 'own_loss', label: 'Own the loss and give the winner credit', risk: 'low', result: `Class. The reporters respect it, and it makes the winner look better without making you look smaller.`, effects: [{ pop: 0.3 }, { conf: -1 }, { event: { type: 'interview', participants: ['reporter'], summary: 'Gave an honest post-loss interview.', data: { quality: { base: 62, mic: 0.3, charisma: 0.3, noise: 10 }, handled: true } } }] },
       { id: 'excuse', label: 'Blame the circumstances', risk: 'med', result: `The excuse comes easily and reads badly. It buys some sympathy and costs some respect.`, effects: [{ pop: -0.3 }, { conf: 1 }] },
@@ -528,15 +528,15 @@ export default [
     id: 'prs_backstage_leak', category: 'press', title: 'A Backstage Leak With Your Name On It', weight: 2, cooldownDays: 90, maxPerCareer: 4,
     cast: { journalist: { pick: 'media', kind: 'journalist' }, boss: { pick: 'staff', role: 'gm' } },
     trigger: { stat: { popularity: { gte: 45 }, careerYears: { gte: 1 } } },
-    slots: { story: ['a planned push for you', 'a planned demotion for you', 'a closed-door dispute', 'a surprise main event'], source: ['an anonymous source', 'a paywalled newsletter', 'a "well-placed insider"', 'a late-night forum thread'] },
-    body: [`{journalist.name} has run a story about {story}, citing {source}. Half the locker room thinks you are the leak, and {boss.name} wants to see you in the morning.`, `You know you did not do it. Proving that is the problem.`],
+    slots: { story: ['a planned push for you', 'a planned demotion for you', 'a closed-door dispute', 'a surprise main event'], source: ['an anonymous source', 'a trade newsletter', 'a "well-placed insider"', 'a leaked memo'] },
+    body: [`{journalist.name} has run a story about {story}, citing {source}. Half the locker room thinks you are the leak, and {boss.name} wants to see you in the morning.`, `The column credits "a source close to the talent," which could be anyone in the building. You know you did not do it, and proving that is the problem.`],
     choices: [
       { id: 'meet_boss', label: 'Meet {boss.first} and deny it directly', risk: 'low', result: `A tense twenty minutes in an office. {boss.first} believes you, mostly, and the locker room lets it go.`, effects: [{ conf: 1 }, { fatigue: 2 }] },
       { id: 'call_journalist', label: 'Confront {journalist.first} to find the source', risk: 'high', outcomes: [
         { weight: 2, bonus: { charisma: 0.4 }, text: `{journalist.first} gives nothing, but confirms that it was not you. That is enough to clear your name.`, effects: [{ pop: 0.2 }, { conf: 2 }, { fatigue: 3 }] },
         { weight: 2, text: `{journalist.first} runs a follow-up about the pressure you put on the press. You are suddenly the story.`, effects: [{ pop: -0.6 }, { conf: -3 }, { fatigue: 3 }] } ] },
-      { id: 'public_statement', label: 'Post a public statement and take no questions', risk: 'med', result: `Short and clear. It satisfies the fans and irritates the office, which would prefer you stayed silent.`, effects: [{ pop: 0.4 }, { conf: 1 }, { fatigue: 2 }] },
-      { id: 'lay_low', label: 'Lay low and let the rumour burn out', risk: 'low', result: `Three days of side-eyes in the corridor. Then something bigger happens elsewhere, and the heat moves on.`, effects: [{ conf: -2 }, { pop: -0.1 }] },
+      { id: 'public_statement', label: 'Release a public statement and take no questions', risk: 'med', result: `Short and clear. It satisfies the fans and irritates the office, which would prefer you stayed silent.`, effects: [{ pop: 0.4 }, { conf: 1 }, { fatigue: 2 }] },
+      { id: 'lay_low', label: 'Lay low and let the rumor burn out', risk: 'low', result: `Three days of side-eyes in the corridor. Then something bigger happens elsewhere, and the heat moves on.`, effects: [{ conf: -2 }, { pop: -0.1 }] },
     ],
   },
   {
@@ -559,14 +559,14 @@ export default [
     cast: { reporter: { pick: 'media', kind: 'reporter' } },
     trigger: { eventWithin: { id: 'wrestlemania', days: 12 }, stat: { popularity: { gte: 45 } } },
     slots: { week: ['Media Week', 'Fan-Fest Week', 'Press Row Week', 'Hall of Fame Week'], burden: ['six hours of interviews a day', 'a signing marathon', 'a sponsor breakfast', 'a festival of fan events'] },
-    body: [`{week} is here, and your schedule is stuffed with {burden}. {reporter.name} has the first slot of the morning, and the questions are all about the biggest night of the year.`, `The city is full of fans who travelled for days to be near you. They are friendly and tireless and you have a match to wrestle.`],
+    body: [`{week} is here, and your schedule is stuffed with {burden}. {reporter.name} has the first slot of the morning, and the questions are all about the biggest night of the year.`, `The city is full of fans who traveled for days to be near you. They are friendly and tireless and you have a match to wrestle.`],
     choices: [
       { id: 'embrace', label: 'Embrace every event and give fans your time', risk: 'med', outcomes: [
         { weight: 3, bonus: { charisma: 0.5 }, text: `Your stamina for small talk surprises even you. The fans remember your name, and the sponsor hands you a bonus.`, effects: [{ pop: 1.3 }, { money: 6000 }, { fatigue: 18 }] },
-        { weight: 1, text: `By Thursday your voice is a rasp and your handshakes are mechanical. A photo of you yawning goes viral.`, effects: [{ pop: 0.3 }, { money: 6000 }, { fatigue: 25 }, { conf: -3 }] } ] },
+        { weight: 1, text: `By Thursday your voice is a rasp and your handshakes are mechanical. A photo of you yawning ends up in the papers.`, effects: [{ pop: 0.3 }, { money: 6000 }, { fatigue: 25 }, { conf: -3 }] } ] },
       { id: 'protect', label: 'Protect your energy and pick three events', risk: 'low', result: `You do three things well and skip the rest. The fans are nice about it, the sponsors less so.`, effects: [{ pop: 0.5 }, { fatigue: 7 }, { money: -1000 }] },
       { id: 'big_statement', label: 'Make one huge statement and go quiet', risk: 'high', outcomes: [
-        { weight: 2, bonus: { mic: 0.7 }, text: `One quote, delivered perfectly in the biggest interview, sets the tone for the whole week. Nobody can stop quoting it.`, effects: [{ pop: 1.2 }, { conf: 3 }, { fatigue: 8 }, { event: { type: 'press_conference', participants: ['reporter'], summary: 'Delivered the quote of Media Week.', data: { quality: { base: 66, mic: 0.7, noise: 10 }, viral: { minQuality: 84, chance: 0.5 } } } }] },
+        { weight: 2, bonus: { mic: 0.7 }, text: `One quote, delivered perfectly in the biggest interview, sets the tone for the whole week. Nobody can stop quoting it.`, effects: [{ pop: 1.2 }, { conf: 3 }, { fatigue: 8 }, { event: { type: 'press_conference', participants: ['reporter'], summary: 'Delivered the quote of the week.', data: { quality: { base: 66, mic: 0.7, noise: 10 }, viral: { minQuality: 84, chance: 0.5 } } } }] },
         { weight: 2, text: `The line is lost in the noise, and you have nothing else prepared.`, effects: [{ pop: 0.1 }, { fatigue: 8 }, { conf: -2 }] } ] },
       { id: 'opt_out', label: 'Hole up in the hotel until showtime', risk: 'low', result: `You arrive rested and nobody has seen you for days. The press complain, and the match is better for it.`, effects: [{ fatigue: -10 }, { pop: -0.5 }, { conf: 1 }] },
     ],
@@ -576,7 +576,7 @@ export default [
     cast: { reporter: { pick: 'media', kind: 'reporter' } },
     trigger: { stat: { careerYears: { gte: 12 }, popularity: { gte: 40 } } },
     slots: { setting: ['At a hometown signing', 'In a live studio chat', 'After a long road trip', 'At an awards banquet'], angle: ['your body', 'your legacy', 'the next generation', 'your family'] },
-    body: [`{setting}, {reporter.name} asks about {angle}, and then the question lands: how much longer do you plan to keep doing this? It is asked kindly, and the kindness makes it harder.`, `You have thought about the answer more than you admit. What you say will start a clock, whether or not you set it.`],
+    body: [`{setting}, {reporter.name} asks about {angle}, and then the question lands: how much longer do you plan to keep doing this? It is asked kindly, and the kindness makes it harder.`, `"Be honest," {reporter.first} adds, gently. "Nobody here will hold you to it." You have thought about the answer more than you admit. What you say will start a clock, whether or not you set it.`],
     choices: [
       { id: 'no_end', label: 'Say you will wrestle until your body quits', risk: 'low', result: `Fans love the defiance, and your physio sighs in the corner. It is a promise to yourself more than to anyone else.`, effects: [{ pop: 0.5 }, { conf: 2 }, { fatigue: 3 }] },
       { id: 'timeline', label: 'Give a rough timeline for a final run', risk: 'med', result: `The announcement is gentle and clear. It makes every match feel more precious, and it also tells the booker how long you have left.`, effects: [{ pop: 0.7 }, { conf: -1 }, { event: { type: 'goal_set', participants: ['reporter'], summary: 'Spoke publicly about a final run.', data: {} } }] },
@@ -619,14 +619,14 @@ export default [
   {
     id: 'soc_charity_stream', category: 'social', title: 'A Charity Stream for {cause}', weight: 1.5, cooldownDays: 140, maxPerCareer: 3,
     trigger: { minYear: 2014, stat: { popularity: { gte: 40 } } },
-    slots: { cause: ['a children\'s hospital', 'an animal shelter', 'a local food bank', 'a veterans\' charity'], game: ['a video-game marathon', 'a cooking disaster', 'a trivia night against fans', 'a twelve-hour talk-and-sign'] },
+    slots: { cause: ['a children\'s hospital', 'an animal shelter', 'a local food bank', 'a veterans\' charity'], game: ['a video-game marathon', 'a cooking disaster', 'a trivia night against fans', 'a marathon talk-and-sign'] },
     body: [`Someone at the charity has asked whether you would host {game} on a livestream to raise money for {cause}. It would be eight hours of a camera, a chat window and a donation total that climbs or stalls.`, `You will either give your followers a good evening or give them one more reason to scroll away. Either way, the money matters.`],
     choices: [
       { id: 'full_marathon', label: 'Commit to the full marathon', risk: 'med', outcomes: [
         { weight: 3, bonus: { charisma: 0.7 }, text: `Chat treats it like a party. The donation goal is smashed in the fifth hour, and you finish hoarse and happy.`, effects: [{ pop: 1.2 }, { conf: 3 }, { fatigue: 14 }, { money: -2000 }, { event: { type: 'social_post', participants: [], summary: 'Hosted a charity livestream marathon.', data: { quality: { base: 68, charisma: 0.7, noise: 10 }, viral: { minQuality: 85, chance: 0.3 } } } }] },
         { weight: 1, text: `Technical failures eat the first two hours. Viewers drift away, but the total is still respectable.`, effects: [{ pop: 0.3 }, { conf: -1 }, { fatigue: 14 }, { money: -2000 }] } ] },
-      { id: 'two_hours', label: 'Do a focused two-hour special', risk: 'low', result: `Tight, funny and well-organised. It raises a decent amount, and you are in bed at a sensible hour.`, effects: [{ pop: 0.5 }, { fatigue: 5 }, { money: -500 }] },
-      { id: 'donate_only', label: 'Write a cheque instead of showing up', risk: 'low', result: `Generous and private. The charity is grateful, your followers do not notice, and your wallet takes the hit.`, effects: [{ money: -6000 }, { conf: 1 }] },
+      { id: 'two_hours', label: 'Do a focused two-hour special', risk: 'low', result: `Tight, funny and well-organized. It raises a decent amount, and you are in bed at a sensible hour.`, effects: [{ pop: 0.5 }, { fatigue: 5 }, { money: -500 }] },
+      { id: 'donate_only', label: 'Write a check instead of showing up', risk: 'low', result: `Generous and private. The charity is grateful, your followers do not notice, and your wallet takes the hit.`, effects: [{ money: -6000 }, { conf: 1 }] },
       { id: 'sponsor_it', label: 'Find a sponsor to match donations', risk: 'med', outcomes: [
         { weight: 2, bonus: { charisma: 0.4 }, text: `A sponsor says yes and doubles the pot. The story gets bigger than the stream.`, effects: [{ pop: 0.9 }, { conf: 2 }, { fatigue: 8 }] },
         { weight: 1, text: `Nobody bites in time, and the pitch makes the stream feel like a sales call.`, effects: [{ pop: -0.2 }, { fatigue: 8 }] } ] },
@@ -635,14 +635,14 @@ export default [
   {
     id: 'soc_parody_account', category: 'social', title: 'A Parody Account Is Getting Big', weight: 1.5, cooldownDays: 120, maxPerCareer: 3,
     trigger: { minYear: 2010, stat: { popularity: { gte: 45 } } },
-    slots: { style: ['a deadpan imitation', 'a surreal, over-the-top caricature', 'an affectionate tribute', 'a savage satire'], size: ['ten thousand followers', 'a viral week', 'a news write-up', 'a million views'] },
+    slots: { style: ['a deadpan imitation', 'a surreal, over-the-top caricature', 'an affectionate tribute', 'a savage satire'], size: ['ten thousand followers', 'fifty thousand followers', 'a million views', 'the front page of a news site'] },
     body: [`A parody account has appeared, producing {style} of everything you say. It has reached {size}, and some of its jokes are very, very good.`, `It is also clear that people in the locker room have been quoting it back to you. You could embrace it, block it or take it to court.`],
     choices: [
       { id: 'embrace', label: 'Follow it and join the joke', risk: 'med', effects: [{ fatigue: 4 }], outcomes: [
         { weight: 3, bonus: { charisma: 0.6 }, text: `You reply to the account in character. The parody and the real you trade lines, and fans love both.`, effects: [{ pop: 0.9 }, { conf: 2 }, { event: { type: 'social_post', participants: [], summary: 'Played along with a parody account.', data: { quality: { base: 64, charisma: 0.6, noise: 12 }, viral: { minQuality: 80, chance: 0.4 } } } }] },
         { weight: 1, text: `The account flips the bit and goes for a darker joke. You are stuck having endorsed it.`, effects: [{ pop: -0.3 }, { conf: -3 }] } ] },
       { id: 'report', label: 'Report it for impersonation', risk: 'med', outcomes: [
-        { weight: 2, text: `The account is suspended. The jokes stop, and some of the fans accuse you of having no sense of humour.`, effects: [{ conf: 1 }, { pop: -0.4 }] },
+        { weight: 2, text: `The account is suspended. The jokes stop, and some of the fans accuse you of having no sense of humor.`, effects: [{ conf: 1 }, { pop: -0.4 }] },
         { weight: 1, text: `The platform ignores the report, and the account posts the whole exchange as its best material yet.`, effects: [{ pop: -0.7 }, { conf: -3 }] } ] },
       { id: 'ignore', label: 'Pretend not to notice', risk: 'low', result: `The account carries on without you. Your mentions are full of its latest jokes, and you cannot unsee them.`, effects: [{ conf: -1 }] },
       { id: 'hire_them', label: 'Offer the creator a writing gig', risk: 'high', outcomes: [
@@ -655,25 +655,25 @@ export default [
     cast: { reporter: { pick: 'media', kind: 'reporter' } },
     trigger: { minYear: 2010, stat: { popularity: { gte: 50 } } },
     slots: { claim: ['you were released', 'you were seriously injured', 'you were quitting the business', 'you were arrested'], spread: ['a screenshot of a fake news site', 'a forum post', 'a doctored video', 'an anonymous video blogger'] },
-    body: [`A hoax claiming {claim} has spread across social media, started by {spread}. {reporter.name} has already texted to ask whether it is true.`, `You have been called by relatives and by your agent, and one of the first people to call was a sponsor.`],
+    body: [`A hoax claiming {claim} has spread across social media, started by {spread}. {reporter.name} has already texted to ask whether it is true.`, `You have been called by relatives and by your agent, and one of the first people to call was a sponsor. "Please tell me this is not true," says the first voicemail.`],
     choices: [
-      { id: 'quick_denial', label: 'Post a short, direct denial', risk: 'low', result: `Two sentences and a photo from today. The hoax is dead by lunchtime, and the people who spread it quietly delete their posts.`, effects: [{ pop: 0.2 }, { conf: 1 }, { event: { type: 'social_post', participants: ['reporter'], summary: 'Shut down a fake rumour with a quick denial.', data: { quality: { base: 60, charisma: 0.3, noise: 8 }, handled: true } } }] },
+      { id: 'quick_denial', label: 'Post a short, direct denial', risk: 'low', result: `Two sentences and a photo from today. The hoax is dead by lunchtime, and the people who spread it quietly delete their posts.`, effects: [{ pop: 0.2 }, { conf: 1 }, { event: { type: 'social_post', participants: ['reporter'], summary: 'Shut down a fake rumor with a quick denial.', data: { quality: { base: 60, charisma: 0.3, noise: 8 }, handled: true } } }] },
       { id: 'mock_it', label: 'Mock the hoax with a joke', risk: 'med', effects: [{ fatigue: 4 }], outcomes: [
-        { weight: 3, bonus: { charisma: 0.6, mic: 0.4 }, text: `Your joke goes round faster than the lie. People are laughing with you, and the hoaxer looks silly.`, effects: [{ pop: 0.9 }, { conf: 2 }, { event: { type: 'social_post', participants: ['reporter'], summary: 'Turned a fake rumour into a joke.', data: { quality: { base: 66, charisma: 0.6, mic: 0.4, noise: 12 }, viral: { minQuality: 80, chance: 0.4 }, handled: true } } }] },
+        { weight: 3, bonus: { charisma: 0.6, mic: 0.4 }, text: `Your joke goes round faster than the lie. People are laughing with you, and the hoaxer looks silly.`, effects: [{ pop: 0.9 }, { conf: 2 }, { event: { type: 'social_post', participants: ['reporter'], summary: 'Turned a fake rumor into a joke.', data: { quality: { base: 66, charisma: 0.6, mic: 0.4, noise: 12 }, viral: { minQuality: 80, chance: 0.4 }, handled: true } } }] },
         { weight: 1, text: `A relative reads the joke and does not find it funny. The hoax lingers, and your tone looks callous.`, effects: [{ pop: -0.3 }, { conf: -2 }] } ] },
       { id: 'legal', label: 'Have lawyers track down the source', risk: 'high', result: `Costly, slow and a bit scary. The source is traced eventually, but you spend a week tied up with paperwork.`, effects: [{ money: -7000 }, { conf: 1 }, { fatigue: 6 }] },
-      { id: 'ride_it', label: 'Let the rumour build buzz before you correct it', risk: 'high', outcomes: [
+      { id: 'ride_it', label: 'Let the rumor build buzz before you correct it', risk: 'high', outcomes: [
         { weight: 2, bonus: { mic: 0.4 }, text: `After a day of speculation, you drop a surprise reveal. The attention is enormous, and the timing looks theatrical.`, effects: [{ pop: 1.0 }, { conf: 1 }] },
-        { weight: 2, text: `Your silence is read as confirmation. Your family and sponsors are not amused, and the correction does not travel as far as the rumour.`, effects: [{ pop: -0.7 }, { conf: -3 }, { money: -2000 }] } ] },
+        { weight: 2, text: `Your silence is read as confirmation. Your family and sponsors are not amused, and the correction does not travel as far as the rumor.`, effects: [{ pop: -0.7 }, { conf: -3 }, { money: -2000 }] } ] },
     ],
   },
   {
     id: 'soc_ama', category: 'social', title: 'An Ask-Me-Anything Goes Live', weight: 1.5, cooldownDays: 100, maxPerCareer: 4,
     trigger: { minYear: 2010, stat: { popularity: { gte: 40 }, mic: { gte: 40 } } },
-    slots: { platform: ['a fan forum', 'a video chat app', 'a live text thread', 'a question box on your page'], question: ['who is the toughest opponent', 'what is your worst habit', 'who is on your bucket-list match', 'what your favourite memory from the road is'] },
+    slots: { platform: ['a fan forum', 'a video chat app', 'a live text thread', 'a question box on your page'], question: ['who is the toughest opponent', 'what is your worst habit', 'who is on your dream-match list', 'what is your favorite memory from the road'] },
     body: [`You opened {platform} for an hour and told fans to ask anything. The top-voted question, by a wide margin, is {question}.`, `You can see the hit counter rising, and a handful of troll accounts waiting by the sidelines. Everything you type will be screenshotted.`],
     choices: [
-      { id: 'be_open', label: 'Answer honestly and with humour', risk: 'med', outcomes: [
+      { id: 'be_open', label: 'Answer honestly and with humor', risk: 'med', outcomes: [
         { weight: 3, bonus: { charisma: 0.6 }, text: `Your answers are funny, human and a little strange. The thread is saved and shared, and people ask for a sequel.`, effects: [{ pop: 0.9 }, { conf: 2 }, { fatigue: 3 }, { event: { type: 'social_post', participants: [], summary: 'Hosted a well-received fan Q&A.', data: { quality: { base: 64, charisma: 0.6, noise: 10 }, viral: { minQuality: 84, chance: 0.3 } } } }] },
         { weight: 1, text: `One careless answer turns into a story, and you spend the next day trying to take it back.`, effects: [{ pop: -0.2 }, { conf: -3 }, { fatigue: 3 }] } ] },
       { id: 'tease_news', label: 'Drop a tease about something upcoming', risk: 'high', result: `You hint at a big announcement. The fans lose their minds, and the creative team asks, a little coldly, what you meant.`, effects: [{ pop: 0.9 }, { conf: 1 }, { fatigue: 3 }] },
@@ -686,21 +686,21 @@ export default [
     cast: { producer: { pick: 'staff', role: 'producer' } },
     trigger: { minYear: 2010, stat: { popularity: { gte: 40 } } },
     slots: { photo: ['a rehearsal shot of a new entrance', 'a backstage picture with a rival', 'a shot of a new set of gear', 'a hotel photo with the championship belt'], source: ['a fan with a long lens', 'a friend you tagged', 'a stagehand', 'your own careless post'] },
-    body: [`{photo} has been posted by {source}, and the internet is already guessing what it means. {producer.name} has seen it and does not look pleased.`, `If the angle was meant to be a surprise, it is gone. If it was meant to be a mystery, the clock has started.`],
+    body: [`{photo} has surfaced online, courtesy of {source}, and the internet is already guessing what it means. {producer.name} has seen it and does not look pleased.`, `"Who gave them that?" {producer.name} asks the room, which does not answer. If the angle was meant to be a surprise, it is gone. If it was meant to be a mystery, the clock has started.`],
     choices: [
       { id: 'own_it', label: 'Own it and hype what is coming', risk: 'med', outcomes: [
         { weight: 2, bonus: { charisma: 0.4 }, text: `You turn the leak into a countdown. Fans spend a week guessing, and the producer allows a small, frosty smile.`, effects: [{ pop: 0.7 }, { conf: 1 }] },
         { weight: 1, text: `The hype raises expectations the show cannot meet. A producer scribbles a note about your judgment.`, effects: [{ pop: 0.2 }, { conf: -2 }] } ] },
-      { id: 'delete_deny', label: 'Take it down and deny everything', risk: 'low', result: `The denial buys time, but the screenshots have already travelled. You look evasive, and the producer is not fooled.`, effects: [{ pop: -0.2 }, { conf: -1 }] },
-      { id: 'apologise_to_producer', label: 'Apologise privately to the producer', risk: 'low', result: `{producer.first} appreciates the call, mostly, and reshuffles the segment. The creative team notes that you can be trusted to own a mistake.`, effects: [{ conf: -1 }, { pop: 0.1 }] },
-      { id: 'blame_source', label: 'Blame the person who posted it', risk: 'med', result: `The story shifts away from you, but the colleague you named is now gunning for you.`, effects: [{ conf: 1 }, { pop: -0.3 }] },
+      { id: 'delete_deny', label: 'Take it down and deny everything', risk: 'low', result: `The denial buys time, but the screenshots have already traveled. You look evasive, and the producer is not fooled.`, effects: [{ pop: -0.2 }, { conf: -1 }] },
+      { id: 'apologise_to_producer', label: 'Apologize privately to the producer', risk: 'low', result: `{producer.first} appreciates the call, mostly, and reshuffles the segment. The creative team notes that you can be trusted to own a mistake.`, effects: [{ conf: -1 }, { pop: 0.1 }] },
+      { id: 'blame_source', label: 'Blame the person who posted it', risk: 'med', result: `The story shifts away from you, but the person you named is now gunning for you.`, effects: [{ conf: 1 }, { pop: -0.3 }] },
     ],
   },
   {
     id: 'soc_pile_on', category: 'social', title: 'A Wave of Hostile Messages', weight: 1.5, cooldownDays: 110, maxPerCareer: 3,
     trigger: { minYear: 2010, stat: { popularity: { gte: 45 }, matches: { gte: 20 } } },
     slots: { trigger: ['a poor match', 'a controversial finish', 'a clipped quote', 'a change of look'], toll: ['your inbox', 'your phone', 'your family\'s accounts', 'a fan page you created'] },
-    body: [`After {trigger}, a wave of cruel messages has hit {toll}. Most are thoughtless and some are obsessive, and a few of the nastiest have your family\'s names in them.`, `You were told to expect a thick skin and no one said how thick. The next hour decides how much of this you carry.`],
+    body: [`After {trigger}, a wave of cruel messages has hit {toll}. Most are thoughtless and some are obsessive, and a few of the nastiest have your family's names in them.`, `You were told to expect a thick skin and no one said how thick. The next hour decides how much of this you carry.`],
     choices: [
       { id: 'block_mute', label: 'Block, mute and report everything', risk: 'low', result: `A tedious hour with the report button, and the fog lifts. The feed is calmer, but the worst messages have already been read.`, effects: [{ conf: 1 }, { fatigue: 4 }, { pop: -0.1 }] },
       { id: 'public_response', label: 'Call out the abuse in a public post', risk: 'med', outcomes: [
@@ -742,7 +742,7 @@ export default [
   },
   {
     id: 'soc_challenge_trend', category: 'social', title: 'The {trend} Challenge Wants You In', weight: 1.2, cooldownDays: 100, maxPerCareer: 3,
-    trigger: { minYear: 2012, stat: { popularity: { gte: 40 } } },
+    trigger: { minYear: 2014, stat: { popularity: { gte: 40 } } },
     slots: { trend: ['Ice-Bucket', 'Dance-Off', 'One-Take', 'Mannequin'], rule: ['you have to tag three rivals', 'you have to do it in costume', 'you have to do it in the ring', 'you have to do it at 6 a.m.'] },
     body: [`The {trend} Challenge is sweeping the sport's accounts, and half the roster has already posted theirs. The rule is that {rule}, and your phone is full of colleagues tagging you.`, `Participating means looking silly on camera. Not participating means being the one name missing from the fun.`],
     choices: [
@@ -776,23 +776,23 @@ export default [
     id: 'fan_airport_encounter', category: 'fans', title: 'A Fan Finds You at the Airport', weight: 2, cooldownDays: 70, maxPerCareer: 5,
     cast: { fan: { pick: 'media', kind: 'fan' } },
     trigger: { stat: { popularity: { gte: 35 } } },
-    slots: { place: ['the gate after a delayed flight', 'baggage claim at midnight', 'the security line', 'a crowded coffee queue'], state: ['exhausted', 'in a hurry', 'half asleep', 'with a sore back'] },
-    body: [`You are {state} at {place} when {fan.name} recognises you and walks over, holding a phone and a battered programme. The fan has clearly rehearsed this, and the line behind you is watching.`, `One second of patience here will be a story that lasts for years. One second of irritation will be a clip that lasts just as long.`],
+    slots: { place: ['the gate after a delayed flight', 'baggage claim at midnight', 'the security line', 'a crowded coffee queue'], state: ['exhausted', 'in a hurry', 'half asleep', 'nursing a sore back'] },
+    body: [`You are {state} at {place} when {fan.name} recognizes you and walks over, holding a pen and a battered program. The fan has clearly rehearsed this, and the line behind you is watching.`, `"I know you are busy," {fan.first} says in a rush, "but it would mean everything." One second of patience here will be a story that lasts for years. One second of irritation will be a clip that lasts just as long.`],
     choices: [
       { id: 'full_time', label: 'Give {fan.first} real time and a long chat', risk: 'low', result: `Ten minutes, a picture, a signed boarding pass. {fan.first} walks off glowing, and the delay no longer feels as bad.`, effects: [{ pop: 0.5 }, { conf: 2 }, { fatigue: 4 }] },
-      { id: 'quick_photo', label: 'Take a quick photo and apologise', risk: 'low', result: `You are warm but brief. {fan.first} is happy, the crowd behind you is mildly amused, and you make your connection.`, effects: [{ pop: 0.2 }, { fatigue: 1 }] },
+      { id: 'quick_photo', label: 'Take a quick photo and apologize', risk: 'low', result: `You are warm but brief. {fan.first} is happy, the crowd behind you is mildly amused, and you make your connection.`, effects: [{ pop: 0.2 }, { fatigue: 1 }] },
       { id: 'in_character', label: 'Greet the fan in full ring character', risk: 'med', outcomes: [
-        { weight: 3, bonus: { charisma: 0.6 }, text: `Half the terminal stops to watch. The performance is brilliant, and someone posts it with a hundred thousand shares.`, effects: [{ pop: 0.9 }, { fatigue: 4 }, { event: { type: 'social_post', participants: ['fan'], summary: 'A fan shared a video of an in-character airport greeting.', data: { quality: { base: 64, charisma: 0.6, noise: 12 }, viral: { minQuality: 80, chance: 0.4 } } } }] },
+        { weight: 3, bonus: { charisma: 0.6 }, text: `Half the terminal stops to watch. The performance is brilliant, and someone films it, and the clip gets passed around for months.`, effects: [{ pop: 0.9 }, { fatigue: 4 }, { event: { type: 'social_post', participants: ['fan'], summary: 'A fan shared a video of an in-character airport greeting.', data: { quality: { base: 64, charisma: 0.6, noise: 12 }, viral: { minQuality: 80, chance: 0.4 } } } }] },
         { weight: 1, text: `The bit comes off cold. The fan looks stunned and the crowd murmurs that you are rude in person.`, effects: [{ pop: -0.4 }, { conf: -2 }, { fatigue: 3 }] } ] },
-      { id: 'decline', label: 'Say sorry and keep walking', risk: 'med', result: `You need to be on the plane. The fan is crestfallen, and a nearby traveller films a compilation of the incident.`, effects: [{ pop: -0.4 }, { conf: -1 }] },
+      { id: 'decline', label: 'Say sorry and keep walking', risk: 'med', result: `You need to be on the plane. The fan is crestfallen, and a nearby traveler films the whole thing.`, effects: [{ pop: -0.4 }, { conf: -1 }] },
     ],
   },
   {
     id: 'fan_hospital_visit', category: 'fans', title: 'A Visit to the {ward} Ward', weight: 1.5, cooldownDays: 130, maxPerCareer: 3,
     cast: { fan: { pick: 'media', kind: 'fan' } },
     trigger: { stat: { popularity: { gte: 30 } } },
-    slots: { ward: ['children\'s', 'long-term care', 'veterans\'', 'rehabilitation'], gift: ['a replica belt', 'a signed T-shirt', 'a hand-drawn card', 'a ring-side ticket'] },
-    body: [`A charity coordinator has asked you to visit the {ward} ward for an hour on your day off. {fan.name} is a patient who has been following your career since long before you were famous, and the staff says it would mean the world.`, `You bring {gift}, and the room has been decorated with your pictures. It is quiet in a way that a loud arena never is.`],
+    slots: { ward: ['children\'s', 'long-term care', 'veterans\'', 'rehabilitation'], gift: ['a replica belt', 'a signed T-shirt', 'a hand-drawn card', 'a ringside ticket'] },
+    body: [`A charity coordinator has asked you to visit the {ward} ward for an hour on your day off. {fan.name} is a patient who has been following your career since long before you were famous, and the staff say it would mean the world.`, `You bring {gift}, and the room has been decorated with your pictures. "You came," {fan.first} says quietly, and that is the whole speech. It is quiet in a way that a loud arena never is.`],
     choices: [
       { id: 'stay_long', label: 'Stay for the whole afternoon', risk: 'low', result: `The hour turns into four. You sign, listen and trade stories with the nurses, and walk out a different person than the one who walked in.`, effects: [{ pop: 0.5 }, { conf: 4 }, { fatigue: 8 }] },
       { id: 'private', label: 'Keep it private: no cameras at all', risk: 'low', result: `Nobody posts a thing. The hospital is touched, and your people shrug at the lost publicity.`, effects: [{ conf: 3 }, { fatigue: 4 }] },
@@ -806,12 +806,12 @@ export default [
     id: 'fan_convention_panel', category: 'fans', title: 'The Fan Convention Panel', weight: 1.8, cooldownDays: 110, maxPerCareer: 4,
     cast: { host: { pick: 'media', kind: 'host' } },
     trigger: { stat: { popularity: { gte: 40 }, mic: { gte: 40 } } },
-    slots: { crowd: ['a small hotel ballroom', 'a packed convention hall', 'a stadium concourse', 'a sold-out theatre'], topic: ['the future of the business', 'the best match you have ever had', 'a fan-voted pick of your career', 'a wild-card audience Q&A'] },
+    slots: { crowd: ['a small hotel ballroom', 'a packed convention hall', 'a stadium concourse', 'a sold-out theater'], topic: ['the future of the business', 'the best match you have ever had', 'a fan-voted pick of your career', 'a wild-card audience Q&A'] },
     body: [`{host.name} is moderating a panel before {crowd}, with {topic} as the headline. You are one of four guests, and the audience has come ready with signs and opinions.`, `The microphone is passed around like a hot potato. Decide in advance whether you plan to steer or follow.`],
     choices: [
       { id: 'lead', label: 'Take control of the panel and lead it', risk: 'med', outcomes: [
         { weight: 3, bonus: { mic: 0.6, charisma: 0.3 }, text: `You ask the room questions, tell a story that gets a laugh, and bring the quieter guests into the conversation. The crowd gives you a standing ovation.`, effects: [{ pop: 0.9 }, { conf: 3 }, { fatigue: 5 }] },
-        { weight: 1, text: `You step on a co-panelist\'s story and the room feels it. The moderator rescues the moment and you look overeager.`, effects: [{ pop: -0.2 }, { conf: -2 }, { fatigue: 5 }] } ] },
+        { weight: 1, text: `You step on a co-panelist's story and the room feels it. The moderator rescues the moment and you look overeager.`, effects: [{ pop: -0.2 }, { conf: -2 }, { fatigue: 5 }] } ] },
       { id: 'share', label: 'Share the stage and let others shine', risk: 'low', result: `Gracious, funny and a touch forgettable. The other guests appreciate it, and the crowd has a pleasant afternoon.`, effects: [{ pop: 0.3 }, { fatigue: 3 }, { conf: 1 }] },
       { id: 'big_reveal', label: 'Reveal something about your future', risk: 'high', result: `You hint at a surprise, and the room erupts. The company does not love finding out in a ballroom.`, effects: [{ pop: 1.0 }, { conf: 2 }, { fatigue: 5 }, { money: -2000 }] },
       { id: 'sign_only', label: 'Skip the panel and just do the signing', risk: 'low', result: `The signing line is long and happy. You miss the stage, and the fans who wanted to hear you speak go home unsatisfied.`, effects: [{ pop: 0.1 }, { money: 2000 }, { fatigue: 6 }] },
@@ -820,7 +820,7 @@ export default [
   {
     id: 'fan_chant', category: 'fans', title: 'The Crowd Starts Chanting', weight: 2, cooldownDays: 60, maxPerCareer: 6, contexts: ['post_match', 'weekly'],
     trigger: { stat: { matches: { gte: 10 }, popularity: { gte: 30 } } },
-    slots: { chant: ['a rhythmic "overrated" chant', 'a mocking sing-along of your entrance theme', 'a roaring chant of your catchphrase', 'a swelling chant begging you to win'], mood: ['a sold-out arena', 'a tiny local hall', 'a rowdy television taping', 'a final-hour house show'] },
+    slots: { chant: ['a rhythmic "overrated" chant', 'a mocking sing-along of your entrance theme', 'a roaring chant of your catchphrase', 'a swelling chant begging you to win'], mood: ['a sold-out arena', 'a tiny local hall', 'a rowdy television taping', 'a half-empty house show'] },
     body: [`In {mood}, the crowd has started {chant}. It builds until your own music is lost in the sound.`, `You have about eight seconds to decide what to do with it. The camera is already on you.`],
     choices: [
       { id: 'play_to_it', label: 'Play to the chant and conduct the crowd', risk: 'med', outcomes: [
@@ -838,7 +838,7 @@ export default [
     cast: { fan: { pick: 'media', kind: 'fan' } },
     trigger: { stat: { popularity: { gte: 35 } } },
     slots: { event: ['a merch tent', 'a hotel signing', 'a mall appearance', 'a charity meet-and-greet'], jab: ['says you are washed up', 'tells you that you got lucky', 'says you let down the fans', 'keeps shouting a name that is not yours'] },
-    body: [`At {event}, {fan.name} reaches the front of the line and, instead of asking for an autograph, {jab}. The people behind are watching and some of them are filming.`, `The staff waits for your signal, and the fan is red in the face. You could end it in three words or let it grow into a story.`],
+    body: [`At {event}, {fan.name} reaches the front of the line and, instead of asking for an autograph, {jab}. The people behind are watching and some of them are filming.`, `"Say something," {fan.first} demands, loud enough for the whole line. The staff waits for your signal, and the fan is red in the face. You could end it in three words or let it grow into a story.`],
     choices: [
       { id: 'kill_with_kindness', label: 'Kill the heckler with kindness', risk: 'med', outcomes: [
         { weight: 3, bonus: { charisma: 0.6 }, text: `You thank {fan.first}, shake the hand, and sign the heckler's shirt. The line breaks into applause.`, effects: [{ pop: 0.8 }, { conf: 3 }, { fatigue: 2 }] },
@@ -853,15 +853,15 @@ export default [
   {
     id: 'fan_long_autograph_line', category: 'fans', title: 'The Autograph Line That Never Ends', weight: 1.5, cooldownDays: 90, maxPerCareer: 4,
     trigger: { stat: { popularity: { gte: 50 } } },
-    slots: { venue: ['a comic convention', 'a stadium parking lot', 'a bookstore', 'a hotel ballroom'], hours: ['four hours', 'six hours', 'eight hours', 'all night'] },
-    body: [`The queue at {venue} snakes round the building and the organisers have just announced that the signing will run for another {hours}. Your hand is already cramping and the water jug has been empty for an hour.`, `Every person in the line paid good money and some travelled far. You are the only thing standing between them and a story to tell.`],
+    slots: { venue: ['a comic convention', 'a stadium parking lot', 'a bookstore', 'a hotel ballroom'], hours: ['four hours', 'six hours', 'eight hours', 'the rest of the night'] },
+    body: [`The queue at {venue} snakes round the building and the organizers have just announced that the signing will run for another {hours}. Your hand is already cramping and the water jug has been empty for an hour.`, `Every person in the line paid good money and some traveled far. You are the only thing standing between them and a story to tell.`],
     choices: [
       { id: 'sign_all', label: 'Sign for everyone, however long it takes', risk: 'low', result: `Your hand never forgives you, but the last fan in the line cries a little. Word of your generosity spreads.`, effects: [{ pop: 0.8 }, { conf: 2 }, { fatigue: 18 }, { money: 3000 }] },
       { id: 'speed', label: 'Speed things up: signature only', risk: 'med', result: `The line moves quickly and the fans get a fraction of what they hoped. You make it to dinner on time.`, effects: [{ pop: 0.1 }, { fatigue: 8 }, { money: 3000 }] },
       { id: 'limit_group', label: 'Do a group photo and a few big signings', risk: 'med', outcomes: [
-        { weight: 2, bonus: { charisma: 0.4 }, text: `The group shot is chaotic and lovely. Everyone gets something, and the organisers take a deep breath of relief.`, effects: [{ pop: 0.5 }, { fatigue: 7 }, { money: 2500 }] },
+        { weight: 2, bonus: { charisma: 0.4 }, text: `The group shot is chaotic and lovely. Everyone gets something, and the organizers take a deep breath of relief.`, effects: [{ pop: 0.5 }, { fatigue: 7 }, { money: 2500 }] },
         { weight: 1, text: `Some fans feel cheated and say so loudly online. The queue ends in a muttering mess.`, effects: [{ pop: -0.4 }, { fatigue: 7 }, { conf: -2 }, { money: 2500 }] } ] },
-      { id: 'leave_early', label: 'Cut the signing short for your health', risk: 'high', result: `You stop at the three-hour mark. Hundreds of people leave without a signature, and the organisers hold it against you.`, effects: [{ fatigue: -4 }, { pop: -0.7 }, { money: -1500 }, { conf: -1 }] },
+      { id: 'leave_early', label: 'Cut the signing short for your health', risk: 'high', result: `You stop at the three-hour mark. Hundreds of people leave without a signature, and the organizers hold it against you.`, effects: [{ fatigue: -4 }, { pop: -0.7 }, { money: -1500 }, { conf: -1 }] },
     ],
   },
   {
@@ -869,11 +869,11 @@ export default [
     cast: { fan: { pick: 'media', kind: 'fan' } },
     trigger: { stat: { popularity: { gte: 40 } } },
     slots: { gift: ['a hand-made replica championship belt', 'a quilt stitched with your catchphrases', 'a framed collage of every match poster', 'a scale model of the arena'], moment: ['at the stage door', 'at a signing table', 'outside your hotel', 'in an elevator'] },
-    body: [`{fan.name} meets you {moment} with {gift}, and it is clear the work took months. The fan hands it over with shaking hands and a very short speech.`, `You have been given things before, but this one has the smell of real effort. Everyone nearby is watching to see what you do with it.`],
+    body: [`{fan.name} meets you {moment} with {gift}, and it is clear the work took months. The fan hands it over with shaking hands and a very short speech.`, `"I did it all myself," {fan.first} manages. "Well, my sister helped with the paint." You have been given things before, but this one has the smell of real effort. Everyone nearby is watching to see what you do with it.`],
     choices: [
-      { id: 'display', label: 'Accept it warmly and display it proudly', risk: 'low', result: `You hold it up for a photo, then take it into the locker room where it hangs for weeks. {fan.first} tells the story for years.`, effects: [{ pop: 0.5 }, { conf: 3 }] },
+      { id: 'display', label: 'Accept it warmly and display it proudly', risk: 'low', result: `You hold it up for a photo, then take it into the locker room, where it stays on display for weeks. {fan.first} tells the story for years.`, effects: [{ pop: 0.5 }, { conf: 3 }] },
       { id: 'reciprocate', label: 'Give something back: tickets and a backstage tour', risk: 'low', result: `{fan.first} gets a night nobody could have scripted. It costs you a little and the story spreads.`, effects: [{ pop: 0.7 }, { conf: 2 }, { money: -1500 }, { fatigue: 3 }] },
-      { id: 'accept_quickly', label: 'Thank the fan briefly and hand it to your assistant', risk: 'med', result: `You are in a hurry and it shows. {fan.first} tries to smile, and a bystander posts a pointed caption.`, effects: [{ pop: -0.4 }, { conf: -2 }] },
+      { id: 'accept_quickly', label: 'Thank the fan briefly and hand it to your assistant', risk: 'med', result: `You are in a hurry and it shows. {fan.first} tries to smile, and a bystander mutters a pointed remark.`, effects: [{ pop: -0.4 }, { conf: -2 }] },
       { id: 'auction', label: 'Auction it for charity with {fan.first}\'s blessing', risk: 'med', outcomes: [
         { weight: 2, bonus: { charisma: 0.3 }, text: `The auction raises a surprising sum, and {fan.first} gets to see the bidding. It all feels generous and grown-up.`, effects: [{ pop: 0.6 }, { conf: 2 }, { money: -500 }] },
         { weight: 1, text: `The fan hears from a friend that it was sold and feels hurt, no matter how good the cause.`, effects: [{ pop: -0.2 }, { conf: -2 }] } ] },
@@ -882,8 +882,8 @@ export default [
   {
     id: 'fan_life_changing_letter', category: 'fans', title: 'A Letter From a Fan Who Needed You', weight: 1.2, cooldownDays: 140, maxPerCareer: 3,
     trigger: { stat: { popularity: { gte: 35 }, careerYears: { gte: 1 } } },
-    slots: { story: ['recovering from surgery', 'stuck in a hard year at school', 'grieving a parent', 'learning to speak with a stutter'], medium: ['a handwritten letter', 'a long email', 'a video message', 'a card slipped under the dressing-room door'] },
-    body: [`Among the fan mail is {medium} from someone who says watching you got them through a stretch of {story}. The words are plain, a little awkward and entirely sincere.`, `You do not know what to say. It will not trend, and there is nothing in it for you except the thing itself.`],
+    slots: { story: ['recovering from surgery', 'stuck in a hard year at school', 'grieving a parent', 'learning to speak with a stutter'], medium: ['a handwritten letter', 'a long typed letter', 'a cassette tape message', 'a card slipped under the dressing-room door'] },
+    body: [`Among the fan mail is {medium} from someone who says watching you got them through a stretch of {story}. The words are plain, a little awkward and entirely sincere.`, `You do not know what to say. It will not make the papers, and there is nothing in it for you except the thing itself.`],
     choices: [
       { id: 'personal_reply', label: 'Write back by hand, at length', risk: 'low', result: `It takes you an hour to write, and you cross out a lot. The reply reaches them three days later, and they frame it.`, effects: [{ conf: 4 }, { fatigue: 3 }, { pop: 0.2 }] },
       { id: 'invite', label: 'Invite them to a show and meet them', risk: 'low', result: `They arrive with their family. The meeting is short and unforgettable, and the staff quietly wipe their eyes.`, effects: [{ conf: 4 }, { pop: 0.4 }, { money: -800 }, { fatigue: 4 }] },
@@ -898,11 +898,11 @@ export default [
     cast: { fan: { pick: 'media', kind: 'fan' } },
     trigger: { stat: { popularity: { gte: 50 } } },
     slots: { size: ['forty regulars', 'three hundred members', 'a thousand-strong group', 'a dozen very loud founders'], ask: ['an official meet-up', 'a discount code', 'a place in the merch store', 'a shout-out on air'] },
-    body: [`{fan.name}, the founder of a fan club with {size}, writes to ask for {ask}. The group has been shouting your name in arenas for a while, and several have the T-shirts to prove it.`, `This is the kind of loyalty that carries a wrestler through bad years. It is also the kind that expects something back.`],
+    body: [`{fan.name}, the founder of a fan club with {size}, writes to ask for {ask}. The group has been shouting your name in arenas for a while, and several have the T-shirts to prove it.`, `"We even have membership cards," {fan.first} adds proudly. This is the kind of loyalty that carries a wrestler through bad years. It is also the kind that expects something back.`],
     choices: [
       { id: 'official', label: 'Make it official and attend the meet-up', risk: 'low', result: `A Saturday afternoon of signing and pizza. The club doubles in membership within a month.`, effects: [{ pop: 0.7 }, { conf: 2 }, { fatigue: 7 }, { money: -1000 }] },
       { id: 'merch_deal', label: 'Offer a share of merch sales to the club', risk: 'med', outcomes: [
-        { weight: 2, bonus: { charisma: 0.3 }, text: `The deal energises the club and puts a small amount in your pocket. Everyone wins a little.`, effects: [{ pop: 0.4 }, { money: 4000 }, { conf: 1 }] },
+        { weight: 2, bonus: { charisma: 0.3 }, text: `The deal energizes the club and puts a small amount in your pocket. Everyone wins a little.`, effects: [{ pop: 0.4 }, { money: 4000 }, { conf: 1 }] },
         { weight: 1, text: `A dispute over who gets what breaks the club in two, and you get letters from both halves.`, effects: [{ pop: -0.3 }, { conf: -3 }, { money: 1000 }] } ] },
       { id: 'shout_out', label: 'Give them a shout-out on air but nothing more', risk: 'low', result: `A short line during a promo. The club goes wild, and the founder is mildly disappointed but accepts.`, effects: [{ pop: 0.3 }, { conf: 1 }] },
       { id: 'keep_distance', label: 'Thank them but keep your distance', risk: 'low', result: `You keep things professional. The club stays loyal but cool, and the founder takes a step back.`, effects: [{ conf: 1 }, { pop: -0.2 }] },
@@ -911,15 +911,15 @@ export default [
   {
     id: 'fan_young_fan_costume', category: 'fans', title: 'A Kid in Your Gear Steals the Show', weight: 1.5, cooldownDays: 110, maxPerCareer: 3,
     trigger: { stat: { popularity: { gte: 35 } } },
-    slots: { place: ['front row', 'the barricade', 'a costume contest', 'a hotel lobby'], kid: ['an eight-year-old', 'a toddler with a plastic belt', 'a shy ten-year-old', 'a teenager with a hand-painted jacket'] },
-    body: [`In {place}, {kid} is in full homemade version of your ring gear, grinning from ear to ear. The family has been saving up for weeks to be here, and the camera crew has spotted them too.`, `It is a small moment, and you have a choice about how large it becomes.`],
+    slots: { place: ['the front row', 'the crowd by the barricade', 'a costume contest', 'a hotel lobby'], kid: ['an eight-year-old', 'a toddler with a plastic belt', 'a shy ten-year-old', 'a teenager with a hand-painted jacket'] },
+    body: [`In {place}, {kid} is wearing a full homemade version of your ring gear, grinning from ear to ear. The family has been saving up for weeks to be here, and the camera crew has spotted them too.`, `It is a small moment, and you have a choice about how large it becomes.`],
     choices: [
       { id: 'bring_in', label: 'Bring the kid into the ring for a moment', risk: 'med', outcomes: [
         { weight: 3, bonus: { charisma: 0.5 }, text: `Pure joy. The kid raises both fists, and the crowd loses its voice. The footage ends up on the evening news.`, effects: [{ pop: 1.0 }, { conf: 3 }, { fatigue: 2 }] },
         { weight: 1, text: `Security and a producer both have notes, and the kid freezes. The family is grateful, but your boss is not.`, effects: [{ pop: 0.3 }, { conf: -1 }, { fatigue: 2 }] } ] },
       { id: 'quiet_gift', label: 'Slip them a signed prop and a few quiet words', risk: 'low', result: `No cameras and no fanfare. The kid beams, and the parents write you a note you keep for years.`, effects: [{ conf: 3 }, { pop: 0.2 }] },
       { id: 'costume_prize', label: 'Judge the costume contest in person', risk: 'low', result: `A cheerful, tiring hour. The kid wins, the others do not, and you hope nobody cries.`, effects: [{ pop: 0.5 }, { fatigue: 5 }, { conf: 1 }] },
-      { id: 'ignore', label: 'Wave from a distance and keep to your entrance', risk: 'low', result: `You smile but keep to the plan. The kid\'s face falls a little, and the cameras find it first.`, effects: [{ pop: -0.3 }, { conf: -1 }] },
+      { id: 'ignore', label: 'Wave from a distance and keep to your entrance', risk: 'low', result: `You smile but keep to the plan. The kid's face falls a little, and the cameras find it first.`, effects: [{ pop: -0.3 }, { conf: -1 }] },
     ],
   },
   {
@@ -939,9 +939,9 @@ export default [
   {
     id: 'fan_restaurant_selfie', category: 'fans', title: 'A Selfie Request at the Wrong Time', weight: 1.2, cooldownDays: 80, maxPerCareer: 4,
     cast: { fan: { pick: 'media', kind: 'fan' } },
-    trigger: { stat: { popularity: { gte: 45 } } },
-    slots: { place: ['restaurant', 'gym', 'hotel elevator', 'cinema queue'], moment: ['tired from the road', 'with your headphones in', 'on a rare night off', 'still sore from last night'] },
-    body: [`You are in the {place}, {moment}, when {fan.name} appears with a phone and a very hopeful smile. Others nearby have noticed and a small crowd is forming.`, `You have been recognised often enough to know the shape of this scene. What you do next is up to you.`],
+    trigger: { minYear: 2010, stat: { popularity: { gte: 45 } } },
+    slots: { place: ['restaurant', 'gym', 'hotel elevator', 'movie line'], moment: ['tired from the road', 'with your headphones in', 'on a rare night off', 'still sore from last night'] },
+    body: [`You are in the {place}, {moment}, when {fan.name} appears with a phone and a very hopeful smile. Others nearby have noticed and a small crowd is forming.`, `"I am so sorry, I know this is rude," {fan.first} says, not sounding very sorry. You have been recognized often enough to know the shape of this scene. What you do next is up to you.`],
     choices: [
       { id: 'gracious', label: 'Smile, pose and sign a napkin', risk: 'low', result: `Two minutes of charm. {fan.first} floats away, and the people next to you applaud.`, effects: [{ pop: 0.3 }, { conf: 1 }, { fatigue: 2 }] },
       { id: 'ask_wait', label: 'Ask {fan.first} to wait until you finish', risk: 'med', result: `Polite and firm. The fan waits, you eat in peace, and the photo is still good when it comes.`, effects: [{ pop: 0.1 }, { conf: 2 }] },
@@ -959,11 +959,11 @@ export default [
     cast: { creative: { pick: 'staff', role: 'creative' } },
     trigger: { stat: { careerYears: { gte: 1 }, popularity: { lte: 65 } }, noFlag: 'gimmick_pitched' },
     slots: { persona: ['a masked, silent enforcer', 'a goofy party-starter', 'a ruthless corporate climber', 'a haunted drifter'], reason: ['flat merchandise numbers', 'a new head writer', 'a sponsor\'s wish list', 'a pitch from a focus group'] },
-    body: [`{creative.name} drops a folder on the table. Inside is a full pitch to rebuild you as {persona}, driven by {reason}. There are mock-up sketches, a music cue and a one-page promo outline.`, `You were not consulted about any of it. The meeting is polite, and the decision is yours to shape if you speak up.`],
+    body: [`{creative.name} drops a folder on the table. Inside is a full pitch to rebuild you as {persona}, driven by {reason}. There are mock-up sketches, a music cue and a one-page promo outline.`, `"Think of it as a promotion," {creative.name} says. You were not consulted about any of it. The meeting is polite, and the decision is yours to shape if you speak up.`],
     choices: [
       { id: 'comply', label: 'Comply and sell the new character fully', risk: 'med', outcomes: [
         { weight: 2, bonus: { charisma: 0.6 }, text: `You commit so hard that the writers start adding scenes. The character clicks, and merchandise starts to move.`, effects: [{ pop: 0.9 }, { conf: -1 }, { fatigue: 8 }, { flag: 'gimmick_pitched' }] },
-        { weight: 2, text: `The character never quite fits. Fans see the seams, and you feel like an actor in a costume of someone else\'s design.`, effects: [{ pop: -0.4 }, { conf: -4 }, { fatigue: 8 }, { flag: 'gimmick_pitched' }] } ] },
+        { weight: 2, text: `The character never quite fits. Fans see the seams, and you feel like an actor in a costume of someone else's design.`, effects: [{ pop: -0.4 }, { conf: -4 }, { fatigue: 8 }, { flag: 'gimmick_pitched' }] } ] },
       { id: 'negotiate', label: 'Negotiate: keep the core and take the best parts', risk: 'low', outcomes: [
         { weight: 3, bonus: { mic: 0.4, charisma: 0.4 }, text: `{creative.first} grudgingly agrees to a hybrid. The character is still you, only louder.`, effects: [{ pop: 0.5 }, { conf: 2 }, { fatigue: 5 }, { flag: 'gimmick_pitched' }] },
         { weight: 1, text: `The compromise pleases nobody. The character ends up half-formed, and the writers lose interest.`, effects: [{ pop: -0.1 }, { conf: -2 }, { fatigue: 5 }, { flag: 'gimmick_pitched' }] } ] },
@@ -974,21 +974,21 @@ export default [
     ],
   },
   {
-    id: 'crt_colours_change', category: 'creative', title: 'A New Colour Scheme for the Gear', weight: 1.5, cooldownDays: 140, maxPerCareer: 3,
+    id: 'crt_colours_change', category: 'creative', title: 'A New Color Scheme for the Gear', weight: 1.5, cooldownDays: 140, maxPerCareer: 3,
     cast: { creative: { pick: 'staff', role: 'creative' } },
     trigger: { stat: { careerYears: { gte: 1 } } },
     slots: { palette: ['electric lime and black', 'bright pink and chrome', 'all white with gold trim', 'matte olive and rust'], note: ['a branding refresh', 'a licensing deal', 'a rebranding test', 'a new designer\'s portfolio'] },
-    body: [`The costume department has sent over sketches of your gear in {palette}, tied to {note}. The designs are bold and some of the stitching has already been done.`, `Gear carries identity. A colour you cannot stand in will show up in every photo, every poster and every action figure.`],
+    body: [`The costume department has sent over sketches of your gear in {palette}, tied to {note}. The designs are bold and some of the stitching has already been done.`, `Gear carries identity. A color you cannot stand in will show up in every photo, every poster and every action figure.`],
     choices: [
-      { id: 'wear_it', label: 'Wear it without complaint', risk: 'low', result: `You step into the new colours and make them yours. Merch sales dip on day one and recover by week three.`, effects: [{ pop: 0.3 }, { conf: -1 }, { money: 1500 }] },
+      { id: 'wear_it', label: 'Wear it without complaint', risk: 'low', result: `You step into the new colors and make them yours. Merch sales dip on day one and recover by week three.`, effects: [{ pop: 0.3 }, { conf: -1 }, { money: 1500 }] },
       { id: 'tweak', label: 'Request a few tweaks to keep your identity', risk: 'low', outcomes: [
-        { weight: 3, text: `The designer meets you halfway: one signature colour stays. The result looks sharper than the original sketch.`, effects: [{ pop: 0.5 }, { conf: 2 }, { fatigue: 2 }] },
+        { weight: 3, text: `The designer meets you halfway: one signature color stays. The result looks sharper than the original sketch.`, effects: [{ pop: 0.5 }, { conf: 2 }, { fatigue: 2 }] },
         { weight: 1, text: `The tweaks take weeks, and the gear arrives wrong on the night of the show.`, effects: [{ pop: -0.3 }, { conf: -2 }, { fatigue: 2 }] } ] },
       { id: 'veto', label: 'Veto it and wear your old gear', risk: 'high', outcomes: [
         { weight: 2, bonus: { confidence: 0.4 }, text: `Your fans love that you refused. The costume team grumbles but you win the standoff.`, effects: [{ conf: 3 }, { pop: 0.4 }] },
-        { weight: 2, text: `The refusal is logged, and the next hat-tip from the creative team is notably cold.`, effects: [{ conf: 1 }, { pop: -0.4 }, { money: -1500 }] } ] },
+        { weight: 2, text: `The refusal is logged, and the creative team's next hello is notably cold.`, effects: [{ conf: 1 }, { pop: -0.4 }, { money: -1500 }] } ] },
       { id: 'sell_it', label: 'Turn the change into a hyped reveal', risk: 'med', outcomes: [
-        { weight: 2, bonus: { charisma: 0.5 }, text: `Your reveal teases the new colours for a week. When they appear, the crowd roars.`, effects: [{ pop: 0.9 }, { money: 3000 }, { fatigue: 4 }] },
+        { weight: 2, bonus: { charisma: 0.5 }, text: `Your reveal teases the new colors for a week. When they appear, the crowd roars.`, effects: [{ pop: 0.9 }, { money: 3000 }, { fatigue: 4 }] },
         { weight: 1, text: `The build-up outpaces the gear, and the crowd reacts with a polite shrug.`, effects: [{ pop: 0.1 }, { fatigue: 4 }] } ] },
     ],
   },
@@ -1014,28 +1014,28 @@ export default [
     cast: { creative: { pick: 'staff', role: 'creative' } },
     trigger: { alignment: ['face'], stat: { popularity: { gte: 40 }, careerYears: { gte: 1 } }, noFlag: 'turn_pitched' },
     slots: { trigger: ['a betrayal of a longtime ally', 'a low blow in a title match', 'a cold interview after a win', 'a snub of the fans'], plan: ['a three-month build', 'an immediate shocker', 'a slow tease', 'a TV special'] },
-    body: [`{creative.name} outlines a plan for your face-to-heel turn, set up through {trigger} and shaped by {plan}. The pitch is full of ideas for how the crowd will react.`, `Heels get longer careers and fatter paydays, or so the argument goes. Faces get the fans\' hearts, which is harder to put on a spreadsheet.`],
+    body: [`{creative.name} outlines a plan for your face-to-heel turn, set up through {trigger} and shaped by {plan}. The pitch is full of ideas for how the crowd will react.`, `Heels get longer careers and fatter paydays, or so the argument goes. Faces get the fans' hearts, which is harder to put on a spreadsheet.`],
     choices: [
       { id: 'embrace', label: 'Embrace the turn and go all in', risk: 'high', outcomes: [
         { weight: 2, bonus: { mic: 0.6, charisma: 0.4 }, text: `The first night the crowd boos you so loudly the arena shakes. You grin at the camera and know it is working.`, effects: [{ pop: 1.2 }, { conf: 3 }, { fatigue: 6 }, { flag: 'turn_pitched' }] },
         { weight: 1, text: `The crowd boos, but nobody cares about the reasons. The turn gets lost in a weak build.`, effects: [{ pop: -0.3 }, { conf: -3 }, { fatigue: 6 }, { flag: 'turn_pitched' }] } ] },
       { id: 'change_terms', label: 'Accept, but ask for a slower build', risk: 'med', result: `Creative agrees to stretch the plan. The slower burn makes the crowd more invested, though it keeps you in limbo.`, effects: [{ pop: 0.5 }, { conf: 1 }, { fatigue: 3 }, { flag: 'turn_pitched' }] },
-      { id: 'stay_face', label: 'Decline: you want to stay a fan favourite', risk: 'low', result: `The pitch goes in a drawer. Your fans appreciate it, though the company is quietly less committed.`, effects: [{ conf: 2 }, { pop: 0.2 }, { money: -1000 }, { flag: 'turn_pitched' }] },
+      { id: 'stay_face', label: 'Decline: you want to stay a fan favorite', risk: 'low', result: `The pitch goes in a drawer. Your fans appreciate it, though the company is quietly less committed.`, effects: [{ conf: 2 }, { pop: 0.2 }, { money: -1000 }, { flag: 'turn_pitched' }] },
       { id: 'counter', label: 'Counter with a face-with-edge idea', risk: 'low', result: `A grittier face character with a streak of temper. It is neither the turn nor the status quo, and everyone claims credit.`, effects: [{ pop: 0.3 }, { conf: 1 }, { fatigue: 3 }, { flag: 'turn_pitched' }] },
     ],
   },
   {
-    id: 'crt_face_turn_pitch', category: 'creative', title: 'A Pitch to Turn Fan Favourite', weight: 2, cooldownDays: 180, maxPerCareer: 2, major: true,
+    id: 'crt_face_turn_pitch', category: 'creative', title: 'A Pitch to Turn Fan Favorite', weight: 2, cooldownDays: 180, maxPerCareer: 2, major: true,
     cast: { creative: { pick: 'staff', role: 'creative' } },
     trigger: { alignment: ['heel'], stat: { popularity: { gte: 40 }, careerYears: { gte: 1 } }, noFlag: 'turn_pitched' },
     slots: { spark: ['standing up to a bully', 'saving a younger wrestler', 'refusing a villain\'s offer', 'a surprising act of sportsmanship'], vehicle: ['a heartfelt promo', 'a slow-burn redemption arc', 'a major PPV moment', 'a video package'] },
-    body: [`{creative.name} pitches a turn in the opposite direction: you, the villain, as the fan favourite, sparked by {spark} and delivered through {vehicle}. The room is quietly excited, and quite a lot of the writers are leaning in.`, `The crowd has been booing you for months and you have been good at it. A redemption story could be great, or could cost you the edge that works.`],
+    body: [`{creative.name} pitches a turn in the opposite direction: you, the villain, as the fan favorite, sparked by {spark} and delivered through {vehicle}. The room is quietly excited, and quite a lot of the writers are leaning in.`, `The crowd has been booing you and you have been good at it. A redemption story could be great, or could cost you the edge that works.`],
     choices: [
       { id: 'embrace', label: 'Embrace the redemption arc', risk: 'high', outcomes: [
         { weight: 2, bonus: { charisma: 0.7 }, text: `When the crowd finally cheers, the reaction is almost physical. You stand in the middle of it and feel like a new performer.`, effects: [{ pop: 1.2 }, { conf: 3 }, { fatigue: 5 }, { flag: 'turn_pitched' }] },
         { weight: 1, text: `The crowd takes its time to forgive, and the story runs out of steam long before they do.`, effects: [{ pop: -0.2 }, { conf: -2 }, { fatigue: 5 }, { flag: 'turn_pitched' }] } ] },
       { id: 'delay', label: 'Ask to keep your edge for a few more months', risk: 'low', result: `Creative agrees to push the turn back. You stay dangerous for now, and the writers use their best ideas on someone else.`, effects: [{ conf: 1 }, { pop: 0.1 }, { flag: 'turn_pitched' }] },
-      { id: 'decline', label: 'Decline: you like being the villain', risk: 'med', result: `You make a case for the heel life. Creative finds it persuasive, but a fan-favourite slot goes to someone else.`, effects: [{ conf: 2 }, { pop: -0.1 }, { flag: 'turn_pitched' }] },
+      { id: 'decline', label: 'Decline: you like being the villain', risk: 'med', result: `You make a case for the heel life. Creative finds it persuasive, but a fan-favorite slot goes to someone else.`, effects: [{ conf: 2 }, { pop: -0.1 }, { flag: 'turn_pitched' }] },
       { id: 'edge_face', label: 'Take it but keep a mean streak', risk: 'med', result: `Half hero, half menace. Crowds are not sure how to cheer you, and that uncertainty keeps people watching.`, effects: [{ pop: 0.5 }, { conf: 1 }, { fatigue: 3 }, { flag: 'turn_pitched' }] },
     ],
   },
@@ -1043,8 +1043,8 @@ export default [
     id: 'crt_put_someone_over', category: 'creative', title: 'The Producer Asks You to Do the Job', weight: 2.5, cooldownDays: 70, maxPerCareer: 6,
     cast: { producer: { pick: 'staff', role: 'producer' }, newcomer: { pick: 'roster', tier: { lte: 2 } } },
     trigger: { stat: { matches: { gte: 15 } } },
-    slots: { venue: ['the production office', 'a hotel breakfast room', 'the hallway outside the gorilla', 'a quiet corner of catering'], argument: ['the company needs fresh stars', 'the fans want a change', 'a newcomer has earned a win', 'the numbers support the push'] },
-    body: [`{producer.name} pulls you aside in {venue}. The plan is for {newcomer.name} to beat you cleanly on Sunday, because {argument}.`, `It is not an insult, and it is not nothing. How you take it will be noticed by both of them.`],
+    slots: { venue: ['the production office', 'a hotel breakfast room', 'the hallway outside the gorilla position', 'a quiet corner of catering'], argument: ['the company needs fresh stars', 'the fans want a change', 'a newcomer has earned a win', 'the numbers support the push'] },
+    body: [`{producer.name} pulls you aside in {venue}. The plan is for {newcomer.name} to beat you cleanly at the next show, because {argument}.`, `"Nothing personal, it is the business," {producer.name} says. It is not an insult, and it is not nothing, and how you take it will be noticed by both of them.`],
     choices: [
       { id: 'accept_gracious', label: 'Accept graciously and help {newcomer.first} look great', risk: 'low', result: `You work the match to make {newcomer.first} look like a star. {producer.first} remembers it, and so does the newcomer.`, effects: [{ rel: { who: 'newcomer', trust: 8, respect: 6 } }, { pop: 0.2 }, { conf: -2 }, { tag: { who: 'newcomer', tag: 'respected_by' } }] },
       { id: 'ask_return', label: 'Accept in exchange for a push of your own', risk: 'med', outcomes: [
@@ -1064,7 +1064,7 @@ export default [
     body: [`{creative.name} has written {line} for {moment}. It is in the script, in bold, with a note that it must be spoken exactly as it appears.`, `You tried it out loud in the shower and it still made you wince. The segment is on live television tonight.`],
     choices: [
       { id: 'say_it', label: 'Say it exactly as written and sell it', risk: 'med', outcomes: [
-        { weight: 2, bonus: { charisma: 0.7 }, text: `Your delivery turns an awful line into a laugh the crowd loves. It becomes a meme, and {creative.first} takes credit.`, effects: [{ pop: 0.6 }, { conf: 1 }] },
+        { weight: 2, bonus: { charisma: 0.7 }, text: `Your delivery turns an awful line into a laugh the crowd loves. It becomes a catchphrase, and {creative.first} takes credit.`, effects: [{ pop: 0.6 }, { conf: 1 }] },
         { weight: 2, text: `The line dies in the room. Fans groan, and the clip becomes a pet joke among colleagues.`, effects: [{ pop: -0.5 }, { conf: -3 }] } ] },
       { id: 'rewrite', label: 'Quietly rewrite the line in your own voice', risk: 'high', effects: [{ fatigue: 5 }], outcomes: [
         { weight: 2, bonus: { mic: 0.7 }, text: `Your version lands with the crowd and nobody remembers the original. {creative.first} reads the tape and nods.`, effects: [{ pop: 0.7 }, { conf: 3 }, { event: { type: 'promo_delivered', participants: ['creative'], summary: 'Swapped a scripted line for an improvised one.', data: { quality: { base: 64, mic: 0.7, noise: 12 } } } }] },
@@ -1094,8 +1094,8 @@ export default [
     id: 'crt_catchphrase_imposed', category: 'creative', title: 'The Catchphrase Nobody Asked For', weight: 1.5, cooldownDays: 140, maxPerCareer: 2,
     cast: { creative: { pick: 'staff', role: 'creative' } },
     trigger: { stat: { popularity: { gte: 40 }, promos: { gte: 3 } } },
-    slots: { phrase: ['"Shut the gate!"', '"Welcome to the show!"', '"No refunds!"', '"Pay attention!"'], plan: ['on every promo', 'at the end of every match', 'in every social post', 'on merchandise'] },
-    body: [`Creative has chosen a catchphrase for you: {phrase}. The writers want it used {plan}, and a T-shirt design is already on the printing floor.`, `Some catchphrases write themselves into history and some are quietly retired. The crowd decides, and they do not take notes.`],
+    slots: { phrase: ['"Shut the gate!"', '"Welcome to the show!"', '"No refunds!"', '"Pay attention!"'], plan: ['on every promo', 'at the end of every match', 'in every interview', 'on merchandise'] },
+    body: [`Creative has chosen a catchphrase for you: {phrase}. The writers want it used {plan}, and a T-shirt design is already on the printing floor.`, `"It tested well," {creative.first} says, which is what {creative.first} says about everything. Some catchphrases write themselves into history and some are quietly retired. The crowd decides, and they do not take notes.`],
     choices: [
       { id: 'sell_it', label: 'Embrace it and teach the crowd the response', risk: 'med', outcomes: [
         { weight: 2, bonus: { charisma: 0.6 }, text: `By week two, the whole arena shouts it back. The T-shirts sell out in a venue or two.`, effects: [{ pop: 0.9 }, { money: 4000 }, { conf: 1 }] },
@@ -1120,7 +1120,7 @@ export default [
       { id: 'keep_old', label: 'Fight to keep the old theme', risk: 'med', outcomes: [
         { weight: 2, bonus: { confidence: 0.4 }, text: `Your case is passionate and persuasive. The old track stays, and the fans thank you.`, effects: [{ conf: 3 }, { pop: 0.2 }, { money: -1000 }] },
         { weight: 2, text: `The licensing math wins. The theme is dropped regardless, and you feel like you lost twice.`, effects: [{ conf: -2 }, { pop: -0.2 }] } ] },
-      { id: 'remix', label: 'Suggest a remix that blends both', risk: 'low', result: `The remix keeps the crowd\'s muscle memory and adds a new texture. Creative approves with a shrug.`, effects: [{ pop: 0.4 }, { conf: 1 }, { money: -800 }] },
+      { id: 'remix', label: 'Suggest a remix that blends both', risk: 'low', result: `The remix keeps the crowd's muscle memory and adds a new texture. Creative approves with a shrug.`, effects: [{ pop: 0.4 }, { conf: 1 }, { money: -800 }] },
       { id: 'demo_pitch', label: 'Commission your own track from a friend', risk: 'high', outcomes: [
         { weight: 1, bonus: { charisma: 0.3 }, text: `Your friend delivers a blazing track. Creative agrees to use it, and the fans quote it.`, effects: [{ pop: 0.9 }, { conf: 3 }, { money: -4000 }] },
         { weight: 2, text: `The track is not what you hoped, and you pay for the studio time anyway.`, effects: [{ pop: -0.1 }, { conf: -2 }, { money: -4000 }] } ] },
@@ -1130,17 +1130,17 @@ export default [
     id: 'crt_own_storyline_pitch', category: 'creative', title: 'Your Chance to Pitch a Storyline', weight: 1.5, cooldownDays: 120, maxPerCareer: 3,
     cast: { creative: { pick: 'staff', role: 'creative' } },
     trigger: { stat: { popularity: { gte: 45 }, promos: { gte: 5 } } },
-    slots: { idea: ['a long-simmering rivalry', 'a heel stable of your own', 'a mentor-protege story', 'a quest for a vacated title'], room: ['a conference-room whiteboard', 'a phone call with the head writer', 'a late-night email chain', 'a lunch with the writers'] },
+    slots: { idea: ['a long-simmering rivalry', 'a heel stable of your own', 'a mentor-and-student story', 'a quest for a vacated title'], room: ['a conference-room whiteboard', 'a phone call with the head writer', 'a late-night conference call', 'a lunch with the writers'] },
     body: [`{creative.name} has opened a window for talent to pitch their own storylines. You have been circling {idea} for weeks, and the pitch is set for {room}.`, `This is a rare moment when your voice feeds directly into the show. It is also a place where weak ideas die quickly and leave a mark.`],
     choices: [
       { id: 'full_pitch', label: 'Prepare a full written pitch with beats', risk: 'med', outcomes: [
         { weight: 3, bonus: { mic: 0.4, charisma: 0.4 }, text: `Your pitch is crisp and specific. {creative.first} circles two ideas and takes them to the head writer.`, effects: [{ pop: 0.8 }, { conf: 3 }, { fatigue: 8 }] },
         { weight: 1, text: `The pitch does not survive the room. The notes are kind and the answer is no.`, effects: [{ conf: -2 }, { fatigue: 8 }] } ] },
       { id: 'sell_vibe', label: 'Pitch the feeling, not the plot', risk: 'low', result: `A quick sell with energy and gaps. {creative.first} loves the tone and takes it from there. You do not get final say.`, effects: [{ pop: 0.3 }, { conf: 1 }, { fatigue: 3 }] },
-      { id: 'steal_spotlight', label: 'Pitch a story that makes you the centre', risk: 'high', outcomes: [
+      { id: 'steal_spotlight', label: 'Pitch a story that makes you the center', risk: 'high', outcomes: [
         { weight: 2, bonus: { confidence: 0.4 }, text: `Your ambition is clear and the idea has a spine. The writers give you the next three weeks.`, effects: [{ pop: 1.0 }, { conf: 3 }, { fatigue: 6 }] },
         { weight: 2, text: `The pitch reads as ego, and one of the senior writers complains to the head of creative.`, effects: [{ pop: -0.4 }, { conf: -3 }, { fatigue: 6 }] } ] },
-      { id: 'pass', label: 'Let the writers write: you will just perform', risk: 'low', result: `You skip the pitch and keep your head down. The decision is respected, and you are not on anyone\'s radar for new ideas.`, effects: [{ conf: -1 }, { fatigue: -2 }] },
+      { id: 'pass', label: 'Let the writers write: you will just perform', risk: 'low', result: `You skip the pitch and keep your head down. The decision is respected, and you are not on anyone's radar for new ideas.`, effects: [{ conf: -1 }, { fatigue: -2 }] },
     ],
   },
   {
@@ -1148,7 +1148,7 @@ export default [
     cast: { creative: { pick: 'staff', role: 'creative' }, foe: { pick: 'roster', tier: { gte: 1 }, sameBrand: true } },
     trigger: { rivalry: { none: true }, stat: { matches: { gte: 10 } } },
     slots: { angle: ['a former friendship that soured', 'a dispute over a missed opportunity', 'a rivalry of rival gyms', 'a mutual obsession with the same title'], promise: ['an easy build', 'a memorable run on TV', 'the best chance for the next push', 'a story the whole locker room will follow'] },
-    body: [`{creative.name} has picked {foe.name} as your next feud, built around {angle}. The pitch promises {promise}, and the paperwork is already printed.`, `You have worked with {foe.first} before, and know the strengths and the quirks. Whether you like the pairing or not, it has been decided above you.`],
+    body: [`{creative.name} has picked {foe.name} as your next feud, built around {angle}. The pitch promises {promise}, and the paperwork is already printed.`, `You know {foe.first} from around the locker room, strengths and quirks included. Whether you like the pairing or not, it has been decided above you.`],
     choices: [
       { id: 'accept', label: 'Accept the feud and start building it', risk: 'low', result: `A solid, steady build. You and {foe.first} find a rhythm, and the story gains heat week by week.`, effects: [{ rivalry: { who: 'foe', heat: 15 } }, { rel: { who: 'foe', heat: 8 } }, { pop: 0.4 }, { fatigue: 4 }] },
       { id: 'upgrade', label: 'Suggest a stipulation to raise the stakes', risk: 'med', outcomes: [
@@ -1164,8 +1164,8 @@ export default [
     id: 'crt_script_changed_late', category: 'creative', title: 'The Script Changes Minutes Before Air', weight: 2, cooldownDays: 60, maxPerCareer: 6, contexts: ['pre_show', 'show_day', 'weekly'],
     cast: { producer: { pick: 'staff', role: 'producer' } },
     trigger: { stat: { matches: { gte: 12 } } },
-    slots: { change: ['your finish is reversed', 'your promo is cut in half', 'a new opponent is substituted', 'your entrance is moved to the end'], notice: ['ten minutes', 'two minutes', 'thirty seconds', 'a note slipped under the door'] },
-    body: [`{producer.name} tells you with {notice} to go that {change}. The room is full of people pretending to be calm.`, `Your match plan, your preparation and your pride are about to get rearranged. The only question is how.`],
+    slots: { change: ['your finish is reversed', 'your promo is cut in half', 'a new opponent is substituted', 'your entrance is moved to the end'], notice: ['with ten minutes to go', 'with two minutes to go', 'with thirty seconds to go', 'in a note slipped under the door'] },
+    body: [`{producer.name} tells you {notice} that {change}. The room is full of people pretending to be calm.`, `"Do not shoot the messenger," {producer.first} adds. Your match plan, your preparation and your pride are about to get rearranged. The only question is how.`],
     choices: [
       { id: 'adapt', label: 'Adapt on the fly and make it work', risk: 'med', outcomes: [
         { weight: 3, bonus: { confidence: 0.6 }, text: `You rebuild the match in your head and sell the change as if it were always planned. The producer shakes your hand.`, effects: [{ pop: 0.5 }, { conf: 3 }, { fatigue: 5 }] },
@@ -1180,7 +1180,7 @@ export default [
     cast: { creative: { pick: 'staff', role: 'creative' } },
     trigger: { stat: { mic: { lte: 60 }, popularity: { gte: 30 } } },
     slots: { type: ['a fast-talking showman', 'a silent, ominous enforcer', 'a comedic sidekick', 'a snarling veteran'], pitch: ['to cover your weak spots on the mic', 'to add an extra layer of spectacle', 'to give you a mentor on screen', 'to open up new storyline options'] },
-    body: [`{creative.name} proposes pairing you with {type}, {pitch}. The pairing would run for months and put another voice in your corner.`, `A good manager can lift a wrestler for years. A bad one can swallow every segment you are in.`],
+    body: [`{creative.name} proposes pairing you with {type}, {pitch}. The pairing would run for months and put another voice in your corner.`, `"We already have someone in mind," {creative.first} adds. A good manager can lift a wrestler for years. A bad one can swallow every segment you are in.`],
     choices: [
       { id: 'accept', label: 'Accept and welcome the new partner', risk: 'med', outcomes: [
         { weight: 2, bonus: { charisma: 0.5 }, text: `The chemistry is instant. Your promos grow sharper with someone to play against, and fans lean in.`, effects: [{ pop: 0.9 }, { conf: 2 }, { mic: 1 }, { fatigue: 3 }] },
@@ -1197,18 +1197,18 @@ export default [
     id: 'opp_sponsor_clash', category: 'opportunity', title: 'A Sponsor Offer That Clashes With Your Image', weight: 2, cooldownDays: 110, maxPerCareer: 4, major: true,
     cast: { agent: { pick: 'staff', role: 'agent' } },
     trigger: { stat: { popularity: { gte: 45 } } },
-    slots: { product: ['a sugary breakfast cereal', 'a budget airline', 'a fizzy energy drink', 'a pet-food brand'], clash: ['your tough-guy act', 'your serious-craftsman image', 'your anti-establishment persona', 'your menacing silence'] },
-    body: [`{agent.name} has landed an offer from {product}: two days of shooting, a generous fee and a campaign built around your face. The only problem is that the sponsor\'s brand clashes with {clash}.`, `The fee is real money. The fans, who know every gesture you make, may not forgive a wink that looks like a sell-out.`],
+    slots: { product: ['a sugary breakfast cereal', 'a budget airline', 'a fizzy energy drink', 'a pet-food brand'], clash: ['your tough act', 'your serious-craftsman image', 'your anti-establishment persona', 'your menacing silence'] },
+    body: [`{agent.name} has landed an offer from {product}: two days of shooting, a generous fee and a campaign built around your face. The only problem is that the sponsor's brand clashes with {clash}.`, `"It is only two days," {agent.name} says, in the voice of someone who takes ten percent. The fee is real money, and the fans, who know every gesture you make, may not forgive a wink that looks like a sell-out.`],
     choices: [
       { id: 'sign', label: 'Sign the deal and film the ad straight', risk: 'med', outcomes: [
-        { weight: 2, bonus: { charisma: 0.4 }, text: `The ad is better than anyone expected and it gets quoted back to you in arenas. The cheque clears on a Friday.`, effects: [{ money: 30000 }, { pop: 0.3 }, { fatigue: 6 }] },
+        { weight: 2, bonus: { charisma: 0.4 }, text: `The ad is better than anyone expected and it gets quoted back to you in arenas. The check clears on a Friday.`, effects: [{ money: 30000 }, { pop: 0.3 }, { fatigue: 6 }] },
         { weight: 2, text: `Fans accuse you of selling out. The ad plays on every channel and the chants start in the cheap seats.`, effects: [{ money: 30000 }, { pop: -0.8 }, { conf: -3 }, { fatigue: 6 }] } ] },
       { id: 'twist_it', label: 'Sign but write the ad as a joke on your own image', risk: 'high', outcomes: [
         { weight: 2, bonus: { charisma: 0.6, mic: 0.3 }, text: `The self-parody wins the internet. The sponsor is stunned by the buzz, and the money doubles on the next renewal.`, effects: [{ money: 22000 }, { pop: 1.1 }, { conf: 2 }, { fatigue: 7 }, { event: { type: 'social_post', participants: [], summary: 'Subverted a sponsor ad with self-parody.', data: { quality: { base: 64, charisma: 0.6, mic: 0.3, noise: 12 }, viral: { minQuality: 80, chance: 0.45 } } } }] },
         { weight: 1, text: `The sponsor hates it and pulls the ad. You keep half the fee and a reputation for being hard to work with.`, effects: [{ money: 8000 }, { pop: -0.1 }, { conf: -2 }, { fatigue: 7 }] } ] },
-      { id: 'decline', label: 'Turn it down to protect your image', risk: 'low', result: `Your agent sighs. The fans will never know what they missed, and you sleep fine knowing you did not trade the brand for a cheque.`, effects: [{ conf: 3 }, { pop: 0.2 }] },
+      { id: 'decline', label: 'Turn it down to protect your image', risk: 'low', result: `Your agent sighs. The fans will never know what they missed, and you sleep fine knowing you did not trade the brand for a check.`, effects: [{ conf: 3 }, { pop: 0.2 }] },
       { id: 'counter_price', label: 'Counter with a steep price and strict terms', risk: 'med', outcomes: [
-        { weight: 1, text: `The sponsor blinks and agrees. You sign with a legal clause and a fat cheque.`, effects: [{ money: 45000 }, { pop: -0.3 }, { fatigue: 6 }] },
+        { weight: 1, text: `The sponsor blinks and agrees. You sign with a legal clause and a fat check.`, effects: [{ money: 45000 }, { pop: -0.3 }, { fatigue: 6 }] },
         { weight: 2, text: `The sponsor walks. Your agent says the price was fair and the sponsor was not.`, effects: [{ conf: 1 }, { pop: 0.1 }] } ] },
     ],
   },
@@ -1217,11 +1217,11 @@ export default [
     cast: { agent: { pick: 'staff', role: 'agent' } },
     trigger: { minYear: 2000, stat: { popularity: { gte: 40 }, careerYears: { gte: 1 } } },
     slots: { session: ['a two-day motion-capture shoot', 'a studio voice-acting session', 'a full-body photogrammetry day', 'a rapid-fire move-set recording'], request: ['a dozen signature moves', 'a custom entrance', 'a taunt sequence', 'a signature promo line'] },
-    body: [`A game studio has asked for {session} to capture {request}, with a licence for your likeness in the next title. {agent.name} has read the contract and says the terms are workable.`, `You will be in a suit of dots in a warehouse in the morning, jumping on a mat in front of forty cameras and one anxious director.`],
+    body: [`A game studio has asked for {session} to capture {request}, with a license for your likeness in the next title. {agent.name} has read the contract and says the terms are workable.`, `"Do not worry," {agent.first} says. "Everybody looks ridiculous in the suit." You will be in a suit of dots in a warehouse in the morning, jumping on a mat in front of forty cameras and one anxious director.`],
     choices: [
       { id: 'full_session', label: 'Give it your full effort and a day of retakes', risk: 'low', outcomes: [
-        { weight: 3, bonus: { charisma: 0.3 }, text: `The studio loves it and your character turns out remarkably true to the real thing. Fans rate your in-game rating higher than their own.`, effects: [{ pop: 0.6 }, { money: 12000 }, { fatigue: 10 }, { conf: 2 }] },
-        { weight: 1, text: `A bad landing in the mocap rig aches for days. The footage is great, though, and the cheque cleared.`, effects: [{ pop: 0.5 }, { money: 12000 }, { fatigue: 14 }, { injury: { part: 'legs', severity: 1, days: 7 } }] } ] },
+        { weight: 3, bonus: { charisma: 0.3 }, text: `The studio loves it and your character turns out remarkably true to the real thing. Fans rate your in-game version higher than their own favorites.`, effects: [{ pop: 0.6 }, { money: 12000 }, { fatigue: 10 }, { conf: 2 }] },
+        { weight: 1, text: `A bad landing in the mocap rig aches for days. The footage is great, though, and the check cleared.`, effects: [{ pop: 0.5 }, { money: 12000 }, { fatigue: 14 }, { injury: { part: 'legs', severity: 1, days: 7 } }] } ] },
       { id: 'negotiate_royalty', label: 'Negotiate a royalty on sales', risk: 'med', outcomes: [
         { weight: 2, bonus: { charisma: 0.4 }, text: `The studio meets you halfway. A small, rolling share gives you a second source of income.`, effects: [{ money: 18000 }, { pop: 0.3 }, { fatigue: 8 }] },
         { weight: 1, text: `They pull the offer and sign another wrestler in the end. You are left wondering.`, effects: [{ pop: -0.2 }, { conf: -2 }] } ] },
@@ -1233,8 +1233,8 @@ export default [
     id: 'opp_reality_show', category: 'opportunity', title: 'A Reality Show Wants a Wrestler', weight: 1.5, cooldownDays: 180, maxPerCareer: 2, major: true,
     cast: { producer: { pick: 'staff', role: 'producer' }, host: { pick: 'media', kind: 'host' } },
     trigger: { minYear: 2003, stat: { popularity: { gte: 55 } } },
-    slots: { format: ['a celebrity cooking contest', 'an island survival challenge', 'a home-renovation race', 'a dance competition'], run: ['a two-week shoot', 'a six-week commitment', 'a single weekend special', 'a travelling series across five cities'] },
-    body: [`{host.name} is fronting {format} and the producers want you as a headline contestant. The commitment is {run}, with cameras in your face and a prize for charity.`, `{producer.name} from the wrestling side is lukewarm, saying the schedule would collide with the road. The money is good and the exposure is huge.`],
+    slots: { format: ['a celebrity cooking contest', 'an island survival challenge', 'a home-renovation race', 'a dance competition'], run: ['a two-week shoot', 'a six-week commitment', 'a single weekend special', 'a traveling series across five cities'] },
+    body: [`{host.name} is fronting {format} and the producers want you as a headline contestant. The commitment is {run}, with cameras in your face and a prize for charity.`, `"The road does not stop for a cooking show," {producer.name} says from the wrestling side, lukewarm at best. The money is good and the exposure is huge.`],
     choices: [
       { id: 'sign_up', label: 'Sign up and play to win', risk: 'high', outcomes: [
         { weight: 2, bonus: { charisma: 0.7 }, text: `The cameras love you. The public sees a funnier, softer you, and every wrestling show you do afterwards has a bigger crowd.`, effects: [{ pop: 1.5 }, { money: 25000 }, { fatigue: 15 }, { conf: 3 }] },
@@ -1251,7 +1251,7 @@ export default [
     cast: { agent: { pick: 'staff', role: 'agent' } },
     trigger: { minYear: 2000, stat: { popularity: { gte: 55 }, charisma: { gte: 50 } } },
     slots: { genre: ['an action comedy', 'a family adventure', 'a low-budget horror film', 'a sports drama'], role: ['a nightclub bouncer', 'a henchman with one great line', 'a small-town sheriff', 'a loud wrestling coach'] },
-    body: [`{agent.name} lands a call from a production company casting {genre}. They want you to play {role}, three days of shooting, a few lines and a pay cheque.`, `The set will be slow and very quiet compared with an arena, and your performance will be judged by people who have never seen you wrestle.`],
+    body: [`{agent.name} lands a call from a production company casting {genre}. They want you to play {role}, three days of shooting, a few lines and a pay check.`, `The set will be slow and very quiet compared with an arena, and your performance will be judged by people who have never seen you wrestle.`],
     choices: [
       { id: 'take_role', label: 'Take the role and treat it like a master class', risk: 'med', outcomes: [
         { weight: 3, bonus: { charisma: 0.7 }, text: `You show up prepared and make the director smile. The scene is the one the trailer uses, and the fans drag new audiences to your matches.`, effects: [{ pop: 1.0 }, { money: 20000 }, { fatigue: 10 }, { charisma: 1 }] },
@@ -1259,7 +1259,7 @@ export default [
       { id: 'bigger_part', label: 'Push for a bigger part with more lines', risk: 'high', outcomes: [
         { weight: 1, bonus: { charisma: 0.4 }, text: `The studio rewrites a scene and you get a real moment. Nobody expects it, and you pull it off.`, effects: [{ pop: 1.3 }, { money: 30000 }, { fatigue: 14 }, { conf: 3 }] },
         { weight: 2, text: `The producers say no and give the part to someone else.`, effects: [{ conf: -2 }, { pop: -0.1 }] } ] },
-      { id: 'stunt_only', label: 'Offer to do stunts instead of acting', risk: 'low', result: `Less glamorous, but a lot of fun. You get paid for the thing you are best at, and the cheque is smaller.`, effects: [{ money: 8000 }, { fatigue: 8 }, { pop: 0.2 }, { injury: { part: 'torso', severity: 1, days: 5 } }] },
+      { id: 'stunt_only', label: 'Offer to do stunts instead of acting', risk: 'low', result: `Less glamorous, but a lot of fun. You get paid for the thing you are best at, and the check is smaller.`, effects: [{ money: 8000 }, { fatigue: 8 }, { pop: 0.2 }, { injury: { part: 'torso', severity: 1, days: 5 } }] },
       { id: 'turn_down', label: 'Turn it down: the schedule is full', risk: 'low', result: `A tidy no. The agent shrugs, and a lesser name gets the part.`, effects: [{ conf: 1 }, { fatigue: -2 }] },
     ],
   },
@@ -1267,8 +1267,8 @@ export default [
     id: 'opp_book_deal', category: 'opportunity', title: 'A Publisher Wants Your Story', weight: 1.3, cooldownDays: 220, maxPerCareer: 2,
     cast: { agent: { pick: 'staff', role: 'agent' } },
     trigger: { stat: { careerYears: { gte: 4 }, popularity: { gte: 55 } } },
-    slots: { form: ['a full autobiography', 'a motivational book', 'a graphic novel', 'a ghostwritten memoir'], tone: ['brutally honest', 'comic and warm', 'a dark behind-the-scenes account', 'a careful, brand-safe account'] },
-    body: [`A publishing house has offered you a deal for {form}, and the editor wants it to be {tone}. The advance is substantial and there is a deadline within the year.`, `The temptation to say everything is real. So is the possibility that colleagues will not be pleased with what you say.`],
+    slots: { form: ['a full autobiography', 'a motivational book', 'a graphic novel', 'a behind-the-scenes diary'], tone: ['brutally honest', 'comic and warm', 'a dark behind-the-scenes account', 'a careful, brand-safe account'] },
+    body: [`A publishing house has offered you a deal for {form}, and the editor wants it to be {tone}. The advance is substantial and there is a deadline within the year.`, `"Name names and you sell more," the editor says. "Name names and you lose friends," everyone else says. The temptation to say everything is real. So is the possibility that colleagues will not be pleased with what you say.`],
     choices: [
       { id: 'tell_all', label: 'Tell the whole story, names and all', risk: 'high', outcomes: [
         { weight: 2, bonus: { charisma: 0.4, mic: 0.3 }, text: `The book climbs the bestseller list. Critics call it honest and funny, and the locker room reads it in silence.`, effects: [{ money: 40000 }, { pop: 1.2 }, { conf: 2 }, { fatigue: 12 }] },
@@ -1285,10 +1285,10 @@ export default [
     cast: { agent: { pick: 'staff', role: 'agent' } },
     trigger: { stat: { popularity: { gte: 50 } } },
     slots: { product: ['a streetwear collection', 'a line of collectible figures', 'a beer-mug and poster range', 'a children\'s clothing line'], pitch: ['hand-picked by you', 'designed around your catchphrases', 'built around your entrance', 'tied to a popular local artist'] },
-    body: [`A merchandise company wants to launch {product}, {pitch}. {agent.name} has run the numbers and says the margin is decent but the up-front investment is yours.`, `If it works, it will fund your career. If it flops, you own a warehouse of unsold stock.`],
+    body: [`A merchandise company wants to launch {product}, {pitch}. {agent.name} has run the numbers and says the margin is decent but the up-front investment is yours.`, `"The margins are fine," {agent.first} says. "The warehouse is the part that scares me." If it works, it will fund your career. If it flops, you own a warehouse of unsold stock.`],
     choices: [
       { id: 'invest', label: 'Invest your own money in the full line', risk: 'high', outcomes: [
-        { weight: 2, bonus: { charisma: 0.4 }, text: `The first drop sells out, and the second is bigger. A sleepy warehouse wakes up, and the fans wear your colours.`, effects: [{ money: 30000 }, { pop: 0.8 }, { conf: 2 }] },
+        { weight: 2, bonus: { charisma: 0.4 }, text: `The first drop sells out, and the second is bigger. A sleepy warehouse wakes up, and the fans wear your colors.`, effects: [{ money: 30000 }, { pop: 0.8 }, { conf: 2 }] },
         { weight: 2, text: `The designs miss and the stock moves slowly. You take a loss and learn a lesson.`, effects: [{ money: -15000 }, { pop: -0.1 }, { conf: -3 }] } ] },
       { id: 'license', label: 'License your name for a royalty only', risk: 'low', result: `No up-front risk, a small steady return and little creative control. The line is fine, and the profits are modest.`, effects: [{ money: 7000 }, { pop: 0.2 }] },
       { id: 'collaborate', label: 'Collaborate with a fan artist on the designs', risk: 'med', outcomes: [
@@ -1301,7 +1301,7 @@ export default [
     id: 'opp_charity_gala', category: 'opportunity', title: 'A Gala Dinner in {city}', weight: 1.3, cooldownDays: 150, maxPerCareer: 3,
     cast: { host: { pick: 'media', kind: 'host' } },
     trigger: { stat: { popularity: { gte: 50 } } },
-    slots: { city: ['a grand hotel', 'a museum hall', 'a civic centre', 'a restored theatre'], role: ['a guest of honour', 'an auction host', 'a keynote speaker', 'a live-auction bidder'] },
+    slots: { city: ['a grand hotel', 'a museum hall', 'a civic center', 'a restored theater'], role: ['a guest of honor', 'an auction host', 'a keynote speaker', 'a live-auction bidder'] },
     body: [`{host.name} is chairing a charity gala at {city} and wants you there as {role}. Black tie, a seated dinner and six hundred guests who will remember how you carried yourself.`, `It is not a wrestling crowd. They are donors, executives, and one or two local celebrities who will be taking photographs.`],
     choices: [
       { id: 'dazzle', label: 'Dress sharp and work the room', risk: 'med', outcomes: [
@@ -1309,15 +1309,15 @@ export default [
         { weight: 1, text: `You trip over a joke in front of the head table. Nobody minds, though your tuxedo does.`, effects: [{ pop: 0.1 }, { conf: -2 }, { fatigue: 6 }, { money: -1500 }] } ] },
       { id: 'big_bid', label: 'Make a headline-grabbing donation on stage', risk: 'low', result: `A big number, a bigger cheer. The charity thanks you with a plaque, and your bank statement thanks you with a groan.`, effects: [{ pop: 0.8 }, { conf: 2 }, { money: -12000 }, { fatigue: 3 }] },
       { id: 'brief', label: 'Attend for an hour, then slip out', risk: 'low', result: `Polite, brief and exactly enough. Nobody remembers you, which is fine.`, effects: [{ pop: 0.1 }, { fatigue: 2 }] },
-      { id: 'decline', label: 'Decline: you hate formal events', risk: 'low', result: `A kind apology and a donation by mail. The organiser is gracious, and you spend the night on your couch.`, effects: [{ fatigue: -5 }, { money: -1000 }, { pop: -0.1 }] },
+      { id: 'decline', label: 'Decline: you hate formal events', risk: 'low', result: `A kind apology and a donation by mail. The organizer is gracious, and you spend the night on your couch.`, effects: [{ fatigue: -5 }, { money: -1000 }, { pop: -0.1 }] },
     ],
   },
   {
     id: 'opp_action_figure', category: 'opportunity', title: 'Designing Your Action Figure', weight: 1.2, cooldownDays: 200, maxPerCareer: 2,
     cast: { creative: { pick: 'staff', role: 'creative' } },
     trigger: { stat: { popularity: { gte: 50 } } },
-    slots: { feature: ['a removable mask', 'a championship belt accessory', 'a bobblehead variant', 'a glow-in-the-dark chase edition'], dispute: ['the ring gear colours', 'your pose', 'the accessories', 'the packaging copy'] },
-    body: [`The toy company is finalising your figure and wants your input on {dispute}. The pitch includes {feature}, and {creative.name} has set aside an afternoon for the review.`, `You are looking at a pocket-sized version of yourself in a hundred thousand children\'s hands. There is no easy way to do it right.`],
+    slots: { feature: ['a removable mask', 'a championship belt accessory', 'a bobblehead variant', 'a glow-in-the-dark chase edition'], dispute: ['the ring gear colors', 'your pose', 'the accessories', 'the packaging copy'] },
+    body: [`The toy company is finalizing your figure and wants your input on {dispute}. The pitch includes {feature}, and {creative.name} has set aside an afternoon for the review.`, `You are looking at a pocket-sized version of yourself in a hundred thousand children's hands. There is no easy way to do it right.`],
     choices: [
       { id: 'detail', label: 'Obsess over every detail and every paint stroke', risk: 'low', result: `The prototype takes three revisions, and the final figure is a cut above. Collectors notice the care.`, effects: [{ pop: 0.5 }, { conf: 2 }, { fatigue: 6 }, { money: 3000 }] },
       { id: 'kids_first', label: 'Make it friendly and playable for children', risk: 'med', outcomes: [
@@ -1333,8 +1333,8 @@ export default [
     id: 'opp_guest_commentary', category: 'opportunity', title: 'A Guest Spot on Commentary', weight: 1.5, cooldownDays: 110, maxPerCareer: 3,
     cast: { commentator: { pick: 'media', kind: 'commentator' } },
     trigger: { injured: false, stat: { mic: { gte: 50 }, popularity: { gte: 45 } } },
-    slots: { match: ['a mid-card showcase', 'a television main event', 'a rival\'s title defence', 'a tag-team bout'], mood: ['an electric crowd', 'a pin-drop silence', 'a distracted audience', 'a chanting crowd'] },
-    body: [`{commentator.name} has invited you to the announce table for {match}, in front of {mood}. You will wear a headset and talk about the thing you know best, with a live monitor in front of you.`, `This is a chance to be funny, to be fair and to show you can lead a broadcast. You will also be talking about people you work with.`],
+    slots: { match: ['a mid-card showcase', 'a television main event', 'a rival\'s title defense', 'a tag-team bout'], mood: ['an electric crowd', 'a pin-drop silence', 'a distracted audience', 'a chanting crowd'] },
+    body: [`{commentator.name} has invited you to the announce table for {match}, in front of {mood}. You will wear a headset and talk about the thing you know best, with a live monitor in front of you.`, `"Just be yourself," {commentator.first} says, "and please do not mention my hair." This is a chance to be funny, to be fair and to show you can lead a broadcast. You will also be talking about people you work with.`],
     choices: [
       { id: 'be_pro', label: 'Call it fairly and add insight', risk: 'low', outcomes: [
         { weight: 3, bonus: { mic: 0.5 }, text: `You describe the match with warmth and fairness. {commentator.first} says you are welcome back, and the wrestlers send a thank-you.`, effects: [{ pop: 0.5 }, { conf: 2 }, { fatigue: 4 }, { mic: 1 }] },
@@ -1368,7 +1368,7 @@ export default [
     cast: { reporter: { pick: 'media', kind: 'reporter' }, exec: { pick: 'staff', role: 'executive' } },
     trigger: { stat: { popularity: { gte: 55 } } },
     slots: { region: ['Japan', 'the United Kingdom', 'Mexico', 'Australia'], stunt: ['a street-corner meet-and-greet', 'a television appearance in a different language', 'a late-night factory visit', 'a stadium walk-out'] },
-    body: [`{exec.name} wants you on the next plane to {region} for {stunt}. {reporter.name} will tag along for a feature that may turn into a cover story.`, `You will cross twelve time zones for four days, sleep very little and meet thousands of people who know your name in a language you do not speak.`],
+    body: [`{exec.name} wants you on the next plane to {region} for {stunt}. {reporter.name} will tag along for a feature that may turn into a cover story.`, `You will spend four days jet-lagged, sleep very little and meet thousands of people who know your name, some of them in a language you do not speak.`],
     choices: [
       { id: 'go_all_in', label: 'Go all in and learn some local phrases', risk: 'med', outcomes: [
         { weight: 3, bonus: { charisma: 0.6 }, text: `The fans adore the effort, and a clip of you stumbling through a local greeting goes round the world. The company sees real overseas numbers.`, effects: [{ pop: 1.2 }, { money: 8000 }, { fatigue: 20 }, { conf: 3 }] },

@@ -10,7 +10,7 @@ export default [
       { id: 'stand', label: 'Stand your ground', risk: 'med', outcomes: [
         { weight: 3, bonus: { confidence: 0.6 }, text: 'You do not flinch. {rival.first} sizes you up, says "Remember this," and backs off. The room notices.', effects: [{ rel: { who: 'rival', respect: 6, fear: 3 } }, { pop: 0.4 }, { conf: 4 }] },
         { weight: 2, text: 'Words turn to shoving before the agents pull you apart. Neither of you blinks.', effects: [{ rel: { who: 'rival', heat: 10 } }, { rivalry: { who: 'rival', heat: 10 } }, { conf: 2 }, { fatigue: 4 }] } ] },
-      { id: 'apologize', label: 'Apologise and clear the air', risk: 'low', result: 'It costs you some pride, but {rival.first} accepts it. The tension drains out of the hallway.', effects: [{ rel: { who: 'rival', heat: -12, respect: 4, trust: 4 } }, { conf: -2 }, { pop: 0.1 }] },
+      { id: 'apologize', label: 'Apologize and clear the air', risk: 'low', result: 'It costs you some pride, but {rival.first} accepts it. The tension drains out of the hallway.', effects: [{ rel: { who: 'rival', heat: -12, respect: 4, trust: 4 } }, { conf: -2 }, { pop: 0.1 }] },
       { id: 'escalate', label: 'Escalate: make it public', risk: 'high', outcomes: [
         { weight: 2, text: 'You turn it into a spectacle, and the stagehands and riggers around you love it. Management will certainly hear about this.', effects: [{ rivalry: { who: 'rival', heat: 18 } }, { rel: { who: 'rival', heat: 14, respect: -4 } }, { pop: 0.8 }] },
         { weight: 1, text: 'It backfires: a producer reads you the riot act, and by morning you have a reputation for being difficult.', effects: [{ rivalry: { who: 'rival', heat: 12 } }, { rel: { who: 'rival', heat: 8 } }, { pop: -0.6 }, { conf: -4 }] } ] },
@@ -37,7 +37,7 @@ export default [
       { id: 'make_peace', label: 'Offer to make amends', risk: 'med', outcomes: [
         { weight: 1, bonus: { charisma: 0.5 }, text: 'It takes time, but something shifts. {rival.first} lets the hostility drop - for now.', effects: [{ event: { type: 'reconciliation', participants: ['rival'], summary: 'Reconciled with {rival.name} after the bad blood.', data: { formerRival: true } } }, { pop: 0.4 }] },
         { weight: 2, text: '{rival.first} laughs in your face. "Some things do not get fixed with a speech," {rival.they} says, and walks off.', effects: [{ rel: { who: 'rival', heat: 6 } }, { conf: -3 }] } ] },
-      { id: 'double_down', label: 'Double down: you did what you had to', risk: 'high', result: 'You refuse to apologise. {rival.first} leaves with murder in {rival.their} eyes.', effects: [{ rivalry: { who: 'rival', heat: 20 } }, { rel: { who: 'rival', heat: 12 } }, { pop: 0.3 }] },
+      { id: 'double_down', label: 'Double down: you did what you had to', risk: 'high', result: 'You refuse to apologize. {rival.first} leaves with murder in {rival.their} eyes.', effects: [{ rivalry: { who: 'rival', heat: 20 } }, { rel: { who: 'rival', heat: 12 } }, { pop: 0.3 }] },
     ],
   },
   {
@@ -73,7 +73,7 @@ export default [
   {
     id: 'rival_trash_talk_media', category: 'media', title: '{rival.name} Takes Shots at You', weight: 2, cooldownDays: 40, maxPerCareer: 10,
     cast: { rival: { pick: 'rivalry', minHeat: 25 }, reporter: { pick: 'media', kind: 'interviewer' } }, memory: { role: 'rival', max: 2 }, trigger: {},
-    body: ['In a sit-down interview, {rival.name} took another swing at you, and the clip is already circulating. {reporter.name} plays it back for you and asks for a response.', '"Anything to say to {rival.them}?" {reporter.they} asks. You have a few seconds to decide how to answer.'],
+    body: ['In a sit-down interview, {rival.name} took another swing at you, and the clip is already circulating. {reporter.name} plays it back for you and asks for a response.', '"Anything to say to {rival.them}?" {reporter.first} asks. You have a few seconds to decide how to answer.'],
     choices: [
       { id: 'counter', label: 'Fire back with a sharp line', risk: 'med', outcomes: [
         { weight: 2, bonus: { mic: 0.7 }, text: 'Your reply is quoted in every wrestling column by the next morning.', effects: [{ pop: 0.8 }, { rivalry: { who: 'rival', heat: 8 } }, { event: { type: 'interview', participants: ['rival'], summary: 'Fired back at {rival.name}.', data: { quality: { base: 70, mic: 0.5 }, viral: { minQuality: 85, chance: 0.5 } } } }] },

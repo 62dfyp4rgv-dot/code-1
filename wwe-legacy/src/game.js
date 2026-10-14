@@ -829,7 +829,7 @@ export class Game {
     const c = this.c, me = c.player.id, w = c.memory.world;
     const nm = (id) => this.universe.get(id)?.name || id;
     return {
-      promises: w.promises.filter((p) => p.by === me).map((p) => ({ id: p.id, text: p.text, status: p.status, target: p.target ? nm(p.target) : null, daysLeft: p.deadlineDay != null ? p.deadlineDay - c.day : null, made: p.madeEvent, resolved: p.resolvedEvent || null, acknowledged: !!p.acknowledged })).sort((a, b) => (a.status === 'open' ? -1 : 1) - (b.status === 'open' ? -1 : 1)),
+      promises: w.promises.filter((p) => p.by === me).map((p) => ({ id: p.id, text: p.text, status: p.status, target: p.target ? nm(p.target) : null, daysLeft: p.deadlineDay != null ? p.deadlineDay - c.day : null, made: p.madeEvent, resolved: p.resolvedEvent || null, acknowledged: !!p.acknowledged })).sort((a, b) => (a.status === 'open' ? 0 : 1) - (b.status === 'open' ? 0 : 1) || (a.status === 'open' ? (a.daysLeft ?? 9e9) - (b.daysLeft ?? 9e9) : String(b.made) < String(a.made) ? -1 : 1)), // open first (soonest deadline), then the most recently resolved
       obligations: w.obligations.filter((o) => o.status === 'pending').map((o) => ({ kind: o.kind, from: nm(o.from), dueIn: o.dueDay - c.day, source: o.source })),
     };
   }
@@ -852,7 +852,7 @@ export class Game {
       const rel = getRel(w, me, id);
       return { id, name: nm(id), tags: tidyTags(rel.tags || []), lines: sum.facts.map((f) => ({ text: f.text, eventId: f.eventIds[f.eventIds.length - 1], count: f.kind === 'rivalry' ? 0 : f.eventIds.length })) };
     }).filter((t) => t.lines.length);
-    const moments = c.memory.ledger.query({ scope: 'player', newestFirst: true, limit: 60 }).filter((e) => e.importance >= 4 && !['finance_month', 'achievement_unlocked'].includes(e.type)).slice(0, 5).map((e) => ({ id: e.id, date: e.date, day: e.day, text: e.summary.length > 150 ? `${e.summary.slice(0, 147).replace(/\s+\S*$/, '')}...` : e.summary }));
+    const moments = c.memory.ledger.query({ scope: 'player', newestFirst: true, limit: 600 }).filter((e) => e.importance >= 4 && !['finance_month', 'achievement_unlocked'].includes(e.type)).slice(0, 5).map((e) => ({ id: e.id, date: e.date, day: e.day, text: e.summary.length > 150 ? `${e.summary.slice(0, 147).replace(/\s+\S*$/, '')}...` : e.summary }));
     return { threads, promises: this.promiseView().promises.filter((p) => p.status === 'open'), moments };
   }
 

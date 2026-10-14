@@ -29,12 +29,13 @@ export function hooks(memory, me, other) {
   // a betrayal that was followed by a reconciliation is history, not a live grudge
   const recs = ledger.query({ types: ['reconciliation'], allParticipants: [me, other] });
   const lastRec = recs[recs.length - 1];
-  for (const b of rel.betrayals) {
-    const ev = ledger.get(b.event);
-    if (lastRec && ev && lastRec.seq > ev.seq) continue;
-    out.push({ kind: b.by === me ? 'i_betrayed_you' : 'you_betrayed_me', refs: [b.event] });
+  const liveBetrayals = rel.betrayals.filter((b) => { const ev = ledger.get(b.event); return !(lastRec && ev && lastRec.seq > ev.seq); });
+  for (const dir of [true, false]) { // one line per direction, citing every live betrayal
+    const mine = liveBetrayals.filter((b) => (b.by === me) === dir);
+    if (mine.length) out.push({ kind: dir ? 'i_betrayed_you' : 'you_betrayed_me', n: mine.length, refs: mine.map((b) => b.event).slice(-6) });
   }
-  if (lastRec) out.push({ kind: 'reconciled', refs: [lastRec.id] });
+  const betrayedAfter = lastRec && rel.betrayals.some((b) => { const ev = ledger.get(b.event); return ev && ev.seq > lastRec.seq; });
+  if (lastRec && !betrayedAfter) out.push({ kind: 'reconciled', refs: [lastRec.id] });
   const insult = ledger.query({ types: ['promo_delivered'], allParticipants: [me, other] }).filter((e) => ['insult', 'humiliate'].includes(e.data.tone));
   if (insult.length) out.push({ kind: 'old_insult', n: insult.length, refs: insult.map((e) => e.id).slice(-2), quote: insult[insult.length - 1].data.line || null });
   // only a promise made ABOUT this person is theirs to throw back (and one already owned up to on air is settled)
@@ -151,6 +152,7 @@ export function memoryLines(memory, me, other, otherName, { speaker = 'other', m
     if (speaker === 'narrator') {
       const fn = NARR[h.kind];
       if (!fn) continue;
+      if (lines.some((l) => (FAMILY[l.kind] || l.kind) === (FAMILY[h.kind] || h.kind))) continue;
       const key = `${other}:${h.kind}:${(h.refs || []).slice(-1)[0] || ''}`;
       if (cooldown && cooldown.store[key] !== undefined && cooldown.day - cooldown.store[key] < (cooldown.days ?? 45)) continue;
       lines.push({ text: fn(h, otherName), refs: h.refs.filter(Boolean), kind: h.kind, key, narrator: true });

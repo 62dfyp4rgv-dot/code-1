@@ -6,7 +6,7 @@ import PACK from './promo_pack.js';
 import { hash53 } from '../core/util.js';
 import { gainPop } from '../career/pace.js';
 import { hooks } from './dialogue.js';
-import { hasOpenPromise } from '../memory/world.js';
+import { hasOpenPromise, getRel } from '../memory/world.js';
 
 export const PROMO_TONES = {
   insult: { label: 'Insult', desc: 'Cut them down in front of everyone.', needsTarget: true, fit: { heel: 8, face: -4, tweener: 2 } },
@@ -72,6 +72,7 @@ export function deliverPromo(career, { tone, targetId = null, claim = 'none', co
   if (!tdef) throw new Error(`unknown promo tone ${tone}`);
   if (tdef.needsTarget && !targetId) throw new Error(`${tone} needs a target`);
   const p = career.player, w = career.universe;
+  if (tone === 'apology' && targetId) { const r0 = getRel(career.memory.world, career.player.id, targetId); if (!r0.events.length && !r0.heat) throw new Error('You have nothing to apologise to them for.'); }
   const target = targetId ? w.get(targetId) : null;
   const rng = career.rng;
   const idx = (career.flags.promoSeq = (career.flags.promoSeq || 0) + 1);

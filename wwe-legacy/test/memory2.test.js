@@ -27,7 +27,7 @@ test('winning a tag match WITH the promise target does not keep a promise to bea
 
 test('a lost triple threat credits only the winner with a rivalry win', () => {
   const m = new Memory('player');
-  m.record(mr(1, { participants: ['player', 'A', 'B'], data: { result: 'loss', winner: 'B', opponents: ['A', 'B'] } }));
+  m.record(mr(1, { participants: ['player', 'A', 'B'], data: { result: 'loss', winner: 'B', opponents: ['A', 'B'], matchType: 'triple_threat' } }));
   assert.equal(getRivalry(m.world, 'player', 'A').wins.A || 0, 0);
   assert.equal(getRivalry(m.world, 'player', 'B').wins.B, 1);
 });
