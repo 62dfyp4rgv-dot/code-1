@@ -110,7 +110,7 @@ export function matchMetrics({ n = 120 } = {}) {
   out.decisionsPerMatch = mean(decisionsPerMatch);
   out.singles = { ...all, ratingMean: mean(all.ratings), ratingStd: std(all.ratings), avgMins: all.mins / Math.max(1, all.n), avgRounds: all.rounds / Math.max(1, all.n), finishersPerMatch: all.fin / Math.max(1, all.n) };
   // commentary coverage over observed event types
-  const seen = new Set(), silent = new Set(), lineSet = new Set();
+  const seen = new Set(), silent = new Set(), voiced = new Set(), lineSet = new Set();
   let lineCount = 0;
   const nameRe = new RegExp(Object.values(W).map((w) => w.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'g');
   for (let i = 0; i < 60; i++) {
@@ -120,11 +120,11 @@ export function matchMetrics({ n = 120 } = {}) {
     for (const ev of e.state.events) {
       seen.add(ev.type);
       const t = narrate(e.state, ev);
-      if (!t && !['position_noop'].includes(ev.type)) silent.add(ev.type);
+      if (t) voiced.add(ev.type); else if (!['position_noop'].includes(ev.type)) silent.add(ev.type);
       if (t) { lineCount++; lineSet.add((Array.isArray(t) ? t.join(' ') : String(t)).replace(nameRe, 'X').replace(/\d+/g, '#')); }
     }
   }
-  out.commentary = { eventTypes: seen.size, silent: [...silent], lines: lineCount, distinct: lineSet.size, variety: (lineSet.size / Math.max(1, lineCount)) * 1000 };
+  out.commentary = { eventTypes: seen.size, silent: [...silent].filter((t) => !voiced.has(t)), lines: lineCount, distinct: lineSet.size, variety: (lineSet.size / Math.max(1, lineCount)) * 1000 };
   out.ms = performance.now() - t0;
   return out;
 }

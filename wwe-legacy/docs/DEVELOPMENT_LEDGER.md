@@ -91,3 +91,13 @@ One entry per Gauntlet round: what was targeted, what changed, what was measured
 - Largest losses: Independent reviewer score (4.6); Independent reviewer score (6.5); Independent reviewer score (6.5); Verified historical data (partial)
 - Regressions: playerAgency -0.24, narrativeQuality -0.32
 - Report: docs/gauntlet/round-09.md
+
+## Round 10
+
+- Target: Round-9 independent review findings: seam QA across all 853 scenario templates (slot fit, premise honesty, mentee direction, quoted NPC dialogue), memory attribution fixes, battle-royal soft-lock fix, mobile fixes
+- Changes: Seam QA of all templates by three QA passes with render-all-combinations detectors, lastOpponent cast, era-aware outlets, respect/obligation/hook memory fixes, forged-unlock dropping, retired-career guards, mobile r9 fixes. Reviewer scores in reviews.json are still round 8's.
+- Mean 8.89 | min 7.14 | >=9: 6/12 | tests 192/192
+- Weakest: Narrative quality 7.14, Memory consistency 7.63, Scenario diversity 7.72
+- Largest losses: Independent reviewer score (6); Independent reviewer score (5.5); Independent reviewer score (6); Verified historical data (partial)
+- Regressions: memoryConsistency -0.25, narrativeQuality -0.29, mobileUsability -0.2
+- Report: docs/gauntlet/round-10.md
