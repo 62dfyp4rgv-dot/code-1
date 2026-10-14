@@ -1,19 +1,19 @@
 {
- "updated": "2026-10-14T08:49:02.432Z",
- "lastRound": 8,
- "mean": 9.01,
+ "updated": "2026-10-14T11:25:47.256Z",
+ "lastRound": 9,
+ "mean": 8.96,
  "scores": {
   "matchEngine": 9.8,
-  "playerAgency": 9.67,
-  "memoryConsistency": 7.92,
+  "playerAgency": 9.43,
+  "memoryConsistency": 7.88,
   "achievementIntegrity": 9.81,
-  "scenarioDiversity": 7.78,
-  "narrativeQuality": 7.75,
+  "scenarioDiversity": 7.73,
+  "narrativeQuality": 7.43,
   "universeSimulation": 8.61,
   "careerProgression": 9.77,
   "mobileUsability": 8.6,
   "technicalReliability": 10,
-  "performance": 8.93,
+  "performance": 8.9,
   "replayability": 9.52
  },
  "nextFocus": [
@@ -47,7 +47,7 @@
   "cd wwe-legacy",
   "npm install",
   "npm test",
-  "node tools/gauntlet.js --round 9 --targets \"<what you will improve>\" --changes \"<what you changed>\""
+  "node tools/gauntlet.js --round 10 --targets \"<what you will improve>\" --changes \"<what you changed>\""
  ],
  "features": {
   "complete": 26,

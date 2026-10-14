@@ -69,7 +69,7 @@ Result: objective, 13 min, 3.0 stars.
 - A stagger, a sway, and Storm is upright.
 - Rourke keeps climbing, one hand after the other.
 - Notice how Rourke is breathing through the mouth. That is a body begging for a break.
-- Storm tries the Knock Them Off, but Rourke has seen enough of it to shut it down.
+- Storm lunges to pull Rourke down, but Rourke holds on.
 - A little time to think: Rourke breathes and plans.
 - Goliath Rourke grabs his torso in obvious pain.
 - Nothing subtle here: Storm swings the Knock Them Off like a wrecking ball at Rourke.
@@ -87,7 +87,6 @@ Result: objective, 13 min, 3.0 stars.
 - Storm makes a mockery of the rulebook with the Kendo Stick Flurry.
 - Storm keeps working the head: Snapmare again.
 - Stopped dead! Rourke swallows up the Ground & Pound from Storm.
-- Kai Storm reaches the top - hands on the prize!
 - Kai Storm claims the prize!
 - Kai Storm wins by retrieving the prize.
 

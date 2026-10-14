@@ -140,6 +140,53 @@
      "summary": "Strong identity, one red CTA per screen, 44px targets, no horizontal overflow at 360/390/430 or 20px text; held back by a long match-prep page with unreachable CTA, heavy sticky HUD on small phones, noisy record book, flat Rumble/result screens and clipping toasts."
     }
    ]
+  },
+  {
+   "round": 8,
+   "note": "Fresh reviewers on the round-8 build (853 authored scenarios, new match types, social/life/faction features). Fixes for these findings were made afterwards (round 9). The memory auditor used an independent oracle over raw ledger events (hundreds of thousands of assertion evaluations; the false ones collapse to 12 root causes).",
+   "scores": {
+    "narrativeQuality": 5.5,
+    "memoryConsistency": 6.0,
+    "mobileUsability": 6.0
+   },
+   "reviewers": [
+    {
+     "area": "narrative",
+     "kind": "agent",
+     "scores": {
+      "narrativeQuality": 5.5,
+      "variety": 5,
+      "voice": 6,
+      "callbacks": 6
+     },
+     "errorsFound": 38,
+     "summary": "Scenario pool is the strongest part and match-record callbacks are numerically accurate; commentary is stock-heavy, multi-way matches loop three filler lines, cage matches narrated as ladders, champion answered as challenger, social posts have slot bugs, NPC speech is thin."
+    },
+    {
+     "area": "memory",
+     "kind": "agent",
+     "scores": {
+      "memoryConsistency": 6.0,
+      "invention_risk": 7,
+      "player_visibility": 7
+     },
+     "claimsVerified": 224427,
+     "claimsFalse": 6257,
+     "summary": "Ledger, chain, replay, save/load and promise tracking held under attack; multi-way losses were credited to every opponent on all surfaces, several scenario texts assumed a recent event their triggers did not check, faction_joined had no rule, the mentor tag had no direction."
+    },
+    {
+     "area": "mobile",
+     "kind": "agent",
+     "scores": {
+      "mobileUsability": 6.0,
+      "clarity": 6.5,
+      "hierarchy": 5.5,
+      "matchScreen": 6.5,
+      "visualPolish": 6.5
+     },
+     "summary": "Coherent identity and clear red CTA, no overflow at 360/390/430; held back by a sticky CTA hidden under the tab bar, a board using 30-42% of small screens, invisible toasts/errors, and long flat lists."
+    }
+   ]
   }
  ]
 }

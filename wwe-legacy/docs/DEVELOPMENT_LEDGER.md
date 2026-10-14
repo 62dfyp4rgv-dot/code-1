@@ -81,3 +81,13 @@ One entry per Gauntlet round: what was targeted, what changed, what was measured
 - Largest losses: Independent reviewer score (4.6); Independent reviewer score (6.5); Independent reviewer score (6.5); Verified historical data (partial)
 - Regressions: performance -0.72
 - Report: docs/gauntlet/round-08.md
+
+## Round 9
+
+- Target: Round-8 independent review findings: multi-way attribution, result-aware triggers, cage/ladder commentary, social feed, answers/reactions packs, mobile layout
+- Changes: pairOutcome shared outcome definition, last-match triggers, faction_joined, mentee tag, title-holder/reaction/social packs, cage lines, media name pools, callback family and global cooldown, mobile fixes (sticky CTA, compact board, toast render/batching, home order). Reviewer scores are still the round-8 ones (narrative 5.5, memory 6.0, mobile 6.0).
+- Mean 8.96 | min 7.43 | >=9: 6/12 | tests 189/189
+- Weakest: Narrative quality 7.43, Scenario diversity 7.73, Memory consistency 7.88
+- Largest losses: Independent reviewer score (4.6); Independent reviewer score (6.5); Independent reviewer score (6.5); Verified historical data (partial)
+- Regressions: playerAgency -0.24, narrativeQuality -0.32
+- Report: docs/gauntlet/round-09.md

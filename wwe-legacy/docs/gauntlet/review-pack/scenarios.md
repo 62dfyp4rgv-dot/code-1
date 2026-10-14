@@ -1,13 +1,24 @@
 # Scenario prose samples
 
-A representative sample of the 84 situations shown to a simulated player during a played career (day 560, 96 matches): up to 8 that cited remembered history, then others in order. Choices were picked at random. `Memory` lines are generated from ledger events the character can actually cite.
+A representative sample of the 78 situations shown to a simulated player during a played career (day 560, 96 matches): up to 8 that cited remembered history, then others in order. Choices were picked at random. `Memory` lines are generated from ledger events the character can actually cite.
+
+## A Kind Word from the Wrong Person  _(day 51, media)_
+
+> Morgan Ashby (Cageside Live) slides a printed page across the table. In a trade magazine, Nolan Devereux admitted to studying your tapes on long drives, with no hook and no sarcasm that you can find.
+> You have spent weeks bracing for the other kind of quote. The interviewer watches your face like a poker player, waiting to see what a surprise does to you.
+
+Memory callbacks shown: "You beat me clean twice. No excuses."
+
+Choices offered: [Return the compliment sincerely, on the record] [Suspect a trick and say so] [Use the quote to sell the next match] [Fold the page and keep it to yourself]
+
+Chosen: **Suspect a trick and say so** → "Nobody is that nice for free," you tell the camera. The line is funny, and it is also cold, and Nolan watches the replay without any expression.
 
 ## A Bidding War for a Hand-Painted Entrance Banner  _(day 56, finance)_
 
-> Alexis Moreau (The Turnbuckle) is running a charity auction for a fund for retired ring crew, and the lot is a hand-painted entrance banner. Nolan Devereux has been bidding against you for ten minutes, each raise accompanied by a smile too bright to be an accident.
+> Taylor Brennan (Pinfall Podcast) is running a charity auction for a fund for retired ring crew, and the lot is a hand-painted entrance banner. Nolan Devereux has been bidding against you for ten minutes, each raise accompanied by a smile too bright to be an accident.
 > The money is going to a good place either way. The audience is enjoying the contest, and so, you suspect, is the rival.
 
-Memory callbacks shown: "You offered a hand once. I have not forgotten who made the first gesture."
+Memory callbacks shown: "You showed me respect after we fought. I noticed. Don't expect it back for free."
 
 Choices offered: [Keep raising until Nolan folds] [Offer to pool the money and win it together] [Let Nolan win the lot] [Raise with a taunt aimed at Nolan]
 
@@ -18,77 +29,66 @@ Chosen: **Raise with a taunt aimed at Nolan** → The taunt comes out meaner tha
 > Lucas Ferreira calls you and Nolan Devereux to the ring in an empty arena. Your feud has run so hot that the crowd is demanding a finish, and the office is asking what kind of match this should be at WrestleMania.
 > Nolan has opinions, and so do you. Whatever you agree on becomes the story of the month.
 
-Memory callbacks shown: "3 clean losses to you, and I remember every one."
+Memory callbacks shown: "I've beaten you before. Nothing changes tonight."
 
 Choices offered: [Demand a steel cage to lock the feud shut] [Suggest a ladder match with something hanging above] [Insist on a clean singles match, no tricks] [Ask for a submission match to prove who is better]
 
 Chosen: **Ask for a submission match to prove who is better** → The idea of a match that cannot be won with a fluke catches the office's imagination. It is a slow-burn, tense bout.
-
-## An Uninvited Seat at the Table  _(day 111, press)_
-
-> The press conference is moving along nicely until Nolan Devereux stands up in the third row and starts talking. Behind you, the hotel manager hurries toward the door, and Taylor Brennan (Pinfall Podcast) sits up with a grin that would make a vulture proud.
-> This is either a gift or a trap. In either case, the next thirty seconds will be the clip.
-
-Memory callbacks shown: "You beat me clean 4 times. No excuses." / "2 clean victories over you. Not one fluke among them."
-
-Choices offered: [Stand up and meet Nolan nose to nose] [Pull up a chair and invite Nolan to say it] [Gather your notes and leave the podium] [Welcome the visitor with a joke and a glass of water]
-
-Chosen: **Pull up a chair and invite Nolan to say it** → You slide the second microphone across and let the stranger talk. The words get ugly and sharp, and you counter every one with a patient question, which looks like a winning hand.
 
 ## A Grudge Demands a Rematch  _(day 115, rivalry)_
 
 > The way your last match with Pierce Wolfe ended left a sour taste. He has been telling anyone who will listen that it was not clean.
 > Management is open to a rematch if you are.
 
-Memory callbacks shown: "Don't pretend the way we finished last time was clean." / "You beat me clean 3 times. No excuses."
+Memory callbacks shown: "Don't pretend the way we finished last time was clean." / "2 clean losses to you, and I remember every one."
 
 Choices offered: [Book the rematch] [Add a stipulation: No DQ] [Ignore it - move on]
 
 Chosen: **Ignore it - move on** → You let it go. Pierce keeps talking, though.
 
-## A House Show That Got Personal  _(day 131, rivalry)_
+## Walter Has Tape of Nolan  _(day 120, training)_
 
-> The crowd in a college gym is half-full and fully drunk, and the night has a ring that rocks with every bump. Nolan Devereux is across the ring, grinning, waiting to see how you handle it.
-> No cameras and no boss, only a few hundred people who will tell the story forever.
+> In the back of a production truck, Walter Grimes presses play on a stack of Nolan Devereux's old matches and stops on a slow, careful way of pacing the first five minutes. It is a tiny thing, and once you see it you can see nothing else.
+> Knowing the habit would make it easier to beat him, and also easier to hurt. It is the sort of information that changes a match from a contest to a lesson, depending on what you do with it.
 
-Memory callbacks shown: "All 4 of your wins over Nolan Devereux were clean."
+Memory callbacks shown: "Every one of those 2 wins over you was clean. Nobody can argue that." / "You showed me respect after we fought. I noticed. Don't expect it back for free."
 
-Choices offered: [Play to the crowd and lean into it] [Protect the match and hit your spots] [Break script and settle the score] [Cut the match short with a quick pin]
+Choices offered: [Build your game plan around the habit] [Tell Nolan what the tape shows] [Study it for craft and ignore the weakness] [Ask Walter to wipe the tape]
 
-Chosen: **Play to the crowd and lean into it** → You turn it into theatre. The crowd roars, the rival gives in, and the finish gets a standing ovation.
+Chosen: **Study it for craft and ignore the weakness** → You watch the clips for the best ideas rather than the worst, and take away a handful of useful transitions. The match that follows is better than you could have planned, and kinder than your rivals deserve.
 
-## Winning Against Nolan Devereux Gets Lonely  _(day 190, rivalry)_
+## Pierce Wolfe Wants a Truce  _(day 131, rivalry)_
 
-> The wins over Nolan Devereux keep stacking up, and tonight they stop feeling like a victory lap. Nolan watches your matches on the monitor with no expression during intermission, and the numbers on your side of the ledger start to look like a debt.
-> A feud only works while the loser still has somewhere to go. Nolan looks like somebody running out of road, and you are the reason.
+> Pierce Wolfe catches you in the catering room with open hands and nobody else around. "Truce," he says. "At least until the next big show, because a sponsor wants you both in one photo."
+> You cannot tell whether he means it. Backing off would calm the room, but a feud this hot is also paying your bills.
 
-Memory callbacks shown: "You beat me clean 5 times. No excuses." / "Every one of those 3 wins over you was clean. Nobody can argue that."
+Memory callbacks shown: "The record says I own you. Check it."
 
-Choices offered: [Pitch a finish where Nolan goes over] [Rub it in on the microphone] [Sit down with a coffee and say nothing about it] [Keep your distance and keep winning]
+Choices offered: [Shake on a quiet truce] [Agree, but only in private] [Refuse and keep the fire burning] [Fake the truce and ambush at the show]
 
-Chosen: **Pitch a finish where Nolan goes over** → The agent grumbles and writes it in pencil. Nolan learns whose idea it was and, for once, says thank you without a hook in it.
+Chosen: **Shake on a quiet truce** → The handshake is short and dry. For the first time in weeks the hallway stops going silent when you walk in.
 
-## Three Words for Nolan Devereux  _(day 213, media)_
+## Pierce Wolfe Wants the Finish Reviewed  _(day 141, rivalry)_
 
-> Sam Okonkwo (Mat Talk Daily) is writing a website's quick-fire lightning round and asks for the three words you would use to describe Nolan Devereux. There is a notebook with three blank lines already ruled, and Sam waits with the patience of someone who knows silence sells.
-> Anything you say will sit next to a photo of the two of you and a pull quote the size of a billboard.
+> Pierce Wolfe has brought a hand-drawn diagram on the back of a call sheet to the production office and is tapping it with one finger. The argument is simple: the foot on the ropes was not clean, and everybody who has watched it twice knows it.
+> The producer looks at you over the top of a coffee cup. This is the kind of complaint that either becomes a rematch or becomes a month of muttering.
 
-Memory callbacks shown: "You offered a hand once. I have not forgotten who made the first gesture."
+Memory callbacks shown: "Last time ended with people yelling at the referee. This time nobody can blame anyone." / "4 losses to you. Tonight I fix that."
 
-Choices offered: [Give three honest, generous words] [Give three words designed to be printed] [Refuse to do the game and talk about the work] [Give one word and watch Sam work for it]
+Choices offered: [Agree to a rematch with a neutral referee] [Admit the finish was cheap, out loud] [Deny it flatly and ask what he plans to do] [Offer a match where nothing can be disputed]
 
-Chosen: **Refuse to do the game and talk about the work** → Sam sighs and rewrites the question into something duller, and you answer it well. The piece is respectful and nobody clips it.
+Chosen: **Deny it flatly and ask what he plans to do** → You say it with a straight face and the producer lets it go. Pierce leaves with the proof folded in a back pocket and a promise on his lips.
 
-## The Challenger Asks for One Thing  _(day 327, championship)_
+## Pierce Wolfe Posts a Not-So-Subtle Jab  _(day 145, social)_
 
-> Bron Breakker approaches you in the elevator, going up, not with a threat but with a request. The challenger would like one honest match with no outside interference, and speaks plainly, without the usual swagger.
-> There is no angle in the tone, or if there is, it is well hidden. A champion who grants the request may look generous, or may look soft, and a champion who refuses may look like a bully with a strap.
+> Pierce Wolfe has posted a cryptic one-line riddle with no names attached, but everybody knows who it is for. It has already collected a trending tag, and your own mentions are demanding a reply.
+> Pierce wants a response. The only choice is whether you give him one, and in what form.
 
-Memory callbacks shown: "6 clean losses to you, and I remember every one." / "6 losses to you. Tonight I fix that."
+Memory callbacks shown: "5 matches. Neither of us has learned to walk away."
 
-Choices offered: [Grant it, no conditions] [Grant it, and attach a public promise of your own] [Refuse: champions do not negotiate] [Laugh and tell him to earn it in the ring]
+Choices offered: [Reply with a razor-sharp clapback] [Respond with a gracious, kind message] [Answer in the ring, not online] [Mute him and say nothing]
 
-Chosen: **Grant it, and attach a public promise of your own** → You say yes, and then you say loudly that you will retain the belt. The promise raises the stakes, and Bron lets the smile show.
+Chosen: **Mute him and say nothing** → Quiet is a statement. Some fans like it, some think you are scared, and the thread dies by dinner.
 
 ## A Training Partner Worth Keeping  _(day 3, alliance)_
 
@@ -144,15 +144,6 @@ Choices offered: [Pitch in until the ring is built] [Ask the chief to teach you 
 
 Chosen: **Pitch in until the ring is built** → Three hours later your palms are blistered and your shirt is gone. The chief hands you a bottle of water and says the ropes will never be tighter than the ones you tied.
 
-## Notes That Were Entirely Correct  _(day 51, backstage)_
-
-> Mei Tanaka delivers the notes on a note slipped under your locker door, and every sentence is accurate. The problem tonight was that you abandoned the finish when the crowd turned on you, and the tone is gentle in the way a scalpel is gentle.
-> You feel the heat climb your neck, followed by something worse, which is recognition. The fix would have taken a moment's attention, and you had been busy thinking about yourself.
-
-Choices offered: [Take every note and thank Mei sincerely] [Defend your choices and explain what you were thinking] [Ask to watch the tape together and learn it properly] [Nod, leave and brood in the parking lot]
-
-Chosen: **Defend your choices and explain what you were thinking** → Defensiveness comes out of your mouth faster than you can stop it. The conversation ends with arms crossed and notes that become shorter in future.
-
 ## The Prank in Catering  _(day 55, debut)_
 
 > Someone has done it to you in catering: a note on your gear that says "ask me about my finisher". Emmett Moreau is leaning on the wall with the face of a person who knows nothing and invented all of it.
@@ -161,3 +152,12 @@ Chosen: **Defend your choices and explain what you were thinking** → Defensive
 Choices offered: [Laugh it off and play along] [Plan a better prank on Emmett Moreau] [Ignore it and keep your eyes on your gear] [Complain to a producer about the hazing]
 
 Chosen: **Plan a better prank on Emmett Moreau** → Your retaliation is neat and totally harmless. Emmett Moreau bows to the crowd and the whole room declares you a keeper.
+
+## A Rule Nobody Wrote Down  _(day 72, backstage)_
+
+> Randy Orton stops you outside the showers and speaks quietly, which is always worse than shouting. You broke an unwritten rule today, namely answering the fans' questions about a finish, and he says so beside a vending machine that hums.
+> There is no malice in the voice, and no mercy either. Whatever you say next will tell the room what kind of person you are when you are corrected.
+
+Choices offered: [Apologise properly and thank Randy for saying so] [Ask for the rest of the rules while you have the chance] [Push back and ask who made that rule] [Laugh it off and change the subject]
+
+Chosen: **Ask for the rest of the rules while you have the chance** → Randy laughs, counts a dozen on his fingers, and ends with the one that matters: never lie to the person you work with. It is the best ten minutes of advice you have had all year.
