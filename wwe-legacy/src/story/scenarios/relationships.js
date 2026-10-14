@@ -76,7 +76,7 @@ export default [
   },
   {
     id: 'riv_ring_accident', category: 'rivalry', title: 'Something Went Wrong with {opp.name}', weight: 2, cooldownDays: 90, maxPerCareer: 3, contexts: ['post_match'],
-    trigger: { daysSince: { match: { lte: 1 } } }, cast: { opp: { pick: 'roster', sameBrand: true } },
+    trigger: { daysSince: { match: { lte: 1 } } }, cast: { opp: { pick: 'lastOpponent', within: 1 } },
     slots: { move: [`a missed dive`, `a botched powerbomb`, `a chair shot that landed higher than planned`, `a slip off the second rope`], aftermath: [`is being helped to the back by two trainers`, `is sitting on the apron with a towel pressed to a cut`, `has gone very quiet in the trainers' room`, `is being checked by the doctor, who will not say a word`] },
     body: [`You and {opp.name} stayed behind after the show to run through next week's finish in the empty ring. The rehearsal ended early after {move}, and {opp.name} {aftermath}. You know exactly what you did, and you also know the story will grow in the retelling.`, `The agent asks what happened. Everybody still in the building is watching your face for the answer.`],
     choices: [

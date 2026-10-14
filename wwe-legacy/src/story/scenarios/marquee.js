@@ -997,7 +997,7 @@ export default [
   // ============================================================ CREATIVE
   {
     id: 'bkg_match_time_cut', category: 'creative', title: `Your Match Is Cut to {minutes}`, weight: 3, major: true, cooldownDays: 120, maxPerCareer: 4, categoryCooldown: 8, contexts: ['pre_show', 'show_day'],
-    cast: { boss: { pick: 'staff', role: 'producer' }, opp: { pick: 'roster', tier: { gte: 1, lte: 3 }, sameBrand: true } },
+    cast: { boss: { pick: 'staff', role: 'producer' }, opp: { pick: 'lastOpponent', within: 2 } },
     trigger: { event: 'ple', stat: { popularity: { gte: 20 } } },
     slots: { minutes: [`six minutes`, `eight minutes`, `four minutes`], blame: [`a long entrance package`, `an opening segment that ran over`, `a last-minute video tribute`] },
     body: [`{boss.name} finds you at catering with the new running order. Because of {blame}, your match against {opp.name} has been trimmed to {minutes}.`, `You had planned a story with a build, a near-fall and a finish. Now you have to decide what survives.`],

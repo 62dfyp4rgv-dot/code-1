@@ -351,7 +351,7 @@ export default [
   },
   {
     id: 'nb_bs_stiff_shot', category: 'backstage', title: `That Shot Was Not in the Plan`, weight: 2, contexts: ['post_match'], cooldownDays: 120, maxPerCareer: 4, categoryCooldown: 4,
-    cast: { opponent: { pick: 'roster', tier: { gte: 1, lte: 3 } } }, memory: { role: 'opponent', max: 2 },
+    cast: { opponent: { pick: 'lastOpponent', within: 1 } }, memory: { role: 'opponent', max: 2 },
     trigger: { stat: { matches: { gte: 6 } } },
     slots: { strike: [`a forearm that landed like a car door`, `three closed-fist shots in a row`, `a clothesline that rattled your teeth`, `a kick that clipped your jaw`], reaction: [`the referee looked straight at you`, `the crowd gasped`, `your vision went white for a second`] },
     body: [`Midway through tonight's match, {opponent.name} threw {strike}, and {reaction}. You are still tasting copper in the dressing room, and the question every worker asks has arrived: accident, or message?`, `The business has a code for this, and the code has more than one answer. What you do in the next ten minutes will be repeated in every hallway by morning.`],

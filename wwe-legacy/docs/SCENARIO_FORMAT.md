@@ -86,3 +86,6 @@ debut, breakout, rivalry, betrayal, alliance, faction, championship, injury, rec
 - **Fans**: a cast `media` pick with `kind: 'fan'` is introduced without an outlet suffix.
 - **Surname preference**: `roster` and `tag` picks prefer candidates whose surname differs from the player and from anyone already cast; they fall back to the full pool if that leaves nobody.
 - **Memory callbacks**: `noAutoMemory: true` disables the auto-attached callback; `memory.noResults` forbids win/loss tally callbacks; `memory.allow` restricts callback kinds. Tally callbacks are never used in emotional categories (personal, mentor, alliance, betrayal, faction, injury, recovery, retirement, legacy, fans, finance, travel).
+- **`pick: 'lastOpponent'`** (optional `within: days`): casts the wrestler the player most recently faced (the winner, after a multi-way loss). Use it for "tonight's match" scenes instead of a random roster pick; the scene is not eligible when there is no recent match.
+- **Media outlets** are matched to the role: reporter/journalist = print, host/commentator = audio (no podcasts before 2008), fan = a civilian name without an outlet.
+- **`mem` entries** accept `last: { result: 'win'|'loss'|'draw', within: days }` (the most recent match must have been against that cast member), and `recent` accepts `lastResult`.

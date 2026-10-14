@@ -129,3 +129,14 @@ test('a forged achievement unlock in a save is dropped on load; retired wrestler
   assert.throws(() => g.startAppearance('interview'), /career is over/);
   assert.throws(() => g.promo({ tone: 'boast' }), /career is over/);
 });
+
+test('cast pick lastOpponent names the person the player just faced (the winner of a multi-way loss), and nobody otherwise', () => {
+  const g = new Game(); g.newCareer({ name: 'Last Opp', seed: 33, startYear: 2024 });
+  const c = g.career, eng = new ScenarioEngine(SCENARIO_TEMPLATES);
+  const [x, y] = g.universe.list((w) => w.brand === c.player.brand);
+  assert.throws(() => eng.start(c, 'riv_ring_accident', { force: true }), /cannot be filled/);
+  c.record({ key: 'lo:1', category: 'match', type: 'match_result', participants: ['player', x.id, y.id], outcome: 'loss', summary: 'm', importance: 2,
+    data: { matchId: 'lo1', matchType: 'triple_threat', opponents: [x.id, y.id], partners: [], result: 'loss', winner: y.id, finish: 'pinfall', clean: true, durationSec: 300, rating: 3 } });
+  const inst = eng.start(c, 'riv_ring_accident', { force: true });
+  assert.equal(inst.cast.opp.id, y.id);
+});

@@ -153,7 +153,8 @@ const PRINT_MEDIA = MEDIA_NAMES.filter((n) => /Ringside Report|Turnbuckle|Backst
 const AUDIO_MEDIA = MEDIA_NAMES.filter((n) => /Podcast|Radio|Cageside/.test(n));
 const CIVILIANS = ['Dana Whitlock', 'Priya Raman', 'Marcus Doyle', 'Elena Vasquez', 'Tom Hargreaves', 'Aisha Bello', 'Greg Palmer', 'Noor Haddad', 'Frankie Moretti', 'Hannah Lund', 'Dev Malhotra', 'Rosa Kim', 'Walt Ostrowski', 'Imani Cole', 'Leo Brandt', 'Mei Tanaka'];
 function mediaFor(c, kind, seed) {
-  const pool = kind === 'fan' ? CIVILIANS : kind === 'host' || kind === 'commentator' ? AUDIO_MEDIA : kind === 'reporter' || kind === 'journalist' ? PRINT_MEDIA : MEDIA_NAMES;
+  const audio = c.year < 2008 ? AUDIO_MEDIA.filter((n) => !/Podcast/.test(n)) : AUDIO_MEDIA; // no podcasts before 2008
+  const pool = kind === 'fan' ? CIVILIANS : kind === 'host' || kind === 'commentator' ? audio : kind === 'reporter' || kind === 'journalist' ? PRINT_MEDIA : MEDIA_NAMES;
   return hashPick(pool, `${c.seed}:media:${kind}:${seed}`);
 }
 
@@ -192,6 +193,16 @@ export function bindCast(t, ctx, seedKey) {
   for (const [role, spec] of Object.entries(t.cast || {})) {
     let pick = null;
     switch (spec.pick) {
+      case 'lastOpponent': {
+        // the wrestler the player just faced (in a multi-way loss: the one who won it), so "tonight's match" scenes name the real person
+        const lm = ctx.lastMatch;
+        if (lm && (!spec.within || ctx.day - lm.day <= spec.within)) {
+          const d = lm.data, id = d.result === 'loss' && d.winner && d.winner !== ctx.me.id ? d.winner : (d.opponents || [])[0];
+          const w = id && ctx.u.get(id);
+          if (w && w.status === 'active' && !taken.has(id)) pick = w;
+        }
+        break;
+      }
       case 'rivalry': {
         const rs = ctx.rivals.filter((r) => r.heat >= (spec.minHeat ?? 15) && (!spec.status || r.status === spec.status)).sort((a, b) => b.heat - a.heat);
         for (const r of rs) { const id = r.a === ctx.me.id ? r.b : r.a; const w = ctx.u.get(id); if (w && w.status === 'active' && !taken.has(id)) { pick = w; break; } }

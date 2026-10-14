@@ -69,7 +69,7 @@ export function validateTemplate(t) {
   checkTriggerShape(t.trigger, errors);
   for (const [role, spec] of Object.entries(t.cast || {})) {
     if (['player'].includes(role)) E('role name "player" is reserved');
-    if (!['rivalry', 'obligation', 'tag', 'champion', 'roster', 'staff', 'media'].includes(spec.pick)) E(`role ${role}: unknown pick "${spec.pick}"`);
+    if (!['rivalry', 'obligation', 'tag', 'champion', 'roster', 'staff', 'media', 'lastOpponent'].includes(spec.pick)) E(`role ${role}: unknown pick "${spec.pick}"`);
     if (spec.pick === 'staff' && !STAFF_ROLES.includes(spec.role)) E(`role ${role}: unknown staff role ${spec.role}`);
     if (spec.pick === 'media' && !MEDIA_KINDS.includes(spec.kind)) E(`role ${role}: unknown media kind ${spec.kind}`);
     if (spec.pick === 'tag' && !REL_TAGS.includes(spec.tag)) E(`role ${role}: unknown relationship tag ${spec.tag}`);

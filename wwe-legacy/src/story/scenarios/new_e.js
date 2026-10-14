@@ -20,7 +20,7 @@ export default [
   },
   {
     id: 'ne_cbk_night_after', category: 'comeback', title: `The Show After the Big Pop`, weight: 2, contexts: ['pre_show', 'post_match'], cooldownDays: 240, maxPerCareer: 2, categoryCooldown: 8,
-    cast: { opp: { pick: 'roster', tier: { lte: 3 }, sameBrand: true } }, memory: { role: 'opp', max: 1 },
+    cast: { opp: { pick: 'lastOpponent', within: 3 } }, memory: { role: 'opp', max: 1 },
     trigger: { flag: 'ne_walked_back', noFlag: 'ne_after_done' },
     slots: { venue: [`a half-sold arena in a college town`, `a house show in a hockey rink`, `a small-city civic center with sticky floors`], worry: [`the first hard bump`, `the third minute, when the adrenaline drains away`, `the moment someone grabs you the wrong way`] },
     body: [`The comeback walk was a movie. Tonight is {venue}, a sleepy crowd, and {opp.name} stretching nearby with a smile that suggests the plan for the match is already in {opp.their} head.`, `The comeback story is over and the regular job has resumed, which is a different test. What you keep returning to is {worry}, and whether your body will lie to you when it arrives.`],
