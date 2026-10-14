@@ -351,7 +351,7 @@ export class Game {
     const recent = c.memory.ledger.query({ types: ['match_result'], scope: 'player', newestFirst: true, limit: 5 });
     const wins = recent.filter((e) => e.data.result === 'win').length;
     const champ = this.universe.get(t.holder);
-    return me.popularity >= t.minPop && wins >= 4 && champ && c.overall() >= this._overall(champ) - 14 && c.stats.s.matches >= 5;
+    return me.popularity >= t.minPop && wins >= 4 && champ && c.overall() >= this._overall(champ) - 14 && c.stats.s.matches >= 8 && c.day >= 90; // no title shot in a rookie's first three months
   }
   _overall(w) { const v = Object.values(w.attrs); return v.reduce((a, b) => a + b, 0) / v.length; }
   /** the faction the player belongs to (from the ledger-driven world state), if any */
@@ -481,7 +481,7 @@ export class Game {
     const booking = makeBooking(c, fieldOpps, {
       partners, opponentPartners: oppPartners,
       type, show: ev.displayName || ev.name, ppv: ev.kind === 'ple' ? ev.displayName : null, ppvTier: ev.kind === 'ple' ? ev.tier : 0,
-      mainEvent: ev.kind === 'ple' || c.player.popularity > 70, title, label: `${PLANS[plan].label} / ${ENTRANCES[ent].label}`, storyline: this._storylineWith(w.id),
+      mainEvent: (ev.kind === 'ple' && (c.player.popularity >= 40 || !!title)) || c.player.popularity > 70, title, label: `${PLANS[plan].label} / ${ENTRANCES[ent].label}`, storyline: this._storylineWith(w.id),
     });
     booking.plan = plan; booking.entrance = ent;
     c.pendingMatch = booking;

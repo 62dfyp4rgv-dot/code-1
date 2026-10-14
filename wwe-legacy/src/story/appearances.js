@@ -78,7 +78,7 @@ export function candidateQuestions(c, extras = {}) {
     qs.push({ id: 'open_promise', ctx: 'open_promise', refs: [p.madeEvent], text: `You promised "${p.text}". The clock is running. How confident are you?` });
   }
   const held = U(c).titlesOf ? U(c).titlesOf(me) : [];
-  if (held.length) qs.push({ id: 'title', ctx: 'title', refs: c.memory.ledger.ofType('title_win').slice(-1).map((e) => e.id), text: `You are the ${held[0].name} holder. Who is the next real threat, and are you ready for them?` });
+  if (held.length) qs.push({ id: 'title', holder: true, ctx: 'title', refs: c.memory.ledger.ofType('title_win').slice(-1).map((e) => e.id), text: `You are the ${held[0].name} holder. Who is the next real threat, and are you ready for them?` });
   else if (c.stats.s.matches >= 6) qs.push({ id: 'title', ctx: 'title', refs: [], text: `You have wrestled ${c.stats.s.matches} matches and you are still chasing gold. When do you get your shot?`, canGuarantee: 'win_title' });
   const inj = c.player.injuries.filter((i) => i.daysLeft > 0).sort((a, b) => b.daysLeft - a.daysLeft)[0];
   if (inj) qs.push({ id: 'injury', ctx: 'injury', refs: inj.eventId ? [inj.eventId] : [], text: `You are working through a ${inj.severity === 2 ? 'serious' : 'minor'} ${inj.part} injury. How bad is it, really?` });
@@ -156,6 +156,7 @@ const SAY = {
     last_match: (x) => !x.won ? `${x.opp} caught me on the night. The ${x.finish} I can fix, and the result I intend to reverse.` : `I had ${x.opp} figured out early. ${x.move ? `The ${x.move}` : `The ${x.finish}`} was always going to be how it ended.`,
     rival: (x) => `${x.opp} can say whatever ${x.they} wants. The result is the only thing that does not change.`,
     open_promise: () => `I said it and I meant it. I am right on schedule.`,
+    title_holder: () => `The belt does not make me better, it just makes me the target. Anyone who wants it can line up behind the last one.`,
     title: () => `A shot is coming and I will be ready, because I am always ready.`,
     upcoming: (x) => `Expect me to be the best thing on the card at ${x.event}.`,
     fans: () => `They believe in me, and I do not plan to give them a reason to stop.`,
@@ -167,6 +168,7 @@ const SAY = {
     last_match: (x) => !x.won ? `${x.opp} earned that ${x.finish}. I will learn from it and I will be back.` : `Honestly? ${x.opp} pushed me harder than I expected, and I am just grateful the ${x.finish} went my way.`,
     rival: (x) => `${x.opp} has earned respect from me. Whatever happens next, I will remember that.`,
     open_promise: () => `I made a promise. I am working every day to keep it, and I will not pretend it is easy.`,
+    title_holder: () => `I am only holding this for the people who held it before me. Every defense is me trying to deserve it.`,
     title: () => `I have a lot left to prove. I will earn it, not demand it.`,
     upcoming: (x) => `I will just try to do justice to the fans at ${x.event}.`,
     fans: () => `Everything. They are the reason I get back up.`,
@@ -178,6 +180,7 @@ const SAY = {
     last_match: (x) => !x.won ? `${x.opp} got one. Enjoy it, because there will not be a second.` : `Anyone who thought ${x.opp} had a chance was not watching. ${x.move ? `The ${x.move}` : 'The finish'} proves it.`,
     rival: (x) => `${x.opp} wants to talk? Fine. Say it to my face next time, because I am done being polite.`,
     open_promise: () => `Watch me. Everyone doubting it will have to eat their words.`,
+    title_holder: () => `Come and take it, then. Every challenger so far has left with a story and without the gold.`,
     title: () => `The champions should be worried. Nobody in that locker room wants this smoke.`,
     upcoming: (x) => `${x.event}? Somebody is getting hurt. I have decided it will not be me.`,
     fans: () => `The ones who cheer, thank you. The ones who boo, you are paying to watch me anyway.`,
@@ -189,6 +192,7 @@ const SAY = {
     last_match: (x) => `It was ugly in places. That ${x.finish} came from mistakes I made, and I know exactly what they were.`,
     rival: (x) => `Part of it is on me. ${x.opp} and I got under each other's skin, and some of that was my doing.`,
     open_promise: () => `I do not know if I will make it. I am going to try harder than I have ever tried.`,
+    title_holder: () => `Being champion is heavier than I expected. I am proud of it, and I am tired in ways I did not know existed.`,
     title: () => `I am not ready yet, and I know it. The gap is smaller than it was a few months ago.`,
     upcoming: (x) => `I am nervous about ${x.event}, and I think that is a good sign.`,
     fans: () => `Some nights they carry me. I try to remember that when I am tired.`,
@@ -200,6 +204,7 @@ const SAY = {
     last_match: (x) => !x.won ? `Mostly that ${x.opp} sweats a lot. As for the ${x.finish}, let us never speak of it again.` : `Mostly that ${x.opp} sweats a lot. The ${x.finish} was a bonus.`,
     rival: (x) => `${x.opp} has a lot of opinions for someone who has looked at the lights as often as ${x.they} has.`,
     open_promise: () => `Deadline? I did not realise there would be a deadline. Somebody tell my agent.`,
+    title_holder: () => `The belt has its own seat on the plane now. It is the best-behaved passenger I have ever had.`,
     title: () => `Soon! Very soon! I have already cleared a shelf.`,
     upcoming: (x) => `Bring snacks to ${x.event}. You will not want to leave your seat.`,
     fans: () => `They mean snacks, and free tickets, and occasionally they mean it when they cheer.`,
@@ -250,9 +255,9 @@ export function answerAppearance(c, answerId, extras = {}) {
   const they = subj && subj.gender === 'F' ? 'she' : subj && subj.gender === 'M' ? 'he' : 'they';
   const nxt = extras.nextEvent;
   const facts = { won: q.ctx === 'last_match_win', opp, they, finish: q.fx ? q.fx.finish : 'finish', move: q.fx ? q.fx.move : null, event: nxt ? (nxt.displayName || nxt.name) : 'the next show' };
-  const legacy = (SAY[answerId][q.id] || (() => 'No comment.'))(facts);
+  const legacy = (SAY[answerId][q.holder ? 'title_holder' : q.id] || SAY[answerId][q.id] || (() => 'No comment.'))(facts);
   // authored variants (src/story/answers_pack.js) share the pool with the fact-specific line above, picked by a seeded hash
-  const packTopic = q.id === 'last_match' && q.ctx !== 'last_match_win' ? (q.draw ? 'last_match_draw' : 'last_match_loss') : q.id; // the authored last_match lines assume a win
+  const packTopic = q.id === 'title' && q.holder ? 'title_holder' : q.id === 'last_match' && q.ctx !== 'last_match_win' ? (q.draw ? 'last_match_draw' : 'last_match_loss') : q.id; // the authored last_match lines assume a win
   const pack = ((ANSWER_PACK[answerId] || {})[packTopic] || []).map((l) => fillAnswer(l, facts, subj));
   const pool = [...pack, legacy];
   const text = pool[parseInt(hash53(`${s.seed}:${q.id}:${answerId}:say`), 36) % pool.length];
