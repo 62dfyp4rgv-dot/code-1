@@ -75,6 +75,12 @@ const SPECIAL_STIPULATIONS = {
 const POST_WIN = ['celebrate', 'show_respect', 'cut_promo', 'attack_rival', 'call_out', 'talk_management', 'seek_treatment', 'help_up'];
 const POST_LOSS = ['show_respect', 'vow_revenge', 'request_rematch', 'argue_result', 'talk_management', 'seek_treatment', 'walk_away'];
 
+/** relationship tags shown to the player: drop the ones the rest of the list has superseded */
+function tidyTags(tags) {
+  const has = (t) => tags.includes(t);
+  return tags.filter((t) => !((has('ally') || has('alliance')) && ['alliance_possible', 'studying_you', 'reluctant'].includes(t)) && !(has('reconciled') && t === 'betrayal'));
+}
+
 export class Game {
   constructor({ saves = null } = {}) {
     this.saves = saves;
@@ -839,7 +845,7 @@ export class Game {
     const threads = [...rank.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5).map(([id]) => {
       const sum = buildPairSummary(c.memory, me, id, nm);
       const rel = getRel(w, me, id);
-      return { id, name: nm(id), tags: rel.tags || [], lines: sum.facts.map((f) => ({ text: f.text, eventId: f.eventIds[f.eventIds.length - 1], count: f.kind === 'rivalry' ? 0 : f.eventIds.length })) };
+      return { id, name: nm(id), tags: tidyTags(rel.tags || []), lines: sum.facts.map((f) => ({ text: f.text, eventId: f.eventIds[f.eventIds.length - 1], count: f.kind === 'rivalry' ? 0 : f.eventIds.length })) };
     }).filter((t) => t.lines.length);
     const moments = c.memory.ledger.query({ scope: 'player', newestFirst: true, limit: 60 }).filter((e) => e.importance >= 4 && !['finance_month', 'achievement_unlocked'].includes(e.type)).slice(0, 5).map((e) => ({ id: e.id, date: e.date, day: e.day, text: e.summary.length > 150 ? `${e.summary.slice(0, 147).replace(/\s+\S*$/, '')}...` : e.summary }));
     return { threads, promises: this.promiseView().promises.filter((p) => p.status === 'open'), moments };
