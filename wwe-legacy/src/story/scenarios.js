@@ -258,8 +258,14 @@ export function bindCast(t, ctx, seedKey) {
 // ------------------------------------------------------------------------------------------ text
 /** Capitalise the start of every sentence (slot values and pronoun tokens can land mid-sentence in lower case). */
 const ABBREV = /(?:\ba\.m|\bp\.m|\bMr|\bMrs|\bMs|\bDr|\bSt|\bvs|\bno|\betc|\be\.g|\bi\.e)\.\s+$/i;
+const SPEECH_TAG = /^(he|she|they|I|we|you|[A-Za-z]+) (asks?|says?|said|adds?|added|replies|replied|whispers?|whispered|mutters?|muttered|answers?|answered|calls?|called|shouts?|shouted|blurts?|blurted|murmurs?|murmured|snaps?|snapped|laughs?|laughed|sighs?|sighed|admits?|admitted|offers?|offered|continues|continued|finally|asked)\b/;
 export function tidy(text) {
-  return text.replace(/(^|[.!?]["')\]]?\s+)([a-z])/g, (m, pre, ch, off) => (ABBREV.test(text.slice(0, off) + pre) ? m : pre + ch.toUpperCase())).replace(/ {2,}/g, ' ').replace(/\s+([,.;!?])/g, '$1');
+  return text.replace(/(^|[.!?]["')\]]?\s+)([a-z])/g, (m, pre, ch, off) => {
+    if (ABBREV.test(text.slice(0, off) + pre)) return m;
+    // a speech tag after a closing quote ("Got a minute?" he says) stays lowercase
+    if (/[?!]["”]\s+$/.test(pre) && SPEECH_TAG.test(text.slice(off))) return m;
+    return pre + ch.toUpperCase();
+  }).replace(/ {2,}/g, ' ').replace(/\s+([,.;!?])/g, '$1');
 }
 const SMALL = new Set(['a', 'an', 'the', 'of', 'in', 'on', 'at', 'for', 'to', 'and', 'but', 'or', 'nor', 'with', 'by', 'from', 'as', 'vs']);
 /** Headline-style capitalisation for rendered titles (slot values arrive in sentence case). */
@@ -369,7 +375,7 @@ const NON_RESULT_HOOKS = ['you_betrayed_me', 'i_betrayed_you', 'broken_promise',
 const NO_TALLY_CATEGORIES = new Set(['personal', 'mentor', 'alliance', 'betrayal', 'faction', 'injury', 'recovery', 'retirement', 'legacy', 'fans', 'finance', 'travel']);
 // warm scenes (a mentee, a friend, a family evening) must not be answered with gloating or grudges: only the warm callbacks fit there
 const WARM_CATEGORIES = new Set(['personal', 'mentor', 'alliance', 'faction', 'injury', 'recovery', 'retirement', 'legacy', 'fans', 'finance', 'travel']);
-const WARM_HOOKS = ['respect', 'respect_from_you', 'reconciled', 'open_promise', 'broken_promise'];
+const WARM_HOOKS = ['respect', 'respect_from_you', 'reconciled'];
 function memoryAllow(t) {
   if (t.memory && t.memory.allow) return t.memory.allow;
   if (WARM_CATEGORIES.has(t.category)) return WARM_HOOKS;

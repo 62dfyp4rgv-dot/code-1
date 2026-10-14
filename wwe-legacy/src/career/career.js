@@ -152,7 +152,7 @@ export class Career {
     const key = `match:${booking.matchId}`;
     const oppNames = booking.opponents.map((o) => o.name).join(' & ');
     const verb = result === 'win' ? 'defeated' : result === 'loss' ? 'lost to' : 'drew with';
-    const finishName = res.finishMove ? getMoveName(res.finishMove) : null;
+    const finishName = res.finishMove && res.finish !== 'objective' ? getMoveName(res.finishMove) : null; // climbing is not a finishing move
     const summary = `${this.player.name} ${verb} ${oppNames}${res.finish && result !== 'draw' ? ` by ${String(res.finish).replace(/_/g, ' ')}${finishName ? ` (${finishName})` : ''}` : ''} on ${booking.show || 'a show'} - ${rating.stars}★.`;
     const out = this.record({
       key, category: 'match', type: 'match_result', participants: [me, ...opponents, ...partners], where: { show: booking.show || null, venue: booking.venue || null },

@@ -137,7 +137,7 @@ export function socialFeed(career, { limit = 14, nameOf = (id) => id } = {}) {
   for (const e of evs) {
     const d = e.data;
     if (e.type === 'social_post') {
-      items.push({ id: e.id, day: e.day, date: e.date, kind: 'player', author: { name: career.player.name, handle: 'you' }, text: d.text, likes: d.likes, shares: d.shares, viral: d.viral, refs: [e.id] });
+      items.push({ id: e.id, day: e.day, date: e.date, kind: 'player', author: { name: career.player.name, handle: 'you' }, text: d.text || e.summary, likes: d.likes, shares: d.shares, viral: d.viral, refs: [e.id] });
       continue;
     }
     // in a multi-way or tag loss the person to name is the winner, not whoever is first on the card
