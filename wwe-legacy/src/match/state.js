@@ -26,7 +26,7 @@ export function buildMoveset(profile) {
     registerMove(spec); // always (re)register: ids can repeat across careers with different content
     sigs.push(spec.id);
   }
-  const finSpec = profile.finisher || { id: `${profile.id}_fin`, name: profile.finisherName || 'Finisher', tpl: (STYLE_FINISHERS[style] || STYLE_FINISHERS.allrounder)[0] };
+  const finSpec = profile.finisher || { id: `${profile.id}_fin`, name: profile.finisherName || getMove((STYLE_FINISHERS[style] || STYLE_FINISHERS.allrounder)[0]).name.replace('Finisher ', ''), tpl: (STYLE_FINISHERS[style] || STYLE_FINISHERS.allrounder)[0] };
   registerMove(finSpec);
   return { moves: [...ids].filter((id) => hasMove(id)), signatures: sigs, finisher: finSpec.id, customSpecs: [...sigSpecs, finSpec] };
 }

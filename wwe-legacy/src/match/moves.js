@@ -191,8 +191,8 @@ sig('sig_ddt', 'Signature DDT', 'grapple', 'head', 21, 11, 0.6, { grappling: 0.6
 sig('sig_clothesline', 'Signature Clothesline', 'strike', 'head', 19, 10, 0.64, { striking: 0.5, power: 0.5 }, [S], [S], { toD: G });
 sig('sig_corner', 'Signature Corner Assault', 'corner', 'torso', 19, 10, 0.66, { power: 0.5, striking: 0.5 }, [S], [C], {});
 sig('sig_suplex', 'Signature Suplex', 'power', 'torso', 21, 12, 0.58, { power: 0.5, grappling: 0.5 }, [S], [S], { toD: G });
-sig('sig_leg', 'Signature Leg Attack', 'technical', 'legs', 20, 10, 0.6, { technical: 0.7, grappling: 0.3 }, [S, G], [S, G], { toD: G, style: ['technician'] });
-sig('sig_arm', 'Signature Arm Attack', 'technical', 'arms', 20, 10, 0.6, { technical: 0.7, grappling: 0.3 }, [S, G], [S, G], { toD: G, style: ['technician'] });
+sig('sig_leg', 'Signature Dragon Screw', 'technical', 'legs', 20, 10, 0.6, { technical: 0.7, grappling: 0.3 }, [S, G], [S, G], { toD: G, style: ['technician'] });
+sig('sig_arm', 'Signature Arm Wrench', 'technical', 'arms', 20, 10, 0.6, { technical: 0.7, grappling: 0.3 }, [S, G], [S, G], { toD: G, style: ['technician'] });
 sig('sig_springboard', 'Signature Springboard', 'aerial', 'head', 20, 11, 0.56, { agility: 0.9, striking: 0.1 }, [A], [S], { toA: G, toD: G });
 sig('sig_elbow', 'Signature Elbow', 'strike', 'head', 19, 9, 0.64, { striking: 0.6, agility: 0.4 }, [S], [G], {});
 

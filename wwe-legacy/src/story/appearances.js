@@ -152,7 +152,7 @@ export function appearanceView(c) {
 // ---- prose: one short answer per (topic, stance); every placeholder comes from the question's facts
 const SAY = {
   confident: {
-    last_match: (x) => `I had ${x.opp} figured out early. ${x.move ? `The ${x.move}` : `The ${x.finish}`} was always going to be how it ended.`,
+    last_match: (x) => !x.won ? `${x.opp} caught me on the night. The ${x.finish} I can fix, and the result I intend to reverse.` : `I had ${x.opp} figured out early. ${x.move ? `The ${x.move}` : `The ${x.finish}`} was always going to be how it ended.`,
     rival: (x) => `${x.opp} can say whatever ${x.they} wants. The result is the only thing that does not change.`,
     open_promise: () => `I said it and I meant it. I am right on schedule.`,
     title: () => `A shot is coming and I will be ready, because I am always ready.`,
@@ -163,7 +163,7 @@ const SAY = {
     injury: () => `It is a setback, not a stop sign. I will be back stronger.`,
   },
   humble: {
-    last_match: (x) => `Honestly? ${x.opp} pushed me harder than I expected, and I am just grateful the ${x.finish} went my way.`,
+    last_match: (x) => !x.won ? `${x.opp} earned that ${x.finish}. I will learn from it and I will be back.` : `Honestly? ${x.opp} pushed me harder than I expected, and I am just grateful the ${x.finish} went my way.`,
     rival: (x) => `${x.opp} has earned respect from me. Whatever happens next, I will remember that.`,
     open_promise: () => `I made a promise. I am working every day to keep it, and I will not pretend it is easy.`,
     title: () => `I have a lot left to prove. I will earn it, not demand it.`,
@@ -174,7 +174,7 @@ const SAY = {
     injury: () => `It hurts, I will not lie. I am listening to the doctors and being patient.`,
   },
   aggressive: {
-    last_match: (x) => `Anyone who thought ${x.opp} had a chance was not watching. ${x.move ? `The ${x.move}` : 'The finish'} proves it.`,
+    last_match: (x) => !x.won ? `${x.opp} got one. Enjoy it, because there will not be a second.` : `Anyone who thought ${x.opp} had a chance was not watching. ${x.move ? `The ${x.move}` : 'The finish'} proves it.`,
     rival: (x) => `${x.opp} wants to talk? Fine. Say it to my face next time, because I am done being polite.`,
     open_promise: () => `Watch me. Everyone doubting it will have to eat their words.`,
     title: () => `The champions should be worried. Nobody in that locker room wants this smoke.`,
@@ -196,7 +196,7 @@ const SAY = {
     injury: () => `It is worse than I have said publicly. I am here because I would rather you hear it from me.`,
   },
   joking: {
-    last_match: (x) => `Mostly that ${x.opp} sweats a lot. The ${x.finish} was a bonus.`,
+    last_match: (x) => !x.won ? `Mostly that ${x.opp} sweats a lot. As for the ${x.finish}, let us never speak of it again.` : `Mostly that ${x.opp} sweats a lot. The ${x.finish} was a bonus.`,
     rival: (x) => `${x.opp} has a lot of opinions for someone who has looked at the lights as often as ${x.they} has.`,
     open_promise: () => `Deadline? I did not realise there would be a deadline. Somebody tell my agent.`,
     title: () => `Soon! Very soon! I have already cleared a shelf.`,
@@ -231,7 +231,7 @@ const FINISH_PHRASE = { pinfall: 'a pinfall', submission: 'a submission', dq: 'a
 function fillAnswer(line, f, subj) {
   const their = subj && subj.gender === 'F' ? 'her' : subj && subj.gender === 'M' ? 'his' : 'their';
   const vals = { opp: f.opp, they: f.they, their, event: f.event, finish: FINISH_PHRASE[f.finish] || `a ${f.finish}`, movePhrase: f.move ? `the ${f.move}` : 'the finish' };
-  return line.replace(/\{(\w+)\}/g, (_, k) => (vals[k] === undefined ? '' : vals[k]));
+  return line.replace(/\{(\w+)\}/g, (_, k) => (vals[k] === undefined ? '' : vals[k])).replace(/(^|[.!?]["']?\s+)([a-z])/g, (_, pre, ch) => pre + ch.toUpperCase());
 }
 export function answerAppearance(c, answerId, extras = {}) {
   const s = c.flags.appearance;
@@ -248,7 +248,7 @@ export function answerAppearance(c, answerId, extras = {}) {
   const subj = q.subject ? U(c).get(q.subject) : null;
   const they = subj && subj.gender === 'F' ? 'she' : subj && subj.gender === 'M' ? 'he' : 'they';
   const nxt = extras.nextEvent;
-  const facts = { opp, they, finish: q.fx ? q.fx.finish : 'finish', move: q.fx ? q.fx.move : null, event: nxt ? (nxt.displayName || nxt.name) : 'the next show' };
+  const facts = { won: q.ctx === 'last_match_win', opp, they, finish: q.fx ? q.fx.finish : 'finish', move: q.fx ? q.fx.move : null, event: nxt ? (nxt.displayName || nxt.name) : 'the next show' };
   const legacy = (SAY[answerId][q.id] || (() => 'No comment.'))(facts);
   // authored variants (src/story/answers_pack.js) share the pool with the fact-specific line above, picked by a seeded hash
   const pack = ((ANSWER_PACK[answerId] || {})[q.id] || []).map((l) => fillAnswer(l, facts, subj));

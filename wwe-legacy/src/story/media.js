@@ -94,7 +94,11 @@ export function deliverPromo(career, { tone, targetId = null, claim = 'none', co
       if (record.has(kind) && recordUsed) continue;
       const hk = `promo:${targetId}:${kind}:${(h.refs || []).slice(-1)[0] || ''}`;
       if (hookUse[hk] !== undefined && career.day - hookUse[hk] < 40) continue; // do not repeat the same callback every promo
-      if (['respect', 'tribute', 'apology', 'inspire'].includes(tone) && ['old_insult', 'broken_promise'].includes(kind) && tone !== 'apology') continue;
+      // the callback has to fit the tone: no gloating in an apology or tribute, no 'you beat me' in a threat
+      if (['respect', 'tribute', 'inspire'].includes(tone) && ['old_insult', 'broken_promise'].includes(kind)) continue;
+      if (['apology', 'respect', 'tribute'].includes(tone) && ['old_insult', 'clean_dominance', 'controversial_finish', 'controversial_finish_old'].includes(kind)) continue;
+      if (tone === 'apology' && ['i_beat_you', 'you_beat_me'].includes(kind)) continue;
+      if (['insult', 'humiliate', 'threat', 'boast'].includes(tone) && kind === 'you_beat_me') continue;
       hookUse[hk] = career.day;
       if (record.has(kind)) recordUsed = true;
       const refs = h.refs.filter(Boolean);
@@ -106,7 +110,7 @@ export function deliverPromo(career, { tone, targetId = null, claim = 'none', co
         i_betrayed_you: `I turned on you once, ${tl}. I know what that cost between us.`,
         controversial_finish: `Last time ended in controversy, ${tl}. This time there will be no doubt.`,
         controversial_finish_old: `Not every finish between us was clean, ${tl}. This one will be.`,
-        clean_dominance: `${h.n} clean wins over you and not one of them was close, ${tl}.`,
+        clean_dominance: `${h.n} clean ${h.n === 1 ? 'win' : 'wins'} over you, ${tl}. It is all on the record.`,
         i_beat_you: `I have beaten you ${h.n === 1 ? 'before' : h.n + ' times'}, ${tl}.`,
         you_beat_me: `${tl}, you have beaten me ${h.n === 1 ? 'once' : h.n + ' times'}. I remember every one.`,
       }[kind];
@@ -116,7 +120,7 @@ export function deliverPromo(career, { tone, targetId = null, claim = 'none', co
   const claimDef = CLAIMS[claim] ? claim : 'none';
   const promises = [];
   const addPromiseClaim = (c, line) => {
-    if (hasOpenPromise(career.memory.world, { by: p.id, kind: c.kind, target: c.target || null, params: c.params || {} })) { lines.push({ text: `I stand by what I said before: ${c.text.charAt(0).toLowerCase()}${c.text.slice(1)}.`, refs: [] }); return; }
+    if (hasOpenPromise(career.memory.world, { by: p.id, kind: c.kind, target: c.target || null, params: c.params || {} })) { lines.push({ text: `I stand by what I said before: ${/^I[ ']/.test(c.text) ? c.text : c.text.charAt(0).toLowerCase() + c.text.slice(1)}.`, refs: [] }); return; }
     promises.push(c); lines.push(line);
   };
   if (claimDef === 'win_match' && target) { addPromiseClaim({ kind: 'win_match', target: targetId, text: `I will beat ${tn}`, deadlineDay: career.day + 150 }, { text: pick([`I promise this: I will beat you, ${tl}.`, `${tl}, I am putting it on the record: I will beat you next time.`, `Next time we meet, ${tl}, it is my hand that gets raised.`], seed + 'p'), refs: [], promise: true }); }

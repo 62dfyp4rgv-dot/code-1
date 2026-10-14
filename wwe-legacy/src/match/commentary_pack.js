@@ -530,7 +530,7 @@ export default {
     "Notice {aL} keeps glancing toward the fans between exchanges. That connection is fuelling a comeback.",
     "Fighters talk about running on the crowd's energy, and {aL} is a perfect example of it tonight.",
     "The chant for {aL} is getting louder, and it is hard to fight against an entire arena of voices.",
-    "{aL} knows the fans are with {self}, and it shows in the way {pos} shoulders are set.",
+    "{aL} can feel the fans behind every move, and it shows in the way {pos} shoulders are set.",
   ],
   color_crowd_against: [
     "The jeers for {a} are getting louder, and a hostile crowd can rattle even the most seasoned veteran.",

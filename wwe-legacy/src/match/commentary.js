@@ -10,6 +10,8 @@ const pron = (state, id) => PRON[state.fighters[id] && state.fighters[id].gender
 const CONNECT_KEY = { strike_light: 'connected_strike', strike_heavy: 'connected_strike', grapple: 'connected_grapple', power: 'connected_power', aerial: 'connected_aerial',
   technical: 'connected_technical', combo: 'connected_combo', corner: 'connected_corner', environmental: 'connected_weapon', illegal: 'connected_dirty' };
 const PLURAL_VERB = { pays: 'pay', takes: 'take', is: 'are', was: 'were', has: 'have', goes: 'go', feels: 'feel', gives: 'give', hurts: 'hurt', buckles: 'buckle', bears: 'bear' };
+const SING_TO_PLURAL = { rattles: 'rattle', knocks: 'knock', lands: 'land', connects: 'connect', hits: 'hit', sends: 'send', drives: 'drive', finds: 'find', crashes: 'crash', snaps: 'snap', catches: 'catch', rocks: 'rock', shakes: 'shake', staggers: 'stagger', takes: 'take', is: 'are', was: 'were', has: 'have', turns: 'turn', leaves: 'leave', echoes: 'echo', sets: 'set', does: 'do', looks: 'look', stings: 'sting', thuds: 'thud', cracks: 'crack', rings: 'ring', wears: 'wear', stops: 'stop', goes: 'go', proves: 'prove', hurts: 'hurt', lands_: 'land', rips: 'rip', lifts: 'lift', slams: 'slam' };
+const esc = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const ord = (n) => ['', 'first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth', 'tenth'][n] || `${n}th`;
 
 // verbs by move category: how the move "lands"
@@ -59,7 +61,8 @@ function narrateRaw(state, ev, bump = 0) {
   const late = state.timeLimit ? (ev.t || 0) / state.timeLimit > 0.7 : false;
   // authored prose pack (src/match/commentary_pack.js): lines use {a} {aL} {t} {tL} {mv} {part} {adj} {pos} {self} {tpos} {tself}
   const ctx = { a, aL, t, tL, mv: myMv, part: ev.part || 'body', adj: ev.quality === 'devastating' ? 'devastating' : ev.quality === 'clean' ? 'clean' : 'solid', pos: posA, self: selfA, tpos: pron(state, ev.target)[2], tself: pron(state, ev.target)[3] };
-  const fill = (line) => line.replace(/\{(\w+)\}/g, (_, k) => (ctx[k] === undefined ? '' : ctx[k]))
+  const fixAgree = (t) => (plural ? t.replace(new RegExp(`(${esc(mvPlain)}(?: from [A-Z][\\w'-]+)?) (\\w+)\\b`, 'g'), (m, head, v) => (SING_TO_PLURAL[v] ? `${head} ${SING_TO_PLURAL[v]}` : m)) : t);
+  const fill = (line) => fixAgree(line).replace(/\{(\w+)\}/g, (_, k) => (ctx[k] === undefined ? '' : ctx[k]))
     .replace(/\b(legs|arms) (pays|takes|is|was|has|goes|feels|gives|hurts|buckles|bears)\b/g, (_, n, v) => `${n} ${PLURAL_VERB[v]}`) // body parts: 'legs' and 'arms' are plural
     .replace(/(^|[.!?]["']?\s+)([a-z])/g, (_, pre, ch) => pre + ch.toUpperCase()); // "the Big Boot" opening a sentence
   const packLines = (key) => (PACK[key] || []).map(fill);
@@ -69,6 +72,19 @@ function narrateRaw(state, ev, bump = 0) {
     const all = arr.length ? arr : legacy;
     return rotate ? all[(H(0, salt) + bump + earlier(state, ev, (e) => e.type === ev.type, 600)) % all.length] : all[H(q, salt) % all.length];
   };
+  const tpos0 = pron(state, ev.target)[2] ? `${pron(state, ev.target)[2]} ` : '';
+  const POSITION = {
+    whip_corner: [`${a} whips ${t} hard into the corner.`, `${aL} sends ${tL} crashing into the turnbuckles.`],
+    pick_up: [`${a} hauls ${t} back to ${tpos0}feet.`, `${aL} drags ${tL} upright by the hair, then the arm.`],
+    drag_up_corner: [`${a} drags ${t} toward the corner.`, `${aL} pulls ${tL} to the corner by the wrist.`],
+    climb_top: [`${a} climbs to the top rope.`, `${aL} scales the turnbuckle and looks down at ${tL}.`],
+    toss_outside: [`${a} tosses ${t} out of the ring.`, `${aL} heaves ${tL} over the top rope to the floor.`],
+    follow_outside: [`${a} follows ${t} out to the floor.`, `${aL} slides under the bottom rope in pursuit.`],
+    drag_out: [`${a} drags ${t} out by the ankle.`, `${aL} yanks ${tL} out of the ring by the leg.`],
+    roll_in: [`${a} rolls ${t} back into the ring.`, `${aL} shoves ${tL} under the bottom rope.`],
+  };
+  const posLine = (alts, salt) => alts[(H(0, salt) + bump + earlier(state, ev, (e) => e.type === ev.type && e.cat === 'positioning', 600)) % alts.length];
+  const positioning = ev.cat === 'positioning' && POSITION[ev.move];
   switch (ev.type) {
     case 'move_connected': {
       const verb = pick(VERB[ev.cat] || ['hits'], q, 2);
@@ -78,7 +94,7 @@ function narrateRaw(state, ev, bump = 0) {
       const part = earlier(state, ev, (e) => e.type === 'move_connected' && e.target === ev.target && e.part === ev.part && e.seq > ev.seq - 14) + 1;
       if (again >= 3 && H(q, 9) % 3 === 0) return `${a} goes back to ${mvPlain} for the ${ord(again)} time, and ${tL} still has no answer.`;
       if (part >= 3 && ev.part && ev.part !== 'torso' && H(q, 8) % 4 === 0) return `${aL} keeps working the ${ev.part}: ${mvPlain} again. ${tail}`.trim();
-      if (ev.cat === 'positioning') return cyc([`${aL} sets up the next spot: ${mvPlain}.`, `${a} changes position - ${mvPlain}.`, `${aL} moves into position: ${mvPlain}.`], 50);
+      if (ev.cat === 'positioning') return positioning ? posLine(POSITION[ev.move], 50) : cyc([`${aL} sets up the next spot.`, `${a} changes position.`, `${aL} moves into position.`], 50);
       if (ev.cat === 'submission') return cyc([`${a} applies ${the(mvPlain)} to ${tL}'s ${ev.part}.`, `${aL} grinds ${the(mvPlain)} into ${tL}.`], 51);
       const adj = ev.quality === 'devastating' ? 'devastating' : dirty ? 'nasty' : ev.quality === 'clean' ? 'clean' : 'solid';
       return say(CONNECT_KEY[ev.cat], [
@@ -98,17 +114,20 @@ function narrateRaw(state, ev, bump = 0) {
       `${a} hits ${mv}!! This could be it!`, `${mv}!! ${tL} is laid out.`, `${aL} hits the finish - ${mv}! Cover coming?`,
       `${mvPlain}!!! ${tL} did not see that coming.`, `Everything ${aL} had went into that ${mv}!`,
     ], 6, true);
-    case 'move_blocked': return say('blocked', [
+    case 'move_blocked': if (ev.cat === 'positioning') return posLine([`${tL} refuses to be moved.`, `${t} plants ${tpos0}feet and shuts the attempt down.`, `${aL} cannot force the issue; ${tL} holds ${tpos0}ground.`], 56);
+      return say('blocked', [
       `${t} blocks ${myMv}.`, `${a} goes for ${myMv} but ${tL} shuts it down.`, `${tL} reads ${the(mvPlain)} and absorbs it.`,
       `${aL}'s ${mvPlain} is smothered before it gets going.`, `Blocked! ${tL} was ready for ${the(mvPlain)}.`, `${tL} plants and refuses to be moved - ${the(mvPlain)} goes nowhere.`,
     ], 7, true);
     case 'finisher_blocked': return pick([`${t} survives ${a}'s ${mv} attempt by blocking it!`, `${tL} stops ${the(mvPlain)} cold! ${aL} cannot believe it.`], q, 8);
-    case 'move_dodged': return say('dodged', [
+    case 'move_dodged': if (ev.cat === 'positioning') return posLine([`${t} slips away before ${aL} can set up.`, `${tL} wriggles free of the attempt.`, `${aL} grabs at ${tL} and gets nothing.`], 57);
+      return say('dodged', [
       `${t} slips away from ${the(mvPlain)}${ev.selfDamage ? ` and ${a} crashes hard` : ''}.`, `${a} misses ${myMv} - ${t} dodged it${ev.selfDamage ? ' and ' + aL + ' is hurt by the miss' : ''}!`,
       `${tL} sidesteps ${the(mvPlain)}${ev.selfDamage ? ', and the miss costs ' + aL : ''}.`, `Nothing but air! ${aL} whiffs on ${myMv}.`, `${tL} ducks ${the(mvPlain)} like it was telegraphed.`,
     ], 9, true);
     case 'finisher_dodged': return pick([`${t} dodges ${a}'s ${mv}! What an escape!`, `${mv} finds nothing! ${tL} slid out of danger.`], q, 10);
-    case 'move_reversed': return ev.baited ? `${t} baited ${a} into it and reverses ${mv}!` : say('reversed', [
+    case 'move_reversed': if (ev.cat === 'positioning') return posLine([`${t} turns the tables on ${aL}'s attempt to take control.`, `${tL} spins out and takes charge instead.`], 58);
+      return ev.baited ? `${t} baited ${a} into it and reverses ${mv}!` : say('reversed', [
       `${t} reverses ${myMv} and turns it around!`, `Reversal! ${t} counters ${the(mvPlain)} and hits back.`, `${tL} was waiting for ${the(mvPlain)} - and flips it on ${aL}!`,
       `${aL} tries ${myMv} and gets it turned right back ${pron(state, ev.actor)[0] === 'they' ? 'on them' : 'on ' + pron(state, ev.actor)[1]}!`, `Beautiful counter by ${tL}!`,
     ], 11, true);
@@ -205,10 +224,11 @@ export function narrate(state, ev) {
   if (!t) return t;
   let i = state.events.length - 1;
   while (i >= 0 && state.events[i].seq !== ev.seq) i--;
-  let prev = null;
-  for (let j = i - 1; j >= 0 && j >= i - 6; j--) { const p = narrateRaw(state, state.events[j], 0); if (p) { prev = p; break; } }
-  if (prev !== t) return t;
-  for (let b = 1; b <= 3; b++) { const alt = narrateRaw(state, ev, b); if (alt && alt !== prev) return alt; }
+  // never repeat any of the last dozen narrated lines
+  const recent = new Set();
+  for (let j = i - 1; j >= 0 && j >= i - 40 && recent.size < 12; j--) { const p = narrateRaw(state, state.events[j], 0); if (p) recent.add(p); }
+  if (!recent.has(t)) return t;
+  for (let b = 1; b <= 10; b++) { const alt = narrateRaw(state, ev, b); if (alt && !recent.has(alt)) return alt; }
   return t;
 }
 
