@@ -127,7 +127,8 @@ export function deliverPromo(career, { tone, targetId = null, claim = 'none', co
       lines.push({ text, refs, kind }); used.push(kind);
     }
   }
-  const claimDef = CLAIMS[claim] ? claim : 'none';
+  // a heartfelt tone is not the place to guarantee a result
+  const claimDef = CLAIMS[claim] && !['apology', 'respect', 'tribute', 'inspire'].includes(tone) ? claim : 'none';
   const promises = [];
   const addPromiseClaim = (c, line) => {
     if (hasOpenPromise(career.memory.world, { by: p.id, kind: c.kind, target: c.target || null, params: c.params || {} })) { lines.push({ text: `I stand by what I said before: ${/^I[ ']/.test(c.text) ? c.text : c.text.charAt(0).toLowerCase() + c.text.slice(1)}.`, refs: [] }); return; }
