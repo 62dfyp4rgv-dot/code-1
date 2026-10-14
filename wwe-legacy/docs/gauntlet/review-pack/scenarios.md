@@ -29,7 +29,7 @@ Chosen: **Return the compliment sincerely, on the record** → You say the kind 
 > During a bus ride through a thunderstorm, Pierce Wolfe goes quiet, then tells you about doubts about whether to keep wrestling at all. It is not the sort of thing people say out loud in this business.
 > You are the only person who has heard it. How you respond will decide whether it is the beginning of a friendship or a slip of the tongue.
 
-Memory callbacks shown: "2 clean losses to you, and I remember every one."
+Memory callbacks shown: "2 of your wins over Pierce Wolfe were clean."
 
 Choices offered: [Listen all night and say little] [Offer blunt, practical advice] [Joke it off and change the subject] [File it away for later use]
 
@@ -62,7 +62,7 @@ Chosen: **Sit down with a coffee and say nothing about it** → You slide a cup 
 > In a late-night diner, Bryce Black slides over with a proposal: join forces as a tag team. He already has a two-man army built on speed sketched out on a napkin.
 > The napkin is not bad. The question is whether you want your career attached to someone else's.
 
-Memory callbacks shown: "One win over you already. I can count higher."
+Memory callbacks shown: "Bryce Black has beaten you once."
 
 Choices offered: [Say yes and shake on it] [Agree to a trial match first] [Accept, but hold the better spots] [Decline and stay a solo act]
 
@@ -73,7 +73,7 @@ Chosen: **Accept, but hold the better spots** → Bryce balks and walks away. Th
 > Pierce Drake ruined the surprise you have been saving for the title match, and he did it too neatly to be luck. A suspiciously identical countermove during rehearsal points toward Jade Cargill, who has been seen chatting with Pierce lately.
 > You have no proof. All you have is a bad feeling and a long list of people who knew.
 
-Memory callbacks shown: "You beat me clean 7 times. No excuses."
+Memory callbacks shown: "7 of your wins over Pierce Drake were clean."
 
 Choices offered: [Accuse Jade to their face] [Feed Jade a fake plan] [Report the leak to the agent] [Stop trusting anyone and change everything]
 
@@ -84,7 +84,7 @@ Chosen: **Feed Jade a fake plan** → The fake plan reaches Pierce within a day.
 > Pierce Drake has been recruiting. Bryce Black turned up at the arena in a synchronised pose on the ramp yesterday, and the whisper is that the crowd is already chanting for them.
 > A rival with a crew can shut doors you did not know you were standing in front of. Building one of your own would take months, and sounds a lot like an arms race.
 
-Memory callbacks shown: "Every one of those 2 wins over you was clean. Nobody can argue that." / "2 wins over you already. I can count higher."
+Memory callbacks shown: "You beat me clean 7 times. No excuses." / "Every one of those 2 wins over you was clean. Nobody can argue that."
 
 Choices offered: [Poach Bryce before it is official] [Start building your own crew] [Ignore it: crews fall apart on their own] [Offer Pierce a truce before it escalates]
 

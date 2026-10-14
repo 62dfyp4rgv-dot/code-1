@@ -33,17 +33,17 @@ Player: Review Sample. Ledger: 376 events, chain verified: true.
 ## Relationships / rivalries from world state
 
 - Rivalry with Pierce Drake: heat 85, 17 matches, status active
-  - Pierce Drake says: ""I have seen more fight in the ring crew, Drake." - that's what was said in front of everyone, and I remember it."  (cites E000361)
+  - Pierce Drake says: ""You are not a threat, Drake. You are a warm-up act." - that's what was said in front of everyone, and I remember it."  (cites E000361)
   - Pierce Drake says: "You beat me clean 15 times. No excuses."  (cites E000094, E000109, E000135, E000140, E000151, E000152, E000154, E000193, E000196, E000201, E000236, E000252, E000310, E000317, E000323)
   - Pierce Drake says: "Every one of those 2 wins over you was clean. Nobody can argue that."  (cites E000118, E000149)
   - Pierce Drake says: "2 wins over you already. I can count higher."  (cites E000118, E000149)
 - Rivalry with Colt Cross: heat 78, 16 matches, status active
-  - Colt Cross says: ""You are not a threat, Cross. You are a warm-up act." - that's what was said in front of everyone, and I remember it."  (cites E000363)
+  - Colt Cross says: ""My dad worked doubles to pay for tickets like these, Cross, and you hand him back half an effort." - that's what was said in front of everyone, and I remember it."  (cites E000363)
   - Colt Cross says: "14 clean losses to you, and I remember every one."  (cites E000165, E000170, E000218, E000232, E000254, E000255, E000291, E000295, E000299, E000301, E000330, E000338, E000342, E000351)
   - Colt Cross says: "Every one of those 2 wins over you was clean. Nobody can argue that."  (cites E000283, E000348)
   - Colt Cross says: "I've beaten you twice. Nothing changes tonight."  (cites E000283, E000348)
 - Rivalry with Soren Ibarra: heat 53, 13 matches, status active
-  - Soren Ibarra says: ""Ibarra talks like a main eventer and wrestles like a favour." - that's what was said in front of everyone, and I remember it."  (cites E000365)
+  - Soren Ibarra says: ""Respect is something you do, Ibarra, not something you demand, and lately you have only done the demanding." - that's what was said in front of everyone, and I remember it."  (cites E000365)
   - Soren Ibarra says: "6 clean losses to you, and I remember every one."  (cites E000153, E000187, E000188, E000205, E000242, E000322)
   - Soren Ibarra says: "Every one of those 7 wins over you was clean. Nobody can argue that."  (cites E000175, E000183, E000194, E000215, E000223, E000249, E000313)
   - Soren Ibarra says: "7 wins over you already. I can count higher."  (cites E000175, E000183, E000194, E000215, E000223, E000249, E000313)
