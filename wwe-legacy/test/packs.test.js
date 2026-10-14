@@ -33,3 +33,23 @@ test('narration built from the pack has no casing, placeholder or agreement arte
   assert.deepEqual(bad.slice(0, 5), []);
   assert.ok(lines > 300 && colors >= 1, `${lines} lines, ${colors} colour lines`);
 });
+
+import TH from '../src/story/title_holder_pack.js';
+import RX from '../src/story/reactions_pack.js';
+import SP from '../src/story/social_pack.js';
+
+test('title-holder, reaction and social packs have the agreed shape and clean lines', () => {
+  const lineOk = (l, allowed) => {
+    assert.ok(typeof l === 'string' && l.length >= 12 && l.length <= 200, l);
+    assert.ok(/^[A-Z{"'(]/.test(l) && /[.!?"')…]$/.test(l), l);
+    assert.ok(!/  /.test(l), l);
+    for (const m of l.matchAll(/\{(\w+)\}/g)) assert.ok(allowed.includes(m[1]), `${m[1]} in ${l}`);
+  };
+  for (const st of ['confident', 'humble', 'aggressive', 'honest', 'joking']) {
+    assert.ok(TH[st].length >= 7 && new Set(TH[st]).size === TH[st].length);
+    TH[st].forEach((l) => lineOk(l, []));
+    for (const t of ['great', 'good', 'mid', 'poor']) { assert.ok(RX[st][t].length >= 9); RX[st][t].forEach((l) => lineOk(l, [])); }
+  }
+  for (const [k, arr] of Object.entries(SP.fan)) { assert.ok(arr.length >= 10, k); arr.forEach((l) => lineOk(l, ['p', 'o', 't'])); }
+  for (const [k, arr] of Object.entries(SP.media)) { assert.ok(arr.length >= 8, k); arr.forEach((l) => lineOk(l, ['p', 'o', 't'])); }
+});

@@ -3,6 +3,8 @@
 // championships, upcoming shows) and each question lists the event ids it relies on. Answer quality is
 // computed from stats, stance fit and context; the prose is composed afterwards and never decides anything.
 import { clamp, hash53 } from '../core/util.js';
+import TITLE_HOLDER from './title_holder_pack.js';
+import REACTIONS from './reactions_pack.js';
 import ANSWER_PACK from './answers_pack.js';
 import { gainPop } from '../career/pace.js';
 import { hooks } from './dialogue.js';
@@ -258,10 +260,11 @@ export function answerAppearance(c, answerId, extras = {}) {
   const legacy = (SAY[answerId][q.holder ? 'title_holder' : q.id] || SAY[answerId][q.id] || (() => 'No comment.'))(facts);
   // authored variants (src/story/answers_pack.js) share the pool with the fact-specific line above, picked by a seeded hash
   const packTopic = q.id === 'title' && q.holder ? 'title_holder' : q.id === 'last_match' && q.ctx !== 'last_match_win' ? (q.draw ? 'last_match_draw' : 'last_match_loss') : q.id; // the authored last_match lines assume a win
-  const pack = ((ANSWER_PACK[answerId] || {})[packTopic] || []).map((l) => fillAnswer(l, facts, subj));
+  const pack = (packTopic === 'title_holder' ? TITLE_HOLDER[answerId] || [] : (ANSWER_PACK[answerId] || {})[packTopic] || []).map((l) => fillAnswer(l, facts, subj));
   const pool = [...pack, legacy];
   const text = pool[parseInt(hash53(`${s.seed}:${q.id}:${answerId}:say`), 36) % pool.length];
-  const sr = REACT_STANCE[answerId] ? REACT_STANCE[answerId][tier(quality)] : REACT[tier(quality)];
+  const sr0 = REACT_STANCE[answerId] ? REACT_STANCE[answerId][tier(quality)] : REACT[tier(quality)];
+  const sr = [...((REACTIONS[answerId] || {})[tier(quality)] || []), ...sr0];
   const react = sr[parseInt(hash53(`${s.seed}:${q.id}r`), 36) % sr.length];
   s.given.push({ q: q.id, promiseId: q.promiseId || null, ctx: q.ctx, answer: answerId, quality, text, react, subject: q.subject || null, refs: q.refs, question: q.text });
   s.index += 1;

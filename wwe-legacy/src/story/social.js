@@ -4,6 +4,7 @@
 //   - POSTING is the only thing that writes: one `social_post` event (rules.js turns callouts into heat, stats count posts,
 //     the achievements that already watch `social_post` can fire).
 import { hash53, clamp } from '../core/util.js';
+import SP from './social_pack.js';
 import { gainPop } from '../career/pace.js';
 import { memoryLines } from './dialogue.js';
 
@@ -121,6 +122,7 @@ const FAN = {
   promo_bad: ['{p} promo did not land tonight. Next time.', 'Mic work was rough from {p}. Great in the ring, though.'],
   interview: ['Watching the {p} interview. Honest and sharp.', '{p} on the couch with the host is the most interesting thing on TV this week.'],
 };
+for (const k of Object.keys(FAN)) FAN[k] = [...(SP.fan[k] || []), ...FAN[k]]; // authored pack first, the original short pools stay as extra variety
 const fill = (s, m) => s.replace(/\{p\}/g, m.p).replace(/\{o\}/g, m.o || 'them').replace(/\{t\}/g, m.t || 'title');
 
 /** The feed, newest first: [{ id, day, date, kind, author, text, likes, refs, tone? }] */
@@ -139,19 +141,19 @@ export function socialFeed(career, { limit = 14, nameOf = (id) => id } = {}) {
     const oppId = (d.opponents || [])[0];
     const on = oppId ? lastName(nameOf(oppId)) : '';
     const m = { p: pn, o: on, t: d.titleName || 'title' };
-    let kind = null, pool = null;
+    let kind = null, pool = null, mkey = null;
     if (e.type === 'match_result') {
-      if (d.result === 'win') { pool = d.clean ? FAN.win_clean : (d.finish === 'dq' || d.finish === 'countout' || d.interference) ? FAN.win_dirty : FAN.win_close; kind = 'fan'; }
-      else if (d.result === 'loss') { pool = (parseInt(hash53(e.id), 36) % 4 === 0) ? FAN.loss_boo : FAN.loss; kind = 'fan'; }
-      else { pool = FAN.draw; kind = 'fan'; }
-    } else if (e.type === 'title_win') { pool = FAN.title; kind = 'fan'; m.t = d.titleName || d.name || 'title'; }
-    else if (e.type === 'title_loss') { pool = FAN.title_loss; kind = 'fan'; m.t = d.titleName || d.name || 'title'; }
-    else if (e.type === 'promo_delivered') { pool = (d.quality ?? 50) >= 55 ? FAN.promo : FAN.promo_bad; kind = 'fan'; }
+      if (d.result === 'win') { mkey = 'win'; pool = d.clean ? FAN.win_clean : (d.finish === 'dq' || d.finish === 'countout' || d.interference) ? FAN.win_dirty : FAN.win_close; kind = 'fan'; }
+      else if (d.result === 'loss') { mkey = 'loss'; pool = (parseInt(hash53(e.id), 36) % 4 === 0) ? FAN.loss_boo : FAN.loss; kind = 'fan'; }
+      else { mkey = 'loss'; pool = FAN.draw; kind = 'fan'; }
+    } else if (e.type === 'title_win') { mkey = 'title'; pool = FAN.title; kind = 'fan'; m.t = d.titleName || d.name || 'title'; }
+    else if (e.type === 'title_loss') { mkey = 'title_loss'; pool = FAN.title_loss; kind = 'fan'; m.t = d.titleName || d.name || 'title'; }
+    else if (e.type === 'promo_delivered') { mkey = 'promo'; pool = (d.quality ?? 50) >= 55 ? FAN.promo : FAN.promo_bad; kind = 'fan'; }
     else if (e.type === 'interview') { pool = FAN.interview; kind = 'fan'; }
     if (!pool) continue;
     // every fourth reaction comes from a media account instead, as a headline
     const media = parseInt(hash53(`m${e.id}`), 36) % 4 === 0 && e.type !== 'interview';
-    const text = fill(hp(pool, `${e.id}:t`), m);
+    const text = fill(hp(media && mkey && SP.media[mkey] ? SP.media[mkey] : pool, `${e.id}:t`), m);
     items.push({ id: e.id, day: e.day, date: e.date, kind: media ? 'media' : 'fan', author: media ? { name: hp(MEDIA, `${e.id}:a`), handle: 'news' } : { name: `@${hp(HANDLES, `${e.id}:h`)}`, handle: 'fan' }, text, likes: likeBase(e.id, media ? 3 : 1), refs: [e.id] });
   }
   // rivals taking shots: a line of real history, in the rival's own voice, shown once per rival per few days
