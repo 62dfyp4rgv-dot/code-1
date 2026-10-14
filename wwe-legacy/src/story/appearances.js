@@ -263,7 +263,9 @@ export function answerAppearance(c, answerId, extras = {}) {
   const pack = (packTopic === 'title_holder' ? TITLE_HOLDER[answerId] || [] : (ANSWER_PACK[answerId] || {})[packTopic] || []).map((l) => fillAnswer(l, facts, subj));
   // lines that talk about 'tonight' or 'last night' only fit a match that really was that recent
   const fresh = (l) => !(/\b(tonight|last night|this evening)\b/i.test(l)) || (q.fx && q.fx.days <= 1);
-  const pool = [...pack.filter(fresh), legacy];
+  // the single hand-written line assumes a clear win or loss: after a draw (or an 'honest' answer to a win) only the authored pool fits
+  const legacyFits = !(q.id === 'last_match' && (q.draw || (answerId === 'honest' && facts.won)));
+  const pool = [...pack.filter(fresh), ...(legacyFits || !pack.length ? [legacy] : [])];
   const text = pool[parseInt(hash53(`${s.seed}:${q.id}:${answerId}:say`), 36) % pool.length];
   const sr0 = REACT_STANCE[answerId] ? REACT_STANCE[answerId][tier(quality)] : REACT[tier(quality)];
   const sr = [...((REACTIONS[answerId] || {})[tier(quality)] || []), ...sr0];

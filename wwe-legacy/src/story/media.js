@@ -140,7 +140,7 @@ export function deliverPromo(career, { tone, targetId = null, claim = 'none', co
   const out = career.record({
     key, category: 'promo', type: 'promo_delivered', participants: [p.id, ...(targetId ? [targetId] : [])],
     refs: [...new Set(lines.flatMap((l) => l.refs))].filter((id) => career.memory.ledger.get(id)),
-    summary: `${p.name} cut ${/^[aeiou]/.test(tone) ? 'an' : 'a'} ${tone} promo${target ? ` on ${target.name}` : ''} (${quality}/100)${claimDef !== 'none' ? ` and made a promise` : ''}.`, importance: viral || quality >= 85 ? 4 : 3,
+    summary: `${p.name} cut ${/^[aeiou]/.test(tone) ? 'an' : 'a'} ${tone} promo${target ? ` on ${target.name}` : ''} (${quality}/100)${promises.length ? ' and made a promise' : claimDef !== 'none' ? ' and stood by an earlier promise' : ''}.`, importance: viral || quality >= 85 ? 4 : 3,
     data: { tone, targets: targetId ? [targetId] : [], quality, viral, context, line: (lines.find((l) => l.role === 'body') || lines[0]).text, promises, claim: claimDef, exposedWeakness: memBonus >= 8 && ['insult', 'humiliate'].includes(tone) },
   });
   // popularity effect

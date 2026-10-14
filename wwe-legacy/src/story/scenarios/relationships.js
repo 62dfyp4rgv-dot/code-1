@@ -92,7 +92,7 @@ export default [
   },
   {
     id: 'riv_mind_games', category: 'rivalry', title: 'Mind Games Before the Big Night', weight: 2, cooldownDays: 70, maxPerCareer: 3, contexts: ['pre_show', 'show_day', 'weekly'],
-    trigger: { rivalry: { minHeat: 25 }, eventWithin: { kind: 'ple', days: 10 } }, cast: { rival: { pick: 'rivalry', minHeat: 25 } },
+    trigger: { rivalry: { minHeat: 25 }, stat: { losses: { gte: 1 } }, eventWithin: { kind: 'ple', days: 10 } }, cast: { rival: { pick: 'rivalry', minHeat: 25 } },
     slots: { stunt: [`taped a photo of your last loss inside your locker`, `moved your bags to the cold end of the hall`, `told the whole catering line you are limping`, `left a pair of knee pads wrapped as a gift on your bench`], bait: [`You were in a perfectly good mood this morning.`, `You had planned a quiet pre-show meal.`, `Your gear bag was already packed and zipped.`, `You had just started to feel loose.`] },
     body: [`{rival.name} has been working on you since the arena doors opened. First {rival.they} {stunt}, and the whole locker room is waiting to see what you do. {bait}`, `It is a bad idea to react, and a worse idea to look like you did not notice.`],
     choices: [
@@ -162,7 +162,7 @@ export default [
   },
   {
     id: 'riv_loss_gloat', category: 'rivalry', title: '{rival.name} Gloats After the Loss', weight: 3, cooldownDays: 45, maxPerCareer: 4, contexts: ['post_match', 'weekly'],
-    trigger: { recent: { lossesGte: 1 }, daysSince: { match: { lte: 3 } } }, cast: { rival: { pick: 'rivalry', minHeat: 15 } }, memory: { role: 'rival', max: 2, allow: ['you_beat_me', 'clean_losses', 'controversial_finish', 'old_insult', 'you_betrayed_me', 'i_betrayed_you', 'broken_promise'] },
+    trigger: { daysSince: { match: { lte: 3 } }, mem: [{ role: 'rival', last: { result: 'loss', within: 3 } }] }, cast: { rival: { pick: 'rivalry', minHeat: 15 } }, memory: { role: 'rival', max: 2, allow: ['you_beat_me', 'clean_losses', 'controversial_finish', 'old_insult', 'you_betrayed_me', 'i_betrayed_you', 'broken_promise'] },
     slots: { how: [`leaving a tube of hand cream in your bag`, `holding an imaginary microphone`, `clapping slowly from the monitor`, `sending a mocking note on the catering menu`], audience: [`a crowd of crew members`, `two agents`, `three younger wrestlers`, `an interviewer with a camera`] },
     body: [`The loss still stings, and {rival.name} cannot leave it alone. {rival.first} is enjoying it by {how} in front of {audience}.`, `You can respond now, or turn it into fuel. Anything you say will travel.`],
     choices: [

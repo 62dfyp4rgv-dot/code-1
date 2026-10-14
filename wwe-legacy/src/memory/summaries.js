@@ -1,6 +1,7 @@
 // Layer C: compressed narrative memory. Summaries are rebuilt from the ledger and every claim
 // carries the ids of the events that justify it, so they can be audited (validateSummaries).
 import { getRel, getRivalry, pairKey } from './world.js';
+import { pairOutcome } from './outcome.js';
 
 /** Head-to-head as OPPONENTS (a tag partner's matches are not meetings). `result` in a match_result is the player's team result,
  *  so the pair is oriented by whichever of a/b the event lists as the opponent. */
@@ -12,8 +13,9 @@ export function h2hCounts(ledger, a, b) {
     const aIsPlayer = opp.includes(b), bIsPlayer = opp.includes(a);
     if (!aIsPlayer && !bIsPlayer) continue;
     matches++; ids.push(e.id);
-    if (e.data.result === 'win') (aIsPlayer ? winsA++ : winsB++);
-    else if (e.data.result === 'loss') (aIsPlayer ? winsB++ : winsA++);
+    const po = pairOutcome(e.data, aIsPlayer ? b : a);
+    if (po === 'win') (aIsPlayer ? winsA++ : winsB++);
+    else if (po === 'loss') (aIsPlayer ? winsB++ : winsA++);
   }
   return { matches, winsA, winsB, ids };
 }
@@ -36,7 +38,7 @@ export function buildPairSummary(memory, a, b, nameOf = (x) => x) {
   const rv = getRivalry(world, a, b);
   if (rv) facts.push({ kind: 'rivalry', status: rv.status, heat: Math.round(rv.heat), eventIds: rv.events.slice(-10), text: `Their rivalry is ${rv.status} (heat ${Math.round(rv.heat)}).` });
   const promo = ledger.query({ types: ['promo_delivered'], allParticipants: [a, b] }).filter((e) => ['insult', 'humiliate', 'threat'].includes(e.data.tone));
-  if (promo.length) facts.push({ kind: 'verbal_attacks', count: promo.length, eventIds: promo.map((e) => e.id), text: `${promo.length} public verbal attack(s) between them.` });
+  if (promo.length) facts.push({ kind: 'verbal_attacks', count: promo.length, eventIds: promo.map((e) => e.id), text: `${nameOf(a)} has attacked ${nameOf(b)} in public ${promo.length === 1 ? 'once' : `${promo.length} times`}.` });
   return { key: `pair:${pairKey(a, b)}`, a, b, facts, text: facts.map((f) => f.text).join(' '), builtAt: ledger.size };
 }
 

@@ -50,7 +50,7 @@ export default [
   },
   {
     id: 'na_deb_family_row', category: 'debut', title: 'The Loss They Drove To See', weight: 2, contexts: ['post_match'], cooldownDays: 240, maxPerCareer: 1, categoryCooldown: 8,
-    trigger: { stat: { matches: { lte: 10 } }, recent: { lossesGte: 1 } },
+    trigger: { stat: { matches: { lte: 10 } }, recent: { lossesGte: 1, lastResult: 'loss' } },
     slots: { relative: ['your mother', 'your father', 'your grandmother', 'your older brother'], seat: ['the third row, holding a hand-lettered sign', 'the last row of the balcony, looking smaller than you ever remembered', 'the standing-room rail beside the concession stand', 'a folding chair at the guard rail'] },
     body: ["The match was a loss by design: you were there to make the other wrestler look good, and you did. Out past the barricade, {relative} sits in {seat}, and the pin lands on a face that is trying very hard not to react.", "The hallway to the exit is thirty steps long, and a steward is already waving fans toward the merch tables. Somebody has to tell {relative} that losing was the job, and the only candidate is you."],
     choices: [

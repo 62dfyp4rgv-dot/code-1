@@ -53,3 +53,12 @@ test('player-founded faction: eligibility, ledger event, replay-safe, and leavin
   assert.notEqual(JSON.stringify(c.memory.world.relationships), trustBefore);
   assert.equal(JSON.stringify(c.memory.replayWorld()), JSON.stringify(c.memory.world));
 });
+
+test('a faction_joined event adds the recruit to the player\'s stable', () => {
+  const c = new Career({ seed: 6, startYear: 2024, player: { id: 'player', name: 'P' } });
+  c.record({ key: 'f1', category: 'relationship', type: 'faction_formed', participants: ['player', 'A'], summary: 'formed', importance: 3, data: { factionId: 'pf_1', name: 'The Syndicate', leader: 'player' } });
+  c.record({ key: 'f2', category: 'relationship', type: 'faction_joined', participants: ['player', 'B'], summary: 'B joins', importance: 3, data: {} });
+  const f = c.memory.world.factions.pf_1;
+  assert.deepEqual([...f.members].sort(), ['A', 'B', 'player']);
+  assert.equal(JSON.stringify(c.memory.replayWorld()), JSON.stringify(c.memory.world));
+});

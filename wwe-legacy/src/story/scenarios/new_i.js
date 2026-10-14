@@ -215,7 +215,7 @@ export default [
   {
     id: 'ni_riv_stiff_notes', category: 'rivalry', title: `{producer.name} Has Notes on Last Night`, weight: 2, contexts: ['weekly'], cooldownDays: 130, maxPerCareer: 3, categoryCooldown: 5,
     cast: { rival: { pick: 'rivalry', minHeat: 25 }, producer: { pick: 'staff', role: 'producer' } }, memory: { role: 'rival', max: 2 },
-    trigger: { stat: { matches: { gte: 3 } }, mem: [{ role: 'rival', h2h: { matchesGte: 1 } }] },
+    trigger: { stat: { matches: { gte: 3 } }, mem: [{ role: 'rival', h2h: { matchesGte: 1 }, last: { within: 7 } }] },
     slots: { complaint: [`two of your forearms landed harder than rehearsed`, `the finish ran thirty seconds past the cue`, `a spot went off script and half the crew gasped`], tone: [`in the voice of someone reading out a parking ticket`, `while straightening a pile of papers that did not need it`, `with the patience of someone counting to ten`] },
     body: [`{producer.name} asks for a word {tone}. The issue with your last match against {rival.name} is that {complaint}.`, `Nobody is in trouble yet. The point of the meeting is to find out whether the heat between you two is a tool or a problem, and whether you are still holding the handle.`],
     choices: [

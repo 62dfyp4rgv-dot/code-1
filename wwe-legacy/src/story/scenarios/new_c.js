@@ -32,7 +32,7 @@ export default [
   },
   {
     id: 'nc_riv_losing_doubt', category: 'rivalry', title: 'The Night After Losing to {rival.name} Again', weight: 3, cooldownDays: 100, maxPerCareer: 2,
-    trigger: { mem: [{ role: 'rival', h2h: { lossesGte: 3 } }], noFlag: 'nc_doubt' },
+    trigger: { mem: [{ role: 'rival', h2h: { lossesGte: 3 }, last: { result: 'loss', within: 4 } }], noFlag: 'nc_doubt' },
     cast: { rival: { pick: 'rivalry', minHeat: 10 } }, memory: { role: 'rival', max: 2, noResults: true },
     slots: { hour: [`a hotel room at 3 a.m.`, `a rest stop off the interstate`, `the back row of an empty arena`, `a diner two towns past the show`], reminder: [`a fan sign cheering for the other side`, `the way the referee's hand slaps the mat`, `a highlight reel in the lobby`, `the sound of the other locker room cheering`] },
     body: [`Sleep will not come in {hour}, and every time you close your eyes there is {reminder}. The losses to {rival.name} have stopped being a streak and started being a thing you believe about yourself.`, `Doubt is part of the job, but it usually passes. This one has a name and a face, and tomorrow you have to work the same building.`],

@@ -369,7 +369,7 @@ export class Game {
     // how much the OTHER wrestler trusts the player (relationship trust is stored per direction)
     const trustIn = (x) => { const r = getRel(w, me, x.id); return { r, t: r.trust[r.a === x.id ? 0 : 1] }; };
     const candidates = mine ? [] : u.list((x) => x.id !== me && !inFaction.has(x.id) && x.brand === c.player.brand).map((x) => ({ x, ...trustIn(x) }))
-      .filter(({ r, t }) => r.tags.includes('ally') || r.tags.includes('mentor') || t >= 25).sort((a, b) => b.t - a.t).slice(0, 8)
+      .filter(({ r, t }) => r.tags.includes('ally') || r.tags.includes('mentor') || r.tags.includes('mentee') || t >= 25).sort((a, b) => b.t - a.t).slice(0, 8)
       .map(({ x, t }) => ({ id: x.id, name: x.name, trust: Math.round(t), style: x.style, alignment: x.alignment }));
     return {
       mine: mine ? { ...mine, leaderName: nm(mine.leader), memberNames: mine.members.map(nm), id: mine.id } : null,
@@ -507,7 +507,7 @@ export class Game {
     const otherChampId = tagTitle && !defendingT ? (tagTitle.holder === opp.id ? tagTitle.holder2 : tagTitle.holder) : null;
     const pool = u.available(c.day, (w) => w.id !== me.id && w.id !== opp.id && w.id !== otherChampId && u.sameBrand(w, me.brand));
     const myF = this.myFaction();
-    const allies = pool.filter((w) => { const r = getRel(c.memory.world, me.id, w.id); return r.tags.includes('ally') || r.tags.includes('mentor') || (myF && myF.members.includes(w.id)); });
+    const allies = pool.filter((w) => { const r = getRel(c.memory.world, me.id, w.id); return r.tags.includes('ally') || r.tags.includes('mentor') || r.tags.includes('mentee') || (myF && myF.members.includes(w.id)); });
     // defending champions team with their title partner; challengers face the champion pair
     const defending = tagTitle && (tagTitle.holder === me.id || tagTitle.holder2 === me.id);
     const mateId = defending ? (tagTitle.holder === me.id ? tagTitle.holder2 : tagTitle.holder) : null;

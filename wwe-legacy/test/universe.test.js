@@ -120,7 +120,7 @@ test('Game integration: an overwhelming wrestler earns title shots, wins the tit
     const ev = g.advanceToNextEvent();
     const opps = g.suggestOpponents();
     const pick = opps.find((o) => o.stakes === 'title') || opps[0];
-    g.prepareMatch({ opponentId: pick.id, stakes: pick.stakes || null });
+    g.prepareMatch({ opponentId: pick.id, stakes: pick.stakes || null, type: pick.type || 'singles' });
     g.startMatch();
     let d = g.decision();
     while (d && !g.engine.over) {

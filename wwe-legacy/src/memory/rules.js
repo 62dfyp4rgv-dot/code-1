@@ -183,13 +183,24 @@ const RULES = {
     }
   },
   reconciliation(world, ev) { const [a, b] = ev.participants; reconcile(world, a, b, ev.id); adjustRel(world, a, b, { respect: 5 }, ev.id, ev.day); adjustRel(world, b, a, { respect: 5 }, ev.id, ev.day); },
-  mentorship(world, ev) { const [first, second] = ev.participants; const [m, s] = ev.data.byPlayer === false ? [second, first] : [first, second]; addTag(world, m, s, 'mentor', ev.id); adjustRel(world, s, m, { respect: 10, trust: 10 }, ev.id, ev.day); adjustRel(world, m, s, { trust: 6, affinity: 5 }, ev.id, ev.day); },
+  mentorship(world, ev, ctx) { const [first, second] = ev.participants; const [m, s] = ev.data.byPlayer === false ? [second, first] : [first, second]; addTag(world, m, s, m === (ctx && ctx.playerId) ? 'mentee' : 'mentor', ev.id); /* 'mentor': they mentor the player; 'mentee': the player mentors them */ adjustRel(world, s, m, { respect: 10, trust: 10 }, ev.id, ev.day); adjustRel(world, m, s, { trust: 6, affinity: 5 }, ev.id, ev.day); },
   faction_formed(world, ev) {
     const d = ev.data;
     world.factions[d.factionId] = { id: d.factionId, name: d.name, leader: d.leader, members: [...ev.participants], formedDay: ev.day, trust: 30, event: ev.id };
     for (let i = 0; i < ev.participants.length; i++) for (let j = i + 1; j < ev.participants.length; j++) {
       adjustRel(world, ev.participants[i], ev.participants[j], { trust: 10, affinity: 8 }, ev.id, ev.day);
       adjustRel(world, ev.participants[j], ev.participants[i], { trust: 10, affinity: 8 }, ev.id, ev.day);
+    }
+  },
+  /** someone joins (or returns to) the player's stable; participants are [player, ...newcomers] */
+  faction_joined(world, ev, ctx) {
+    const me = ctx.playerId;
+    const f = (ev.data && world.factions[ev.data.factionId]) || Object.values(world.factions).find((x) => x.members.includes(me));
+    if (!f) return;
+    for (const id of ev.participants) {
+      if (id === me && !(ev.data && ev.data.playerJoins)) continue;
+      if (!f.members.includes(id)) f.members.push(id);
+      for (const m of f.members) if (m !== id) { adjustRel(world, m, id, { trust: 4, affinity: 3 }, ev.id, ev.day); adjustRel(world, id, m, { trust: 4, affinity: 3 }, ev.id, ev.day); }
     }
   },
   faction_left(world, ev, ctx) {

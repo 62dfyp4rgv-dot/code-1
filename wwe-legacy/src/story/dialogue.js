@@ -3,6 +3,7 @@
 // a past event: if no supporting fact exists, the line is simply not produced.
 import { getRel, getRivalry, openPromises, brokenPromises } from '../memory/world.js';
 import { hash53 } from '../core/util.js';
+import { pairOutcome } from '../memory/outcome.js';
 
 /** Collect factual hooks (each with refs) about the relationship between the player and `other`. */
 export function hooks(memory, me, other) {
@@ -12,7 +13,7 @@ export function hooks(memory, me, other) {
   const h2h = ledger.query({ types: ['match_result'], allParticipants: [me, other] }).filter((e) => (e.data.opponents || []).includes(other));
   if (h2h.length) {
     // team result, the same definition the rivalry screen and opponent card use (a partner's pin is still our win)
-    const wins = h2h.filter((e) => e.data.result === 'win'), losses = h2h.filter((e) => e.data.result === 'loss');
+    const wins = h2h.filter((e) => pairOutcome(e.data, other) === 'win'), losses = h2h.filter((e) => pairOutcome(e.data, other) === 'loss');
     if (wins.length) out.push({ kind: 'i_beat_you', n: wins.length, last: wins[wins.length - 1], refs: wins.map((e) => e.id).slice(-40) });
     if (losses.length) out.push({ kind: 'you_beat_me', n: losses.length, last: losses[losses.length - 1], refs: losses.map((e) => e.id).slice(-40) });
     const clean = wins.filter((e) => e.data.clean);

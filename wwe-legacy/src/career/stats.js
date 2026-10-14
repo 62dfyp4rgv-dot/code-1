@@ -2,6 +2,7 @@
 // be recomputed from the ledger (see recomputeStats), and every headline number has an
 // "evidence" predicate so the UI can list the exact events behind it.
 import { matches } from '../memory/ledger.js';
+import { pairOutcome } from '../memory/outcome.js';
 import { matchPay } from './finance.js';
 
 const blank = () => ({
@@ -48,7 +49,8 @@ export class CareerStats {
         for (const o of d.opponents || []) {
           const r = (s.opponents[o] ||= { matches: 0, wins: 0, losses: 0, draws: 0, last: 0 });
           r.matches++; r.last = ev.day;
-          if (d.result === 'win') r.wins++; else if (d.result === 'loss') r.losses++; else r.draws++;
+          const po = pairOutcome(d, o); // in a multi-way loss only the winner beat you
+          if (po === 'win') r.wins++; else if (po === 'loss') r.losses++; else if (po === 'other') r.unresolved = (r.unresolved || 0) + 1; else r.draws++;
         }
         for (const p of d.partners || []) {
           const r = (s.partners[p] ||= { matches: 0, wins: 0 });

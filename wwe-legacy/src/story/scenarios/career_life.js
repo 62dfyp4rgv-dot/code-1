@@ -343,7 +343,7 @@ export default [
     id: 'life_inj_diagnosis', category: 'injury', title: 'The Diagnosis on Your {part}', weight: 3, major: true, cooldownDays: 60, maxPerCareer: 4, categoryCooldown: 8,
     cast: { doc: { pick: 'staff', role: 'doctor' } },
     trigger: { injured: true, serious: false },
-    slots: { part: ['knee', 'shoulder', 'ribs', 'neck'], timing: ['right before a pay-per-view', 'in the middle of a hot streak', 'the week before a possible title opportunity', 'during a quiet stretch of the schedule'] },
+    slots: { part: ['knee', 'shoulder', 'ribs', 'neck'], timing: ['right before a pay-per-view', 'the week before a possible title opportunity', 'during a quiet stretch of the schedule'] },
     body: ['{doc.name} puts the scan on the lightbox and traces the damage to your {part} with a pen. The timing is bad: it comes {timing}, and the schedule does not care.', 'The report says rest, but you know how much work you are missing. There are ways to speed it up, and ways to make it worse.'],
     choices: [
       { id: 'rest', label: 'Follow the rest plan to the letter', risk: 'low', result: 'You sit out, eat, sleep and watch the shows from home. It is boring and frustrating, and your body thanks you for it.', effects: [{ fatigue: -12 }, { pop: -0.4 }, { conf: -1 }] },

@@ -8,6 +8,7 @@ import { Rng } from '../core/rng.js';
 import { gainPop } from '../career/pace.js';
 import { getRel, getRivalry, openPromises, brokenPromises, dueObligations, hasOpenPromise } from '../memory/world.js';
 import { memoryLines } from './dialogue.js';
+import { pairOutcome } from '../memory/outcome.js';
 import { eventsOn } from '../universe/calendar.js';
 
 export const CATEGORIES = ['debut', 'breakout', 'rivalry', 'betrayal', 'alliance', 'faction', 'championship', 'injury', 'recovery', 'media', 'podcast', 'press', 'contract',
@@ -15,7 +16,7 @@ export const CATEGORIES = ['debut', 'breakout', 'rivalry', 'betrayal', 'alliance
 
 export const STAFF_ROLES = ['agent', 'creative', 'gm', 'trainer', 'doctor', 'executive', 'owner', 'coach', 'agent2', 'producer'];
 export const MEDIA_KINDS = ['reporter', 'host', 'fan', 'journalist', 'commentator', 'interviewer'];
-export const REL_TAGS = ['ally', 'mentor', 'respected_by', 'insulted_by', 'humiliated_by', 'betrayal', 'studying_you', 'alliance_possible', 'reconciled', 'reluctant'];
+export const REL_TAGS = ['ally', 'mentor', 'mentee', 'respected_by', 'insulted_by', 'humiliated_by', 'betrayal', 'studying_you', 'alliance_possible', 'reconciled', 'reluctant'];
 export const EVENT_TYPES_ALLOWED = ['betrayal', 'alliance_formed', 'faction_formed', 'faction_joined', 'faction_left', 'mentorship', 'reconciliation', 'brand_transfer',
   'podcast', 'press_conference', 'interview', 'social_post', 'confrontation', 'refusal_to_help', 'promo_delivered', 'retirement', 'goal_set', 'decision'];
 
@@ -45,6 +46,7 @@ export function buildContext(career) {
     },
     recentLosses: recent.filter((e) => e.data.result === 'loss').length, recentWins: recent.filter((e) => e.data.result === 'win').length,
     injured, serious, holdsTitle: Object.keys(s.titles.current).length > 0, rivals, ev,
+    lastMatch,
     daysSince: { match: lastMatch ? c.day - lastMatch.day : 9999, promo: lastPromo ? c.day - lastPromo.day : 9999, scenario: c.day - lastScn },
     promiseOpen: openPromises(c.memory.world, p.id).length > 0, promiseBroken: brokenPromises(c.memory.world, p.id).length > 0,
     contractDaysLeft: p.contract ? p.contract.endDay - c.day : null,
@@ -77,6 +79,7 @@ export function checkTrigger(t, ctx, bind) {
       case 'recent':
         if (v.lossesGte != null && ctx.recentLosses < v.lossesGte) return false;
         if (v.winsGte != null && ctx.recentWins < v.winsGte) return false;
+        if (v.lastResult && !(ctx.lastMatch && ctx.lastMatch.data.result === v.lastResult)) return false;
         break;
       case 'injured': if (ctx.injured !== v) return false; break;
       case 'serious': if (ctx.serious !== v) return false; break;
@@ -110,6 +113,14 @@ export function checkTrigger(t, ctx, bind) {
           if (m.trustLte != null && rel.trust[i] > m.trustLte) return false;
           if (m.trustGte != null && rel.trust[i] < m.trustGte) return false;
           if (m.heatGte != null && rel.heat < m.heatGte) return false;
+          // 'last': the most recent match must have been against this person (result: what happened between you, within: days ago)
+          if (m.last) {
+            const lm = ctx.lastMatch;
+            if (!lm) return false;
+            const po = pairOutcome(lm.data, b.id);
+            if (!po || (m.last.result && po !== m.last.result)) return false;
+            if (m.last.within != null && ctx.day - lm.day > m.last.within) return false;
+          }
           if (m.h2h) {
             const st = ctx.c.stats.s.opponents[b.id] || { wins: 0, losses: 0, matches: 0 };
             if (m.h2h.winsGte != null && st.wins < m.h2h.winsGte) return false;

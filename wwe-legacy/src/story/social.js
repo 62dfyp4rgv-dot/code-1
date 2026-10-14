@@ -138,12 +138,13 @@ export function socialFeed(career, { limit = 14, nameOf = (id) => id } = {}) {
       items.push({ id: e.id, day: e.day, date: e.date, kind: 'player', author: { name: career.player.name, handle: 'you' }, text: d.text, likes: d.likes, shares: d.shares, viral: d.viral, refs: [e.id] });
       continue;
     }
-    const oppId = (d.opponents || [])[0];
+    // in a multi-way or tag loss the person to name is the winner, not whoever is first on the card
+    const oppId = d.result === 'loss' && d.winner && d.winner !== me ? d.winner : (d.opponents || [])[0];
     const on = oppId ? lastName(nameOf(oppId)) : '';
     const m = { p: pn, o: on, t: d.titleName || 'title' };
     let kind = null, pool = null, mkey = null;
     if (e.type === 'match_result') {
-      if (d.result === 'win') { mkey = 'win'; pool = d.clean ? FAN.win_clean : (d.finish === 'dq' || d.finish === 'countout' || d.interference) ? FAN.win_dirty : FAN.win_close; kind = 'fan'; }
+      if (d.result === 'win') { mkey = 'win'; pool = (d.finish === 'dq' && d.dqBy === me) ? FAN.win_dirty : (d.clean && !d.comeback) ? FAN.win_clean : FAN.win_close; kind = 'fan'; }
       else if (d.result === 'loss') { mkey = 'loss'; pool = (parseInt(hash53(e.id), 36) % 4 === 0) ? FAN.loss_boo : FAN.loss; kind = 'fan'; }
       else { mkey = 'loss'; pool = FAN.draw; kind = 'fan'; }
     } else if (e.type === 'title_win') { mkey = 'title'; pool = FAN.title; kind = 'fan'; m.t = d.titleName || d.name || 'title'; }
@@ -164,7 +165,7 @@ export function socialFeed(career, { limit = 14, nameOf = (id) => id } = {}) {
     if (!lines.length) continue;
     const ref = lines[0].refs[lines[0].refs.length - 1];
     const ev = ref && L.get(ref);
-    items.push({ id: `rival:${other}:${ref}`, day: ev ? ev.day : career.day, date: ev ? ev.date : '', kind: 'rival', author: { name: nameOf(other), handle: 'rival', id: other }, text: lines[0].text, likes: likeBase(`${other}:${ref}`, 1.5), refs: lines[0].refs });
+    items.push({ id: `rival:${other}:${ref}`, day: career.day - 1, date: '', kind: 'rival', author: { name: nameOf(other), handle: 'rival', id: other }, text: lines[0].text, likes: likeBase(`${other}:${ref}`, 1.5), refs: lines[0].refs });
   }
   items.sort((a, b) => b.day - a.day || (a.id < b.id ? 1 : -1));
   return items.slice(0, limit);
