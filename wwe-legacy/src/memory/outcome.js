@@ -4,7 +4,7 @@
 import { getRuleset, waysOf } from '../match/rules.js';
 
 const MULTI = new Map();
-function isMultiWay(matchType) {
+export function isMultiWay(matchType) {
   if (!matchType) return false;
   if (!MULTI.has(matchType)) { let m = false; try { m = waysOf(getRuleset(matchType)) > 2; } catch { m = false; } MULTI.set(matchType, m); }
   return MULTI.get(matchType);

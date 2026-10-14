@@ -121,7 +121,7 @@ export default [
   {
     id: 'riv_champ_deal', category: 'rivalry', title: 'A Deal from the Champion', weight: 2, cooldownDays: 100, maxPerCareer: 2,
     trigger: { stat: { popularity: { gte: 40 }, overall: { gte: 55 } }, holdsTitle: false }, cast: { champ: { pick: 'champion', class: 'world' } },
-    slots: { venue: [`the champion's private locker room`, `a rented office behind the arena`, `the production truck`, `a hotel suite`], price: [`a clean loss when we first meet`, `a favor on a night of my choosing`, `a slice of your merchandise income`] },
+    slots: { venue: [`the champion's private locker room`, `a rented office behind the arena`, `the production truck`, `a hotel suite`], price: [`a kind word about me in your next interview`, `a favor on a night of my choosing`, `a slice of your merchandise income`] },
     body: [`{champ.name} invites you to {venue} and gets straight to it. "You are on your way up, and I can open the door. In return, I want {price}."`, `"Think of it as an investment," {champ.first} adds. A straightforward business offer from the most powerful person on the roster, it also says plenty about what {champ.they} thinks of you.`],
     choices: [
       { id: 'take', label: 'Take the deal', risk: 'med', result: `You shake on it. The door does open, but you owe now, and {champ.first} reminds you with a look every time you meet.`, effects: [{ pop: 0.8 }, { money: 8000 }, { conf: -2 }, { rel: { who: 'champ', trust: -3, respect: 2 } }, { flag: 'owes_champion' }] },

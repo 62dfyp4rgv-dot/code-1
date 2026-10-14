@@ -121,7 +121,8 @@ export function addObligation(world, o) {
   if (world.obligations.some((x) => x.id === o.id)) return;
   world.obligations.push({ status: 'pending', ...o });
 }
-export function dueObligations(world, day) { return world.obligations.filter((o) => o.status === 'pending' && o.dueDay <= day); }
+// a matter left unanswered for four months has lapsed
+export function dueObligations(world, day) { return world.obligations.filter((o) => o.status === 'pending' && o.dueDay <= day && day - o.dueDay <= 120); }
 
 // ---- slow decay for non-grudge feelings (called weekly); betrayal memory never decays
 export function decayWorld(world, days = 7) {

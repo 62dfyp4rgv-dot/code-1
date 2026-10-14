@@ -95,7 +95,8 @@ const RULES = {
         adjustRel(world, o, me, { respect: dirty ? -2 : 1 }, ev.id, ev.day);
         world.counters[`cleanLosses:${o}>${me}`] = 0;
       }
-      if (dirty && win) {
+      // only interference leaves the loser with a grievance: when the rival himself was disqualified or counted out, nothing was stolen
+      if (d.interference && win) {
         addObligation(world, { id: `ob:${ev.id}:${o}:grudge`, kind: 'grudge_rematch', from: o, to: me, dueDay: ev.day + 7 + jitter(ev, 0, 10), source: ev.id });
       }
     }

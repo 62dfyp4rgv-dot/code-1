@@ -19,7 +19,7 @@ import { UniverseSim } from './universe/sim.js';
 import { RumbleEngine, createRumble, narrateRumble } from './match/rumble.js';
 import { checkRecords, recordsHeld, recordsLost } from './universe/records.js';
 import { maybeYearEnd } from './universe/awards.js';
-import { ScenarioEngine } from './story/scenarios.js';
+import { ScenarioEngine, syncFactionFlags } from './story/scenarios.js';
 import { SCENARIO_TEMPLATES } from './story/scenarios/index.js';
 
 export const scenarioEngine = new ScenarioEngine(SCENARIO_TEMPLATES);
@@ -300,7 +300,7 @@ export class Game {
     const add = (w, extra = {}) => { if (!w || seen.has(w.id)) return; seen.add(w.id); cards.push({ ...this.opponentCard(w), ...extra }); };
     // 1. matches scripted by scenarios (forced booking) come first
     const forced = c.flags.forcedMatch;
-    if (forced && u.get(forced.who)) add(u.get(forced.who), { forced: true, type: forced.type, stakes: forced.stakes });
+    if (forced && u.get(forced.who)?.status === 'active') add(u.get(forced.who), { forced: true, type: forced.type, stakes: forced.stakes });
     // 1b. a Royal Rumble winner earns a WrestleMania title shot
     const todayEv = this.eventToday();
     const shot = c.flags.maniaShot;
@@ -375,6 +375,7 @@ export class Game {
     // how much the OTHER wrestler trusts the player (relationship trust is stored per direction)
     const trustIn = (x) => { const r = getRel(w, me, x.id); return { r, t: r.trust[r.a === x.id ? 0 : 1] }; };
     const candidates = mine ? [] : u.list((x) => x.id !== me && !inFaction.has(x.id) && x.brand === c.player.brand).map((x) => ({ x, ...trustIn(x) }))
+      .filter(({ x, r }) => { const rv = getRivalry(w, me, x.id); return !(rv && rv.status !== 'resolved' && rv.heat >= 50) && !(r.betrayals.length && !r.tags.includes('reconciled')); })
       .filter(({ r, t }) => r.tags.includes('ally') || r.tags.includes('mentor') || r.tags.includes('mentee') || t >= 25).sort((a, b) => b.t - a.t).slice(0, 8)
       .map(({ x, t }) => ({ id: x.id, name: x.name, trust: Math.round(t), style: x.style, alignment: x.alignment }));
     return {
@@ -394,6 +395,7 @@ export class Game {
     for (const id of ids) if (!view.candidates.some((x) => x.id === id)) throw new Error('that wrestler is not willing to join');
     const factionId = `pf_${c.day}`;
     const r = c.record({ key: `faction:found:${c.day}`, category: 'relationship', type: 'faction_formed', participants: [me, ...ids], summary: `${c.player.name} founded ${name} with ${ids.map((id) => this.universe.get(id).name).join(' and ')}.`, importance: 4, data: { factionId, name, leader: me, byPlayer: true } });
+    syncFactionFlags(c);
     return { event: r.event, unlocked: r.unlocked, faction: this.myFaction() };
   }
   leaveFaction() {
@@ -401,6 +403,7 @@ export class Game {
     this._blockedByScenario();
     if (!f) throw new Error('you are not in a faction');
     const r = c.record({ key: `faction:left:${f.id}:${c.day}`, category: 'relationship', type: 'faction_left', participants: [me, ...f.members], summary: `${c.player.name} left ${f.name}.`, importance: 3, data: { factionId: f.id, member: me, byPlayer: true } });
+    c.flags.story = c.flags.story || {}; delete c.flags.story.in_stable; delete c.flags.story.player_leads_stable;
     return { event: r.event, unlocked: r.unlocked };
   }
   opponentCard(w) {
@@ -451,7 +454,7 @@ export class Game {
     if (!w) throw new Error('unknown opponent');
     const stips = this.availableStipulations(opponentId);
     const u2 = this.universe;
-    const forced = c.flags.forcedMatch && c.flags.forcedMatch.who === opponentId ? c.flags.forcedMatch : null;
+    const forced = c.flags.forcedMatch && c.flags.forcedMatch.who === opponentId && w.status === 'active' ? c.flags.forcedMatch : null;
     if (forced) { type = forced.type || type; stakes = forced.stakes || stakes; }
     let title = null;
     if (stakes === 'title') {

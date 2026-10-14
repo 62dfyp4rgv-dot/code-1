@@ -48,7 +48,7 @@ export function buildContext(career) {
     injured, serious, holdsTitle: Object.keys(s.titles.current).length > 0, rivals, ev,
     lastMatch,
     daysSince: { match: lastMatch ? c.day - lastMatch.day : 9999, promo: lastPromo ? c.day - lastPromo.day : 9999, scenario: c.day - lastScn },
-    promiseOpen: openPromises(c.memory.world, p.id).length > 0, promiseBroken: brokenPromises(c.memory.world, p.id).length > 0,
+    promiseOpen: openPromises(c.memory.world, p.id).length > 0, promiseBroken: brokenPromises(c.memory.world, p.id).filter((x) => !x.acknowledged).length > 0,
     contractDaysLeft: p.contract ? p.contract.endDay - c.day : null,
   };
 }
@@ -185,10 +185,21 @@ function preferDistinct(cands, bind) {
   return distinct.length ? distinct : cands;
 }
 
+/** someone who is currently an enemy of the player: a hot rivalry, an unreconciled betrayal, or trust in ruins */
+function isHostile(ctx, w) {
+  const world = ctx.mem.world, me = ctx.me.id;
+  const rv = getRivalry(world, me, w.id);
+  if (rv && rv.status !== 'resolved' && (rv.heat >= 50)) return true;
+  const rel = getRel(world, me, w.id);
+  if (rel.betrayals.length && !rel.tags.includes('reconciled')) return true;
+  return Math.min(rel.trust[0], rel.trust[1]) <= -30;
+}
+
 /** Bind cast roles. Returns {binding} or null if any role cannot be filled. */
 export function bindCast(t, ctx, seedKey) {
   const bind = { player: playerBinding(ctx.me) };
   const taken = new Set([ctx.me.id]);
+  const warm = WARM_CATEGORIES.has(t.category) || !!t.warm;
   const roster = ctx.u ? ctx.u.list((w) => w.id !== ctx.me.id) : [];
   for (const [role, spec] of Object.entries(t.cast || {})) {
     let pick = null;
@@ -209,7 +220,7 @@ export function bindCast(t, ctx, seedKey) {
         break;
       }
       case 'obligation': {
-        const ob = dueObligations(ctx.mem.world, ctx.day).find((o) => o.kind === spec.kind && o.to === ctx.me.id && !taken.has(o.from));
+        const ob = dueObligations(ctx.mem.world, ctx.day).find((o) => o.kind === spec.kind && o.to === ctx.me.id && !taken.has(o.from) && ctx.u.get(o.from)?.status === 'active');
         if (ob) { pick = ctx.u.get(ob.from); bind.__obligation = bind.__obligation || {}; bind.__obligation[role] = ob.id; }
         break;
       }
@@ -221,7 +232,7 @@ export function bindCast(t, ctx, seedKey) {
           if (taken.has(other) || !rel.tags.includes(spec.tag)) continue;
           // someone the player betrayed and never made up with is not a warm ally, whatever tags they still carry
           if (rel.betrayals.length && !rel.tags.includes('reconciled') && !['betrayal', 'reconciled', 'insulted_by', 'humiliated_by'].includes(spec.tag)) continue;
-          const w = ctx.u.get(other); if (w && w.status === 'active') cands.push(w);
+          const w = ctx.u.get(other); if (w && w.status === 'active' && !(warm && isHostile(ctx, w))) cands.push(w);
         }
         if (cands.length) pick = hashPick(preferDistinct(cands, bind), `${seedKey}:${role}`);
         break;
@@ -234,7 +245,7 @@ export function bindCast(t, ctx, seedKey) {
         break;
       }
       case 'roster': {
-        let c2 = roster.filter((w) => !taken.has(w.id));
+        let c2 = roster.filter((w) => !taken.has(w.id) && !(warm && isHostile(ctx, w)));
         if (spec.tier) c2 = c2.filter((w) => inRange(w.tier ?? 1, spec.tier));
         if (spec.sameBrand) c2 = c2.filter((w) => w.brand === ctx.brand);
         if (spec.gender) c2 = c2.filter((w) => w.gender === spec.gender);
@@ -361,7 +372,7 @@ const categoryOf = (type) => ({ betrayal: 'relationship', alliance_formed: 'rela
   contract_signed: 'career', brand_transfer: 'career', award: 'career', retirement: 'career', hall_of_fame: 'career', record_set: 'career', milestone: 'career', podcast: 'media', press_conference: 'media', interview: 'media', social_post: 'media', confrontation: 'promo', promo_delivered: 'promo', goal_set: 'personal', decision: 'story' }[type] || 'story');
 
 export function extrasOf(c, ctx) {
-  const bp = brokenPromises(c.memory.world, c.player.id), op = openPromises(c.memory.world, c.player.id);
+  const bp = brokenPromises(c.memory.world, c.player.id).filter((x) => !x.acknowledged), op = openPromises(c.memory.world, c.player.id);
   return {
     brand: c.player.brand, year: c.year, show: ctx && ctx.ev ? ctx.ev.displayName || ctx.ev.name : c.player.brand,
     brokenPromise: bp.length ? bp[bp.length - 1].text : 'my promise', openPromise: op.length ? op[op.length - 1].text : 'my promise', era: c.era,
@@ -387,6 +398,16 @@ const _bpCache = new Map();
 function usesBrokenPromise(t) {
   if (!_bpCache.has(t.id)) _bpCache.set(t.id, /"promise":"broken"/.test(JSON.stringify(t.trigger || {})));
   return _bpCache.get(t.id);
+}
+
+/** story flags in_stable / player_leads_stable mirror the world's faction membership once the player belongs to one */
+export function syncFactionFlags(c) {
+  const mine = Object.values(c.memory.world.factions).find((x) => x.members.includes(c.player.id));
+  c.flags.story = c.flags.story || {};
+  if (mine) {
+    c.flags.story.in_stable ??= c.day;
+    if (mine.leader === c.player.id) c.flags.story.player_leads_stable ??= c.day; else delete c.flags.story.player_leads_stable;
+  }
 }
 
 export class ScenarioEngine {
@@ -566,6 +587,12 @@ export class ScenarioEngine {
     if (eff.events.some((e) => e.type === 'retirement')) c.flags.retired = c.day;
     c.flags.story = c.flags.story || {};
     for (const f of eff.flags) { if (f.set) c.flags.story[f.set] = c.day; if (f.clear) delete c.flags.story[f.clear]; }
+    // the story flags follow the world's factions, never the other way round: a scene that ends the stable really ends it
+    if (eff.flags.some((f) => f.clear === 'in_stable')) {
+      const mine = Object.values(c.memory.world.factions).find((x) => x.members.includes(c.player.id));
+      if (mine) c.record({ key: `scn:${inst.id}:faction_left`, category: 'relationship', type: 'faction_left', participants: [c.player.id, ...mine.members.filter((id) => id !== c.player.id)], summary: `${c.player.name} left ${mine.name}.`, importance: 3, data: { factionId: mine.id, member: c.player.id, byPlayer: true } });
+    }
+    syncFactionFlags(c);
     // repetition bookkeeping
     const st = this.state(c);
     st.last[t.id] = c.day; st.count[t.id] = (st.count[t.id] || 0) + 1; st.catLast[t.category] = c.day;

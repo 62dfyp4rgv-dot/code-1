@@ -10,6 +10,7 @@ import { CareerStats, recomputeStats } from './stats.js';
 import { AchievementEngine } from '../achievements/engine.js';
 import { ACHIEVEMENT_DEFS } from '../achievements/defs.js';
 import { eraForYear } from '../data/eras.js';
+import { isMultiWay } from '../memory/outcome.js';
 import { summarizeMatch, rateMatch } from '../match/rating.js';
 import { damageFraction } from '../match/state.js';
 import { getMove } from '../match/moves.js';
@@ -121,7 +122,9 @@ export class Career {
     const result = res.winnerSide === null ? 'draw' : res.winnerSide === myTeam ? 'win' : 'loss';
     const sum = summarizeMatch(st)[me];
     const rating = rateMatch(st);
-    const opponents = booking.opponents.map((o) => o.id);
+    // tag partners on the other side are opponents too: they can be the one who pinned the player
+    const oppList = [...booking.opponents, ...(booking.opponentPartners || [])];
+    const opponents = oppList.map((o) => o.id);
     const partners = (booking.partners || []).map((o) => o.id);
     const dqBy = res.dqBy;
     const interference = st.events.some((e) => e.type === 'interference');
@@ -129,7 +132,7 @@ export class Career {
     const oppFs = opponents.map((id) => st.fighters[id]);
     const myDmg = damageFraction(f);
     const oppDmg = oppFs.reduce((s, o) => s + damageFraction(o), 0) / Math.max(1, oppFs.length);
-    const oppOverall = booking.opponents.reduce((s, o) => s + this.overall(o), 0) / Math.max(1, opponents.length);
+    const oppOverall = oppList.reduce((s, o) => s + this.overall(o), 0) / Math.max(1, opponents.length);
     const upset = result === 'win' && oppOverall >= this.overall() + 12;
     const comeback = result === 'win' && (st.peakDeficit?.[me] ?? 0) >= 0.28;
     const cats = f.stats.categories;
@@ -150,7 +153,9 @@ export class Career {
     const titleChange = titleOnLine && result === 'win' && !iAmChampion && ['pinfall', 'submission', 'objective', 'ten_count', 'falls'].includes(res.finish);
     const winnerId = res.winnerId;
     const key = `match:${booking.matchId}`;
-    const oppNames = booking.opponents.map((o) => o.name).join(' & ');
+    const winnerOpp = oppList.find((o) => o.id === res.winnerId);
+    // a multi-way loss is a loss to the one who got the fall, not to everybody in the ring
+    const oppNames = result === 'loss' && winnerOpp && isMultiWay(st.type) ? `${winnerOpp.name} (one of ${oppList.length} opponents)` : oppList.map((o) => o.name).join(' & ');
     const verb = result === 'win' ? 'defeated' : result === 'loss' ? 'lost to' : 'drew with';
     const finishName = res.finishMove && res.finish !== 'objective' ? getMoveName(res.finishMove) : null; // climbing is not a finishing move
     const summary = `${this.player.name} ${verb} ${oppNames}${res.finish && result !== 'draw' ? ` by ${String(res.finish).replace(/_/g, ' ')}${finishName ? ` (${finishName})` : ''}` : ''} on ${booking.show || 'a show'} - ${rating.stars}★.`;

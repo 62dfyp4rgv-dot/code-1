@@ -146,7 +146,7 @@ export function socialFeed(career, { limit = 14, nameOf = (id) => id } = {}) {
     const m = { p: pn, o: on, t: d.titleName || 'title' };
     let kind = null, pool = null, mkey = null;
     if (e.type === 'match_result') {
-      if (d.result === 'win') { mkey = 'win'; pool = (d.finish === 'dq' && d.dqBy === me) ? FAN.win_dirty : (d.clean && !d.comeback) ? FAN.win_clean : FAN.win_close; kind = 'fan'; }
+      if (d.result === 'win') { mkey = 'win'; pool = d.interference ? FAN.win_dirty : (d.clean && !d.comeback && (d.dominant || (d.rating ?? 0) >= 3)) ? FAN.win_clean : FAN.win_close; kind = 'fan'; }
       else if (d.result === 'loss') { mkey = 'loss'; pool = (parseInt(hash53(e.id), 36) % 4 === 0) ? FAN.loss_boo : FAN.loss; kind = 'fan'; }
       else { mkey = null; pool = FAN.draw; kind = 'fan'; }
     } else if (e.type === 'title_win') { mkey = 'title'; pool = FAN.title; kind = 'fan'; m.t = d.titleName || d.name || 'title'; }
@@ -160,7 +160,7 @@ export function socialFeed(career, { limit = 14, nameOf = (id) => id } = {}) {
     items.push({ id: e.id, day: e.day, date: e.date, kind: media ? 'media' : 'fan', author: media ? { name: hp(MEDIA, `${e.id}:a`), handle: 'news' } : { name: `@${hp(HANDLES, `${e.id}:h`)}`, handle: 'fan' }, text, likes: likeBase(e.id, media ? 3 : 1), refs: [e.id] });
   }
   // rivals taking shots: a line of real history, in the rival's own voice, shown once per rival per few days
-  const rivals = Object.values(career.memory.world.rivalries).filter((r) => (r.a === me || r.b === me) && r.heat >= 18 && r.status !== 'resolved').sort((a, b) => b.heat - a.heat).slice(0, 3);
+  const rivals = Object.values(career.memory.world.rivalries).filter((r) => (r.a === me || r.b === me) && r.heat >= 18 && r.status !== 'resolved' && career.universe.get(r.a === me ? r.b : r.a)?.status === 'active').sort((a, b) => b.heat - a.heat).slice(0, 3);
   for (const r of rivals) {
     const other = r.a === me ? r.b : r.a;
     const lines = memoryLines(career.memory, me, other, nameOf(other), { speaker: 'other', max: 1, allow: ['you_beat_me', 'i_beat_you', 'clean_losses', 'clean_dominance', 'old_insult', 'controversial_finish', 'you_betrayed_me', 'i_betrayed_you'] });
