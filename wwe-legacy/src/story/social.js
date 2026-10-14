@@ -11,7 +11,7 @@ export const POST_TONES = {
   gratitude: { label: 'Thank the fans', desc: 'Warm and simple. Safe for faces, a little off-brand for heels.', needsTarget: false, fit: { face: 9, heel: -7, tweener: 2 },
     lines: ['Still can\'t believe how loud it was tonight. Thank you, every one of you.', 'To everyone who bought a ticket, drove through traffic, held up a sign: this one\'s for you.', 'Signed 200 autographs and my hand still works. Barely. Thank you.', 'You pay attention to the small stuff. I notice. Thank you.', 'Nobody does this alone. Thank you for being part of it.'] },
   hype: { label: 'Hype the next show', desc: 'Build the card and sell the match.', needsTarget: false, fit: { face: 4, heel: 4, tweener: 4 },
-    lines: ['{event} is coming. Clear your calendar and charge your phone.', 'Tickets are moving for {event}. If you want a story to tell, be there.', 'Eight days of prep, one night to prove it. {event}.', 'Whatever you think happens at {event}, you are wrong. Come find out why.', 'I do not make promises I cannot film. {event}: watch.'] },
+    lines: ['{event} is coming. Clear your calendar and charge your phone.', 'Tickets are moving for {event}. If you want a story to tell, be there.', 'Weeks of prep, one night to prove it. {event}.', 'Whatever you think happens at {event}, you are wrong. Come find out why.', 'I do not make promises I cannot film. {event}: watch.'] },
   training: { label: 'Share a training clip', desc: 'Show the work. Always lands a little.', needsTarget: false, fit: { face: 5, heel: 3, tweener: 5 },
     lines: ['5 a.m. Cold gym. Warm coffee. Nobody watching. Yet.', 'Another hour on the bag, another hour closer to the next one.', 'They see the entrance. They do not see this.', 'Back at it. The ring does not care how I feel, so neither do I.', 'Rep 200. Nobody counts but me.'] },
   callout: { label: 'Call out a rival', desc: 'Public challenge. Feeds the rivalry.', needsTarget: true, fit: { face: 2, heel: 6, tweener: 4 }, heat: 7,
@@ -86,7 +86,8 @@ export function postToSocial(career, { tone, targetId = null, nextEvent = null }
   const shares = Math.round(likes * (viral ? 0.9 : 0.12));
   const tn = target ? target.name : '';
   const raw = tdef.lines[parseInt(hash53(`${key}:${tone}`), 36) % tdef.lines.length];
-  const text = raw.replace(/\{t\}/g, target ? target.name.split(' ').slice(-1)[0] : 'you').replace(/\{event\}/g, nextEvent ? (nextEvent.displayName || nextEvent.name) : 'the next show');
+  const text0 = raw.replace(/\{t\}/g, target ? target.name.split(' ').slice(-1)[0] : 'you').replace(/\{event\}/g, nextEvent ? (nextEvent.displayName || nextEvent.name) : 'the next show');
+  const text = text0.charAt(0).toUpperCase() + text0.slice(1);
   const backlash = tdef.risky && quality < 45;
   const out = career.record({
     key, category: 'media', type: 'social_post', participants: [p.id, ...(targetId ? [targetId] : [])],

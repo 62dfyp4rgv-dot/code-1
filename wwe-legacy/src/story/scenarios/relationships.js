@@ -379,7 +379,7 @@ export default [
     id: 'bet_rumour_about_ally', category: 'betrayal', title: 'What {friend.name} Said About You', weight: 2, cooldownDays: 70, maxPerCareer: 3,
     trigger: {}, cast: { friend: { pick: 'tag', tag: 'ally' }, source: { pick: 'roster', sameBrand: true } },
     slots: { remark: [`that you only got your push because of the office`, `that you cannot work without a script`, `that you are "coasting"`, `that you were scared in your last match`], witness: [`a hairdresser`, `a camera operator`, `two younger wrestlers`] },
-    body: [`{source.name} tells you, almost gently, what {friend.name} said about you: {remark}. There were {witness} in the room.`, `It may be true. It may be exaggerated. It may be a plant. None of it feels good.`],
+    body: [`{source.name} tells you, almost gently, what {friend.name} said about you: {remark}. In the room at the time: {witness}.`, `It may be true. It may be exaggerated. It may be a plant. None of it feels good.`],
     choices: [
       { id: 'ask', label: 'Ask {friend.first} directly', risk: 'low', outcomes: [
         { weight: 2, bonus: { charisma: 0.3 }, text: `{friend.first} laughs, mortified, and says it was taken out of context. You decide to believe it.`, effects: [{ rel: { who: 'friend', trust: 4, affinity: 2 } }, { conf: 1 }] },

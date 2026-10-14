@@ -85,6 +85,9 @@ function narrateRaw(state, ev, bump = 0) {
   };
   const posLine = (alts, salt) => alts[(H(0, salt) + bump + earlier(state, ev, (e) => e.type === ev.type && e.cat === 'positioning', 600)) % alts.length];
   const positioning = ev.cat === 'positioning' && POSITION[ev.move];
+  if (ev.move === 'knock_off' && ['move_blocked', 'move_dodged', 'move_reversed'].includes(ev.type)) {
+    return pick({ move_blocked: [`${aL} lunges to pull ${tL} down, but ${tL} holds on.`, `${tL} grips tight and will not be knocked off.`], move_dodged: [`${t} swings clear of ${aL}'s grab.`, `${aL} grabs at ${tL} and finds only air.`], move_reversed: [`${t} shoves ${aL} away from the climb instead!`, `${tL} twists free and sends ${aL} staggering.`] }[ev.type], q, 70);
+  }
   switch (ev.type) {
     case 'move_connected': {
       if (ev.move === 'toss_over') return pick([`${a} gets both hands on ${t} and heaves toward the top rope!`, `${aL} hoists ${tL} up and drives for the top rope!`, `${aL} muscles ${tL} up to the top rope - ${tL} is teetering!`], q, 61);
@@ -132,7 +135,7 @@ function narrateRaw(state, ev, bump = 0) {
     case 'finisher_dodged': return pick([`${t} dodges ${a}'s ${mv}! What an escape!`, `${mv} finds nothing! ${tL} slid out of danger.`], q, 10);
     case 'move_reversed': if (ev.move === 'toss_over') return pick([`${t} reverses the toss and turns the tables on ${a}!`, `${tL} blocks the throw and sends ${aL} crashing into the ropes!`], q, 65);
       if (ev.cat === 'positioning') return posLine([`${t} turns the tables on ${aL}'s attempt to take control.`, `${tL} spins out and takes charge instead.`], 58);
-      return ev.baited ? `${t} baited ${a} into it and reverses ${mv}!` : say('reversed', [
+      return ev.baited ? `${t} baited ${a} into it and reversed ${the(mvPlain)}!` : say('reversed', [
       `${t} reverses ${myMv} and turns it around!`, `Reversal! ${t} counters ${the(mvPlain)} and hits back.`, `${tL} was waiting for ${the(mvPlain)} - and flips it on ${aL}!`,
       `${aL} tries ${myMv} and gets it turned right back ${pron(state, ev.actor)[0] === 'they' ? 'on them' : 'on ' + pron(state, ev.actor)[1]}!`, `Beautiful counter by ${tL}!`,
     ], 11, true);
@@ -169,12 +172,12 @@ function narrateRaw(state, ev, bump = 0) {
     case 'demand_submit': return pick([`${a} demands a submission!`, `"Give up!" shouts ${aL}.`], q, 26);
     case 'dq': return `The referee calls for the bell - ${a} is disqualified${ev.moveName ? ' for ' + ev.moveName : ''}!`;
     case 'warning': return `The referee warns ${a} about ${ev.moveName || 'that'} (warning ${ev.count}).`;
-    case 'illegal_unseen': return pick([`${a} gets away with ${ev.moveName || 'something dirty'} while the ref isn't looking.`, `The ref missed it: ${aL} used ${ev.moveName || 'a cheap shot'}.`], q, 27);
+    case 'illegal_unseen': return pick([`${a} gets away with ${ev.moveName ? the(ev.moveName) : 'something dirty'} while the ref isn't looking.`, `The ref missed it: ${aL} used ${ev.moveName ? the(ev.moveName) : 'a cheap shot'}.`, `${aL} sneaks in ${ev.moveName ? the(ev.moveName) : 'a cheap shot'} behind the referee's back.`, `Nobody in the black-and-white shirt saw ${ev.moveName ? the(ev.moveName) : 'that'} from ${aL}.`], q, 27);
     case 'count': return pick([`The referee counts ${a} on the floor: ${ev.n}.`, `${ev.n}! ${aL} is still outside!`], q, 28);
     case 'countout': return `${a} fails to beat the count!`;
     case 'tactic': return ev.tactic.startsWith('target_') ? pick([`${a} starts working on the ${ev.tactic.slice(7)}.`, `${aL} has picked a target: the ${ev.tactic.slice(7)}.`], q, 29) : ev.tactic.startsWith('pace_') ? `${a} changes the pace.` : `${a} studies ${nm(ev.target) === 'Someone' ? 'the opponent' : t}.`;
     case 'focus': return pick([`${a} turns on ${t}.`, `${aL} switches targets and goes after ${tL}.`, `${aL} spots ${tL} and changes direction.`], q, 45);
-    case 'jump_in': return pick([`${a} charges back into the thick of it!`, `${aL} has seen enough waiting - back into the fray!`, `${aL} slides in and takes control of the chaos.`], q, 46);
+    case 'jump_in': return cyc([`${a} charges back into the thick of it!`, `${aL} has seen enough waiting - back into the fray!`, `${aL} slides in and takes control of the chaos.`, `${aL} is done watching and wades in swinging.`, `${a} vaults the ropes and rejoins the brawl.`, `${aL} spots an opening and dives back in.`, `Back in comes ${aL}, with a point to prove.`, `${aL} elbows ${selfA} a spot in the melee.`, `${aL} re-enters the ring and the odds change again.`, `The crowd roars as ${aL} climbs back in.`], 46);
     case 'eliminated': if (ev.finish === 'over_the_top') return pick([`${t} goes OVER THE TOP ROPE! ${aL} has eliminated ${tL} - ${ev.remaining} left!`, `Over the top and out! ${aL} dumps ${tL} to the floor - ${ev.remaining} remain.`, `${tL} hits the floor, both feet down - ${tL} is eliminated by ${aL}! ${ev.remaining} competitors left.`, `That's the toss! ${aL} sends ${tL} over the top rope and ${tL} is gone. ${ev.remaining} remain.`], q, 66);
       return pick([`${t} is ELIMINATED by ${a}! ${ev.remaining} left.`, `That's it for ${tL}! ${aL} sends ${tL} packing - ${ev.remaining} remain.`, `${tL} has been eliminated! ${ev.remaining} competitors left.`], q, 47);
     case 'entry': return pick([`The next pod opens: number ${ev.number} is ${a}!`, `Entrant number ${ev.number}: ${a} bursts out of the pod!`, `${a} is released into the chamber - number ${ev.number}!`], q, 48);
@@ -209,10 +212,12 @@ function narrateRaw(state, ev, bump = 0) {
     case 'ten_count': return say('ten_count', [`${a} is still down... ${ev.n}.`, `${ev.n}... ${aL} stirs but cannot rise.`], 41, true);
     case 'rise': return say('rise', [`${a} drags ${selfA} to ${posA} feet!`, `${aL} beats the count - somehow!`], 42, true);
     case 'knockout': return `Ten! ${a} can't get up - it's over!`;
-    case 'climb': return ev.rung >= ev.steps ? `${a} reaches the top - hands on the prize!` : say('climb', [`${a} climbs another rung - ${ev.steps - ev.rung} to go.`, `${aL} reaches for the next rung. ${ev.steps - ev.rung} left to climb.`, `Up goes ${aL}, ${ev.steps - ev.rung} ${ev.steps - ev.rung === 1 ? 'rung' : 'rungs'} from the top.`], 43, true);
-    case 'slip': return say('slip', [`${a} slips and tumbles down!`, `${aL}'s footing goes - down ${pron(state, ev.actor)[0] === 'they' ? 'they' : pron(state, ev.actor)[0]} comes!`, `Disaster! ${aL} loses ${posA} balance on the ladder!`, `${aL} slides off the rung and crashes to the mat!`], 44, true);
-    case 'toppled': return `${a} knocks ${t} off - a huge fall!`;
-    case 'objective': return state.rules.prize === 'briefcase' ? pick([`${a} unhooks the briefcase - Money in the Bank belongs to ${aL}!`, `${a} pulls the briefcase down! The contract is ${aL}'s!`], q, 67) : `${a} claims the prize!`;
+    case 'climb': if (state.rules.objective === 'cage') return ev.rung >= ev.steps ? `${a} swings a leg over the top of the cage!` : pick([`${a} hauls ${selfA} up the cage wall - ${ev.steps - ev.rung} to go.`, `${aL} finds a handhold in the mesh and climbs.`, `Up the steel goes ${aL}, ${ev.steps - ev.rung} to the top.`, `${aL} drags ${selfA} higher on the cage, fingers white on the wire.`], q, 43);
+      return ev.rung >= ev.steps ? '' : say('climb', [`${a} climbs another rung - ${ev.steps - ev.rung} to go.`, `${aL} reaches for the next rung. ${ev.steps - ev.rung} left to climb.`, `Up goes ${aL}, ${ev.steps - ev.rung} ${ev.steps - ev.rung === 1 ? 'rung' : 'rungs'} from the top.`], 43, true);
+    case 'slip': if (state.rules.objective === 'cage') return pick([`${a} loses ${posA} grip on the cage wall and drops!`, `${aL}'s hands slip off the steel - back down ${pron(state, ev.actor)[0] === 'they' ? 'they' : pron(state, ev.actor)[0]} comes!`, `${aL} falls from the cage and crashes to the mat!`], q, 44);
+      return say('slip', [`${a} slips and tumbles down!`, `${aL}'s footing goes - down ${pron(state, ev.actor)[0] === 'they' ? 'they' : pron(state, ev.actor)[0]} comes!`, `Disaster! ${aL} loses ${posA} balance on the ladder!`, `${aL} slides off the rung and crashes to the mat!`], 44, true);
+    case 'toppled': return state.rules.objective === 'cage' ? pick([`${a} yanks ${t} off the cage wall - a huge fall!`, `${aL} drags ${tL} down from the steel!`], q, 68) : `${a} knocks ${t} off - a huge fall!`;
+    case 'objective': return state.rules.prize === 'briefcase' ? pick([`${a} unhooks the briefcase - Money in the Bank belongs to ${aL}!`, `${a} pulls the briefcase down! The contract is ${aL}'s!`], q, 67) : state.rules.objective === 'cage' ? pick([`${a} drops to the floor outside the cage - it's over!`, `${aL}'s feet hit the arena floor. The escape is complete!`], q, 69) : `${a} claims the prize!`;
     case 'fall': return `FALL! ${state.fighters[state.teams[ev.side][0]].name}'s side scores by ${ev.finish}. (${ev.falls[0]}-${ev.falls[1]})`;
     case 'time_limit': return `Time limit expires.`;
     case 'surprise_pin': return `${a} springs a surprise roll-up on ${t}!`;

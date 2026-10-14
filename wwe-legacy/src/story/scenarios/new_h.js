@@ -158,7 +158,7 @@ export default [
     id: 'nh_med_rival_profile', category: 'media', title: `Three Words for {rival.name}`, weight: 2, cooldownDays: 90, maxPerCareer: 3, categoryCooldown: 6,
     cast: { rival: { pick: 'rivalry', minHeat: 25 }, writer: { pick: 'media', kind: 'journalist' } }, memory: { role: 'rival', max: 1, noResults: true },
     trigger: { stat: { popularity: { gte: 25 } } },
-    slots: { format: [`a glossy monthly's "Know Your Enemy" page`, `a newspaper's Sunday profile`, `a website's quick-fire lightning round`], prop: [`a recorder balanced on a coffee cup`, `a notebook with three blank lines already ruled`, `a stopwatch on the table, ticking`] },
+    slots: { format: [`a glossy monthly's "Know Your Enemy" page`, `a newspaper's Sunday profile`, `a website's quick-fire round`], prop: [`a recorder balanced on a coffee cup`, `a notebook with three blank lines already ruled`, `a stopwatch on the table, ticking`] },
     body: [`{writer.name} is writing {format} and asks for the three words you would use to describe {rival.name}. There is {prop}, and {writer.first} waits with the patience of someone who knows silence sells.`, `Anything you say will sit next to a photo of the two of you and a pull quote the size of a billboard.`],
     choices: [
       { id: 'generous', label: `Give three honest, generous words`, risk: 'low', result: `Dangerous, patient, relentless: you mean every one, and {writer.first} looks almost disappointed at how little there is to quote. {rival.first} reads it and says nothing to you, which is its own kind of answer.`, effects: [{ rel: { who: 'rival', respect: 6, heat: -4 } }, { pop: 0.2 }, { conf: 1 }] },

@@ -137,7 +137,14 @@ function staffFor(c, role) {
   }
   return c.flags.staff[role];
 }
-function mediaFor(c, kind, seed) { return hashPick(MEDIA_NAMES, `${c.seed}:media:${kind}:${seed}`); }
+// people and outlets are matched by format so a podcast host is never in a magazine profile, and a fan never shares a name with a reporter
+const PRINT_MEDIA = MEDIA_NAMES.filter((n) => /Ringside Report|Turnbuckle|Backstage Wire|Squared Circle|Mat Talk/.test(n));
+const AUDIO_MEDIA = MEDIA_NAMES.filter((n) => /Podcast|Radio|Cageside/.test(n));
+const CIVILIANS = ['Dana Whitlock', 'Priya Raman', 'Marcus Doyle', 'Elena Vasquez', 'Tom Hargreaves', 'Aisha Bello', 'Greg Palmer', 'Noor Haddad', 'Frankie Moretti', 'Hannah Lund', 'Dev Malhotra', 'Rosa Kim', 'Walt Ostrowski', 'Imani Cole', 'Leo Brandt', 'Mei Tanaka'];
+function mediaFor(c, kind, seed) {
+  const pool = kind === 'fan' ? CIVILIANS : kind === 'host' || kind === 'commentator' ? AUDIO_MEDIA : kind === 'reporter' || kind === 'journalist' ? PRINT_MEDIA : MEDIA_NAMES;
+  return hashPick(pool, `${c.seed}:media:${kind}:${seed}`);
+}
 
 const PRON = { M: { they: 'he', them: 'him', their: 'his', theirs: 'his' }, F: { they: 'she', them: 'her', their: 'her', theirs: 'hers' } };
 export function wrestlerBinding(w) {

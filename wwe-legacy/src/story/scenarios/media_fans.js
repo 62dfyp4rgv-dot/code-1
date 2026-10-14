@@ -1301,7 +1301,7 @@ export default [
     id: 'opp_charity_gala', category: 'opportunity', title: 'A Gala Dinner in {city}', weight: 1.3, cooldownDays: 150, maxPerCareer: 3,
     cast: { host: { pick: 'media', kind: 'host' } },
     trigger: { stat: { popularity: { gte: 50 } } },
-    slots: { city: ['a grand hotel', 'a museum hall', 'a civic centre', 'a charity auction house'], role: ['a guest of honour', 'an auction host', 'a keynote speaker', 'a live-auction bidder'] },
+    slots: { city: ['a grand hotel', 'a museum hall', 'a civic centre', 'a restored theatre'], role: ['a guest of honour', 'an auction host', 'a keynote speaker', 'a live-auction bidder'] },
     body: [`{host.name} is chairing a charity gala at {city} and wants you there as {role}. Black tie, a seated dinner and six hundred guests who will remember how you carried yourself.`, `It is not a wrestling crowd. They are donors, executives, and one or two local celebrities who will be taking photographs.`],
     choices: [
       { id: 'dazzle', label: 'Dress sharp and work the room', risk: 'med', outcomes: [

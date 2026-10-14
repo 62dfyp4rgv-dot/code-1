@@ -3,7 +3,7 @@ export default [
   {
     id: 'nlf_empty_chair', category: 'personal', title: `An Empty Chair at {occasion}`, weight: 3, major: true, cooldownDays: 150, maxPerCareer: 2, categoryCooldown: 6,
     trigger: { stat: { family: { lte: 22 }, careerYears: { gte: 0.3 } } },
-    slots: { occasion: [`Sunday Dinner`, `a Family Birthday`, `the Recital`], caller: [`Your sister`, `Your mother`, `An old friend of the family`] },
+    slots: { occasion: [`Sunday dinner`, `a family birthday`, `the recital`], caller: [`Your sister`, `Your mother`, `An old friend of the family`] },
     body: [`{caller} calls while you are lacing your boots, and the line is quiet for a second too long. Nobody says you are missed. They say there is a chair kept for you at {occasion}, and that it has been kept before.`, `The truck leaves for the next town in two hours, and the schedule has no room in it for a long drive in the wrong direction.`],
     choices: [
       { id: 'go_home', label: `Drive home tonight and miss the loading call`, risk: 'med', outcomes: [

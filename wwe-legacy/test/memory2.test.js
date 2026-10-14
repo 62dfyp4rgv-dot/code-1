@@ -59,7 +59,8 @@ test('callback lines never print the bare "you, you" slip and respect the cooldo
   assert.ok(first.length > 0);
   for (const l of first) assert.ok(!/you, you|, you\./i.test(l.text), l.text);
   const again = memoryLines(m, 'player', 'A', 'Alpha', { speaker: 'other', max: 3, cooldown: { ...cd, day: 20 } });
-  assert.equal(again.length, 0, 'same callbacks are not repeated within the cooldown');
+  // one line per fact family per call, so a sibling fact may surface later, but nothing already said is repeated within the cooldown
+  assert.ok(again.every((l) => !first.some((f) => f.key === l.key || f.text === l.text)), 'same callbacks are not repeated within the cooldown');
   const later = memoryLines(m, 'player', 'A', 'Alpha', { speaker: 'other', max: 3, cooldown: { ...cd, day: 80 } });
   assert.ok(later.length > 0);
 });

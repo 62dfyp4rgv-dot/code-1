@@ -50,7 +50,7 @@ const BODY = {
   respect: ['It takes a lot to earn that from me.', 'Whatever the result, the work you put in is real.'],
   tribute: ['Without people like {t}, nobody gets to do this.', 'The ring is better because {t} stood in it.'],
   apology: ['Words said in anger do not stay in the room. I know that now.', 'Nobody had to forgive me. I am asking anyway.'],
-  boast: ['Check the numbers. Then check them again.', 'The only person who can stop me is standing in this ring, and he is looking at me in the mirror.'],
+  boast: ['Check the numbers. Then check them again.', 'The only person who can stop me is standing in this ring, and I see them every morning in the mirror.'],
   inspire: ['When I stumble, you are the ones who pull me up.', 'Every chant is a promise I owe you back.'],
 };
 
@@ -107,6 +107,7 @@ export function deliverPromo(career, { tone, targetId = null, claim = 'none', co
       if (['apology', 'respect', 'tribute'].includes(tone) && ['old_insult', 'clean_dominance', 'controversial_finish', 'controversial_finish_old'].includes(kind)) continue;
       if (tone === 'apology' && ['i_beat_you', 'you_beat_me'].includes(kind)) continue;
       if (['insult', 'humiliate', 'threat', 'boast'].includes(tone) && kind === 'you_beat_me') continue;
+      if (['insult', 'humiliate', 'threat', 'boast', 'challenge'].includes(tone) && kind === 'broken_promise') continue;
       hookUse[hk] = career.day;
       if (record.has(kind)) recordUsed = true;
       const refs = h.refs.filter(Boolean);
@@ -139,7 +140,7 @@ export function deliverPromo(career, { tone, targetId = null, claim = 'none', co
   const out = career.record({
     key, category: 'promo', type: 'promo_delivered', participants: [p.id, ...(targetId ? [targetId] : [])],
     refs: [...new Set(lines.flatMap((l) => l.refs))].filter((id) => career.memory.ledger.get(id)),
-    summary: `${p.name} cut a ${tone} promo${target ? ` on ${target.name}` : ''} (${quality}/100)${claimDef !== 'none' ? ` and made a promise` : ''}.`, importance: viral || quality >= 85 ? 4 : 3,
+    summary: `${p.name} cut ${/^[aeiou]/.test(tone) ? 'an' : 'a'} ${tone} promo${target ? ` on ${target.name}` : ''} (${quality}/100)${claimDef !== 'none' ? ` and made a promise` : ''}.`, importance: viral || quality >= 85 ? 4 : 3,
     data: { tone, targets: targetId ? [targetId] : [], quality, viral, context, line: (lines.find((l) => l.role === 'body') || lines[0]).text, promises, claim: claimDef, exposedWeakness: memBonus >= 8 && ['insult', 'humiliate'].includes(tone) },
   });
   // popularity effect

@@ -118,6 +118,7 @@ const LINES = {
     (h) => `"${h.text}" - that's on the record, and I'm coming for it.`,
   ],
 };
+const FAMILY = { i_beat_you: 'record', you_beat_me: 'record', clean_dominance: 'record', clean_losses: 'record', long_rivalry: 'record', controversial_finish: 'finish', controversial_finish_old: 'finish', i_betrayed_you: 'betrayal', you_betrayed_me: 'betrayal', respect: 'respect', respect_from_you: 'respect' };
 const variant = (list, h) => list[parseInt(hash53(`${h.kind}:${(h.refs || []).join(',')}`), 36) % list.length];
 
 // Narrator voice: what the player remembers, stated as fact (used when a scene mentions someone who is not necessarily speaking)
@@ -167,8 +168,14 @@ export function memoryLines(memory, me, other, otherName, { speaker = 'other', m
     if (!list) continue;
     const key = `${other}:${hh.kind}:${(h.refs || []).slice(-1)[0] || ''}`;
     if (cooldown && cooldown.store[key] !== undefined && cooldown.day - cooldown.store[key] < (cooldown.days ?? 45)) continue;
+    // the same kind of callback should not come from everybody in turn: one use per kind per three weeks across all characters
+    const gkey = `*:${speaker}:${hh.kind}`;
+    if (cooldown && cooldown.store[gkey] !== undefined && cooldown.day - cooldown.store[gkey] < 21) continue;
+    // two lines about the same fact family (the win/loss record, or the betrayal) read like a database dump: keep the first
+    const fam = FAMILY[hh.kind] || hh.kind;
+    if (lines.some((l) => (FAMILY[l.kind] || l.kind) === fam)) continue;
     lines.push({ text: variant(list, h)(hh, speaker === 'other' ? 'you' : otherName), refs: h.refs.filter(Boolean), kind: hh.kind, key });
-    if (cooldown) cooldown.store[key] = cooldown.day;
+    if (cooldown) { cooldown.store[key] = cooldown.day; cooldown.store[gkey] = cooldown.day; }
     if (lines.length >= max) break;
   }
   return lines;
