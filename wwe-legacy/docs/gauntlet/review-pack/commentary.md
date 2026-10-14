@@ -28,7 +28,7 @@ Result: pinfall, 5 min, 2.5 stars.
 - Hammer dives across Vale and calls for the count.
 - 1...
 - 2...
-- Adrian Vale kicks out without much trouble.
+- Comfortable kickout from Vale; Hammer will have to do better.
 - Hammer refuses to stay down and rises.
 - Rex Hammer starts working on the head.
 - Rex Hammer's mind games backfire.
@@ -63,7 +63,7 @@ Result: objective, 13 min, 3.0 stars.
 - Carefully, Storm ascends.
 - Step by step, Rourke gets vertical again.
 - Storm springs from the top and delivers the Flying Crossbody onto Rourke's torso.
-- Storm keeps working the head: Ground & Pound again. The crowd winces.
+- Storm keeps going after the head with the Ground & Pound. The crowd winces.
 - Rourke hauls himself to his feet using sheer stubbornness.
 - Step by shaky step, Rourke goes higher.
 - A stagger, a sway, and Storm is upright.
@@ -85,7 +85,7 @@ Result: objective, 13 min, 3.0 stars.
 - Notice Storm keeps glancing toward the fans between exchanges. That connection is fuelling a comeback.
 - Rourke springs to his feet, shaking off the fall.
 - Storm makes a mockery of the rulebook with the Kendo Stick Flurry.
-- Storm keeps working the head: Snapmare again.
+- Storm keeps going after the head with the Snapmare.
 - Stopped dead! Rourke swallows up the Ground & Pound from Storm.
 - Kai Storm claims the prize!
 - Kai Storm wins by retrieving the prize.

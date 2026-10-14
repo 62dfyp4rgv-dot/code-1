@@ -1,105 +1,103 @@
 # Promo samples (generated with memory)
 
-## challenge on Colt Cross (heat 85, 14 prior matches)
+## challenge on Bryce Black (heat 100, 11 prior matches)
 
-- Everybody in this arena wants to see it, Colt Cross. All that is missing is your answer.
-- If you say no, Cross, I will understand. If you say yes, I will see you at the bell, and I will bring everything.
-- Not every finish between us was clean, Cross. This one will be.  _[cites E000259]_
-- 12 clean wins over you, Cross. It is all on the record.  _[cites E000115, E000227, E000238, E000262, E000263, E000270, E000274, E000286, E000316, E000324, E000326, E000343]_
-- I promise this: I will beat you, Cross.
-- Put it on the board and watch me cross it off.
-
-Quality 72/100. Colt Cross accepts the challenge.
-
-## insult on Colt Cross (heat 93, 14 prior matches)
-
-- Let me be honest with you about Colt Cross, because somebody in this building has to be.
-- You are not a threat, Cross. You are a warm-up act.
-- I have beaten you 13 times, Cross.  _[cites E000115, E000227, E000238, E000259, E000262, E000263, E000270, E000274, E000286, E000316, E000324, E000326, E000343]_
-- I stand by what I said before: I will beat Colt Cross.
-- Remember this night.
-
-Quality 66/100. Colt Cross is furious.
-
-## challenge on Soren Ibarra (heat 45, 13 prior matches)
-
-- I have said enough about you to the crowd, Soren Ibarra. Now I am saying it to you: let us settle this.
-- No gimmicks, no excuses. The ring, and the clock.
-- 8 clean wins over you, Ibarra. It is all on the record.  _[cites E000133, E000143, E000149, E000189, E000214, E000224, E000301, E000303]_
-- Next time we meet, Ibarra, it is my hand that gets raised.
+- This is a challenge, Bryce Black. Accept it or hide.
+- Whoever wins, Black, wins it honestly, and everyone leaves knowing exactly where they stand.
+- 7 clean wins over you, Black. It is all on the record.  _[cites E000097, E000105, E000128, E000217, E000295, E000311, E000345]_
+- Black, I am putting it on the record: I will beat you next time.
 - You heard it here first, and you will hear the bell next.
 
-Quality 80/100. Soren Ibarra accepts the challenge.
+Quality 77/100. Bryce Black accepts the challenge.
 
-## insult on Soren Ibarra (heat 53, 13 prior matches)
+## insult on Bryce Black (heat 100, 11 prior matches)
 
-- Soren Ibarra, I would call you a disappointment, but that would suggest anyone expected something.
-- My dad worked doubles to pay for tickets like these, Ibarra, and you hand him back half an effort.
-- I have beaten you 8 times, Ibarra.  _[cites E000133, E000143, E000149, E000189, E000214, E000224, E000301, E000303]_
-- I stand by what I said before: I will beat Soren Ibarra.
-- Take that back to the locker room.
+- Bryce Black, I would call you a disappointment, but that would suggest anyone expected something.
+- You are not a threat, Black. You are a warm-up act.
+- I have beaten you 7 times, Black.  _[cites E000097, E000105, E000128, E000217, E000295, E000311, E000345]_
+- I stand by what I said before: I will beat Bryce Black.
+- Some nights, a microphone is enough. This was one of them.
 
-Quality 56/100. Soren Ibarra is furious.
+Quality 69/100. Bryce Black is furious.
 
-## challenge on Pierce Drake (heat 42, 12 prior matches)
+## challenge on Nolan Devereux (heat 24, 10 prior matches)
 
-- This is a challenge, Pierce Drake. Accept it or hide.
-- Say yes, Drake, and I will make it the best match of your career.
-- Last time ended in controversy, Drake. This time there will be no doubt.  _[cites E000336]_
-- 10 clean wins over you, Drake. It is all on the record.  _[cites E000094, E000106, E000109, E000111, E000138, E000145, E000194, E000196, E000243, E000288]_
-- Next time we meet, Drake, it is my hand that gets raised.
-- Write it down.
+- Everybody in this arena wants to see it, Nolan Devereux. All that is missing is your answer.
+- No gimmicks, no excuses, no hiding behind friends. Just the ring, the clock, and the two of us, Devereux.
+- 8 clean wins over you, Devereux. It is all on the record.  _[cites E000031, E000040, E000190, E000215, E000253, E000279, E000323, E000352]_
+- Devereux, I am putting it on the record: I will beat you next time.
+- Hold me to it.
 
-Quality 83/100. Pierce Drake accepts the challenge.
+Quality 75/100. Nolan Devereux accepts the challenge.
 
-## insult on Pierce Drake (heat 50, 12 prior matches)
+## insult on Nolan Devereux (heat 32, 10 prior matches)
 
-- Let me be honest with all of you about Pierce Drake.
-- Respect is something you do, Drake, not something you demand, and lately you have only done the demanding.
-- I have beaten you 10 times, Drake.  _[cites E000094, E000106, E000109, E000111, E000138, E000145, E000194, E000196, E000243, E000288]_
-- I stand by what I said before: I will beat Pierce Drake.
-- That is all I have to say.
+- I have been polite long enough, Nolan Devereux.
+- I take no pleasure in saying this, Devereux, but you cut corners every night, and the people who paid for a ticket noticed.
+- I have beaten you 8 times, Devereux.  _[cites E000031, E000040, E000190, E000215, E000253, E000279, E000323, E000352]_
+- I stand by what I said before: I will beat Nolan Devereux.
+- Mark the date, because you will want to remember it.
 
-Quality 70/100. Pierce Drake is furious.
+Quality 57/100. Nolan Devereux is furious.
 
-## Backstage Interview (69/100)
+## challenge on Pierce Wolfe (heat 18, 9 prior matches)
 
-- Q: You promised "I will beat Pierce Drake". The clock is running. How confident are you?
-  - A (aggressive): Do not count the days. Count the people who will be sorry I was right.
-  - The panel nods, and one member admits that sounded dangerous. _[grounded in E000365]_
-- Q: You and Colt Cross have shared the ring 14 times. You once said of Colt Cross: "You are not a threat, Cross. You are a warm-up act". How do you see this rivalry?
-  - A (joking): People ask if it is personal. It is mostly parking-related.
-  - The studio warms right up, and the next question comes with a smile. _[grounded in E000362, E000362]_
-- Q: NXT is 1 day away. What should the fans expect from you?
-  - A (confident): Expect me to be the best thing on the card at NXT.
-  - The panel trades a look that says this one might be for real. 
+- This is a challenge, Pierce Wolfe. Accept it or hide.
+- Say yes, Wolfe, and I will make it the best match of your career.
+- 8 clean wins over you, Wolfe. It is all on the record.  _[cites E000005, E000045, E000065, E000196, E000244, E000277, E000309, E000341]_
+- I promise this: I will beat you, Wolfe.
+- You heard it here first, and you will hear the bell next.
 
-## Podcast Sit-Down (68/100)
+Quality 78/100. Pierce Wolfe accepts the challenge.
 
-- Q: Pierce Wolfe beat you recently. People are asking whether you were outclassed. Were you?
-  - A (aggressive): Do not mistake a loss for a surrender. I am sharpening everything I have for round two.
-  - A reporter jots down angry, then crosses it out for lack of anything better. _[grounded in E000356]_
-- Q: You have wrestled 96 matches and you are still chasing gold. When do you get your shot?
-  - A (joking): Soon! Very soon! I have already cleared a shelf.
-  - The joke lands softly but it lands. 
-- Q: You and Colt Cross have shared the ring 14 times. You once said of Colt Cross: "You are not a threat, Cross. You are a warm-up act". How do you see this rivalry?
-  - A (humble): I have a lot of respect for Colt Cross. If I come up short again, it will still have been an honour.
-  - It reads as sincere. _[grounded in E000362, E000362]_
+## insult on Pierce Wolfe (heat 26, 9 prior matches)
+
+- Let me be honest with all of you about Pierce Wolfe.
+- Call it the truth, Wolfe: you are capable of more than this, and tonight you showed none of it.
+- I have beaten you 8 times, Wolfe.  _[cites E000005, E000045, E000065, E000196, E000244, E000277, E000309, E000341]_
+- I stand by what I said before: I will beat Pierce Wolfe.
+- Roll the tape back tomorrow and see if I flinched.
+
+Quality 62/100. Pierce Wolfe is furious.
+
+## Backstage Interview (65/100)
+
+- Q: You said "I will retain my title against all comers". It did not happen. Why should anyone believe you now?
+  - A (aggressive): You want an apology? I do not have one. I have a list of names, and the top spot is not empty.
+  - The host smirks and says someone woke up on the wrong side of the bed. _[grounded in E000125, E000139]_
+- Q: You promised "I will beat Pierce Wolfe". The clock is running. How confident are you?
+  - A (joking): I made a promise, yes. In my defence, it sounded much better at three in the morning.
+  - Producers look pleased through the glass and mark the line as a keeper. _[grounded in E000366]_
+- Q: You and Bryce Black have shared the ring 11 times. You once said of Bryce Black: "You are not a threat, Black. You are a warm-up act". How do you see this rivalry?
+  - A (humble): A rivalry like this is a gift. Few people ever get someone who pushes them this hard.
+  - The cameras catch a few fans clapping with their hands over their hearts. _[grounded in E000363, E000363]_
+
+## Podcast Sit-Down (76/100)
+
+- Q: NXT is tonight. What should the fans expect from you?
+  - A (aggressive): Everyone at NXT should bring a second ticket, because the first one will not last long.
+  - The crowd answers with a rising cheer that has teeth in it. 
+- Q: You beat Colt Cross recently by pinfall. What did you see out there that others missed?
+  - A (joking): Technically it ended with a pinfall. Spiritually, I am still checking that I have all my limbs.
+  - Chat responds with plenty of laughing faces and a few requests for more. _[grounded in E000356]_
+- Q: You have held championship gold before and you do not hold it now. What does it take to get back to the top?
+  - A (confident): Gold is not a dream for me, it is a schedule. I know exactly when it arrives.
+  - The host nods slowly, clearly believing every word of it. _[grounded in E000283]_
+- Q: You said "I will retain my title against all comers". It did not happen. Why should anyone believe you now?
+  - A (honest): I broke it. No excuses, no spin. I made a promise and I did not keep it.
+  - The host sets down the cue cards and simply says thank you. _[grounded in E000125, E000139]_
+
+## Press Conference (73/100)
+
 - Q: The fans are starting to notice you. What do they mean to you?
-  - A (honest): I read the comments, even though I know I should not. The good ones help, and the cruel ones stay for weeks.
-  - Nobody expected that. Everybody respects it. 
-
-## Press Conference (70/100)
-
-- Q: Pierce Wolfe beat you recently. People are asking whether you were outclassed. Were you?
-  - A (aggressive): Put my name on the next card against Pierce Wolfe. I do not want a warm-up, I want revenge.
-  - The host raises both eyebrows and says now we are getting somewhere. _[grounded in E000356]_
+  - A (aggressive): The ones who cheer, thank you. The ones who boo, you paid to watch me anyway.
+  - The edge is felt and the host loves it. 
+- Q: You beat Colt Cross recently by pinfall. What did you see out there that others missed?
+  - A (joking): Mostly that Colt Cross sweats a lot. The ending, a pinfall, was a bonus.
+  - A ripple of laughter runs through the crowd, ending in a few cheers. _[grounded in E000356]_
 - Q: NXT is 6 days away. What should the fans expect from you?
-  - A (joking): I am treating NXT like any big night. I will panic early, eat poorly, and hope for the best.
-  - Chat responds with plenty of laughing faces and a few requests for more. 
-- Q: You and Colt Cross have shared the ring 14 times. You once said of Colt Cross: "You are not a threat, Cross. You are a warm-up act". How do you see this rivalry?
-  - A (humble): I know people want drama, but really I am just grateful to have a rival worth the effort.
-  - Heads nod around the room. _[grounded in E000362, E000362]_
-- Q: You promised "I will beat Pierce Drake". The clock is running. How confident are you?
-  - A (honest): I am scared I will fall short. I am more scared of not trying.
-  - The cameras catch a fan nodding along in the third row. _[grounded in E000365]_
+  - A (confident): At NXT I plan to be the sharpest, loudest and best-prepared name on the card.
+  - The host forgets the next question and just grins, while the crowd starts a chant. 
+- Q: You and Bryce Black have shared the ring 11 times. You once said of Bryce Black: "You are not a threat, Black. You are a warm-up act". How do you see this rivalry?
+  - A (honest): I do not hate Bryce Black. I hate how much this matters to me, and I am not sure what that says about me.
+  - The host nods and says that took guts. _[grounded in E000363, E000363]_
