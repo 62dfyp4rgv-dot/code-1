@@ -354,7 +354,7 @@ export class ScenarioEngine {
       if (!t.contexts && !contexts.includes('weekly')) continue;
       const cd = t.cooldownDays ?? 90;
       if (st.last[t.id] != null && c.day - st.last[t.id] < cd) continue;
-      if ((st.count[t.id] || 0) >= (t.maxPerCareer ?? 3)) continue;
+      if ((st.count[t.id] || 0) >= (t.maxPerCareer ?? 2)) continue;
       if (st.recent.includes(t.id)) continue;
       const catCd = t.categoryCooldown ?? 5;
       if (st.catLast[t.category] != null && c.day - st.catLast[t.category] < catCd) continue;
@@ -378,7 +378,10 @@ export class ScenarioEngine {
   pick(c, { contexts = ['weekly'], rng = c.rng } = {}) {
     const el = this.eligible(c, { contexts });
     if (!el.length) return null;
-    const w = el.map((e) => (e.t.weight ?? 1) * (e.bind.__obligation ? 12 : 1) * (e.t.priority ?? 1));
+    // one rival should not star in every scene: each wrestler who appeared in the last few scenes halves a candidate's weight (obligations are exempt)
+    const seen = this.state(c).castRecent || [];
+    const crowd = (e) => (e.bind.__obligation ? 0 : Object.values(e.bind).filter((b) => b && b.isWrestler && seen.includes(b.id)).length);
+    const w = el.map((e) => (e.t.weight ?? 1) * (e.bind.__obligation ? 12 : 1) * (e.t.priority ?? 1) * 0.5 ** crowd(e));
     const i = rng.weightedIndex(w);
     return this.instantiate(c, el[i]);
   }
@@ -506,6 +509,7 @@ export class ScenarioEngine {
     const st = this.state(c);
     st.last[t.id] = c.day; st.count[t.id] = (st.count[t.id] || 0) + 1; st.catLast[t.category] = c.day;
     st.recent.push(t.id); if (st.recent.length > 8) st.recent.shift();
+    st.castRecent = [...(st.castRecent || []), ...Object.values(bind).filter((b) => b && b.isWrestler && b.id !== c.player.id).map((b) => b.id)].slice(-8);
     c.flags.scn.variant = c.flags.scn.variant || {}; c.flags.scn.variant[t.id] = (c.flags.scn.variant[t.id] || 0) + 1;
     c.checkMilestones();
     return { text: resultText, notes: eff.notes, events, unlocked: events.flatMap((e) => []), outcomeIndex };

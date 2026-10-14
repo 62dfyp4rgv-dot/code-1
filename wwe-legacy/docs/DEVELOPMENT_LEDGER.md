@@ -61,3 +61,13 @@ One entry per Gauntlet round: what was targeted, what changed, what was measured
 - Largest losses: Independent reviewer score (4.5); Independent reviewer score (5.5); Independent reviewer score (6); Authored, validated templates (target 2,000 would be complete) (589)
 - Regressions: memoryConsistency -1.07, narrativeQuality -1.03, mobileUsability -1.05
 - Report: docs/gauntlet/round-06.md
+
+## Round 7
+
+- Target: Fix findings of the round-6 independent reviews: narrative (pronouns, fan intros, commentary repetition, move names), memory (clean totals, unified h2h, direction of respect, stale grudges, Rumble-year promises, duplicate promise events, save truncation), mobile (sticky CTA, folded lists, toasts, HUD)
+- Changes: Scenario prose pass (93 templates, role-token pronouns), engine: fan intros/surname preference/noAutoMemory, commentary window + positioning lines + plural agreement, answer pack loss/draw lines, h2hCounts unified, save envelope sha256 + ledger head/size, mobile UI fixes. Reviewer scores in reviews.json are the round-6 scores (pre-fix).
+- Mean 9.04 | min 7.67 | >=9: 7/12 | tests 140/140
+- Weakest: Scenario diversity 7.67, Narrative quality 7.75, Memory consistency 7.83
+- Largest losses: Independent reviewer score (4.6); Independent reviewer score (6.5); Independent reviewer score (6.5); Authored, validated templates (target 2,000 would be complete) (589)
+- Regressions: none
+- Report: docs/gauntlet/round-07.md

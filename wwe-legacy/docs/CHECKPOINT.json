@@ -1,36 +1,36 @@
 {
- "updated": "2026-10-13T16:37:20.362Z",
- "lastRound": 6,
- "mean": 8.94,
+ "updated": "2026-10-14T02:55:47.225Z",
+ "lastRound": 7,
+ "mean": 9.04,
  "scores": {
   "matchEngine": 9.8,
-  "playerAgency": 9.59,
-  "memoryConsistency": 7.67,
-  "achievementIntegrity": 9.86,
-  "scenarioDiversity": 7.59,
-  "narrativeQuality": 7.71,
+  "playerAgency": 9.74,
+  "memoryConsistency": 7.83,
+  "achievementIntegrity": 9.85,
+  "scenarioDiversity": 7.67,
+  "narrativeQuality": 7.75,
   "universeSimulation": 8.32,
-  "careerProgression": 9.33,
-  "mobileUsability": 8.4,
+  "careerProgression": 9.77,
+  "mobileUsability": 8.6,
   "technicalReliability": 10,
-  "performance": 9.46,
-  "replayability": 9.56
+  "performance": 9.65,
+  "replayability": 9.54
  },
  "nextFocus": [
   {
    "category": "narrativeQuality",
    "criterion": "Independent reviewer score",
-   "value": 4.5
+   "value": 4.6
   },
   {
    "category": "memoryConsistency",
    "criterion": "Independent reviewer score",
-   "value": 5.5
+   "value": 6.5
   },
   {
    "category": "mobileUsability",
    "criterion": "Independent reviewer score",
-   "value": 6
+   "value": 6.5
   },
   {
    "category": "scenarioDiversity",
@@ -47,7 +47,7 @@
   "cd wwe-legacy",
   "npm install",
   "npm test",
-  "node tools/gauntlet.js --round 7 --targets \"<what you will improve>\" --changes \"<what you changed>\""
+  "node tools/gauntlet.js --round 8 --targets \"<what you will improve>\" --changes \"<what you changed>\""
  ],
  "features": {
   "complete": 22,
