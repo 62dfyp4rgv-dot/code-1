@@ -857,7 +857,7 @@ export class Game {
     const threads = [...rank.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5).map(([id]) => {
       const sum = buildPairSummary(c.memory, me, id, nm);
       const rel = getRel(w, me, id);
-      return { id, name: nm(id), tags: tidyTags(rel.tags || []), lines: sum.facts.map((f) => ({ text: f.text, eventId: f.eventIds[f.eventIds.length - 1], count: f.kind === 'rivalry' ? 0 : f.eventIds.length })) };
+      return { id, name: nm(id), tags: tidyTags(rel.tags || []), lines: sum.facts.map((f) => ({ text: f.kind === 'rivalry' && this.universe.get(id) && this.universe.get(id).status !== 'active' ? `They have left the ring (rivalry was ${f.status}, heat ${f.heat}).` : f.text, eventId: f.eventIds[f.eventIds.length - 1], count: f.kind === 'rivalry' ? 0 : f.eventIds.length })) };
     }).filter((t) => t.lines.length);
     const moments = c.memory.ledger.query({ scope: 'player', newestFirst: true, limit: 600 }).filter((e) => e.importance >= 4 && !['finance_month', 'achievement_unlocked'].includes(e.type)).slice(0, 5).map((e) => ({ id: e.id, date: e.date, day: e.day, text: e.summary.length > 150 ? `${e.summary.slice(0, 147).replace(/\s+\S*$/, '')}...` : e.summary }));
     return { threads, promises: this.promiseView().promises.filter((p) => p.status === 'open'), moments };

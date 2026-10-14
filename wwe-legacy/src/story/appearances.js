@@ -118,7 +118,8 @@ export function appearanceOptions(c) {
     const since = c.day - (hist[id] ?? -999);
     const wait = Math.max(0, k.cooldown - since);
     const fatigued = c.player.fatigue > 92;
-    return { id, ...k, available: wait === 0 && !fatigued && !c.flags.appearance, wait, reason: c.flags.appearance ? 'An appearance is already in progress.' : wait ? `Available again in ${wait} day${wait === 1 ? '' : 's'}.` : fatigued ? 'Too exhausted.' : null };
+    const retired = !!c.flags.retired;
+    return { id, ...k, available: wait === 0 && !fatigued && !c.flags.appearance && !retired, wait, reason: retired ? 'Your career is over.' : c.flags.appearance ? 'An appearance is already in progress.' : wait ? `Available again in ${wait} day${wait === 1 ? '' : 's'}.` : fatigued ? 'Too exhausted.' : null };
   });
 }
 

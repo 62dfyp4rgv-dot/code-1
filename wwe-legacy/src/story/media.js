@@ -155,7 +155,11 @@ export function deliverPromo(career, { tone, targetId = null, claim = 'none', co
   let reaction = null;
   if (target && tdef.needsTarget) {
     const mood = { insult: 'is furious', humiliate: 'is livid and wants revenge', challenge: 'accepts the challenge', threat: 'is rattled but defiant', respect: 'returns the respect', tribute: 'is touched', apology: 'is willing to move on' }[tone];
-    reaction = `${target.name} ${mood}.`;
+    // warm words land according to the relationship: a rival at boiling point does not simply "return the respect"
+    const rel = getRel(career.memory.world, p.id, target.id);
+    const theirTrust = rel.trust[rel.a === target.id ? 0 : 1];
+    const cold = ['respect', 'tribute', 'apology'].includes(tone) && (rel.heat >= 60 || theirTrust < 0 || (rel.betrayals.length && !rel.tags.includes('reconciled')));
+    reaction = `${target.name} ${cold ? (tone === 'apology' ? 'hears you out but is not ready to forgive' : 'is not buying it') : mood}.`;
   }
   career.checkMilestones();
   return { quality, viral, lines, event: out.event, unlocked: out.unlocked, reaction, duplicate: out.duplicate };
