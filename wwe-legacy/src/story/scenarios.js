@@ -354,8 +354,12 @@ export function extrasOf(c, ctx) {
 // a template whose premise is itself about a result can opt out with `memory.noResults` / `memory.allow` / `noAutoMemory`.
 const NON_RESULT_HOOKS = ['you_betrayed_me', 'i_betrayed_you', 'broken_promise', 'old_insult', 'controversial_finish', 'controversial_finish_old', 'reconciled', 'respect', 'open_promise'];
 const NO_TALLY_CATEGORIES = new Set(['personal', 'mentor', 'alliance', 'betrayal', 'faction', 'injury', 'recovery', 'retirement', 'legacy', 'fans', 'finance', 'travel']);
+// warm scenes (a mentee, a friend, a family evening) must not be answered with gloating or grudges: only the warm callbacks fit there
+const WARM_CATEGORIES = new Set(['personal', 'mentor', 'alliance', 'faction', 'injury', 'recovery', 'retirement', 'legacy', 'fans', 'finance', 'travel']);
+const WARM_HOOKS = ['respect', 'respect_from_you', 'reconciled', 'open_promise', 'broken_promise'];
 function memoryAllow(t) {
   if (t.memory && t.memory.allow) return t.memory.allow;
+  if (WARM_CATEGORIES.has(t.category)) return WARM_HOOKS;
   if ((t.memory && t.memory.noResults) || NO_TALLY_CATEGORIES.has(t.category)) return NON_RESULT_HOOKS;
   return undefined;
 }
