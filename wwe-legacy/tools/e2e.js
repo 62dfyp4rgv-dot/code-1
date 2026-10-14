@@ -196,6 +196,17 @@ const apState = await state(() => ({ interviews: window.__S.g.career.stats.s.int
 check('interview played through the UI and recorded', apState.interviews === 1 && apState.ev === 1 && apSteps === 3, JSON.stringify({ ...apState, apSteps }));
 await click('#btn-ap-done');
 
+// social feed: compose a post through the UI, see the reaction, find it in the feed
+await click('[data-action=tab][data-id=more]'); await click('[data-action=openSub][data-id=social]'); await page.waitForSelector('#social');
+await noOverflow('social'); await shot('16f-social');
+await click('[data-action=socialSet][data-v=training]'); await click('#btn-social-send'); await page.waitForSelector('#social-result');
+await noOverflow('social result'); await shot('16g-social-result');
+const socState = await state(() => ({ posts: window.__S.g.career.stats.s.socialPosts, ev: window.__S.g.career.memory.ledger.ofType('social_post').length }));
+check('social post written through the UI and recorded', socState.posts === 1 && socState.ev === 1, JSON.stringify(socState));
+await click('#btn-social-done');
+check('the post appears in the feed', (await page.locator('#social .list .item').first().innerText()).length > 10);
+await click('[data-action=closeSub]');
+
 // legacy / Hall of Fame view (read-only here; retiring is covered by unit tests)
 await click('[data-action=tab][data-id=career]'); await click('#btn-legacy'); await page.waitForSelector('#legacy');
 await noOverflow('legacy'); await shot('16d-legacy');

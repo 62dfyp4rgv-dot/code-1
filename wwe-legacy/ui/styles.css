@@ -221,3 +221,6 @@ details.fold[open] > summary::after { content: "\2212"; }
   .dmg b em { font-size: .72rem; }
   .feed p:nth-last-child(n+3) { display: none; }
 }
+summary { min-height: 44px; display: flex; align-items: center; }
+summary.kv { justify-content: space-between; }
+button.item { min-height: 44px; }

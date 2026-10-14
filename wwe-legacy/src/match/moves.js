@@ -175,6 +175,14 @@ def('barricade_whip', 'Whip into the Barricade', 'environmental', 'torso', 16, 6
 def('steps_slam', 'Ring Steps Slam', 'environmental', 'head', 20, 8, 0.64, { power: 0.8, grappling: 0.2 }, [O], [O], { mom: 9, heat: 8, toD: G, rules: ['weapons'] });
 def('table_slam', 'Slam Through the Table', 'environmental', 'torso', 24, 12, 0.56, { power: 0.8, grappling: 0.2 }, [S, O], [S, G, O], { mom: 14, heat: 14, toD: G, rules: ['weapons'], risk: { part: 'arms', dmg: 4, note: 'crashes into the wreckage' } });
 def('ladder_shot', 'Ladder Shot', 'environmental', 'head', 19, 8, 0.7, { striking: 0.5, power: 0.5 }, [S, O], [S, G, O], { weapon: true, mom: 8, heat: 8, toD: G, rules: ['weapons'] });
+// hardcore-only (TLC): added to a wrestler's moveset only when the ruleset has `hardcore`
+def('chair_dropkick', 'Chair-Assisted Dropkick', 'environmental', 'head', 22, 8, 0.62, { agility: 0.5, striking: 0.3, psychology: 0.2 }, [S], [S, C], { weapon: true, mom: 9, heat: 9, toD: G, rules: ['weapons', 'hardcore'], risk: { part: 'legs', dmg: 5, note: 'crashes onto the chair' } });
+def('table_powerbomb', 'Powerbomb Through a Table', 'environmental', 'torso', 28, 14, 0.5, { power: 0.8, grappling: 0.2 }, [S], [S], { mom: 16, heat: 16, toD: G, rules: ['weapons', 'hardcore'], risk: { part: 'torso', dmg: 6, note: 'is caught in the wreckage' } });
+def('ladder_table_splash', 'Splash Off the Ladder Through a Table', 'environmental', 'torso', 31, 14, 0.55, { agility: 0.8, power: 0.2 }, [T], [G], { mom: 18, heat: 18, toA: G, rules: ['weapons', 'hardcore'], risk: { part: 'torso', dmg: 10, note: 'crashes through the table' } });
+
+// battle royal: over-the-top-rope elimination (only when the ruleset has `overTheTop`)
+def('toss_over', 'Throw Over the Top Rope', 'power', 'torso', 6, 10, 0.5, { power: 0.9, grappling: 0.1 }, [S], [S, R], { special: 'over_top', rules: ['overTheTop'], mom: 6, heat: 6, time: 30 });
+
 def('ground_pound_floor', 'Slam on the Floor', 'power', 'torso', 14, 9, 0.62, { power: 0.8, grappling: 0.2 }, [O], [O], { toD: G, mom: 7 });
 def('apron_drop', 'Apron Slam', 'power', 'torso', 15, 9, 0.6, { power: 0.8, grappling: 0.2 }, [O], [O], { mom: 8, toD: G, heat: 5 });
 
@@ -255,6 +263,10 @@ export const COMMON_MOVES = [
   'kendo_flurry', 'trash_can_lid', 'ground_pound_floor', 'apron_drop', 'ground_punches', 'knee_drop', 'leg_drop',
   'trip_from_floor', 'slide_in_clothesline', 'drag_out',
 ];
+
+/** moves a ruleset grants on top of the wrestler's own set (never part of COMMON_MOVES, so ordinary matches are unaffected) */
+export const HARDCORE_MOVES = ['chair_dropkick', 'table_powerbomb', 'ladder_table_splash'];
+export const OVER_TOP_MOVES = ['toss_over'];
 
 export const STYLE_MOVES = {
   brawler: ['jab_combo', 'knife_edge', 'lariat', 'roundhouse', 'big_boot', 'neckbreaker', 'spinebuster', 'tree_of_woe', 'sleeper'],

@@ -4,7 +4,8 @@
 import { BoundRng } from '../core/rng.js';
 import { clamp } from '../core/util.js';
 import { getMove } from './moves.js';
-import { F, opponentOf, damageFraction, staminaFrac } from './state.js';
+import { F, opponentOf, liveFoes, damageFraction, staminaFrac } from './state.js';
+import { waysOf } from './rules.js';
 import { kickoutChance } from './calc.js';
 
 export const aiRngOf = (state) => new BoundRng(state, 'aiRng');
@@ -81,6 +82,9 @@ export function chooseAction(state, id, options, override) {
       if (m.hold && !state.rules.pinfall) s += urgency * 16;
       if (m.id === 'rest_hold') s -= urgency * 30;
       if (m.special === 'topple') s += 40;
+      // battle royal: a landed toss ends the target's night, so it beats any amount of ordinary damage; weak, battered foes first
+      if (m.special === 'over_top') s = pp * 55 + dfrac * 45 + (1 - staminaFrac(D)) * 30 + (Math.max(0, A.attrs.power - D.attrs.toughness)) * 0.25 - m.cost * 0.4 - (pp < 0.28 ? 14 : 0) - (A.usedMoves[m.id] || 0) * 0.8;
+      if (state.rules.hardcore && m.cat === 'environmental') s += 8;
       if (m.pinMove) s += (staminaFrac(D) < 0.35 ? 6 : -10);
       return s;
     }
@@ -105,13 +109,22 @@ export function chooseAction(state, id, options, override) {
       case 'climb_down': return 25;
       case 'make_tag': return damageFraction(A) > 0.2 || staminaFrac(A) < 0.4 || A.tactics.seekTag ? 70 : 8;
       case 'crawl_corner': return damageFraction(A) > 0.22 || staminaFrac(A) < 0.4 ? 56 : 4;
-      case 'obj_climb': return 38 + urgency * 30 + prof.aggression * 8 + (D.pos === 'grounded' ? 22 : -14) - A.dmg.legs * 0.1;
+      case 'obj_climb': {
+        if (waysOf(state.rules) <= 2) return 38 + urgency * 30 + prof.aggression * 8 + (D.pos === 'grounded' ? 22 : -14) - A.dmg.legs * 0.1;
+        // multi-way ladder: any standing foe can knock a climber off, so climb when most of the field is down (or time is short)
+        const foes = liveFoes(state, id).map((x) => F(state, x));
+        const threats = foes.filter((x) => x.pos === 'standing' && x.legal).length;
+        return 40 + urgency * 30 + prof.aggression * 8 + (foes.length - threats) * 11 - threats * 12 - A.dmg.legs * 0.1 + A.climb * 4;
+      }
       case 'study': return prof.skill > 0.5 ? 10 : 2;
       case 'pace_fast': return prof.aggression > 0.6 ? 9 : 2;
       case 'pace_slow': return staminaFrac(A) < 0.5 ? 12 : 1;
       case 'pace_normal': return 2;
       default:
-        if (o.tempoId?.startsWith('focus:')) { const foe = F(state, o.tempoId.slice(6)); return damageFraction(foe) > dfrac + 0.18 && damageFraction(foe) > damageFraction(D) + 0.15 ? 26 : -6; }
+        if (o.tempoId?.startsWith('focus:')) {
+          const foe = F(state, o.tempoId.slice(6));
+          // ladder: whoever is climbing must be stopped, and the higher the more urgently
+          if (state.rules.objective && foe.pos === 'top' && foe.climb > 0 && A.pos !== 'top') return 52 + foe.climb * 14; return damageFraction(foe) > dfrac + 0.18 && damageFraction(foe) > damageFraction(D) + 0.15 ? 26 : -6; }
         if (o.tempoId?.startsWith('target_')) {
           const part = o.tempoId.slice(7);
           return D.dmg[part] >= Math.max(...Object.values(D.dmg)) - 1 ? 9 : 1;

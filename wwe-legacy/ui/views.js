@@ -392,11 +392,33 @@ export function more(S) {
   if (s === 'rivalries') return rivalries(S);
   if (s === 'relationships') return relationships(S);
   if (s === 'media') return media(S);
+  if (s === 'social') return social(S);
   if (s === 'matches') return matches(S);
   if (s === 'settings') return settingsView(S);
   if (s === 'finances') return finances(S);
-  const items = [['matches', 'Matches', 'Every match you have wrestled'], ['rivalries', 'Rivalries', 'Heat, history, grudges'], ['media', 'Media', 'Cut promos and make promises'], ['achievements', 'Achievements', 'Earned, in progress and secret'], ['relationships', 'Relationships', 'Allies, enemies and trust'], ['finances', 'Finances', 'Contract, merchandise, lifestyle'], ['settings', 'Settings & Saves', 'Text size, theme, save slots']];
+  const items = [['matches', 'Matches', 'Every match you have wrestled'], ['rivalries', 'Rivalries', 'Heat, history, grudges'], ['media', 'Media', 'Cut promos and make promises'], ['social', 'Social', 'Your feed, fan mood, post'], ['achievements', 'Achievements', 'Earned, in progress and secret'], ['relationships', 'Relationships', 'Allies, enemies and trust'], ['finances', 'Finances', 'Contract, merchandise, lifestyle'], ['settings', 'Settings & Saves', 'Text size, theme, save slots']];
   return `<main class="screen">${header('More')}${items.map(([id, l, d]) => `<button class="btn" data-action="openSub" data-id="${id}"><span class="t"><b>${l}</b><small>${d}</small></span><span class="r">›</span></button>`).join('')}</main>`;
+}
+
+function social(S) {
+  const g = S.g, v = g.socialView(), ui = (S.ui.social ||= {});
+  const res = ui.result;
+  if (res) return `<main class="screen" id="social-result">${header('Posted', res.viral ? 'It went viral' : 'Your post is live', '')}
+    <div class="banner"><div class="eyebrow">Reaction</div><div class="score-big num">${res.quality}<small style="font-size:1rem;opacity:.7">/100</small></div><p style="opacity:.9">${esc(res.reaction)}</p></div>
+    <div class="card"><p class="line">${esc(res.text)}</p>${kv('Likes', res.likes.toLocaleString())}${kv('Shares', res.shares.toLocaleString())}</div>
+    ${res.unlocked.map((u) => `<div class="row"><span class="pill brass">Achievement</span><b>${esc(u.name)}</b></div>`).join('')}
+    <button class="btn primary sticky-cta" data-action="socialDone" id="btn-social-done">Back to the feed</button></main>`;
+  const tone = ui.tone && v.tones[ui.tone] ? ui.tone : 'gratitude', def = v.tones[tone];
+  const targets = g.universe.list((w) => w.brand === g.career.player.brand).slice(0, 40);
+  const moodCls = v.mood.score >= 20 ? 'good' : v.mood.score <= -15 ? 'bad' : '';
+  return `<main class="screen" id="social">${header('Social', `${v.followers.toLocaleString()} followers`, back('closeSub'))}
+    <div class="card"><div class="row spread"><b>Fan mood</b><span class="pill ${moodCls}">${esc(v.mood.label)}</span></div>${bar(v.mood.score + 100, 200, v.mood.score >= 20 ? 'good' : 'brass')}</div>
+    <div class="card"><h3>New post</h3>
+      <div class="chips wrap">${Object.entries(v.tones).map(([id, t]) => `<button class="chip ${tone === id ? 'on' : ''}" data-action="socialSet" data-v="${id}">${esc(t.label)}</button>`).join('')}</div>
+      <p class="muted">${esc(def.desc)}</p>
+      ${def.needsTarget ? `<label class="f">About<select id="social-target" data-action-change="socialTarget">${targets.map((w) => `<option value="${w.id}" ${ui.target === w.id ? 'selected' : ''}>${esc(w.name)}</option>`).join('')}</select></label>` : ''}
+      <button class="btn primary" data-action="socialSend" id="btn-social-send" ${v.canPost ? '' : 'disabled'}>${v.canPost ? 'Post it' : esc(v.why)}</button></div>
+    <div class="card"><h3>Feed</h3><div class="list">${v.feed.map((p) => `<button class="item" data-action="inspect" data-id="${esc(p.refs[p.refs.length - 1])}" style="background:none;border:0;border-bottom:1px solid var(--line);text-align:left;width:100%;color:inherit;font:inherit;cursor:pointer;min-height:44px"><span class="col grow" style="gap:2px"><span class="eyebrow">${esc(p.author.name)}${p.kind === 'player' ? ' (you)' : p.kind === 'rival' ? ' · rival' : p.kind === 'media' ? ' · news' : ''} · ${esc(formatDate(p.day, g.career.startYear))}</span><span>${esc(p.text)}</span><span class="muted" style="font-size:.8rem">♥ ${p.likes.toLocaleString()}</span></span></button>`).join('') || '<div class="empty">Nothing yet. Win a match, cut a promo, or post something.</div>'}</div></div></main>`;
 }
 
 function achievements(S) {

@@ -24,6 +24,8 @@ export function moveBlockedReason(state, A, D, move) {
   if (move.rules) {
     if (move.rules.includes('outside') && !state.rules.outside) return 'No outside action in this match';
     if (move.rules.includes('objective') && !state.rules.objective) return 'Only in ladder/cage matches';
+    if (move.rules.includes('hardcore') && !state.rules.hardcore) return 'Only in hardcore matches';
+    if (move.rules.includes('overTheTop') && !state.rules.overTheTop) return 'Only in a battle royal';
     if (move.rules.includes('weapons') && !state.rules.weapons && state.referee.state === 'watching') return 'Referee is watching';
   }
   if (move.pinMove && !(state.rules.pinfall || state.rules.ironMan)) return 'Pinfalls do not count';
@@ -81,12 +83,15 @@ export const TEMPO = {
   crawl_corner: { label: 'Crawl to Your Corner', group: 'Tactics', desc: 'Fight toward your partner.', check: (s, A) => {
     if (!s.rules.tag) return 'Not a tag match';
     if (['corner', 'ropes', 'outside', 'top'].includes(A.pos)) return 'Already there / unavailable';
+    if (!partnerOf(s, A.id)) return 'No partner to tag'; // handicap: the lone wrestler has nobody to crawl to
     return null;
   } },
   obj_climb: { label: 'Climb Higher', group: 'Tactics', desc: 'Climb a rung toward the prize. Vulnerable up there.', check: (s, A, D) => {
     if (!s.rules.objective) return 'No objective';
     if (!['standing', 'top'].includes(A.pos)) return 'Get to your feet first';
-    if (D && D.pos === 'top' && D.climb > A.climb) return 'Opponent is higher';
+    // a rival who is higher up the ladder blocks the climb (in multi-way ladders: any rival, not just the current target)
+    const rivals = waysOf(s.rules) > 2 ? liveFoes(s, A.id).map((id) => F(s, id)) : [D];
+    if (rivals.some((r) => r && r.pos === 'top' && r.climb > A.climb)) return 'Opponent is higher';
     return null;
   } },
 };
@@ -104,6 +109,8 @@ function describeMove(state, A, D, move, enabled, reason) {
     o.p = p; o.hint = hintLabel(p); o.pct = Math.round(p * 100);
     o.desc = `${move.tgt === 'full' ? 'Full body.' : `Targets the ${move.tgt}.`}${move.risk ? ' Risky if it misses.' : ''}${move.illegal ? ' Illegal.' : ''}`;
     if (move.cat === 'finisher') o.desc = 'Your finishing move. Momentum is spent on the attempt.';
+    if (move.special === 'over_top') o.desc = 'Heave them over the top rope: if it lands they are eliminated. Strength against their toughness and stamina.';
+    if (state.rules.hardcore && (move.weapon || move.cat === 'environmental')) o.desc += ' Hits harder here, but you feel it too.';
   }
   return o;
 }

@@ -54,6 +54,26 @@ export const RULESETS = {
     id: 'hell_cell', name: 'Hell in a Cell', teamSize: 1, pinfall: true, submission: true, dq: false, countout: false,
     weapons: true, outside: true, ropeBreaks: false, cell: true, timeLimit: 30, desc: 'A towering cell. No DQ, no count-out, brutal bumps. Pinfall or submission only.',
   },
+  tlc: {
+    id: 'tlc', name: 'Tables, Ladders & Chairs', teamSize: 1, pinfall: false, submission: false, dq: false, countout: false,
+    weapons: true, outside: true, ropeBreaks: false, objective: 'ladder', hardcore: 1.35, recoil: 0.18, timeLimit: 35,
+    desc: 'Anything goes and everything hurts. Retrieve the prize from above the ring; no pins, no submissions, and tables, ladders and chairs hit harder (and bite back).',
+  },
+  mitb: {
+    id: 'mitb', name: 'Money in the Bank', teamSize: 1, ways: 4, pinfall: false, submission: false, dq: false, countout: false,
+    weapons: true, outside: true, ropeBreaks: false, objective: 'ladder', prize: 'briefcase', timeLimit: 40,
+    desc: 'Four wrestlers, one briefcase hanging above the ring. Climb the ladder and unhook it; any foe can knock a climber off. Nobody wins by pinfall. Premium Live Event only.',
+  },
+  battle_royal: {
+    id: 'battle_royal', name: 'Battle Royal', teamSize: 1, ways: 6, elimination: true, overTheTop: true, pinfall: true, submission: true, dq: false, countout: false,
+    weapons: false, outside: false, ropeBreaks: true, timeLimit: 45,
+    desc: 'Six wrestlers in the ring. Fall to a pin or submission, or get thrown over the top rope, and you are out. The last one in wins.',
+  },
+  handicap: {
+    id: 'handicap', name: 'Handicap Match (1 vs 2)', teamSizes: [1, 2], tag: true, pinfall: true, submission: true, dq: true, countout: true,
+    weapons: false, outside: true, ropeBreaks: true, timeLimit: 24, loneBonus: { regen: 1.45, resist: 0.22 },
+    desc: 'You against two. They tag, you cannot - but you recover faster and shrug off more punishment. A fall over either of them wins it.',
+  },
 };
 
 export function getRuleset(id) {

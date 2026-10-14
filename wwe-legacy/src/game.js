@@ -29,6 +29,7 @@ import { getRel, getRivalry, hasOpenPromise } from './memory/world.js';
 import { buildPairSummary } from './memory/summaries.js';
 import { memoryLines } from './story/dialogue.js';
 import { deliverPromo, PROMO_TONES, CLAIMS } from './story/media.js';
+import { socialOptions, postToSocial, socialFeed } from './story/social.js';
 import { appearanceOptions, startAppearance, answerAppearance, appearanceView, cancelAppearance, APPEARANCE_KINDS } from './story/appearances.js';
 
 export const BACKGROUNDS = {
@@ -728,6 +729,12 @@ export class Game {
   }
 
   // ------------------------------------------------------------------ media
+  // ---- social media
+  socialView() {
+    const c = this.c, nm = (id) => this.universe.get(id)?.name || id;
+    return { ...socialOptions(c), feed: socialFeed(c, { nameOf: nm }) };
+  }
+  socialPost({ tone, targetId = null }) { this._blockedByScenario(); return postToSocial(this.c, { tone, targetId, nextEvent: this.nextEvent() }); }
   promoOptions() { return { tones: PROMO_TONES, claims: CLAIMS, pending: this.c.flags.promoPending || null }; }
   promo(o) {
     const r = deliverPromo(this.c, o);

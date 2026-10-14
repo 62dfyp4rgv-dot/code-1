@@ -37,7 +37,7 @@ export const FEATURES = [
   { id: 's_scenarios', area: 'story', label: 'Scenario engine with validated templates (cast, slots, choices, effects)', status: 'complete', probe: () => has('src/story/scenarios.js', /class ScenarioEngine/) },
   { id: 's_promo', area: 'story', label: 'Promo delivery with memory-grounded claims', status: 'complete', probe: () => has('src/story/media.js', /deliverPromo/) },
   { id: 's_interview', area: 'story', label: 'Standalone interviews / podcasts / press conferences as player-initiated, memory-grounded flows', status: 'complete', probe: () => has('src/story/appearances.js', /answerAppearance/) },
-  { id: 's_social', area: 'story', label: 'Social media / fan systems beyond scenarios', status: 'unimplemented' },
+  { id: 's_social', area: 'story', label: 'Social media feed and posting (fan mood, ledger-derived reactions, rival shots, posts that move popularity and rivalries)', status: 'complete', probe: () => has('src/story/social.js', /postToSocial/), note: 'Single-platform text feed; no images, DMs, follower growth simulation beyond popularity, or moderation mechanics.' },
   // Platform
   { id: 'p_save', area: 'platform', label: 'Versioned saves, slots, autosave, backup, migrations, checksum', status: 'complete', probe: () => has('src/save/save.js', /migrateCareerJSON/) },
   { id: 'p_pwa', area: 'platform', label: 'Offline PWA (manifest, service worker), iPhone viewport UI', status: 'complete', probe: () => has('ui/sw.js', /addEventListener/) },

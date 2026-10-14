@@ -98,6 +98,23 @@ const RULES = {
       if (win) world.counters[`partnerWins:${p}`] = (world.counters[`partnerWins:${p}`] || 0) + 1;
     }
   },
+  social_post(world, ev, ctx) {
+    const d = ev.data, me = ctx.playerId;
+    for (const t of d.targets || []) {
+      const q = Math.max(0.3, (d.quality ?? 50) / 70);
+      if (d.tone === 'mock') {
+        adjustRel(world, t, me, { heat: 8 * q, respect: -4, trust: -2 }, ev.id, ev.day);
+        bumpRivalry(world, me, t, { heat: 6, eventId: ev.id, day: ev.day });
+        addTag(world, t, me, 'insulted_by', ev.id);
+      } else if (d.tone === 'callout') {
+        adjustRel(world, t, me, { heat: 5, respect: 1 }, ev.id, ev.day);
+        bumpRivalry(world, me, t, { heat: 5, eventId: ev.id, day: ev.day });
+      } else if (d.tone === 'respect') {
+        adjustRel(world, t, me, { respect: 5 * q, affinity: 2 }, ev.id, ev.day);
+        addTag(world, t, me, 'respected_by', ev.id);
+      }
+    }
+  },
   promo_delivered(world, ev, ctx) {
     const d = ev.data, me = ctx.playerId;
     for (const t of d.targets || []) {

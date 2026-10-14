@@ -3,7 +3,7 @@
 import { Rng } from '../core/rng.js';
 import { clamp } from '../core/util.js';
 import {
-  COMMON_MOVES, STYLE_MOVES, STYLE_SIGNATURES, STYLE_FINISHERS, registerMove, hasMove, getMove,
+  COMMON_MOVES, STYLE_MOVES, STYLE_SIGNATURES, STYLE_FINISHERS, HARDCORE_MOVES, OVER_TOP_MOVES, registerMove, hasMove, getMove,
 } from './moves.js';
 import { getRuleset, other, OBJECTIVE, waysOf } from './rules.js';
 
@@ -84,6 +84,9 @@ export function createMatchState(cfg) {
       const f = createFighter(profile, side, { isPlayer: profile.id === cfg.playerId, difficulty: cfg.difficulty });
       // submission-only rules: everyone has learned the basic holds, whatever their usual style
       if (!rules.pinfall) for (const id of BASIC_HOLDS) if (!f.moveIds.includes(id)) f.moveIds.push(id);
+      // rule-granted moves: table/chair work in hardcore matches, the over-the-top toss in battle royals
+      if (rules.hardcore) for (const id of HARDCORE_MOVES) if (!f.moveIds.includes(id)) f.moveIds.push(id);
+      if (rules.overTheTop) for (const id of OVER_TOP_MOVES) if (!f.moveIds.includes(id)) f.moveIds.push(id);
       f.legal = idx === 0;
       f.pos = idx === 0 ? 'standing' : 'apron';
       // Elimination Chamber: only the first few start in the ring; the others wait in pods and enter on a timer
@@ -95,7 +98,15 @@ export function createMatchState(cfg) {
   const ids = Object.keys(fighters);
   if (new Set(ids).size !== teams.reduce((a, t) => a + t.length, 0)) throw new Error('duplicate wrestler ids in match');
   if (teams.length !== waysOf(rules)) throw new Error(`${rules.name} needs ${waysOf(rules)} sides, got ${teams.length}`);
-  if (rules.teamSize && teams.some((t) => t.length !== rules.teamSize)) {
+  if (rules.teamSizes) {
+    // uneven sides (handicap): one size per side, in seat order
+    if (rules.teamSizes.length !== teams.length || teams.some((t, i) => t.length !== rules.teamSizes[i])) {
+      throw new Error(`${rules.name} requires ${rules.teamSizes.join(' vs ')} wrestlers per side`);
+    }
+    // the outnumbered side gets the ruleset's `loneBonus` (faster stamina recovery, tougher to hurt)
+    const biggest = Math.max(...teams.map((t) => t.length));
+    if (rules.loneBonus) teams.forEach((t) => { if (t.length === 1 && biggest > 1) fighters[t[0]].bonus = { ...rules.loneBonus }; });
+  } else if (rules.teamSize && teams.some((t) => t.length !== rules.teamSize)) {
     throw new Error(`${rules.name} requires ${rules.teamSize} per side`);
   }
   const firstLegal = teams.map((t) => t[0]).filter((id) => fighters[id].legal);
@@ -133,6 +144,12 @@ export const opponentOf = (state, id) => {
   const foes = liveFoes(state, id);
   const cur = state.focus && state.focus[id];
   if (cur && foes.includes(cur)) return cur;
+  // ladder matches: with no explicit target, whoever is highest on the ladder is the one to stop
+  if (state.rules.objective) {
+    const climbing = foes.filter((x) => state.fighters[x].pos === 'top' && state.fighters[x].climb > 0)
+      .sort((a, b) => state.fighters[b].climb - state.fighters[a].climb || (a < b ? -1 : 1));
+    if (climbing.length) return climbing[0];
+  }
   // most damaged foe; ties go to the next seat around the ring so no seat is a default punching bag
   const me = state.fighters[id].side, n = waysOf(state.rules);
   const seat = (x) => (state.fighters[x].side - me + n) % n;

@@ -5,7 +5,7 @@ import { BoundRng } from '../core/rng.js';
 import { clamp } from '../core/util.js';
 import { getMove, familyOf } from './moves.js';
 import { STANCES } from './stances.js';
-import { computeConnect, calcDamage, kickoutChance, holdEscapeChance, submitChance } from './calc.js';
+import { computeConnect, calcDamage, kickoutChance, holdEscapeChance, submitChance, isHardcoreMove } from './calc.js';
 import { F, opponentOf, partnerOf, legalOf, damageFraction, staminaFrac, phaseOf, crowdBias } from './state.js';
 import { other, waysOf } from './rules.js';
 import { FREE_ACTIONS, TEMPO } from './actions.js';
@@ -27,6 +27,7 @@ const addStamina = (f, n) => { f.stamina = clamp(f.stamina + n, 0, f.maxStamina)
 const paceTime = (f) => (f.tactics.pace === 'fast' ? 0.85 : f.tactics.pace === 'slow' ? 1.15 : 1);
 
 function hurt(state, f, part, amount, source) {
+  if (f.bonus) amount *= 1 - f.bonus.resist; // handicap: the outnumbered wrestler shrugs off some punishment
   const before = f.dmg[part];
   f.dmg[part] = clamp(before + amount, 0, 100);
   const real = f.dmg[part] - before;
@@ -158,7 +159,7 @@ export function finalizeRound(state, R, spent) {
   if (state.result) return;
   for (const f of Object.values(state.fighters)) {
     const inRing = f.legal;
-    const regen = inRing ? (1.2 + f.attrs.endurance / 60) * (f.tactics.pace === 'slow' ? 1.3 : f.tactics.pace === 'fast' ? 0.8 : 1) * (1 - f.dmg.torso / 250)
+    const regen = inRing ? (1.2 + f.attrs.endurance / 60) * (f.tactics.pace === 'slow' ? 1.3 : f.tactics.pace === 'fast' ? 0.8 : 1) * (1 - f.dmg.torso / 250) * (f.bonus ? f.bonus.regen : 1)
       : 3;
     addStamina(f, regen);
     if (f.dazed > 0) f.dazed -= 1;
@@ -518,10 +519,20 @@ function connectHit(state, R, A, D, move, stance, fam) {
   if (move.cat === 'signature') A.stats.signaturesHit++;
   const quality = crit ? 'devastating' : dmg > move.dmg * 1.1 ? 'clean' : 'solid';
   const type = move.cat === 'finisher' ? 'finisher_connected' : move.cat === 'signature' ? 'signature_connected' : 'move_connected';
+  // hardcore (TLC): furniture and weapons bite back - the user takes a share of the impact (deterministic, no dice)
+  let recoil = 0;
+  if (state.rules.hardcore && state.rules.recoil && isHardcoreMove(move)) {
+    recoil = hurt(state, A, move.risk ? move.risk.part : 'arms', Math.max(2, move.dmg * state.rules.recoil), 'recoil');
+  }
   emit(state, type, {
     actor: A.id, target: D.id, move: move.id, moveName: move.name, cat: move.cat, part: move.tgt, damage: Math.round(real * 10) / 10,
-    quality, stance: stance.id, illegal: move.illegal,
+    quality, stance: stance.id, illegal: move.illegal, ...(recoil ? { selfDamage: Math.round(recoil * 10) / 10 } : {}),
   });
+  // battle royal: a clean toss sends the target over the top rope - eliminated on the spot
+  if (move.special === 'over_top' && state.rules.overTheTop) {
+    eliminate(state, D.id, A.side, 'over_the_top', { winnerId: A.id, loserId: D.id, finishMove: move.id, finishCat: move.cat });
+    return;
+  }
   // special effects
   if (move.special === 'topple') {
     D.climb = 0; D.pos = 'grounded';
@@ -591,6 +602,7 @@ function failedAttack(state, R, A, D, move, stance, fam, outcome, detail) {
 
 function setInitiativeAfter(state, R, A, D, outcome, move) {
   let next = A.id;
+  if (D.out) { state.initiative = A.id; return; } // the target was just eliminated: the winner keeps control
   if (outcome === 'connect') {
     if (state.chain && state.chain.n >= 3 && R.chance(0.35)) {
       next = D.id; state.chain = null;

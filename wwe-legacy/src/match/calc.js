@@ -6,6 +6,8 @@ import { NEUTRAL_AVOID } from './stances.js';
 import { F, damageFraction, staminaFrac, crowdBias, phaseOf } from './state.js';
 
 export const ACC_BONUS = 0.07;
+/** weapon and furniture moves: boosted (and recoil-prone) under a ruleset's `hardcore` rule */
+export const isHardcoreMove = (move) => move.weapon || move.cat === 'environmental';
 export const DAMAGE_SCALE = 1.3;
 
 // weight tables are shared constants, so their key/value arrays are compiled once (hot path)
@@ -81,6 +83,10 @@ export function computeConnect(state, atkId, move, defId, stance = null, ctx = {
   parts.state = (D.dazed > 0 ? 0.06 : 0) - (A.dazed > 0 ? 0.15 : 0)
     + (D.pos === 'grounded' && fam === 'strike' ? 0.04 : 0);
   parts.bait = 0;
+  // over-the-top toss: raw strength against the target's toughness and how much they have left in the tank
+  parts.overTop = move.special === 'over_top'
+    ? (A.attrs.power - D.attrs.toughness) / 500 + (0.5 - staminaFrac(D)) * 0.25 + (D.pos === 'ropes' ? 0.08 : 0) - 0.04
+    : 0;
   parts.hold = move.hold ? 0.3 * (D.dmg[move.hold.tgt] / 100) - 0.08 + (staminaFrac(D) < 0.4 ? 0.06 : 0) : 0;
   let p = Object.values(parts).reduce((a, b) => a + b, 0);
   p += ctx.noise || 0;
@@ -111,6 +117,7 @@ export function calcDamage(state, atkId, move, defId, stance, variance = 1, mult
     }
   }
   dmg *= variance * mult * DAMAGE_SCALE;
+  if (state.rules.hardcore && isHardcoreMove(move)) dmg *= state.rules.hardcore; // TLC: tables, chairs and ladders hit harder
   return Math.max(0.5, dmg);
 }
 

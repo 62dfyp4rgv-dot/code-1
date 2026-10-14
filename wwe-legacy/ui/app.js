@@ -237,6 +237,17 @@ const A = {
       await autosave(); render();
     } catch (e) { err(e); }
   },
+  socialSet: ({ v }) => { (S.ui.social ||= {}).tone = v; render(); },
+  socialSend: async () => {
+    try {
+      const u = (S.ui.social ||= {}), tone = u.tone || 'gratitude', def = S.g.socialView().tones[tone];
+      let target = def.needsTarget ? (document.getElementById('social-target')?.value || u.target) : null;
+      if (def.needsTarget && !target) target = S.g.universe.list((w) => w.brand === S.g.career.player.brand)[0].id;
+      u.result = S.g.socialPost({ tone, targetId: target });
+      checkAchievementToasts(); await autosave(); render();
+    } catch (e) { err(e); }
+  },
+  socialDone: () => { (S.ui.social ||= {}).result = null; render(); },
   promoSet: ({ k, v }) => { S.ui.promo[k] = v; render(); },
   deliverPromo: async () => {
     try {
@@ -300,6 +311,7 @@ root.addEventListener('change', (ev) => {
   const el = ev.target;
   if (el.dataset.actionChange === 'sig') { syncCreate(); }
   if (el.dataset.actionChange === 'promoTarget') S.ui.promo.target = el.value;
+  if (el.dataset.actionChange === 'socialTarget') (S.ui.social ||= {}).target = el.value;
 });
 root.addEventListener('input', (ev) => {
   const el = ev.target;
