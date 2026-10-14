@@ -641,7 +641,9 @@ export class Game {
     const s = e.state, me = s.fighters[this.c.player.id];
     const opp = s.fighters[s.teams[1 - me.side][0]];
     const multi = waysOf(s.rules) > 2;
-    const legalOpp = multi ? s.fighters[engineOpponentOf(s, me.id)] : (s.fighters[Object.values(s.fighters).find((f) => f.side !== me.side && f.legal)?.id] || opp);
+    // once the match is over there may be no live foe left (e.g. the last man standing in a battle royal): show the last one beaten
+    const anyFoe = s.fighters[[...s.eliminated].reverse().find((id) => s.fighters[id] && s.fighters[id].side !== me.side)] || Object.values(s.fighters).find((f) => f.side !== me.side);
+    const legalOpp = (multi ? s.fighters[engineOpponentOf(s, me.id)] : (s.fighters[Object.values(s.fighters).find((f) => f.side !== me.side && f.legal)?.id] || opp)) || anyFoe;
     const view = (f) => ({ id: f.id, name: f.name, stamina: Math.round(f.stamina), maxStamina: f.maxStamina, momentum: Math.round(f.momentum), confidence: Math.round(f.confidence), dmg: Object.fromEntries(Object.entries(f.dmg).map(([k, v]) => [k, Math.round(v)])), pos: f.pos, legal: f.legal, alignment: f.alignment, dazed: f.dazed > 0, tactics: f.tactics, style: f.style, climb: f.climb });
     return {
       type: s.type, rules: s.rules, time: Math.round(s.time), timeLimit: s.timeLimit, phase: s.phase, round: s.round, crowd: Math.round(s.crowd.heat),

@@ -125,7 +125,9 @@ const A = {
   cwset: ({ k, v }) => { const c = S.create; c.cw = { style: 'allrounder', alignment: 'tweener', gender: 'M', tier: 2, ...(c.cw || {}) }; c.cw[k] = k === 'tier' ? +v : v; c.cw.name = document.getElementById('in-cwname')?.value || c.cw.name; render(); if (c.cw.name) { const el = document.getElementById('in-cwname'); if (el) el.value = c.cw.name; } },
   cwadd: () => {
     const c = S.create; c.cw = { style: 'allrounder', alignment: 'tweener', gender: 'M', tier: 2, ...(c.cw || {}) };
-    const name = (document.getElementById('in-cwname')?.value || '').trim().replace(/\s+/g, ' ');
+    const raw = document.getElementById('in-cwname')?.value || '';
+    c.cw.name = raw; // keep what was typed so an error does not wipe the field
+    const name = raw.trim().replace(/\s+/g, ' ');
     if (name.length < 3 || !name.includes(' ') || !/^[A-Za-z][A-Za-z .'-]*$/.test(name)) return toast('Use a first and last name, letters only.');
     if ((c.custom || []).some((x) => x.name.toLowerCase() === name.toLowerCase())) return toast('That name is already in your list.');
     c.custom = [...(c.custom || []), { ...c.cw, name }]; c.cw = { ...c.cw, name: '' }; render();
@@ -276,7 +278,7 @@ const A = {
       checkAchievementToasts(); await autosave(); render();
     } catch (e) { err(e); }
   },
-  lifestyle: ({ id }) => { try { S.g.setLifestyle(id); render(); } catch (e) { err(e); } },
+  lifestyle: ({ id }) => { try { const f = S.g.setLifestyle(id); toast(`Lifestyle set: ${(f.lifestyles[id] || {}).label || id}.`); render(); } catch (e) { err(e); } },
   rbToggle: () => { S.ui.rbAll = !S.ui.rbAll; render(); },
   openLegacy: () => { S.tab = 'career'; S.sub = 'legacy'; render(); },
   retireAsk: () => { S.ui.confirmRetire = true; render(); },

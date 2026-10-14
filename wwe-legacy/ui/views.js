@@ -74,7 +74,7 @@ function worldEditor(c) {
   return `<details class="fold card" id="world-editor" ${custom.length || c.cw ? "open" : ""}><summary>World editor: add your own wrestlers (${custom.length}/12)</summary>
     <p class="muted">Custom wrestlers replace similar fictional ones, so the roster and title lineages stay intact. They live in the world like everyone else: they feud, win titles and retire.</p>
     ${custom.map((x, i) => `<div class="row spread"><span><b>${esc(x.name)}</b> <span class="muted">${cap(x.style)} · ${cap(x.alignment)} · tier ${x.tier} · ${x.gender}</span></span><button class="btn small ghost" data-action="cwdel" data-i="${i}">Remove</button></div>`).join('')}
-    <label class="f">Ring name<input type="text" id="in-cwname" maxlength="28" autocomplete="off" placeholder="First Last"></label>
+    <label class="f">Ring name<input type="text" id="in-cwname" maxlength="28" autocomplete="off" placeholder="First Last" value="${esc(cw.name || '')}"></label>
     <div class="eyebrow">Style</div><div class="chips wrap">${STYLES.map((s) => chip('style', s, cap(s))).join('')}</div>
     <div class="eyebrow">Alignment</div><div class="chips">${['face', 'heel', 'tweener'].map((a) => chip('alignment', a, cap(a))).join('')}</div>
     <div class="eyebrow">Gender</div><div class="chips">${chip('gender', 'M', 'Male')}${chip('gender', 'F', 'Female')}</div>
@@ -245,7 +245,7 @@ export function match(S) {
       <div class="grid2" style="gap:12px">${fighterBoard(mv.me, false)}${fighterBoard(mv.opp, true)}</div>
       ${mv.ways > 2 ? `<div class="others"><span class="eyebrow" style="color:var(--mat-ink);flex:none">Also in</span>${mv.others.map((o) => `<span class="pill" style="color:var(--mat-ink)">${esc(o.name)} · STA ${o.stamina} · MOM ${o.momentum}${mv.objective ? ` · Climb ${o.climb}/${mv.objective.steps}` : ''}</span>`).join('')}</div>` : ''}
       <div class="heat"><span>Crowd</span>${bar(mv.crowd)}<span>${mv.referee === 'watching' ? 'Ref watching' : mv.referee === 'down' ? 'REF DOWN' : 'Ref distracted'}</span></div>
-      ${mv.rules.tag && mv.team ? `<div class="posrow"><span class="eyebrow" style="color:var(--mat-ink)">Legal: ${esc(mv.team.mine.find((x) => x.legal)?.name || '')}</span><span class="eyebrow" style="color:var(--mat-ink)">Legal: ${esc(mv.team.theirs.find((x) => x.legal)?.name || '')}</span></div>` : ''}
+      ${mv.rules.tag && mv.team ? `<div class="others">${[['Your partner', mv.team.mine], ['Their partner', mv.team.theirs]].map(([lab, t]) => t.filter((x) => !x.legal && x.id !== mv.me.id).map((x) => `<span class="pill" style="color:var(--mat-ink)">${lab}: ${esc(x.name.split(' ').slice(-1)[0])} · STA ${x.stamina}</span>`).join('')).join('')}</div><div class="posrow"><span class="eyebrow" style="color:var(--mat-ink)">Legal: ${esc(mv.team.mine.find((x) => x.legal)?.name || '')}</span><span class="eyebrow" style="color:var(--mat-ink)">Legal: ${esc(mv.team.theirs.find((x) => x.legal)?.name || '')}</span></div>` : ''}
       ${mv.rules.ironMan ? `<div class="posrow"><b class="num">Falls ${mv.falls[mv.mySide]}</b><b class="num">Falls ${mv.falls[1 - mv.mySide]}</b></div>` : ''}
       ${mv.rules.objective ? `<div class="posrow"><b class="num">Climb ${mv.climb.me}/${mv.objective.steps}</b><b class="num">Climb ${mv.climb.opp}/${mv.objective.steps}</b></div>` : ''}
     </div>
@@ -281,6 +281,8 @@ function decisionPanel(S, d, mv) {
     head = `<div class="prompt"><div class="eyebrow">On the apron</div><h2>${d.context.pin ? 'Your partner is being pinned!' : 'Support your partner'}</h2></div>`;
   }
   // when every option shows a success chance, rank them: best odds first and marked
+  // the ladder / cage objective is the point of the match: pin it first
+  if (d.kind === 'action') shown = [...shown.filter((o) => o.id === 'obj_climb'), ...shown.filter((o) => o.id !== 'obj_climb')];
   const oddsOf = (o) => (o.pct != null ? o.pct : (m => (m ? +m[1] : null))(/(\d+)\s*%/.exec(o.hint || '')));
   const rated = shown.filter((o) => oddsOf(o) != null).sort((a, b) => oddsOf(b) - oddsOf(a));
   if (shown.length > 1 && rated.length === shown.length) shown = [...rated];
@@ -288,7 +290,7 @@ function decisionPanel(S, d, mv) {
   const btn = (o) => {
     const hint = o.hint ? `<span class="hint ${(o.hint.split(' ')[0] || '').replace(/\W/g, '')} ${/%/.test(o.hint) ? 'n' : ''}">${esc(o.hint)}${o.pct != null ? ` ${o.pct}%` : ''}</span>` : '';
     const cost = o.cost > 0 ? `<span class="r">${o.cost} STA</span>` : o.cost < 0 ? `<span class="r">+${-o.cost} STA</span>` : o.free ? '<span class="r">Free</span>' : '';
-    return `<button class="btn${o.id === bestId ? ' best' : ''}" data-action="choose" data-id="${esc(o.id)}"><span class="t"><b>${esc(o.label)}${o.id === bestId ? ' <span class="pill good">Best odds</span>' : ''}</b>${o.desc ? `<small>${esc(o.desc)}</small>` : ''}</span><span class="col" style="align-items:flex-end;gap:4px">${hint}${cost}</span></button>`;
+    return `<button class="btn${o.id === bestId ? ' best' : ''}" data-action="choose" data-id="${esc(o.id)}"><span class="t"><b>${esc(o.label)}${o.id === 'obj_climb' ? ' <span class="pill obj">Objective</span>' : ''}${o.id === bestId ? ' <span class="pill good">Best odds</span>' : ''}</b>${o.desc ? `<small>${esc(o.desc)}</small>` : ''}</span><span class="col" style="align-items:flex-end;gap:4px">${hint}${cost}</span></button>`;
   };
   return `<div class="col" id="decision" data-kind="${d.kind}">${head}${chips}<div class="opts">${shown.map(btn).join('')}</div></div>`;
 }
@@ -305,9 +307,10 @@ export function result(S) {
       <p style="opacity:.85">${esc(r.summary)}</p></div>
     ${(r.promises || []).length ? `<div class="card" style="border-color:var(--rope)"><h3>Promises settled</h3>${r.promises.map((p) => `<div class="row"><span class="pill ${p.status === 'kept' ? 'good' : 'bad'}">${cap(p.status)}</span><b>${esc(p.text)}</b></div>`).join('')}</div>` : ''}
     ${r.unlocked.length ? `<details class="fold card" style="border-color:var(--brass-fill)" ${r.unlocked.length <= 2 ? 'open' : ''}><summary>${r.unlocked.length} achievement${r.unlocked.length === 1 ? '' : 's'} unlocked</summary>${r.unlocked.map((u) => `<div class="item"><span class="dot gold"></span><div class="col" style="gap:2px"><b>${esc(u.name)}</b><span class="muted" style="font-size:.85rem">${esc(String(u.explanation).replace(/ Requirement met \((\d+)\/\1\)\.?$/, ''))}</span></div></div>`).join('')}</details>` : ''}
-    <div class="col"><div class="eyebrow">What now?</div>
+    <div class="col"><div class="eyebrow">What now? <span class="muted">(optional: pick any, or head back)</span></div>
+    ${S.ui.postMsg ? `<p class="line" id="post-msg">${esc(S.ui.postMsg)}</p>` : ''}
     ${opts.map((o) => `<button class="btn" data-action="post" data-id="${o.id}"><span class="t"><b>${esc(o.label)}</b><small>${esc(o.desc)}</small></span></button>`).join('') || '<p class="muted">Nothing left to decide.</p>'}
-    ${S.ui.postMsg ? `<p class="line">${esc(S.ui.postMsg)}</p>` : ''}</div>
+    </div>
     <div class="card"><h3>Match stats</h3>
       ${kv('Moves landed', `${st.connected ?? 0} of ${st.moves ?? 0}`)}${kv('Reversals made', st.reversalsMade ?? 0)}${kv('Near falls', st.nearFalls ?? 0)}${kv('Damage taken', st.damageTaken ?? 0)}${kv('Finisher', st.finishersHit ? 'Hit' : 'Not landed')}
       <button class="btn small ghost" data-action="inspect" data-id="${esc(r.event.id)}">See the ledger entry</button></div>
@@ -395,7 +398,7 @@ export function calendar(S) {
 // ---------------------------------------------------------------- roster
 export function roster(S) {
   const g = S.g, q = (S.ui.rq || '').toLowerCase();
-  const list = g.universe.list((w) => !q || w.name.toLowerCase().includes(q)).sort((a, b) => b.tier - a.tier || b.popularity - a.popularity);
+  const list = g.universe.list((w) => !q || w.name.toLowerCase().includes(q)).sort((a, b) => g._overall(b) - g._overall(a) || b.popularity - a.popularity); // sorted by the number shown (overall)
   return `<main class="screen">${header('Roster', `${list.length} wrestlers`)}
     <input type="search" id="in-rq" placeholder="Search" value="${esc(S.ui.rq || '')}" aria-label="Search roster">
     <div class="card"><div class="list">${list.map((w) => `<button class="item" data-action="profile" data-id="${w.id}" style="background:none;border:0;border-bottom:1px solid var(--line);text-align:left;width:100%;color:inherit;font:inherit;cursor:pointer">${avatar(w, 34)}<span class="col grow" style="gap:0"><b>${esc(w.name)}</b><span class="muted">${cap(w.style)} · ${esc(w.brand)}</span></span><span class="num">${Math.round(g._overall(w))}</span></button>`).join('')}</div></div></main>`;

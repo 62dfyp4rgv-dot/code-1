@@ -831,3 +831,21 @@ test('game: the stipulation list a UI renders contains every new type with a nam
   }
   assert.ok(list.every((x) => x.id !== 'tag'));
 });
+
+test('game: matchView still works after the player wins a battle royal (no live foe left)', () => {
+  let won = 0;
+  for (const seed of [41, 42, 43, 44, 45, 46]) {
+    const g = newGame(seed);
+    toDay(g, () => true);
+    for (const k of Object.keys(g.career.player.attrs)) g.career.player.attrs[k] = 99;
+    const o = g.suggestOpponents()[0];
+    stage(g, o.id, 26);
+    g.prepareMatch({ opponentId: o.id, type: 'battle_royal' });
+    g.startMatch();
+    playOut(g);
+    const mv = g.matchView(); // used to throw "Cannot read properties of undefined (reading 'id')" when nobody was left
+    assert.ok(mv && mv.opp && mv.opp.name);
+    if (g.engine.state.result && g.engine.state.result.winnerId === g.career.player.id) won++;
+  }
+  assert.ok(won >= 1, 'a maxed-out wrestler should win at least one of six battle royals');
+});
