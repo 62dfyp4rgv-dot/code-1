@@ -763,7 +763,7 @@ export class Game {
       const rel = getRel(w, me, id);
       return { id, name: nm(id), tags: rel.tags || [], lines: sum.facts.map((f) => ({ text: f.text, eventId: f.eventIds[f.eventIds.length - 1], count: f.eventIds.length })) };
     }).filter((t) => t.lines.length);
-    const moments = c.memory.ledger.query({ scope: 'player', newestFirst: true, limit: 60 }).filter((e) => e.importance >= 4 && e.type !== 'finance_month').slice(0, 5).map((e) => ({ id: e.id, date: e.date, text: e.summary }));
+    const moments = c.memory.ledger.query({ scope: 'player', newestFirst: true, limit: 60 }).filter((e) => e.importance >= 4 && e.type !== 'finance_month').slice(0, 5).map((e) => ({ id: e.id, date: e.date, day: e.day, text: e.summary }));
     return { threads, promises: this.promiseView().promises.filter((p) => p.status === 'open'), moments };
   }
 

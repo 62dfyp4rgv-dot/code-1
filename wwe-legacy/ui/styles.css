@@ -195,8 +195,8 @@ label.f { display: flex; flex-direction: column; gap: 6px; font-weight: 600; fon
 .others { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .others .pill { font-size: .72rem; }
 
-/* toast: compact, one line, above the tab bar, never intercepts taps */
-.toast { top: auto; bottom: calc(var(--tab-h) + 10px + env(safe-area-inset-bottom, 0px)); font-size: .82rem; padding: 6px 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: calc(100% - 32px); }
+/* toast: compact, one line, in the top safe area (never over controls), never intercepts taps */
+.toast { top: calc(env(safe-area-inset-top, 0px) + 8px); bottom: auto; font-size: .82rem; padding: 6px 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: calc(100% - 32px); }
 .kv .v { display: inline-flex; align-items: center; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
 .feed { max-height: none; min-height: 0; overflow: visible; }
 .sticky-cta { position: sticky; bottom: 8px; z-index: 4; }
@@ -205,3 +205,19 @@ label.f { display: flex; flex-direction: column; gap: 6px; font-weight: 600; fon
 .chips.wrap { -webkit-mask-image: none; mask-image: none; }
 .opts .btn { padding: 9px 12px; min-height: 50px; }
 .opts .btn .t small { font-size: .78rem; }
+
+/* round-6 mobile review fixes */
+.screen.noTab { padding-bottom: 84px; }
+.record-ev { white-space: nowrap; flex: none; }
+details.fold > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; justify-content: space-between; gap: 8px; font-weight: 700; list-style: none; }
+details.fold > summary::-webkit-details-marker { display: none; }
+details.fold > summary::after { content: "+"; font-size: 1.3rem; opacity: .7; }
+details.fold[open] > summary::after { content: "\2212"; }
+.score-big { font-family: var(--font-display); font-weight: 900; font-size: 2.6rem; line-height: 1; }
+@media (max-height: 740px) {
+  .board { gap: 4px; padding: 7px 10px; }
+  .dmg b { flex-direction: row; height: 22px; justify-content: space-between; padding: 0 5px; }
+  .dmg b span { font-size: .58rem; }
+  .dmg b em { font-size: .72rem; }
+  .feed p:nth-last-child(n+3) { display: none; }
+}

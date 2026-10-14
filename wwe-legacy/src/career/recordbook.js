@@ -56,7 +56,7 @@ export function buildRecordBook(career, nameOf = (x) => x) {
       item('Longest losing streak', s.streak.bestLoss, streakEvidence(ledger, s.streak.bestLossEnd, s.streak.bestLoss)),
       item('Current streak', s.streak.current > 0 ? `${s.streak.current}W` : s.streak.current < 0 ? `${-s.streak.current}L` : '—', s.streak.current ? ledger.query({ types: ['match_result'], scope: 'player', newestFirst: true, limit: Math.abs(s.streak.current) }).map((e) => e.id) : []),
       item('Most frequent opponent', opp[0] ? `${nameOf(opp[0][0])} (${opp[0][1].matches})` : '—', opp[0] ? ledger.query({ types: ['match_result'], allParticipants: [me, opp[0][0]] }).map((e) => e.id) : []),
-      item('Greatest rival', rivals[0] ? `${nameOf(rivals[0].other)} (heat ${Math.round(rivals[0].r.heat)}, ${rivals[0].r.matches} matches)` : '—', rivals[0] ? rivals[0].r.events : []),
+      item('Greatest rival', rivals[0] ? `${nameOf(rivals[0].other)} (heat ${Math.round(rivals[0].r.heat)}, ${rivals[0].r.matches} match${rivals[0].r.matches === 1 ? "" : "es"})` : '—', rivals[0] ? rivals[0].r.events : []),
       item('Best tag-team partner', partners[0] ? `${nameOf(partners[0][0])} (${partners[0][1].wins} wins together)` : '—', partners[0] ? ledger.query({ types: ['match_result'], allParticipants: [me, partners[0][0]], where: { 'data.result': 'win' } }).filter((e) => (e.data.partners || []).includes(partners[0][0])).map((e) => e.id) : []),
     ],
   });

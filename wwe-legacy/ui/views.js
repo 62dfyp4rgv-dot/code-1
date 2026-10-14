@@ -170,6 +170,8 @@ function book(S) {
     ${opps.map((o) => oppCard(o, S.ui.oppId === o.id)).join('')}</main>`;
 }
 
+const stipBtn = (sel) => (s) => `<button class="btn" ${s.unlocked ? '' : 'disabled'} data-action="pset" data-k="type" data-v="${s.id}" style="${sel.type === s.id ? 'border-color:var(--rope)' : ''}"><span class="t"><b>${esc(s.name)}</b><small>${esc(s.desc)}</small></span><span class="r">${s.unlocked ? '' : `Rivalry ${s.need}`}</span></button>`;
+
 function prep(S) {
   const g = S.g, o = g.universe.get(S.ui.oppId);
   const card = g.opponentCard(o);
@@ -184,8 +186,9 @@ function prep(S) {
       : `<button class="btn" data-action="scout" data-id="${o.id}">Scout ${esc(o.name.split(' ')[0])}</button>`}
     <div class="col"><div class="eyebrow">Game plan</div>${Object.entries(PLANS).map(([id, p]) => `<button class="btn" data-action="pset" data-k="plan" data-v="${id}" style="${sel.plan === id ? 'border-color:var(--rope)' : ''}"><span class="t"><b>${esc(p.label)}</b><small>${esc(p.desc)}</small></span></button>`).join('')}</div>
     <div class="col"><div class="eyebrow">Entrance</div><div class="chips">${Object.entries(ENTRANCES).map(([id, e]) => `<button class="chip ${sel.entrance === id ? 'on' : ''}" data-action="pset" data-k="entrance" data-v="${id}">${esc(e.label)}</button>`).join('')}</div></div>
-    <div class="col"><div class="eyebrow">Match type</div>${stips.map((s) => `<button class="btn" ${s.unlocked ? '' : 'disabled'} data-action="pset" data-k="type" data-v="${s.id}" style="${sel.type === s.id ? 'border-color:var(--rope)' : ''}"><span class="t"><b>${esc(s.name)}</b><small>${esc(s.desc)}</small></span><span class="r">${s.unlocked ? '' : `Rivalry ${s.need}`}</span></button>`).join('')}</div>
-    <button class="btn primary" data-action="startMatch" id="btn-start">Head to the ring</button></main>`;
+    <div class="col"><div class="eyebrow">Match type</div>${stips.filter((s) => s.unlocked).map(stipBtn(sel)).join('')}
+      ${stips.some((s) => !s.unlocked) ? `<details class="fold card"><summary>Locked match types (${stips.filter((s) => !s.unlocked).length})</summary><div class="col" style="margin-top:8px">${stips.filter((s) => !s.unlocked).map(stipBtn(sel)).join('')}</div></details>` : ''}</div>
+    <button class="btn primary sticky-cta" data-action="startMatch" id="btn-start">Head to the ring</button></main>`;
 }
 
 // ---------------------------------------------------------------- match
@@ -273,14 +276,14 @@ export function result(S) {
       <div class="row spread"><span class="stars" aria-label="${r.rating.stars} stars">${stars(r.rating.stars)} <b class="num">${Number(r.rating.stars).toFixed(2)}</b></span><span class="num">${mmss(r.durationSec)}</span></div>
       <p style="opacity:.85">${esc(r.summary)}</p></div>
     ${(r.promises || []).length ? `<div class="card" style="border-color:var(--rope)"><h3>Promises settled</h3>${r.promises.map((p) => `<div class="row"><span class="pill ${p.status === 'kept' ? 'good' : 'bad'}">${cap(p.status)}</span><b>${esc(p.text)}</b></div>`).join('')}</div>` : ''}
-    ${r.unlocked.length ? `<div class="card" style="border-color:var(--brass-fill)"><h3>Achievements unlocked</h3>${r.unlocked.map((u) => `<div class="item"><span class="dot gold"></span><div class="col" style="gap:2px"><b>${esc(u.name)}</b><span class="muted" style="font-size:.85rem">${esc(u.explanation)}</span></div></div>`).join('')}</div>` : ''}
+    ${r.unlocked.length ? `<details class="fold card" style="border-color:var(--brass-fill)" ${r.unlocked.length <= 2 ? 'open' : ''}><summary>${r.unlocked.length} achievement${r.unlocked.length === 1 ? '' : 's'} unlocked</summary>${r.unlocked.map((u) => `<div class="item"><span class="dot gold"></span><div class="col" style="gap:2px"><b>${esc(u.name)}</b><span class="muted" style="font-size:.85rem">${esc(String(u.explanation).replace(/ Requirement met \((\d+)\/\1\)\.?$/, ''))}</span></div></div>`).join('')}</details>` : ''}
+    <div class="col"><div class="eyebrow">What now?</div>
+    ${opts.map((o) => `<button class="btn" data-action="post" data-id="${o.id}"><span class="t"><b>${esc(o.label)}</b><small>${esc(o.desc)}</small></span></button>`).join('') || '<p class="muted">Nothing left to decide.</p>'}
+    ${S.ui.postMsg ? `<p class="line">${esc(S.ui.postMsg)}</p>` : ''}</div>
     <div class="card"><h3>Match stats</h3>
       ${kv('Moves landed', `${st.connected ?? 0} of ${st.moves ?? 0}`)}${kv('Reversals made', st.reversalsMade ?? 0)}${kv('Near falls', st.nearFalls ?? 0)}${kv('Damage taken', st.damageTaken ?? 0)}${kv('Finisher', st.finishersHit ? 'Hit' : 'Not landed')}
       <button class="btn small ghost" data-action="inspect" data-id="${esc(r.event.id)}">See the ledger entry</button></div>
     ${r.injuries.length ? `<div class="card"><h3>Injuries</h3>${r.injuries.map((i) => `<div class="row"><span class="pill bad">${i.severity > 1 ? 'Serious' : 'Minor'}</span>${cap(i.part)}</div>`).join('')}</div>` : ''}
-    <div class="col"><div class="eyebrow">What now?</div>
-    ${opts.map((o) => `<button class="btn" data-action="post" data-id="${o.id}"><span class="t"><b>${esc(o.label)}</b><small>${esc(o.desc)}</small></span></button>`).join('') || '<p class="muted">Nothing left to decide.</p>'}
-    ${S.ui.postMsg ? `<p class="line">${esc(S.ui.postMsg)}</p>` : ''}</div>
     <button class="btn primary sticky-cta" data-action="donePost" id="btn-done">Back to the locker room</button></main>`;
 }
 
@@ -309,9 +312,9 @@ function storyCard(S) {
   if (!st.threads.length && !st.promises.length && !st.moments.length) return '';
   const btn = (id, inner) => `<button class="item" data-action="inspect" data-id="${id}" style="background:none;border:0;border-bottom:1px solid var(--line);text-align:left;width:100%;color:inherit;font:inherit;cursor:pointer;min-height:44px">${inner}</button>`;
   return `<div class="card" id="story-so-far"><h3>Story so far</h3>
-    ${st.threads.map((t) => `<div class="eyebrow" style="margin-top:8px">${esc(t.name)}${t.tags.length ? ` · ${esc(t.tags.map(cap).join(', '))}` : ''}</div>${t.lines.map((l) => btn(l.eventId, `<span>${esc(l.text)} <span class="why">${l.count} event${l.count === 1 ? '' : 's'}</span></span>`)).join('')}`).join('')}
+    ${st.threads.map((t) => `<div class="eyebrow" style="margin-top:8px">${esc(t.name)}${t.tags.length ? ` · ${esc(t.tags.map(cap).join(', '))}` : ''}</div>${t.lines.map((l) => btn(l.eventId, `<span>${esc(l.text)}${l.count > 1 ? ` <span class="why">${l.count} events</span>` : ''}</span>`)).join('')}`).join('')}
     ${st.promises.length ? `<div class="eyebrow" style="margin-top:8px">Open promises</div>${st.promises.map((p) => btn(p.made, `<span>${esc(p.text)}${p.daysLeft != null ? ` <span class="why">${p.daysLeft} days left</span>` : ''}</span>`)).join('')}` : ''}
-    ${st.moments.length ? `<div class="eyebrow" style="margin-top:8px">Recent turning points</div>${st.moments.map((m) => btn(m.id, `<span>${esc(m.date)} · ${esc(m.text)}</span>`)).join('')}` : ''}</div>`;
+    ${st.moments.length ? `<div class="eyebrow" style="margin-top:8px">Recent turning points</div>${st.moments.map((m) => btn(m.id, `<span><b>${esc(formatDate(m.day, S.g.career.startYear))}</b> · ${esc(m.text)}</span>`)).join('')}` : ''}</div>`;
 }
 
 function legacyCard(S) {
@@ -341,7 +344,7 @@ function recordBook(S) {
   const book = buildRecordBook(c, names);
   const empty = (it) => String(it.value) === '0' || it.value === '—' || String(it.value) === '$0';
   const hidden = S.ui.rbAll ? 0 : book.sections.reduce((n, s) => n + s.items.filter(empty).length, 0);
-  const row = (s, it, i) => `<div class="kv"><span>${esc(it.label)}</span><span class="v">${esc(it.value)} ${it.evidence && it.evidence.length ? `<button class="chip" style="margin:-9px 0;padding:1px 10px" data-action="evidence" data-sec="${s.id}" data-i="${i}">${it.evidence.length} ev.</button>` : ''}</span></div>`;
+  const row = (s, it, i) => `<div class="kv"><span>${esc(it.label)}</span><span class="v">${esc(it.value)} ${it.evidence && it.evidence.length ? `<button class="chip record-ev" style="margin:-9px 0;padding:1px 10px" data-action="evidence" data-sec="${s.id}" data-i="${i}">${it.evidence.length} ›</button>` : ''}</span></div>`;
   return `<main class="screen">${header('Record Book', `${book.player} · as of ${book.asOf}`, back('closeSub'))}
     ${book.sections.map((s) => { const rows = s.items.map((it, i) => (!S.ui.rbAll && empty(it) ? '' : row(s, it, i))).join(''); return rows ? `<div class="card"><h3>${esc(s.title)}</h3>${rows}</div>` : ''; }).join('')}
     <button class="btn ghost" data-action="rbToggle">${S.ui.rbAll ? 'Hide empty statistics' : hidden ? `Show ${hidden} empty statistic${hidden === 1 ? '' : 's'}` : 'All statistics shown'}</button></main>`;
@@ -449,13 +452,15 @@ function finances(S) {
 function appearances(S) {
   const g = S.g;
   const res = S.ui.apResult;
-  if (res) return `<main class="screen" id="appearance-result">${header(res.label, `${res.quality}/100${res.viral ? ' · VIRAL' : ''}`, `<button class="btn small ghost" data-action="apDone" id="btn-ap-done">Done</button>`)}
+  if (res) return `<main class="screen" id="appearance-result">${header(res.label, res.viral ? 'Went viral' : 'Appearance complete')}
+    <div class="banner"><div class="eyebrow">Overall</div><div class="score-big num">${res.quality}<small style="font-size:1rem;opacity:.7">/100</small></div></div>
     ${res.given.map((x) => `<div class="card"><p class="why">${esc(x.question)}</p><p class="line">${esc(x.text)}</p><p class="why">${esc(x.react)} · ${x.quality}/100${x.refs.length ? ` · remembers ${x.refs.length} event${x.refs.length === 1 ? '' : 's'}` : ''}</p></div>`).join('')}
     ${res.promises.length ? `<div class="card"><span class="pill brass">Promise on record</span> <b>${esc(res.promises[0].text)}</b></div>` : ''}
     ${res.pay ? `<div class="card">${kv('Appearance fee', '$' + res.pay.toLocaleString())}</div>` : ''}
-    ${res.unlocked.map((u) => `<div class="row"><span class="pill brass">Achievement</span><b>${esc(u.name)}</b></div>`).join('')}</main>`;
+    ${res.unlocked.map((u) => `<div class="row"><span class="pill brass">Achievement</span><b>${esc(u.name)}</b></div>`).join('')}
+    <button class="btn primary sticky-cta" data-action="apDone" id="btn-ap-done">Done</button></main>`;
   const v = g.appearanceView();
-  if (v && !v.done) return `<main class="screen" id="appearance">${header(v.label, `Question ${v.step} of ${v.of}`, `<button class="btn small ghost" data-action="apCancel">Walk out</button>`)}
+  if (v && !v.done) return `<main class="screen" id="appearance">${header(v.label, `Question ${v.step} of ${v.of}`, `<button class="btn small ghost" data-action="apCancel" title="Leaves without recording your answers">Walk out</button>`)}
     <div class="card"><p class="line" id="ap-question">${esc(v.question)}</p>${v.refs.length ? `<span class="why">based on ${v.refs.length} event${v.refs.length === 1 ? '' : 's'} in your history</span>` : ''}</div>
     <div class="opts col" id="ap-answers">${v.answers.map((a) => `<button class="btn" data-action="apAnswer" data-id="${a.id}"><span class="t"><b>${esc(a.label)}</b><small>${esc(a.desc)}</small></span></button>`).join('')}</div></main>`;
   return null;
@@ -467,9 +472,11 @@ function media(S) {
   const g = S.g, o = g.promoOptions(), ui = S.ui.promo;
   const targets = g.universe.list((w) => w.brand === g.career.player.brand).slice(0, 40);
   const res = S.ui.promoResult;
-  if (res) return `<main class="screen">${header('Promo cut', `${res.quality}/100${res.viral ? ' · VIRAL' : ''}`, `<button class="btn small ghost" data-action="promoDone">Done</button>`)}
-    <div class="card">${res.lines.map((l) => `<p class="line">${esc(l.text)}${l.refs.length ? `<span class="why">remembers ${l.refs.length} past event${l.refs.length === 1 ? '' : 's'}</span>` : l.promise ? '<span class="why">promise recorded</span>' : ''}</p>`).join('')}${res.reaction ? `<p class="muted">${esc(res.reaction)}</p>` : ''}
-    ${res.unlocked.map((u) => `<div class="row"><span class="pill brass">Achievement</span><b>${esc(u.name)}</b></div>`).join('')}</div></main>`;
+  if (res) return `<main class="screen">${header('Promo cut', res.viral ? 'Went viral' : 'Promo delivered')}
+    <div class="banner"><div class="eyebrow">Overall</div><div class="score-big num">${res.quality}<small style="font-size:1rem;opacity:.7">/100</small></div>${res.reaction ? `<p style="opacity:.85">${esc(res.reaction)}</p>` : ''}</div>
+    <div class="card">${res.lines.map((l) => `<p class="line">${esc(l.text)}${l.refs.length ? `<span class="why">remembers ${l.refs.length} past event${l.refs.length === 1 ? '' : 's'}</span>` : l.promise ? '<span class="pill brass">Promise on record</span>' : ''}</p>`).join('')}
+    ${res.unlocked.map((u) => `<div class="row"><span class="pill brass">Achievement</span><b>${esc(u.name)}</b></div>`).join('')}</div>
+    <button class="btn primary sticky-cta" data-action="promoDone">Done</button></main>`;
   const tone = o.tones[ui.tone];
   return `<main class="screen">${header('Media', 'Promos, interviews and press', back('closeSub'))}
     ${o.pending ? '<p class="line">The crowd is waiting for you to speak.</p>' : ''}
@@ -500,7 +507,7 @@ function settingsView(S) {
 
 export function savesCard(S) {
   return `<div class="card"><h3>Save slots</h3>${S.slots.map((s) => `<div class="card" style="background:var(--surface-2)"><div class="row spread"><b>${s.slot === 'auto' ? 'Autosave' : `Slot ${s.slot.slice(-1)}`}</b>${s.empty ? '<span class="pill">Empty</span>' : s.ok === false ? '<span class="pill bad">Damaged</span>' : `<span class="pill good">${esc((s.savedAt || '').slice(0, 10))}</span>`}</div>
-    ${s.empty ? '' : `<div class="muted">${esc(s.name)} · ${esc(s.date)} · ${s.matches} matches · ${s.titles} titles · ${s.achievements} achievements</div>`}
+    ${s.empty ? '' : `<div class="muted">${esc(s.name)} · ${esc(s.date)} · ${s.matches} match${s.matches === 1 ? "" : "es"} · ${s.titles} title${s.titles === 1 ? "" : "s"} · ${s.achievements} achievement${s.achievements === 1 ? "" : "s"}</div>`}
     <div class="row">${S.g.career && s.slot !== 'auto' ? `<button class="btn small grow" data-action="saveSlot" data-id="${s.slot}">Save here</button>` : ''}${s.empty ? '' : `<button class="btn small grow" data-action="loadSlot" data-id="${s.slot}">Load</button><button class="btn small ghost" data-action="delSlot" data-id="${s.slot}">Delete</button>`}</div></div>`).join('')}</div>`;
 }
 
