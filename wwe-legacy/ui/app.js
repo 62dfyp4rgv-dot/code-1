@@ -36,7 +36,7 @@ function applySettings() {
 async function refreshSlots() { try { S.slots = await saves.list(); } catch { S.slots = []; } }
 
 function toast(text, kind = '') {
-  if (S.screen === 'match' && kind === 'ach') return; // unlocks are listed on the result screen; a toast would cover the scoreboard
+  if ((S.screen === 'match' || S.screen === 'result') && kind === 'ach') return; // unlocks are listed in the result screen's own fold; // unlocks are listed on the result screen; a toast would cover the scoreboard
   S.toast = { text, kind, key: null }; // key = the screen it first appears on; it is dropped as soon as the player navigates elsewhere
   clearTimeout(toast.t);
   toast.t = setTimeout(() => { S.toast = null; render(); }, kind === 'ach' ? 2600 : 2200);
@@ -128,9 +128,9 @@ const A = {
     const raw = document.getElementById('in-cwname')?.value || '';
     c.cw.name = raw; // keep what was typed so an error does not wipe the field
     const name = raw.trim().replace(/\s+/g, ' ');
-    if (name.length < 3 || !name.includes(' ') || !/^[A-Za-z][A-Za-z .'-]*$/.test(name)) return toast('Use a first and last name, letters only.');
-    if ((c.custom || []).some((x) => x.name.toLowerCase() === name.toLowerCase())) return toast('That name is already in your list.');
-    c.custom = [...(c.custom || []), { ...c.cw, name }]; c.cw = { ...c.cw, name: '' }; render();
+    if (name.length < 3 || !name.includes(' ') || !/^[A-Za-z][A-Za-z .'-]*$/.test(name)) { c.cwErr = 'Use a first and last name, letters only.'; return render(); }
+    if ((c.custom || []).some((x) => x.name.toLowerCase() === name.toLowerCase())) { c.cwErr = 'That name is already in your list.'; return render(); }
+    c.cwErr = null; c.custom = [...(c.custom || []), { ...c.cw, name }]; c.cw = { ...c.cw, name: '' }; render();
   },
   cwdel: ({ i }) => { S.create.custom = (S.create.custom || []).filter((_, j) => j !== +i); render(); },
   newCareer: () => { S.create = defaultCreate(); S.screen = 'create'; render(); },
@@ -240,7 +240,7 @@ const A = {
   post: async ({ id }) => {
     try {
       const r = S.g.postMatchChoose(id);
-      S.ui.postMsg = r.message;
+      S.ui.postMsg = r.message; toast(r.message); // the line under the list can be scrolled out of view, so say it as a toast too
       if (S.g.career.flags.promoPending) { S.ui.promo.target = S.g.career.flags.promoPending.target || S.ui.promo.target; }
       checkAchievementToasts(); render();
     } catch (e) { err(e); }

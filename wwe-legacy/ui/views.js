@@ -74,7 +74,7 @@ function worldEditor(c) {
   return `<details class="fold card" id="world-editor" ${custom.length || c.cw ? "open" : ""}><summary>World editor: add your own wrestlers (${custom.length}/12)</summary>
     <p class="muted">Custom wrestlers replace similar fictional ones, so the roster and title lineages stay intact. They live in the world like everyone else: they feud, win titles and retire.</p>
     ${custom.map((x, i) => `<div class="row spread"><span><b>${esc(x.name)}</b> <span class="muted">${cap(x.style)} · ${cap(x.alignment)} · tier ${x.tier} · ${x.gender}</span></span><button class="btn small ghost" data-action="cwdel" data-i="${i}">Remove</button></div>`).join('')}
-    <label class="f">Ring name<input type="text" id="in-cwname" maxlength="28" autocomplete="off" placeholder="First Last" value="${esc(cw.name || '')}"></label>
+    <label class="f">Ring name<input type="text" id="in-cwname" maxlength="28" autocomplete="off" placeholder="First Last" value="${esc(cw.name || '')}" ${c.cwErr ? 'aria-invalid="true" style="border-color:var(--rope)"' : ''}></label>${c.cwErr ? `<p class="err" role="alert" style="color:var(--rope);margin:2px 0 6px">${esc(c.cwErr)}</p>` : ''}<label hidden></label>
     <div class="eyebrow">Style</div><div class="chips wrap">${STYLES.map((s) => chip('style', s, cap(s))).join('')}</div>
     <div class="eyebrow">Alignment</div><div class="chips">${['face', 'heel', 'tweener'].map((a) => chip('alignment', a, cap(a))).join('')}</div>
     <div class="eyebrow">Gender</div><div class="chips">${chip('gender', 'M', 'Male')}${chip('gender', 'F', 'Female')}</div>
@@ -241,7 +241,7 @@ export function match(S) {
   const lines = S.feed.slice(-40);
   return `<div class="match" id="match">
     <div class="board${mv.ways > 2 ? ' multi' : ''}" id="board" aria-live="polite">
-      <div class="names"><div class="nm">${esc(mv.me.name)}</div><div class="clock num">${mmss(mv.time)}<small>${esc(mv.phase)} · ${mmss(mv.timeLimit)}</small></div><div class="nm r">${esc(mv.opp.name)}</div></div>
+      <div class="names"><div class="nm">${esc(mv.me.name)}</div><div class="clock num">${mmss(mv.time)}<small>${esc(mv.phase)} · limit ${mmss(mv.timeLimit)}</small></div><div class="nm r">${esc(mv.opp.name)}</div></div>
       <div class="grid2" style="gap:12px">${fighterBoard(mv.me, false)}${fighterBoard(mv.opp, true)}</div>
       ${mv.ways > 2 ? `<div class="others"><span class="eyebrow" style="color:var(--mat-ink);flex:none">Also in</span>${mv.others.map((o) => `<span class="pill" style="color:var(--mat-ink)">${esc(o.name)} · STA ${o.stamina} · MOM ${o.momentum}${mv.objective ? ` · Climb ${o.climb}/${mv.objective.steps}` : ''}</span>`).join('')}</div>` : ''}
       <div class="heat"><span>Crowd</span>${bar(mv.crowd)}<span>${mv.referee === 'watching' ? 'Ref watching' : mv.referee === 'down' ? 'REF DOWN' : 'Ref distracted'}</span></div>
@@ -254,6 +254,7 @@ export function match(S) {
   </div>`;
 }
 
+const isObj = (o) => /(^|:)obj_climb$/.test(String(o.id));
 function decisionPanel(S, d, mv) {
   const g = S.g;
   let head = '', chips = '';
@@ -282,15 +283,15 @@ function decisionPanel(S, d, mv) {
   }
   // when every option shows a success chance, rank them: best odds first and marked
   // the ladder / cage objective is the point of the match: pin it first
-  if (d.kind === 'action') shown = [...shown.filter((o) => o.id === 'obj_climb'), ...shown.filter((o) => o.id !== 'obj_climb')];
+  if (d.kind === 'action') shown = [...shown.filter(isObj), ...shown.filter((o) => !isObj(o))];
   const oddsOf = (o) => (o.pct != null ? o.pct : (m => (m ? +m[1] : null))(/(\d+)\s*%/.exec(o.hint || '')));
-  const rated = shown.filter((o) => oddsOf(o) != null).sort((a, b) => oddsOf(b) - oddsOf(a));
+  const rated = shown.filter((o) => oddsOf(o) != null && !isObj(o)).sort((a, b) => oddsOf(b) - oddsOf(a));
   if (shown.length > 1 && rated.length === shown.length) shown = [...rated];
   const bestId = rated.length > 1 && oddsOf(rated[0]) > oddsOf(rated[1]) ? rated[0].id : null;
   const btn = (o) => {
     const hint = o.hint ? `<span class="hint ${(o.hint.split(' ')[0] || '').replace(/\W/g, '')} ${/%/.test(o.hint) ? 'n' : ''}">${esc(o.hint)}${o.pct != null ? ` ${o.pct}%` : ''}</span>` : '';
     const cost = o.cost > 0 ? `<span class="r">${o.cost} STA</span>` : o.cost < 0 ? `<span class="r">+${-o.cost} STA</span>` : o.free ? '<span class="r">Free</span>' : '';
-    return `<button class="btn${o.id === bestId ? ' best' : ''}" data-action="choose" data-id="${esc(o.id)}"><span class="t"><b>${esc(o.label)}${o.id === 'obj_climb' ? ' <span class="pill obj">Objective</span>' : ''}${o.id === bestId ? ' <span class="pill good">Best odds</span>' : ''}</b>${o.desc ? `<small>${esc(o.desc)}</small>` : ''}</span><span class="col" style="align-items:flex-end;gap:4px">${hint}${cost}</span></button>`;
+    return `<button class="btn${o.id === bestId ? ' best' : ''}" data-action="choose" data-id="${esc(o.id)}"><span class="t"><b>${esc(o.label)}${isObj(o) ? ' <span class="pill obj">Objective</span>' : ''}${o.id === bestId ? ' <span class="pill good">Best odds</span>' : ''}</b>${o.desc ? `<small>${esc(o.desc)}</small>` : ''}</span><span class="col" style="align-items:flex-end;gap:4px">${hint}${cost}</span></button>`;
   };
   return `<div class="col" id="decision" data-kind="${d.kind}">${head}${chips}<div class="opts">${shown.map(btn).join('')}</div></div>`;
 }
@@ -302,7 +303,7 @@ export function result(S) {
   const st = r.stats || {};
   const win = r.result === 'win';
   return `<main class="screen noTab">
-    <div class="banner result-${r.result}"><div class="eyebrow">${esc(r.opponents.join(' & '))}</div><h1>${r.result === 'win' ? 'Victory' : r.result === 'loss' ? 'Defeat' : 'Draw'}</h1>
+    <div class="banner result-${r.result}"><div class="eyebrow">${esc(r.opponents.length > 3 ? `${r.opponents.length} opponents` : r.opponents.join(' & '))}</div><h1>${r.result === 'win' ? 'Victory' : r.result === 'loss' ? 'Defeat' : 'Draw'}</h1>
       <div class="row spread"><span class="stars" aria-label="${r.rating.stars} stars">${stars(r.rating.stars)} <b class="num">${Number(r.rating.stars).toFixed(2)}</b></span><span class="num">${mmss(r.durationSec)}</span></div>
       <p style="opacity:.85">${esc(r.summary)}</p></div>
     ${(r.promises || []).length ? `<div class="card" style="border-color:var(--rope)"><h3>Promises settled</h3>${r.promises.map((p) => `<div class="row"><span class="pill ${p.status === 'kept' ? 'good' : 'bad'}">${cap(p.status)}</span><b>${esc(p.text)}</b></div>`).join('')}</div>` : ''}
