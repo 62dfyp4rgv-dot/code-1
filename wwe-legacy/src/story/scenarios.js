@@ -383,6 +383,12 @@ function memoryAllow(t) {
   return undefined;
 }
 
+const _bpCache = new Map();
+function usesBrokenPromise(t) {
+  if (!_bpCache.has(t.id)) _bpCache.set(t.id, /"promise":"broken"/.test(JSON.stringify(t.trigger || {})));
+  return _bpCache.get(t.id);
+}
+
 export class ScenarioEngine {
   constructor(templates) {
     this.templates = new Map();
@@ -407,6 +413,9 @@ export class ScenarioEngine {
       if (st.last[t.id] != null && c.day - st.last[t.id] < cd) continue;
       if ((st.count[t.id] || 0) >= (t.maxPerCareer ?? 2)) continue;
       if (st.recent.includes(t.id)) continue;
+      // scenes that all turn on the same broken promise share one cooldown, so a single
+      // broken word is not litigated in scene after scene
+      if (usesBrokenPromise(t) && st.brokenLast != null && c.day - st.brokenLast < 120) continue;
       const catCd = t.categoryCooldown ?? 5;
       if (st.catLast[t.category] != null && c.day - st.catLast[t.category] < catCd) continue;
       let ok;
@@ -560,6 +569,7 @@ export class ScenarioEngine {
     // repetition bookkeeping
     const st = this.state(c);
     st.last[t.id] = c.day; st.count[t.id] = (st.count[t.id] || 0) + 1; st.catLast[t.category] = c.day;
+    if (usesBrokenPromise(t)) st.brokenLast = c.day;
     st.recent.push(t.id); if (st.recent.length > 8) st.recent.shift();
     st.castRecent = [...(st.castRecent || []), ...Object.values(bind).filter((b) => b && b.isWrestler && b.id !== c.player.id).map((b) => b.id)].slice(-8);
     c.flags.scn.variant = c.flags.scn.variant || {}; c.flags.scn.variant[t.id] = (c.flags.scn.variant[t.id] || 0) + 1;
