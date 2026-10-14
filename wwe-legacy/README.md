@@ -25,12 +25,14 @@ node tools/gauntlet.js --round N   # measure, score and report a Gauntlet round 
 
 | Area | Where | Notes |
 |---|---|---|
-| Match engine | `src/match/` | Authoritative JSON state machine; attacker action → defender stance → resolve. Nine rulesets plus a 30-man Royal Rumble. |
+| Match engine | `src/match/` | Authoritative JSON state machine; attacker action → defender stance → resolve. Seventeen rulesets (singles, tag, submission, no-DQ, last man standing, iron man, ladder, cage, Hell in a Cell, triple threat, fatal four-way, elimination, Elimination Chamber, TLC, Money in the Bank, battle royal, handicap) plus a 30-man Royal Rumble. |
 | Persistent memory | `src/memory/` | Hash-chained immutable ledger, rule-driven world state, retrieval, evidence-checked summaries. |
-| Achievements + Record Book | `src/achievements/`, `src/career/` | 192 declarative definitions, evidence event ids, every number opens to its evidence. |
+| Achievements + Record Book | `src/achievements/`, `src/career/` | 196 declarative definitions, evidence event ids, every number opens to its evidence. |
 | Career | `src/career/`, `src/game.js` | Creation, training, bookings, contracts, injuries, titles, post-match choices, media. |
 | Universe | `src/universe/`, `src/data/` | Calendar of weekly shows and PLEs, rosters, titles with lineage checks, AI-vs-AI matches, feuds, alliances, betrayals, churn. |
-| Stories | `src/story/` | Data-driven scenarios, promos, interviews / podcasts / press conferences built from ledger facts. |
+| Stories | `src/story/` | 853 authored scenarios (see FEATURE_STATUS for generated-configuration counts), promos, interviews / podcasts / press conferences, a social-media feed and posting, all built from ledger facts. |
+| Personal life | `src/career/life.js` | Wellbeing, family and friends as persistent numbers; off-day activities; effects on recovery and story triggers. |
+| World | `src/universe/`, `src/game.js` | AI factions plus a player faction screen (found / leave), and a world editor for adding custom wrestlers at career creation. |
 | Saves | `src/save/` | Versioned, checksummed, gzip, three slots + autosave + backup, migrations. |
 | UI | `ui/` | Vanilla JS, safe-area aware, 4 text sizes, light/dark/system, offline PWA. |
 

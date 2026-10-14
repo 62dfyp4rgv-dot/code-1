@@ -14,7 +14,7 @@ src/core        rng.js (seeded PRNG), util.js (hash53, deepFreeze, clamp…)
 src/match       moves.js rules.js state.js stances.js calc.js actions.js resolve.js ai.js engine.js
                 commentary.js rating.js samples.js rumble.js
 src/memory      ledger.js world.js rules.js retrieve.js summaries.js memory.js
-src/achievements defs.js (192 declarative) engine.js (DSL evaluator) custom.js util.js
+src/achievements defs.js (196 declarative) engine.js (DSL evaluator) custom.js util.js
 src/career      career.js stats.js recordbook.js booking.js eventTypes.js pace.js
 src/universe    calendar.js universe.js sim.js records.js awards.js
 src/data        eras.js generator.js roster_real.js (approximate, flagged)
@@ -31,7 +31,7 @@ tools/          build serve e2e smoke_artifact matchsim prover scenarios careers
 
 A round is `attacker action → (defender stance) → resolve`. Pending decisions are explicit kinds: `action`, `defense`, `pin`, `hold_h`, `hold_v`, `rise` (ten count), `apron` (tag partner). `calc.js` is pure: connect probabilities and damage are computed without RNG, so the UI can show honest odds and tests can assert exact numbers; `resolve.js` rolls dice against them and emits **structured events**. `commentary.js` narrates events (variants chosen by hashing the sequence number, never the RNG). `rating.js` derives a 0–5★ rating and stats from events only.
 
-Rulesets (`rules.js`) are data: singles, tag, submission, no-DQ, last man standing, iron man, ladder, cage, hell cell. Tunables that exist only for specific rule types (`subWeight`, `riseWeight`) live in the ruleset. AI (`ai.js`) uses its own RNG stream and difficulty profiles; it gets *urgent* near the time limit so draws are rare.
+Rulesets (`rules.js`) are data (17): singles, tag, submission, no-DQ, last man standing, iron man, ladder, cage, hell cell, triple threat, fatal four-way, elimination, chamber, TLC (`hardcore`, `recoil`), Money in the Bank (4-way ladder), battle royal (`overTheTop`), handicap (`teamSizes`, `loneBonus`). Tunables that exist only for specific rule types (`subWeight`, `riseWeight`) live in the ruleset. AI (`ai.js`) uses its own RNG stream and difficulty profiles; it gets *urgent* near the time limit so draws are rare.
 
 The Royal Rumble (`rumble.js`) is a separate seeded 30-entrant engine with its own decisions and summary event.
 
@@ -66,3 +66,11 @@ Scenario templates are pure data (see `SCENARIO_FORMAT.md`): trigger predicates,
 ## Determinism guarantee
 
 The custom-move registry (`moves.js`) is process-global; every fighter creation and match restore re-registers its specs so results never depend on what ran earlier (regression test: `test/determinism.test.js`).
+
+## Round 7-8 additions
+- `src/story/social.js`: the social feed is a pure view derived from the ledger (fan reactions, media headlines, rival shots from `memoryLines`, the player's own posts); posting writes one `social_post` event whose rule (`memory/rules.js`) turns callouts/mocking into heat and rivalry. Fan mood is a pure function of the last 12 public events.
+- `src/career/life.js`: wellbeing / family / friends live on `player.life` (saved with the player, not derived from the ledger); activities write `life_activity` events; `Career.advanceDays` calls `lifeDay` and `recoveryBonus`. Scenario triggers read `wellbeing`, `family`, `socialLife`; effects `wellbeing`/`family`/`social` move them.
+- Factions: `Game.factionView/foundFaction/leaveFaction` write `faction_formed` / `faction_left` events; leaving costs trust through the rules engine.
+- World editor: `Universe.addCustom` replaces similar fictional wrestlers with validated player-authored ones at career creation.
+- Save envelope: checksum is SHA-256 (legacy hash53 still opens), plus `ledgerHead`/`ledgerSize` so truncation of the ledger tail is detected. Limitation: all of this is integrity checking, not authentication; anyone with the code can re-chain and re-checksum a forged save.
+- Head-to-head records are defined once (`memory/summaries.js h2hCounts`: opponents only, team result) and used by hooks, Story-so-far, the rivalry screen and the opponent card.

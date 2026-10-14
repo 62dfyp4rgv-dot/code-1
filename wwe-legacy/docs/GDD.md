@@ -21,7 +21,7 @@ Name, gender, alignment (face/heel/tweener), style (7 styles), background (4), s
 - **Sequence**: attacker chooses → defender sees the move family and picks a stance (block, dodge, reverse, counter-strike, brace, protect, sell, fight back, bait, distance, counter-special, roll away) → resolution.
 - **State**: position (standing, grounded, corner, ropes, apron, outside, top), four body parts of damage, stamina, momentum, confidence, crowd heat and bias, referee state (watching / down / distracted), phase (opening, building, closing), tactics (pace, target, study, bait).
 - **Finishing**: pin counts with kickout odds depending on the last impact; submissions escalate through hold pressure and escape/reversal choices; ropes break holds where the rules allow; DQ, count-outs, ten counts, ladder and cage objectives, iron-man falls and tag legality are rule-driven.
-- **Rulesets**: singles, tag, submission, no-DQ, last man standing, iron man, ladder, cage, hell cell; plus a 30-man Royal Rumble.
+- **Rulesets**: singles, tag, submission, no-DQ, last man standing, iron man, ladder, cage, Hell in a Cell, triple threat, fatal four-way, elimination, Elimination Chamber, TLC, Money in the Bank (4-way ladder, PLE days), battle royal (6, over-the-top eliminations), handicap (1 vs 2, player as the lone wrestler); plus a 30-man Royal Rumble.
 - **Rating**: 0–5★ computed from near falls, reversals, variety, pacing and peak heat.
 
 ## Story and media
@@ -34,7 +34,7 @@ Weekly shows by brand and era, premium live events, singles and secondary titles
 
 ## Progression and rewards
 
-Training and matches grow attributes; popularity unlocks bigger bookings, title shots and stipulations (rivalry heat unlocks no-DQ, submission, iron man, last man, ladder, cage, hell cell); 192 achievements (11 secret, 8 era-gated); records held by the player are tracked against approximate benchmarks.
+Training and matches grow attributes; popularity unlocks bigger bookings, title shots and stipulations (rivalry heat unlocks no-DQ, submission, iron man, last man, ladder, cage, hell cell); 196 achievements (11 secret, 8 era-gated); records held by the player are tracked against approximate benchmarks.
 
 ## Platform
 
