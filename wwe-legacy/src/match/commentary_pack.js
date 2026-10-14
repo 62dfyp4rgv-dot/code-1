@@ -229,15 +229,11 @@ export default {
   kickout: [
     "{a} kicks out without much trouble.",
     "No problem there. {aL} lifts a shoulder at two.",
-    "{tL} did not have {aL} pinned, not even close.",
     "{aL} shrugs off the cover and keeps going.",
     "The shoulder pops up easily, and {aL} is back in this.",
     "Comfortable kickout from {aL}; {tL} will have to do better.",
     "Nothing to see here: {aL} breaks the pin at two.",
-    "{aL} was never in danger on that cover.",
-    "{aL} bucks {tL} off with plenty to spare.",
     "That cover wasn't enough, and {aL} kicks out.",
-    "Two. {aL} powers out, unbothered.",
     "{tL} tries to hold the pin, but {aL} shoves a shoulder up with ease.",
   ],
   pin_win: [

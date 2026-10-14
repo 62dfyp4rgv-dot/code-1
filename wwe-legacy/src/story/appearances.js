@@ -56,8 +56,8 @@ export function candidateQuestions(c, extras = {}) {
     const oppName = opp ? nameOf(c, opp) : 'your opponent';
     const days = c.day - m.day;
     const when = days === 0 ? 'tonight' : days === 1 ? 'last night' : days <= 7 ? `${days} days ago` : 'recently';
-    const fx = { finish: String(m.data.finish || 'finish').replace(/_/g, ' '), move: m.data.finishMoveName || null, days };
-    if (m.data.result === 'win') qs.push({ id: 'last_match', fx, ctx: 'last_match_win', subject: opp, refs: [m.id], text: `You beat ${oppName} ${when} by ${String(m.data.finish).replace(/_/g, ' ')}. What did you see out there that others missed?` });
+    const fx = { finish: String(m.data.finish || 'finish').replace(/_/g, ' ').replace(/\bdq\b/i, 'DQ'), move: m.data.finishMoveName || null, days };
+    if (m.data.result === 'win') qs.push({ id: 'last_match', fx, ctx: 'last_match_win', subject: opp, refs: [m.id], text: `You beat ${oppName} ${when} by ${String(m.data.finish).replace(/_/g, ' ').replace(/\bdq\b/i, 'DQ')}. What did you see out there that others missed?` });
     else if (m.data.result === 'loss') qs.push({ id: 'last_match', fx, ctx: 'last_match_loss', subject: opp, refs: [m.id], text: `${oppName} beat you ${when}. People are asking whether you were outclassed. Were you?` });
     else qs.push({ id: 'last_match', draw: true, fx, ctx: 'last_match_loss', subject: opp, refs: [m.id], text: `Your match with ${oppName} ${when} ended without a winner. Who do you think deserved the win?` });
   }
@@ -268,7 +268,11 @@ export function answerAppearance(c, answerId, extras = {}) {
   const pool = [...pack.filter(fresh), ...(legacyFits || !pack.length ? [legacy] : [])];
   const text = pool[parseInt(hash53(`${s.seed}:${q.id}:${answerId}:say`), 36) % pool.length];
   const sr0 = REACT_STANCE[answerId] ? REACT_STANCE[answerId][tier(quality)] : REACT[tier(quality)];
-  const sr = [...((REACTIONS[answerId] || {})[tier(quality)] || []), ...sr0];
+  // reactions mention a venue (studio, press room, chat); keep only those that fit where this appearance happens
+  const VENUE_BAD = { podcast: /press room|reporters|flash|stage|arena|backstage/i, press_conference: /podcast|listener|chat|stream|studio|panel|producer|co-?host/i, interview: /podcast|listener|chat|stream|press room|reporters|flash/i };
+  const bad = VENUE_BAD[s.kind];
+  const sr1 = [...((REACTIONS[answerId] || {})[tier(quality)] || []), ...sr0];
+  const sr = bad ? (sr1.filter((l) => !bad.test(l)).length >= 3 ? sr1.filter((l) => !bad.test(l)) : sr1) : sr1;
   const react = sr[parseInt(hash53(`${s.seed}:${q.id}r`), 36) % sr.length];
   s.given.push({ q: q.id, promiseId: q.promiseId || null, ctx: q.ctx, answer: answerId, quality, text, react, subject: q.subject || null, refs: q.refs, question: q.text });
   s.index += 1;

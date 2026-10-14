@@ -146,14 +146,14 @@ export function socialFeed(career, { limit = 14, nameOf = (id) => id } = {}) {
     if (e.type === 'match_result') {
       if (d.result === 'win') { mkey = 'win'; pool = (d.finish === 'dq' && d.dqBy === me) ? FAN.win_dirty : (d.clean && !d.comeback) ? FAN.win_clean : FAN.win_close; kind = 'fan'; }
       else if (d.result === 'loss') { mkey = 'loss'; pool = (parseInt(hash53(e.id), 36) % 4 === 0) ? FAN.loss_boo : FAN.loss; kind = 'fan'; }
-      else { mkey = 'loss'; pool = FAN.draw; kind = 'fan'; }
+      else { mkey = null; pool = FAN.draw; kind = 'fan'; }
     } else if (e.type === 'title_win') { mkey = 'title'; pool = FAN.title; kind = 'fan'; m.t = d.titleName || d.name || 'title'; }
     else if (e.type === 'title_loss') { mkey = 'title_loss'; pool = FAN.title_loss; kind = 'fan'; m.t = d.titleName || d.name || 'title'; }
     else if (e.type === 'promo_delivered') { mkey = 'promo'; pool = (d.quality ?? 50) >= 55 ? FAN.promo : FAN.promo_bad; kind = 'fan'; }
     else if (e.type === 'interview') { pool = FAN.interview; kind = 'fan'; }
     if (!pool) continue;
     // every fourth reaction comes from a media account instead, as a headline
-    const media = parseInt(hash53(`m${e.id}`), 36) % 4 === 0 && e.type !== 'interview';
+    const media = parseInt(hash53(`m${e.id}`), 36) % 4 === 0 && e.type !== 'interview' && !!mkey;
     const text = fill(hp(media && mkey && SP.media[mkey] ? SP.media[mkey] : pool, `${e.id}:t`), m);
     items.push({ id: e.id, day: e.day, date: e.date, kind: media ? 'media' : 'fan', author: media ? { name: hp(MEDIA, `${e.id}:a`), handle: 'news' } : { name: `@${hp(HANDLES, `${e.id}:h`)}`, handle: 'fan' }, text, likes: likeBase(e.id, media ? 3 : 1), refs: [e.id] });
   }

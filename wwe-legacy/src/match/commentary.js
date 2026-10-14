@@ -42,6 +42,16 @@ function earlier(state, ev, pred, limit = 400) {
 }
 
 function narrateRaw(state, ev, bump = 0) {
+  const text = narrateCore(state, ev, bump);
+  if (!text || !ev.moveName) return text;
+  // subject-verb agreement for plural move names ("the Stomps rattles" -> "the Stomps rattle"), whichever template produced the line
+  const rawMv = ev.moveName, ownerLast = String(state.fighters[ev.actor] ? state.fighters[ev.actor].name : '').split(' ').slice(-1)[0];
+  const mvPlain = rawMv.startsWith(`${ownerLast}'s `) ? rawMv.slice(ownerLast.length + 3) : rawMv;
+  if (!(/[^s]s$/.test(mvPlain) && !/ss$/.test(mvPlain))) return text;
+  return text.replace(new RegExp(`(${esc(mvPlain)}(?: from [A-Z][\\w'-]+)?) (\\w+)\\b`, 'g'), (m, head, v) => (SING_TO_PLURAL[v] ? `${head} ${SING_TO_PLURAL[v]}` : m));
+}
+
+function narrateCore(state, ev, bump = 0) {
   const nm = (id) => (id && state.fighters[id] ? state.fighters[id].name : 'Someone');
   const last = (id) => nm(id).split(' ').slice(-1)[0];
   const a = nm(ev.actor), t = nm(ev.target), aL = last(ev.actor), tL = last(ev.target);
@@ -62,7 +72,7 @@ function narrateRaw(state, ev, bump = 0) {
   // authored prose pack (src/match/commentary_pack.js): lines use {a} {aL} {t} {tL} {mv} {part} {adj} {pos} {self} {tpos} {tself}
   const ctx = { a, aL, t, tL, mv: myMv, part: ev.part || 'body', adj: ev.quality === 'devastating' ? 'devastating' : ev.quality === 'clean' ? 'clean' : 'solid', pos: posA, self: selfA, tpos: pron(state, ev.target)[2], tself: pron(state, ev.target)[3] };
   const fixAgree = (t) => (plural ? t.replace(new RegExp(`(${esc(mvPlain)}(?: from [A-Z][\\w'-]+)?) (\\w+)\\b`, 'g'), (m, head, v) => (SING_TO_PLURAL[v] ? `${head} ${SING_TO_PLURAL[v]}` : m)) : t);
-  const fill = (line) => fixAgree(line).replace(/\{(\w+)\}/g, (_, k) => (ctx[k] === undefined ? '' : ctx[k]))
+  const fill = (line) => fixAgree(line.replace(/\{(\w+)\}/g, (_, k) => (ctx[k] === undefined ? '' : ctx[k])))
     .replace(/\b(legs|arms) (pays|takes|is|was|has|goes|feels|gives|hurts|buckles|bears)\b/g, (_, n, v) => `${n} ${PLURAL_VERB[v]}`) // body parts: 'legs' and 'arms' are plural
     .replace(/(^|[.!?]["']?\s+)([a-z])/g, (_, pre, ch) => pre + ch.toUpperCase()); // "the Big Boot" opening a sentence
   const packLines = (key) => (PACK[key] || []).map(fill);
@@ -96,8 +106,8 @@ function narrateRaw(state, ev, bump = 0) {
       const tail = dirty || H(q, 3) % 3 ? '' : pick(IMPACT_TAIL[ev.quality] || [''], q, 3);
       const again = earlier(state, ev, (e) => e.type === 'move_connected' && e.actor === ev.actor && e.move === ev.move) + 1;
       const part = earlier(state, ev, (e) => e.type === 'move_connected' && e.target === ev.target && e.part === ev.part && e.seq > ev.seq - 14) + 1;
-      if (again >= 3 && H(q, 9) % 3 === 0) return `${a} goes back to ${mvPlain} for the ${ord(again)} time, and ${tL} still has no answer.`;
-      if (part >= 3 && ev.part && ev.part !== 'torso' && H(q, 8) % 4 === 0) return `${aL} keeps working the ${ev.part}: ${mvPlain} again. ${tail}`.trim();
+      if (again >= 3 && H(q, 9) % 3 === 0) return `${a} goes back to ${the(mvPlain)} for the ${ord(again)} time, and ${tL} still has no answer.`;
+      if (part >= 3 && ev.part && ev.part !== 'torso' && H(q, 8) % 4 === 0) return `${aL} keeps going after the ${ev.part} with ${the(mvPlain)}. ${tail}`.trim();
       if (ev.cat === 'positioning') return positioning ? posLine(POSITION[ev.move], 50) : cyc([`${aL} sets up the next spot.`, `${a} changes position.`, `${aL} moves into position.`], 50);
       if (ev.cat === 'submission') return cyc([`${a} applies ${the(mvPlain)} to ${tL}'s ${ev.part}.`, `${aL} grinds ${the(mvPlain)} into ${tL}.`], 51);
       const adj = ev.quality === 'devastating' ? 'devastating' : dirty ? 'nasty' : ev.quality === 'clean' ? 'clean' : 'solid';
@@ -147,7 +157,8 @@ function narrateRaw(state, ev, bump = 0) {
     case 'pin_kickout': return ev.nearFall ? say('kickout_near', [
       `KICK OUT at two! ${a} just got a shoulder up - that was close!`, `TWO! ${aL} gets the shoulder up at the last instant!`, `Only two! ${aL} somehow survives!`,
     ], 16, true) : say('kickout', [`${a} kicks out at two.`, `${aL} powers out at two.`, `Out at two! ${aL} is not done.`], 17, true);
-    case 'pin_win': return say('pin_win', [`One, two, three! ${a} wins by pinfall!`, `Three! That's it - ${aL} gets the pin!`, `The ref's hand hits the mat a third time. ${aL} wins!`], 18, true);
+    case 'pin_win': if (state.rules.elimination || state.rules.ironMan) return ''; // the 'eliminated' / 'fall' event narrates these
+      return say('pin_win', [`One, two, three! ${a} wins by pinfall!`, `Three! That's it - ${aL} gets the pin!`, `The ref's hand hits the mat a third time. ${aL} wins!`], 18, true);
     case 'pin_save': return say('pin_save', [`${a} rushes in and breaks up the pin on ${nm(ev.saved)}!`, `The save! ${aL} dives in to break the count.`], 19, true);
     case 'pin_reversed': return `${a} bridges out and reverses the cover!`;
     case 'pin_broken_dirty': return `${a} gets a thumb in the eye and breaks the count!`;
@@ -164,7 +175,8 @@ function narrateRaw(state, ev, bump = 0) {
     case 'hold_reversed': return `${a} reverses the hold and hurts ${t}!`;
     case 'rope_break': return say('rope_break', [`${a} gets to the ropes! Break!`, `Rope break! ${aL} stretches and grabs the bottom rope.`], 23, true);
     case 'crawl_progress': return pick([`${a} drags toward the ropes...`, `Inch by inch, ${aL} crawls for the ropes.`], q, 24);
-    case 'submission_win': return ev.voluntary ? `${t} taps out to ${a}'s ${mv}!` : say('submission_win', [`${t} taps! ${a} wins by submission!`, `That's it - ${tL} taps out! ${aL} wins!`, `The ref calls for the bell: ${tL} gave up.`], 25, true);
+    case 'submission_win': if (state.rules.elimination || state.rules.ironMan) return '';
+      return ev.voluntary ? `${t} taps out to ${a}'s ${mv}!` : say('submission_win', [`${t} taps! ${a} wins by submission!`, `That's it - ${tL} taps out! ${aL} wins!`, `The ref calls for the bell: ${tL} gave up.`], 25, true);
     case 'hold_released': return ev.exhausted ? `${a} is too tired to maintain the hold.` : `${a} releases the hold.`;
     case 'hold_transition': return `${a} rolls the hold into a cover!`;
     case 'hold_slipped': return `${a} loses the grip!`;
@@ -177,7 +189,7 @@ function narrateRaw(state, ev, bump = 0) {
     case 'countout': return `${a} fails to beat the count!`;
     case 'tactic': return ev.tactic.startsWith('target_') ? pick([`${a} starts working on the ${ev.tactic.slice(7)}.`, `${aL} has picked a target: the ${ev.tactic.slice(7)}.`], q, 29) : ev.tactic.startsWith('pace_') ? `${a} changes the pace.` : `${a} studies ${nm(ev.target) === 'Someone' ? 'the opponent' : t}.`;
     case 'focus': return pick([`${a} turns on ${t}.`, `${aL} switches targets and goes after ${tL}.`, `${aL} spots ${tL} and changes direction.`], q, 45);
-    case 'jump_in': return cyc([`${a} charges back into the thick of it!`, `${aL} has seen enough waiting - back into the fray!`, `${aL} slides in and takes control of the chaos.`, `${aL} is done watching and wades in swinging.`, `${a} vaults the ropes and rejoins the brawl.`, `${aL} spots an opening and dives back in.`, `Back in comes ${aL}, with a point to prove.`, `${aL} elbows ${selfA} a spot in the melee.`, `${aL} re-enters the ring and the odds change again.`, `The crowd roars as ${aL} climbs back in.`], 46);
+    case 'jump_in': return cyc([`${a} charges back into the thick of it!`, `${aL} has seen enough waiting - back into the fray!`, `${aL} slides in and takes control of the chaos.`, `${aL} is done watching and wades in swinging.`, `${aL} spots an opening and dives back in.`, `Back in comes ${aL}, with a point to prove.`, `${aL} elbows ${selfA} a spot in the melee.`, `${aL} re-enters the ring and the odds change again.`, `The crowd roars as ${aL} climbs back in.`], 46);
     case 'eliminated': if (ev.finish === 'over_the_top') return pick([`${t} goes OVER THE TOP ROPE! ${aL} has eliminated ${tL} - ${ev.remaining} left!`, `Over the top and out! ${aL} dumps ${tL} to the floor - ${ev.remaining} remain.`, `${tL} hits the floor, both feet down - ${tL} is eliminated by ${aL}! ${ev.remaining} competitors left.`, `That's the toss! ${aL} sends ${tL} over the top rope and ${tL} is gone. ${ev.remaining} remain.`], q, 66);
       return pick([`${t} is ELIMINATED by ${a}! ${ev.remaining} left.`, `That's it for ${tL}! ${aL} sends ${tL} packing - ${ev.remaining} remain.`, `${tL} has been eliminated! ${ev.remaining} competitors left.`], q, 47);
     case 'entry': return pick([`The next pod opens: number ${ev.number} is ${a}!`, `Entrant number ${ev.number}: ${a} bursts out of the pod!`, `${a} is released into the chamber - number ${ev.number}!`], q, 48);

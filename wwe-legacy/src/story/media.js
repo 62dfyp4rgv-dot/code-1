@@ -82,7 +82,7 @@ export function deliverPromo(career, { tone, targetId = null, claim = 'none', co
   const viral = quality >= 88 && rng.chance(0.45);
   // compose lines
   const lines = [];
-  const seed = key + tone;
+  const seed = `${career.seed}:${key}${tone}`;
   const tn = target ? target.name : '';
   const tl = tn ? tn.split(' ').slice(-1)[0] : '';
   const gen = target && target.gender === 'F' ? { their: 'her', they: 'she', them: 'her' } : target && target.gender === 'M' ? { their: 'his', they: 'he', them: 'him' } : { their: 'their', they: 'they', them: 'them' };

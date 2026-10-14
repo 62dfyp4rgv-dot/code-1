@@ -291,7 +291,7 @@ export class Game {
     const c = this.c, me = c.player, u = this.universe;
     const ovr = c.overall();
     const rng = new Rng(`opp:${c.seed}:${c.day}`);
-    const pool = u.available(c.day, (w) => w.id !== me.id && u.sameBrand(w, me.brand) && (w.gender === me.gender || rng.chance(0.15)));
+    const pool = u.available(c.day, (w) => w.id !== me.id && u.sameBrand(w, me.brand) && (w.gender === me.gender || rng.chance(0.03)));
     const cards = [];
     const seen = new Set();
     const add = (w, extra = {}) => { if (!w || seen.has(w.id)) return; seen.add(w.id); cards.push({ ...this.opponentCard(w), ...extra }); };
@@ -327,7 +327,10 @@ export class Game {
       } else if (t.holder && this._shotEligible(t)) add(u.get(t.holder), { title: this._titleInfo(t), stakes: 'title' });
     }
     // 3. ordinary opponents near your level
-    const scored = pool.map((w) => ({ w, d: Math.abs(this._overall(w) - ovr) + rng.next() * 6 })).sort((a, b) => a.d - b.d);
+    // variety: someone already faced in the last few matches is much less likely to be offered again (rivalries still generate their own demands)
+    const recentOpps = c.memory.ledger.query({ types: ['match_result'], scope: 'player', newestFirst: true, limit: 8 }).flatMap((e) => e.data.opponents || []);
+    const faced = (id) => recentOpps.reduce((n, x, i) => n + (x === id ? (i < 2 ? 3 : 1) : 0), 0);
+    const scored = pool.map((w) => ({ w, d: Math.abs(this._overall(w) - ovr) + rng.next() * 6 + faced(w.id) * 9 })).sort((a, b) => a.d - b.d);
     for (const { w } of scored) { if (cards.length >= 5) break; add(w); }
     return cards;
   }

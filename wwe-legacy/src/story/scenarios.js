@@ -158,9 +158,18 @@ function mediaFor(c, kind, seed) {
 }
 
 const PRON = { M: { they: 'he', them: 'him', their: 'his', theirs: 'his' }, F: { they: 'she', them: 'her', their: 'her', theirs: 'hers' } };
+/** the name a colleague would use in conversation: "The Rock", "Triple H", "Stone Cold", "Punk" (for CM Punk), otherwise the first name */
+export function shortName(name) {
+  const t = String(name).split(' ');
+  if (t.length === 1) return t[0];
+  if (/^The$/i.test(t[0])) return t.slice(0, 2).join(' ');
+  if (/^(Triple|Stone|Big|Road|Hulk|Macho|Ultimate|Rowdy|Razor|Jake|Million|Mr\.|Dr\.)$/.test(t[0])) return t.slice(0, 2).join(' ');
+  if (/^[A-Z]{2,3}$/.test(t[0]) && t.length === 2) return t[1]; // CM Punk, AJ Styles, LA Knight
+  return t[0];
+}
 export function wrestlerBinding(w) {
   const g = PRON[w.gender] || { they: 'they', them: 'them', their: 'their', theirs: 'theirs' };
-  return { id: w.id, name: w.name, first: w.name.split(' ')[0], last: w.name.split(' ').slice(-1)[0], isWrestler: true, ...g, style: w.style, tier: w.tier ?? 1, alignment: w.alignment };
+  return { id: w.id, name: w.name, first: shortName(w.name), last: w.name.split(' ').slice(-1)[0], isWrestler: true, ...g, style: w.style, tier: w.tier ?? 1, alignment: w.alignment };
 }
 const playerBinding = (p) => {
   const g = PRON[p.gender] || { they: 'they', them: 'them', their: 'their', theirs: 'theirs' };
@@ -216,6 +225,7 @@ export function bindCast(t, ctx, seedKey) {
         if (spec.tier) c2 = c2.filter((w) => inRange(w.tier ?? 1, spec.tier));
         if (spec.sameBrand) c2 = c2.filter((w) => w.brand === ctx.brand);
         if (spec.gender) c2 = c2.filter((w) => w.gender === spec.gender);
+        else if (!spec.anyGender) { const same = c2.filter((w) => w.gender === ctx.me.gender); if (same.length >= 3) c2 = same; } // scenes about colleagues default to the player's own division
         if (spec.alignment) c2 = c2.filter((w) => [].concat(spec.alignment).includes(w.alignment));
         if (spec.style) c2 = c2.filter((w) => [].concat(spec.style).includes(w.style));
         if (c2.length) pick = hashPick(preferDistinct(c2, bind), `${seedKey}:${role}`);
