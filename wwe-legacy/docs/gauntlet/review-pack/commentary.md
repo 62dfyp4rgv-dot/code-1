@@ -6,7 +6,7 @@ Each line was produced by `narrate()` from a structured engine event. The engine
 
 Result: pinfall, 5 min, 2.5 stars.
 
-- Vale sets up the next spot: Irish Whip to Corner.
+- Vale sends Hammer crashing into the turnbuckles.
 - Rex Hammer catches the Forearm Smash before it can do any damage.
 - Vale tries the Tree of Woe Stomps, but Hammer has seen enough of it to shut it down.
 - Adrian Vale starts working on the head.
@@ -15,10 +15,10 @@ Result: pinfall, 5 min, 2.5 stars.
 - Hammer grins, then goes to the Eye Rake on Vale's head.
 - Hammer circles, looking for an angle.
 - Vale doesn't telegraph it, and Hammer never sees the Chop coming.
-- Rex Hammer turns the tables, flipping his Arm Attack right back at Adrian Vale!
+- Rex Hammer turns the tables, flipping his Arm Wrench right back at Adrian Vale!
 - Vale thought the opening was safe. Hammer showed otherwise with the Chinlock.
 - Rex Hammer unloads a flurry on Vale and caps it with the Ground & Pound!
-- Hammer moves into position: Climb to the Top Rope.
+- Rex Hammer climbs to the top rope.
 - Vale is down, and Hammer smells blood: cover!
 - 1!
 - 2!
@@ -34,17 +34,17 @@ Result: pinfall, 5 min, 2.5 stars.
 - Rex Hammer's mind games backfire.
 - Step by step, Vale gets vertical again.
 - Adrian Vale grabs his head in obvious pain.
-- That's the finish, surely! Rex Hammer lands the Finisher on Vale!
+- That's the finish, surely! Rex Hammer lands the Superkick on Vale!
 - Pinfall attempt from Hammer, and the ref counts.
-- 1...
-- 2...
+- 1!
+- 2!
 - 3...
 - No kickout this time! Hammer has Vale pinned for the win!
 - Rex Hammer wins by pinfall.
 
 ## ladder: Kai Storm vs Goliath Rourke (seed 5)
 
-Result: objective, 29 min, 3.0 stars.
+Result: objective, 13 min, 3.0 stars.
 
 - That was close! Rourke attempts the Steel Chair Shot and clips the air where Storm used to be.
 - Goliath Rourke catches the Steel Chair Shot before it can do any damage.
@@ -52,95 +52,41 @@ Result: objective, 29 min, 3.0 stars.
 - A step back, a shrug, and Rourke has avoided the Kendo Stick Flurry.
 - Up comes Rourke, slower than anyone would like.
 - Storm makes a mockery of the rulebook with the Trash Can Lid Strike.
-- Steel, wood, or worse, it all feels the same to Rourke after the Trash Can Lid Strike.
-- Storm keeps working the head: Ladder Shot again.
-- Hold on, Rourke is back in this!
+- Steel, wood, or worse, it all feels the same to Rourke after the Kendo Stick Flurry.
+- Storm hauls himself up another step, ignoring everything below.
 - Rourke rolls onto his stomach and pushes up.
-- Storm tries the Clothesline, but Rourke has seen enough of it to shut it down.
-- Kai Storm slips out of the way, and Goliath Rourke grabs nothing but air.
-- Rourke crumples as Storm brings the Ladder Shot down across the head.
+- No net, no fear. Kai Storm flings himself at Rourke with the Flying Crossbody.
+- Storm refuses to stay down and rises.
+- Rourke crumples as Storm brings the Steel Chair Shot down across the head.
 - Rourke looks stunned by the speed of Storm's run, and confidence is feeding on itself.
-- Goliath Rourke grabs his head in obvious pain.
 - Kai Storm reaches for a weapon and delivers the Steel Chair Shot to Rourke's head.
-- Stopped dead! Rourke swallows up the Steel Chair Shot from Storm.
-- Storm keeps working the head: Ladder Shot again.
-- Rourke plants his feet, and Storm's attempt at the Steel Chair Shot goes nowhere.
-- Rourke refuses to stay down and rises.
-- Nice read by Rourke, who smothers the Tornado DDT from Storm.
-- Rourke hauls himself up another step, ignoring everything below.
-- Storm rolls through the ropes and hits the floor, buying time.
-- A foot slides, a grip fails, and Rourke falls.
-- Storm swings with bad intentions, and Rourke takes the Kendo Stick Flurry to the torso.
-- Storm goes to the Steel Chair Shot and meets a brick wall in Rourke.
-- Foreign object, familiar result: Rourke crumples under the Kendo Stick Flurry.
-- Storm keeps working the head: Steel Chair Shot again.
-- There is real belief in this arena for Storm, and belief has a way of bending a match.
-- That's going to leave a mark. Kai Storm hits Rourke with the Kendo Stick Flurry.
-- Storm climbs through the ropes and returns to the action.
-- A little time to think: Rourke breathes and plans.
-- Whip-fast from Storm, with the Leg Drop thudding into the head.
-- Ugly and effective: Storm connects with the Steel Chair Shot to the head.
-- Storm makes a mockery of the rulebook with the Slam Through the Table.
-- A shift in the winds, and Rourke is flying with them.
-- Rourke lets the adrenaline settle.
-- Rourke has no time to answer as Storm pours it on, finishing with the Ground & Pound to the head.
-- Rourke is working against a wall of noise, and every boo is another tiny tax on the nerves.
-- No chance. Rourke was waiting for the Ladder Shot.
-- Storm lines up the shot and swings. Rourke absorbs the Ladder Shot with his head.
-- Oh no! Storm slips and tumbles.
-- A stagger, a sway, and Rourke is upright.
-- Rourke wobbles, flails, and goes down hard.
-- That is how you build a sequence: Storm sets it up, the Ground & Pound knocks it down.
-- Storm keeps working the head: Chinlock again.
-- Rourke springs to his feet, shaking off the fall.
-- The pace has caught up with Rourke. Efficient fighters save energy, and Rourke may have been careless with his reserves.
-- The ladder shakes, and Rourke cannot hold on.
-- Storm gets up, but the legs aren't quite steady.
-- Rourke soaks it up, and Storm gets nothing from the Kendo Stick Flurry.
-- Surgical from Storm: the Chinlock lands exactly where Rourke was weakest.
 - Carefully, Storm ascends.
-- Back on his feet, Rourke looks for the next exchange.
-- Something is wrong: Rourke is clutching his torso.
-- Gravity does the rest as Storm lands the Flying Crossbody.
-- Kai Storm climbs to a knee, then to both feet.
-- Momentum like this is fragile but intoxicating, and Storm is making the most of it against Rourke.
-- Foreign object, familiar result: Rourke crumples under the Steel Chair Shot.
-- Storm keeps working the head: Ladder Shot again.
-- Rourke walks right into the Knee Drop to the Arm, and the arms pay for it.
-- Goliath Rourke fights back, and the match swings the other way!
-- Rourke takes stock of the damage and keeps moving.
-- Disaster for Storm, who misses a rung and plummets.
-- Rourke pushes off the canvas and stands, wobbling.
-- Step by shaky step, Rourke goes higher.
-- Storm grabs the bottom rope and drags himself upright.
-- Storm knows the fans are with himself, and it shows in the way his shoulders are set.
-- Rourke circles, looking for an angle.
-- Storm stings Rourke with the Forearm Smash.
-- Ugly and effective: Storm connects with the Steel Chair Shot to the head.
-- Storm keeps climbing, one hand after the other.
-- Rourke rolls onto his stomach and pushes up.
-- Off the ropes in a blur, Storm sails into the Flying Crossbody.
-- The attack is snuffed out. Rourke had the Ground & Pound scouted.
-- Rourke refuses to stay down and rises.
-- Goliath Rourke is gassed. The footwork has slowed, the hands are dropping, and a sharp opponent will notice.
-- The higher Rourke gets, the louder it becomes.
-- Storm points to the sky - the finish is coming!
-- Rourke slips, and the climb is over in an instant.
-- Step by step, Storm gets vertical again.
-- Storm keeps working the head: Steel Chair Shot again.
-- Reversal! Storm goes for the Leg Drop and Rourke spins it around.
+- Step by step, Rourke gets vertical again.
+- Storm springs from the top and delivers the Flying Crossbody onto Rourke's torso.
+- Storm keeps working the head: Ground & Pound again. The crowd winces.
 - Rourke hauls himself to his feet using sheer stubbornness.
-- Storm commits to the Body Slam; Rourke says no.
-- The clock is the third competitor now. Storm and Rourke both know that time is slipping away.
-- A forearm, a shoulder, a wall of resistance: Rourke stifles the Slam Through the Table.
-- Technique over thunder: Kai Storm threads the Headlock Takeover into Rourke's head.
-- Storm grits his teeth and climbs on.
-- A stagger, a sway, and Rourke is upright.
-- That's the Flying Crossbody from altitude, and Rourke's torso took the landing.
+- Step by shaky step, Rourke goes higher.
+- A stagger, a sway, and Storm is upright.
+- Rourke keeps climbing, one hand after the other.
+- Notice how Rourke is breathing through the mouth. That is a body begging for a break.
+- Storm tries the Knock Them Off, but Rourke has seen enough of it to shut it down.
+- A little time to think: Rourke breathes and plans.
+- Goliath Rourke grabs his torso in obvious pain.
+- Nothing subtle here: Storm swings the Knock Them Off like a wrecking ball at Rourke.
+- Kai Storm knocks Goliath Rourke off - a huge fall!
+- Something is wrong: Rourke is clutching his head.
+- Rourke is a step behind, and Storm exploits it with the Chinlock.
+- Storm stings Rourke with the Leg Drop.
+- Hold on, Rourke is back in this!
+- Rourke lets the adrenaline settle.
+- Rourke sees the weapon too late, and the Kendo Stick Flurry is the result.
+- Ugly and effective: Storm connects with the Trash Can Lid Strike to the head.
+- Reversal! Storm goes for the Steel Chair Shot and Rourke spins it around.
+- Notice Storm keeps glancing toward the fans between exchanges. That connection is fuelling a comeback.
 - Rourke springs to his feet, shaking off the fall.
-- Rourke misjudges the step, and gravity does the rest.
-- Storm gets up, but the legs aren't quite steady.
-- Rourke cannot find a rhythm because Storm keeps dictating the tempo, and that is the whole story here.
+- Storm makes a mockery of the rulebook with the Kendo Stick Flurry.
+- Storm keeps working the head: Snapmare again.
+- Stopped dead! Rourke swallows up the Ground & Pound from Storm.
 - Kai Storm reaches the top - hands on the prize!
 - Kai Storm claims the prize!
 - Kai Storm wins by retrieving the prize.
@@ -150,7 +96,7 @@ Result: objective, 29 min, 3.0 stars.
 Result: submission, 9 min, 2.3 stars.
 
 - Sable cuts off the escape route and lands the Headlock Takeover on Spotlight's head.
-- Dmitri Sable changes position - Climb to the Top Rope.
+- Sable scales the turnbuckle and looks down at Spotlight.
 - Sable has picked a target: the head.
 - Out of the ring goes Sable, looking to stall.
 - 2! Sable is still outside!
@@ -163,7 +109,7 @@ Result: submission, 9 min, 2.3 stars.
 - Step by step, Spotlight gets vertical again.
 - Stopped dead! Spotlight swallows up the Vertical Suplex from Sable.
 - Chain wrestling pays off as Sable slides into the Snapmare.
-- Johnny Spotlight REVERSES Dmitri Sable's Finisher!! Unbelievable!
+- Johnny Spotlight REVERSES Dmitri Sable's Leg Lock!! Unbelievable!
 - Spotlight hauls himself to his feet using sheer stubbornness.
 - That's the Stomps from Johnny Spotlight, flush on Sable's torso.
 - That was close! Spotlight attempts his Elbow and clips the air where Sable used to be.

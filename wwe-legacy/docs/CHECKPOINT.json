@@ -1,20 +1,20 @@
 {
- "updated": "2026-10-14T02:55:47.225Z",
- "lastRound": 7,
- "mean": 9.04,
+ "updated": "2026-10-14T08:49:02.432Z",
+ "lastRound": 8,
+ "mean": 9.01,
  "scores": {
   "matchEngine": 9.8,
-  "playerAgency": 9.74,
-  "memoryConsistency": 7.83,
-  "achievementIntegrity": 9.85,
-  "scenarioDiversity": 7.67,
+  "playerAgency": 9.67,
+  "memoryConsistency": 7.92,
+  "achievementIntegrity": 9.81,
+  "scenarioDiversity": 7.78,
   "narrativeQuality": 7.75,
-  "universeSimulation": 8.32,
+  "universeSimulation": 8.61,
   "careerProgression": 9.77,
   "mobileUsability": 8.6,
   "technicalReliability": 10,
-  "performance": 9.65,
-  "replayability": 9.54
+  "performance": 8.93,
+  "replayability": 9.52
  },
  "nextFocus": [
   {
@@ -33,26 +33,26 @@
    "value": 6.5
   },
   {
-   "category": "scenarioDiversity",
-   "criterion": "Authored, validated templates (target 2,000 would be complete)",
-   "value": 589
-  },
-  {
    "category": "universeSimulation",
    "criterion": "Verified historical data",
    "value": "partial"
+  },
+  {
+   "category": "scenarioDiversity",
+   "criterion": "Authored, validated templates (target 2,000 would be complete)",
+   "value": 853
   }
  ],
  "resume": [
   "cd wwe-legacy",
   "npm install",
   "npm test",
-  "node tools/gauntlet.js --round 8 --targets \"<what you will improve>\" --changes \"<what you changed>\""
+  "node tools/gauntlet.js --round 9 --targets \"<what you will improve>\" --changes \"<what you changed>\""
  ],
  "features": {
-  "complete": 22,
-  "partial": 4,
-  "unimplemented": 3
+  "complete": 26,
+  "partial": 2,
+  "unimplemented": 2
  },
  "files": {
   "ledger": "docs/DEVELOPMENT_LEDGER.md",

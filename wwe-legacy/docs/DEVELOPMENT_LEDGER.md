@@ -71,3 +71,13 @@ One entry per Gauntlet round: what was targeted, what changed, what was measured
 - Largest losses: Independent reviewer score (4.6); Independent reviewer score (6.5); Independent reviewer score (6.5); Authored, validated templates (target 2,000 would be complete) (589)
 - Regressions: none
 - Report: docs/gauntlet/round-07.md
+
+## Round 8
+
+- Target: Features and content: TLC/MITB/battle royal/handicap, personal-life system, social media feed, faction management UI, world editor, 264 new authored scenarios (853 total, 65% memory-bearing), cast-recency weighting, review-driven fixes
+- Changes: New match types with tests (36), life.js + scenario life stats and 8 life scenes, social.js feed/posting, factions UI, world editor, scenario defaults maxPerCareer 2 and cast-recency weighting, mobile fixes; reviewer scores remain the round-6 (pre-fix) ones.
+- Mean 9.01 | min 7.75 | >=9: 6/12 | tests 185/185
+- Weakest: Narrative quality 7.75, Scenario diversity 7.78, Memory consistency 7.92
+- Largest losses: Independent reviewer score (4.6); Independent reviewer score (6.5); Independent reviewer score (6.5); Verified historical data (partial)
+- Regressions: performance -0.72
+- Report: docs/gauntlet/round-08.md
