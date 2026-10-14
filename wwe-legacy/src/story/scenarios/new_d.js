@@ -279,8 +279,8 @@ export default [
     cast: { host: { pick: 'media', kind: 'host' }, legend: { pick: 'roster', tier: { gte: 4 } } },
     trigger: { minYear: 2008, stat: { popularity: { gte: 25 } } },
     slots: {
-      state: [`leaning on a cane`, `wearing a hospital wristband from the day before`, `with a hearing aid that whistles`, `pausing between every few sentences`],
-      topic: [`how a crowd used to feel before cameras were everywhere`, `what the dressing room smelled like in the old days`, `the last time they were truly afraid in a ring`, `the matches that no tape survives of`],
+      state: [`leaning on a cane`, `wearing a hospital wristband from the day before`, `wearing a hearing aid that whistles`, `pausing between every few sentences`],
+      topic: [`how a crowd used to feel before cameras were everywhere`, `what the dressing room smelled like in the old days`, `the last time {legend.they} was truly afraid in a ring`, `the matches that no tape survives of`],
     },
     body: [`{host.name} has paired you with {legend.name} for a joint episode, and the legend is {state}. The legend begins to tell you about {topic}, and the microphones pick up the creak of an old chair and a very long memory.`, `The host looks at you with a quiet panic. The best thing in the room is not you, and everybody knows it.`],
     choices: [
@@ -405,7 +405,7 @@ export default [
     memory: { role: 'rival', max: 2 },
     trigger: { rivalry: { minHeat: 25 } },
     slots: {
-      entrance: [`strolls in through the back door with a microphone of their own`, `stands up in the third row and starts talking`, `arrives dragging a folding chair`, `takes the empty seat beside you and says nothing`],
+      entrance: [`strolls in through the back door with a microphone of {rival.their} own`, `stands up in the third row and starts talking`, `arrives dragging a folding chair`, `takes the empty seat beside you and says nothing`],
       reaction: [`the cameras swing around`, `every reporter stops typing`, `someone drops a coffee`, `the hotel manager hurries toward the door`],
     },
     body: [`The press conference is moving along nicely until {rival.name} {entrance}. Behind you, {reaction}, and {reporter.name} sits up with a grin that would make a vulture proud.`, `This is either a gift or a trap. In either case, the next thirty seconds will be the clip.`],
@@ -511,7 +511,7 @@ export default [
     memory: { role: 'rival', max: 1 },
     trigger: { minYear: 2010, mem: [{ role: 'rival', respectGte: 8 }] },
     slots: {
-      prank: [`a video of themselves pretending to be your biggest fan`, `a fake contract signed with a banana`, `a photo of your gym bag redecorated with glitter`, `a list titled Ten Reasons You Cannot Be Trusted with Scissors`],
+      prank: [`a video of {rival.them}self pretending to be your biggest fan`, `a fake contract signed with a banana`, `a photo of your gym bag redecorated with glitter`, `a list titled Ten Reasons You Cannot Be Trusted with Scissors`],
       reach: [`for the whole roster to see`, `where half the production crew will find it`, `in the group chat of the entire locker room`, `at four in the afternoon, when everyone is bored`],
     },
     body: [`{rival.name} has posted {prank}, {reach}. It is the kind of joke you only make about somebody you have studied closely, and it is a little rude and very funny.`, `Replies are stacking up, and nobody knows which way you will take it. In the middle of a heated feud, a good joke is either a ceasefire or a new weapon.`],
@@ -708,11 +708,11 @@ export default [
     body: [`In row two sits {group}, all dressed as you in {costume}. {fan.name}, apparently the organiser, has made certain that every detail of the effort is visible from the ring.`, `Your entrance is in ninety seconds. They are serious about the commitment, and it is the most touching and ridiculous thing you have seen in months.`],
     choices: [
       { id: 'ring', label: 'Bring them to ringside and pose for a photo', risk: 'low', result: `The ring announcer coughs, and security hesitates, and then the whole row stands at the barricade with arms in the air. It is the best single photograph of your career.`, effects: [{ pop: 1.0 }, { conf: 2 }, { fatigue: 2 }] },
-      { id: 'nod', label: 'Give them a salute at the top of the ramp', risk: 'low', result: `You hold the gaze of the smallest one for a full second, and they scream. The family goes home having been seen, which is most of what they came for.`, effects: [{ pop: 0.5 }, { conf: 1 }] },
-      { id: 'gear', label: 'Send real gear to the youngest one after the show', risk: 'low', result: `A parcel with a worn shirt and a signed belt strap reaches the house the following week. The child sleeps in it, and the parents write you a very long letter.`, effects: [{ money: -400 }, { conf: 3 }, { pop: 0.3 }] },
+      { id: 'nod', label: 'Give them a salute at the top of the ramp', risk: 'low', result: `You hold the gaze of the smallest one for a full second, and they scream. The group goes home having been seen, which is most of what they came for.`, effects: [{ pop: 0.5 }, { conf: 1 }] },
+      { id: 'gear', label: 'Send real gear to the youngest one after the show', risk: 'low', result: `A parcel with a worn shirt and a signed belt strap reaches {fan.first} the following week. The youngest sleeps in it, and someone writes you a very long letter.`, effects: [{ money: -400 }, { conf: 3 }, { pop: 0.3 }] },
       { id: 'tease', label: 'Stay in character and mock the costumes mercilessly', risk: 'high', outcomes: [
-        { weight: 1, bonus: { charisma: 0.6 }, text: `The family is thrilled to be abused by you, and the whole section laughs along. It is a master class in a sort of affection nobody else is allowed to show.`, effects: [{ pop: 0.9 }, { conf: 1 }] },
-        { weight: 2, text: `One child cries, and the parents are quiet and hurt. You apologise afterwards, but the damage cannot be unseen.`, effects: [{ pop: -0.6 }, { conf: -4 }] } ] },
+        { weight: 1, bonus: { charisma: 0.6 }, text: `The group is thrilled to be abused by you, and the whole section laughs along. It is a master class in a sort of affection nobody else is allowed to show.`, effects: [{ pop: 0.9 }, { conf: 1 }] },
+        { weight: 2, text: `One of them tears up, and the rest are quiet and hurt. You apologise afterwards, but the damage cannot be unseen.`, effects: [{ pop: -0.6 }, { conf: -4 }] } ] },
     ],
   },
   {
@@ -757,15 +757,15 @@ export default [
     memory: { role: 'rival', max: 1 },
     trigger: {},
     slots: {
-      fan_type: [`a grinning kid`, `a stern grandmother`, `a man in a full costume`, `a couple on their anniversary`],
+      fan_type: [`a grinning kid`, `a stern grandmother`, `a man in a full costume`, `a young woman celebrating her anniversary`],
       spot: [`the sleeve`, `the back`, `the space beside the logo`, `the tag inside the collar`],
     },
-    body: [`{fan.name}, {fan_type}, reaches the front of the autograph line in a shirt printed with {rival.name}'s face. The request is clear and polite: sign {spot}.`, `The people behind them are watching your hand. If you scribble, you are rude; if you smile, you are suspicious; and either way, {rival.first} will hear about it.`],
+    body: [`{fan.name}, {fan_type}, reaches the front of the autograph line in a shirt printed with {rival.name}'s face. The request is clear and polite: sign {spot}.`, `The people in line behind {fan.first} are watching your hand. If you scribble, you are rude; if you smile, you are suspicious; and either way, {rival.first} will hear about it.`],
     choices: [
       { id: 'sign_warm', label: 'Sign it kindly and say the fan has good taste', risk: 'low', result: `You sign it with a flourish and compliment the fan\'s judgement. The story gets back to {rival.first}, who does not know what to do with a gift from an enemy.`, effects: [{ pop: 0.5 }, { rel: { who: 'rival', respect: 3, heat: -2 } }, { conf: 1 }] },
       { id: 'barb', label: 'Sign it with a barb about its owner', risk: 'med', outcomes: [
         { weight: 2, bonus: { mic: 0.5 }, text: `The barb, written in thick marker, is hilarious, and the fan holds it up for the line. {rival.first} hears about it and does not laugh.`, effects: [{ pop: 0.7 }, { rivalry: { who: 'rival', heat: 5 } }, { rel: { who: 'rival', heat: 4 } }] },
-        { weight: 1, text: `The fan does not get the joke, and neither does the mother standing behind. The shirt is ruined, and your name is on it in the wrong way.`, effects: [{ pop: -0.4 }, { conf: -2 }, { rivalry: { who: 'rival', heat: 3 } }] } ] },
+        { weight: 1, text: `The fan does not get the joke, and neither does anyone standing in line behind. The shirt is ruined, and your name is on it in the wrong way.`, effects: [{ pop: -0.4 }, { conf: -2 }, { rivalry: { who: 'rival', heat: 3 } }] } ] },
       { id: 'refuse', label: 'Refuse to sign it, politely but firmly', risk: 'low', result: `You tell the fan you do not sign other people\'s faces, and offer a signed photo instead. The line is split, and the fan is gracious about it.`, effects: [{ pop: -0.2 }, { conf: 1 }, { rel: { who: 'rival', respect: -1 } }] },
       { id: 'swap', label: 'Offer to swap the shirt for one of yours', risk: 'med', result: `The fan\'s eyes go wide, and the exchange is photographed ten times. It costs you a shirt, and the picture of {rival.first}\'s shirt on your table makes a very funny post-show story.`, effects: [{ money: -100 }, { pop: 0.8 }, { rivalry: { who: 'rival', heat: 3 } }] },
     ],
@@ -911,10 +911,10 @@ export default [
     },
     body: [`The knock comes {hour}, and it is {rookie.name}, who is obviously not supposed to be there and does not know what to say. The request, once it comes out in a rush, is simple: {request}.`, `{rookie.first} has a smaller match tomorrow than yours, and probably a bigger fear. You are tired and have your own list of things to worry about, but the doorway is a small place for a person to stand.`],
     choices: [
-      { id: 'invite', label: 'Let them in and give them the time they need', risk: 'low', result: `You make bad hotel coffee and talk through anything but the match. When {rookie.first} finally falls asleep on the couch, you cover them with a jacket, and sleep comes harder for you.`, effects: [{ rel: { who: 'rookie', respect: 6, trust: 5, affinity: 4 } }, { conf: 2 }, { fatigue: 4 }] },
+      { id: 'invite', label: 'Let {rookie.them} in and stay as long as needed', risk: 'low', result: `You make bad hotel coffee and talk through anything but the match. When {rookie.first} finally falls asleep on the couch, you cover {rookie.them} with a jacket, and sleep comes harder for you.`, effects: [{ rel: { who: 'rookie', respect: 6, trust: 5, affinity: 4 } }, { conf: 2 }, { fatigue: 4 }] },
       { id: 'pep', label: 'Give a short, firm pep talk in the corridor', risk: 'low', result: `You say three useful things standing up and send {rookie.first} back to bed with a hand on a shoulder. It is kind, and it is brief, and it is enough.`, effects: [{ rel: { who: 'rookie', respect: 3, trust: 2 } }, { conf: 1 }, { fatigue: 1 }] },
-      { id: 'send_away', label: 'Send them away gently and protect your sleep', risk: 'low', result: `You say you will see them in the morning and close the door softly. The sleep that follows is good, and the guilt arrives at about seven.`, effects: [{ fatigue: -6 }, { rel: { who: 'rookie', respect: -2 } }, { conf: -1 }] },
-      { id: 'meal', label: 'Take them to the all-night diner downstairs', risk: 'med', result: `Over eggs and bad coffee, a stranger recognises both of you and asks for a picture. The rookie laughs for the first time all week, and the picture is on the diner wall by Sunday.`, effects: [{ money: -80 }, { rel: { who: 'rookie', respect: 5, affinity: 5 } }, { pop: 0.4 }, { fatigue: 3 }] },
+      { id: 'send_away', label: 'Send {rookie.them} away gently and protect your sleep', risk: 'low', result: `You say you will see {rookie.them} in the morning and close the door softly. The sleep that follows is good, and the guilt arrives at about seven.`, effects: [{ fatigue: -6 }, { rel: { who: 'rookie', respect: -2 } }, { conf: -1 }] },
+      { id: 'meal', label: 'Take {rookie.them} to the all-night diner downstairs', risk: 'med', result: `Over eggs and bad coffee, a stranger recognises both of you and asks for a picture. The rookie laughs for the first time all week, and the picture is on the diner wall by Sunday.`, effects: [{ money: -80 }, { rel: { who: 'rookie', respect: 5, affinity: 5 } }, { pop: 0.4 }, { fatigue: 3 }] },
     ],
   },
   {
@@ -957,7 +957,7 @@ export default [
     memory: { role: 'rival', max: 2 },
     trigger: { holdsTitle: true, mem: [{ role: 'rival', matchesGte: 1 }] },
     slots: {
-      request: [`one honest match with no outside interference`, `a fair referee and a finish that cannot be disputed`, `to shake hands before the bell`, `to have their family seated near the ring`],
+      request: [`one honest match with no outside interference`, `a fair referee and a finish that cannot be disputed`, `to shake hands before the bell`, `to have {rival.their} family seated near the ring`],
       place: [`the hallway outside the arena\'s medical room`, `a corner of the parking lot`, `the empty ring at the end of the night`, `the elevator, going up`],
     },
     body: [`{rival.name} approaches you in {place}, not with a threat but with a request. The challenger would like {request}, and speaks plainly, without the usual swagger.`, `There is no angle in the tone, or if there is, it is well hidden. A champion who grants the request may look generous, or may look soft, and a champion who refuses may look like a bully with a strap.`],
@@ -965,7 +965,7 @@ export default [
       { id: 'grant', label: 'Grant it, no conditions', risk: 'low', result: `You say yes at once and mean it. {rival.first} stares for a moment, then nods once, and the contest ahead feels a little cleaner for the deal.`, effects: [{ rel: { who: 'rival', respect: 6, trust: 4, heat: -5 } }, { pop: 0.4 }, { conf: 1 }] },
       { id: 'terms', label: 'Grant it, and attach a public promise of your own', risk: 'med', result: `You say yes, and then you say loudly that you will retain the belt. The promise raises the stakes, and {rival.first} lets the smile show.`, effects: [{ promise: { kind: 'retain_title', text: 'I will retain my title against all comers', params: { defenses: 1 }, deadlineDays: 60 } }, { rel: { who: 'rival', respect: 3 } }, { pop: 0.6 }, { conf: 2 }] },
       { id: 'refuse', label: 'Refuse: champions do not negotiate', risk: 'med', result: `The reply is cold and brief. {rival.first} turns away without arguing, and you find that the hallway is warmer after the turn.`, effects: [{ rivalry: { who: 'rival', heat: 8 } }, { rel: { who: 'rival', respect: -4, heat: 6 } }, { pop: 0.2 }, { conf: 1 }] },
-      { id: 'mock', label: 'Laugh and tell them to earn it in the ring', risk: 'high', outcomes: [
+      { id: 'mock', label: 'Laugh and tell {rival.them} to earn it in the ring', risk: 'high', outcomes: [
         { weight: 2, bonus: { mic: 0.5 }, text: `The line is quoted by half the roster before the end of the night. {rival.first} does not respond, which is more worrying than any retort.`, effects: [{ pop: 0.8 }, { rivalry: { who: 'rival', heat: 10 } }, { rel: { who: 'rival', heat: 8, respect: -3 } }] },
         { weight: 1, text: `The laugh lands as arrogant, and an older champion in the corridor looks at you with something close to pity. {rival.first} walks off with a plan.`, effects: [{ pop: -0.2 }, { rivalry: { who: 'rival', heat: 10 } }, { conf: -2 }] } ] },
     ],

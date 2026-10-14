@@ -108,7 +108,7 @@ export default [
     choices: [
       { id: 'teach', label: `Give the afternoon and teach everything you know`, risk: 'low', result: `You walk through ring awareness, eliminations and what to do when the ropes sag. {rookie.first} leaves steadier, and a few veterans see you doing it.`, effects: [{ event: { type: 'mentorship', participants: ['rookie'], summary: `Coached {rookie.name} before a Royal Rumble.`, data: { byPlayer: true } } }, { rel: { who: 'rookie', trust: 12, respect: 10, affinity: 8 } }, { fatigue: 10 }, { conf: 2 }] },
       { id: 'short', label: `Offer five minutes and a warning to stay low-key`, risk: 'low', result: `You hand over a few honest rules and leave it there. It is practical, if not warm.`, effects: [{ rel: { who: 'rookie', respect: 3, trust: 2 } }, { conf: 1 }] },
-      { id: 'rival_trick', label: `Offer advice that sets them up to fail`, risk: 'high', outcomes: [
+      { id: 'rival_trick', label: `Offer advice that sets {rookie.them} up to fail`, risk: 'high', outcomes: [
         { weight: 2, text: `{rookie.first} follows your advice and is eliminated within two minutes. Nobody ever finds out why, and you quietly cut a future rival down.`, effects: [{ rel: { who: 'rookie', trust: 2 } }, { conf: 2 }, { pop: -0.1 }] },
         { weight: 1, text: `A veteran overheard the lesson and tells half the locker room. You are suddenly known as the person who sabotages first-timers.`, effects: [{ rel: { who: 'rookie', trust: -20, heat: 15, respect: -12 } }, { pop: -0.8 }, { conf: -5 }, { event: { type: 'betrayal', participants: ['rookie'], summary: `Sabotaged {rookie.name} before the Royal Rumble.`, data: {} } }] } ] },
       { id: 'pass', label: `Decline: you need to focus on your own night`, risk: 'low', result: `You tell {rookie.first} you have your own match to prepare for, and mean it. {rookie.they} thanks you politely and leaves.`, effects: [{ rel: { who: 'rookie', respect: -2 } }, { conf: 2 }, { fatigue: -4 }] },
@@ -135,7 +135,7 @@ export default [
     id: 'rmb_empty_spot', category: 'rumble', title: `An Empty Number in the Drum`, weight: 2, major: true, cooldownDays: 365, maxPerCareer: 2, categoryCooldown: 10, contexts: ['weekly', 'pre_show'],
     cast: { boss: { pick: 'staff', role: 'gm' } },
     trigger: { minYear: 1988, eventWithin: { id: 'royal_rumble', days: 5 }, stat: { rumbleEntries: { lte: 2 }, popularity: { gte: 10 } } },
-    slots: { reason: [`a booked entrant fell ill`, `a returning star is stuck in a snowstorm`, `a contract dispute pulled one name off the card`], offer: [`a quick payday`, `a chance to be seen`, `a favour the office would owe you`] },
+    slots: { reason: [`a booked entrant fell ill`, `a returning star is stuck in a storm`, `a contract dispute pulled one name off the card`], offer: [`a quick payday`, `a chance to be seen`, `a favour the office would owe you`] },
     body: [`{boss.name} reaches you with a stack of paper and a wary grin. {reason}, and there is a slot in the match that needs filling by tonight.`, `The ask is simple and so is the pitch: {offer}. The catch is that nobody has prepped you, and the Rumble does not forgive weak entries.`],
     choices: [
       { id: 'take', label: `Take the spot with no questions asked`, risk: 'med', outcomes: [

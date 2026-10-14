@@ -204,7 +204,7 @@ export default [
     id: 'pod_ask_about_rival', category: 'podcast', title: 'The Podcast Wants to Talk About {rival.name}', weight: 2, cooldownDays: 60, maxPerCareer: 5,
     cast: { rival: { pick: 'rivalry', minHeat: 15 }, host: { pick: 'media', kind: 'host' } },
     memory: { role: 'rival', max: 1 },
-    trigger: { minYear: 2008 },
+    trigger: { minYear: 2008, stat: { popularity: { gte: 25 }, careerYears: { gte: 0.5 } } },
     slots: { show: ['a long-form interview show', 'a wrestling-fan roundtable', 'a comedy podcast', 'a shock-jock morning show'], angle: ['whether the feud is real', 'who needs whom more', 'whose finish is better', 'whether anybody is the good guy'] },
     body: [`You are two hours into {show} and {host.name} finally gets to the question everyone listening wants answered: {angle}. {host.first} leans into the microphone and lets you speak first.`, `{rival.name} is sure to hear the episode, probably before the weekend. A single good sentence could trend; a bad one will be quoted at you for months.`],
     choices: [
@@ -260,19 +260,19 @@ export default [
     ],
   },
   {
-    id: 'pod_rival_attack', category: 'podcast', title: '{rival.name}\'s Show Goes After You', weight: 2.5, cooldownDays: 60, maxPerCareer: 5,
+    id: 'pod_rival_attack', category: 'podcast', title: '{rival.name} Goes After You on Air', weight: 2.5, cooldownDays: 60, maxPerCareer: 5,
     cast: { rival: { pick: 'rivalry', minHeat: 30 }, host: { pick: 'media', kind: 'host' } },
     memory: { role: 'rival', max: 1 },
-    trigger: { minYear: 2012 },
+    trigger: { minYear: 2012, stat: { popularity: { gte: 25 }, careerYears: { gte: 0.5 } } },
     slots: { claim: ['you have been coasting for months', 'your best match was a fluke', 'you owe the locker room an apology', 'you only got the spot because of a favour'], clip: ['an unedited rant', 'a polished eight-minute cold open', 'a late-night live stream', 'a guest appearance on a friendly podcast'] },
-    body: [`{rival.name} used {clip} to tell {host.name}'s audience that {claim}. The episode has been downloaded tens of thousands of times in a day, and your phone is full of people asking whether you saw it.`, `{rival.first} is clearly pleased with the reaction. A reply from you, or the lack of one, becomes part of the story.`],
+    body: [`{rival.name} used {clip} to tell the world that {claim}. {host.name} gave it a full segment, so the episode has been downloaded tens of thousands of times in a day, and your phone is full of people asking whether you saw it.`, `{rival.first} is clearly pleased with the reaction. A reply from you, or the lack of one, becomes part of the story.`],
     choices: [
       { id: 'counter_stream', label: 'Answer back on your own channel tonight', risk: 'med', outcomes: [
         { weight: 3, bonus: { mic: 0.7 }, text: `You rebut every point with calm precision, and a few jokes. By midnight the replies are firmly on your side.`, effects: [{ pop: 0.9 }, { rivalry: { who: 'rival', heat: 8 } }, { conf: 3 }, { fatigue: 4 }, { event: { type: 'social_post', participants: ['rival'], summary: 'Answered {rival.name}\'s podcast attack.', data: { quality: { base: 66, mic: 0.6, noise: 12 }, viral: { minQuality: 82, chance: 0.45 } } } }] },
         { weight: 2, text: `Your reply comes out rushed and emotional, and it hands {rival.first} another episode's worth of material.`, effects: [{ pop: -0.3 }, { rivalry: { who: 'rival', heat: 8 } }, { conf: -3 }, { fatigue: 4 }] } ] },
-      { id: 'guest_their_rival', label: 'Appear on the show of a rival\'s enemy', risk: 'med', result: `You book a guest slot on a show with a different audience and make your case in front of a friendlier room. It splits the crowd into camps.`, effects: [{ pop: 0.5 }, { rivalry: { who: 'rival', heat: 12 } }, { rel: { who: 'rival', heat: 8 } }, { fatigue: 4 }] },
+      { id: 'guest_their_rival', label: 'Take a guest slot on a friendlier show', risk: 'med', result: `You book a guest slot on a show with a different audience and make your case in front of a friendlier room. It splits the crowd into camps.`, effects: [{ pop: 0.5 }, { rivalry: { who: 'rival', heat: 12 } }, { rel: { who: 'rival', heat: 8 } }, { fatigue: 4 }] },
       { id: 'settle_in_ring', label: 'Challenge {rival.first} to settle it in the ring', risk: 'high', result: `You skip the keyboard war and send word to the booking office. The challenge is accepted within the hour.`, effects: [{ booking: { who: 'rival', type: 'singles' } }, { rivalry: { who: 'rival', heat: 14 } }, { pop: 0.5 }, { fatigue: 5 }] },
-      { id: 'ignore', label: 'Ignore the show and let the work speak', risk: 'low', result: `You post nothing. Some say you rose above it, others say you were silenced.`, effects: [{ conf: -2 }, { pop: -0.1 }, { rel: { who: 'rival', respect: -2 } }] },
+      { id: 'ignore', label: 'Ignore it and let the work speak', risk: 'low', result: `You post nothing. Some say you rose above it, others say you were silenced.`, effects: [{ conf: -2 }, { pop: -0.1 }, { rel: { who: 'rival', respect: -2 } }] },
     ],
   },
   {
@@ -613,7 +613,7 @@ export default [
         { weight: 2, text: `The reply is slower and clumsier than you wanted, and {rival.first} replies to your reply with something nastier.`, effects: [{ pop: -0.4 }, { rivalry: { who: 'rival', heat: 8 } }, { conf: -3 }] } ] },
       { id: 'ratio_with_class', label: 'Respond with a gracious, kind message', risk: 'low', result: `A warm reply that makes {rival.first} look petty. The crowd sees a mature competitor, and {rival.first} sees an opponent who will not be baited.`, effects: [{ pop: 0.4 }, { rel: { who: 'rival', respect: 3 } }, { conf: 1 }] },
       { id: 'in_ring', label: 'Answer in the ring, not online', risk: 'med', result: `You post a single line: "See you Monday". Fans love the swagger, and the match gets made.`, effects: [{ booking: { who: 'rival', type: 'singles' } }, { rivalry: { who: 'rival', heat: 10 } }, { pop: 0.5 }, { fatigue: 4 }] },
-      { id: 'mute', label: 'Mute them and say nothing', risk: 'low', result: `Quiet is a statement. Some fans like it, some think you are scared, and the thread dies by dinner.`, effects: [{ conf: -1 }, { pop: -0.1 }] },
+      { id: 'mute', label: 'Mute {rival.them} and say nothing', risk: 'low', result: `Quiet is a statement. Some fans like it, some think you are scared, and the thread dies by dinner.`, effects: [{ conf: -1 }, { pop: -0.1 }] },
     ],
   },
   {

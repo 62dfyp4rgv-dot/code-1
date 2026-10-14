@@ -416,7 +416,7 @@ export default [
     id: 'nb_bs_ride_with_enemy', category: 'backstage', title: `Stuck Together With Your Enemy`, weight: 2, contexts: ['weekly'], cooldownDays: 150, maxPerCareer: 2, categoryCooldown: 5,
     cast: { rival: { pick: 'rivalry', minHeat: 15 } }, memory: { role: 'rival', max: 2 },
     trigger: { maxYear: 2006 },
-    slots: { transport: [`an airport shuttle bus`, `a rental car in a snowstorm`, `a pair of adjoining seats on a regional flight`, `a motel with one working vending machine`], witness: [`a boy in a replica shirt`, `a ticket clerk who knows everyone`, `a heckler nursing a beer`] },
+    slots: { transport: [`an airport shuttle bus`, `a rental car in a storm`, `a pair of adjoining seats on a regional flight`, `a motel with one working vending machine`], witness: [`a boy in a replica shirt`, `a ticket clerk who knows everyone`, `a heckler nursing a beer`] },
     body: [`The weather has decided that you and {rival.name} will spend the night stuck together in {transport}. Until the next show, you are supposed to be mortal enemies, and {witness} is watching both of you with narrowed eyes.`, `The code of the business says the act does not stop at the curtain. Yet it is three in the morning and neither of you has slept in a day.`],
     choices: [
       { id: 'stay_in_character', label: `Stay in character and glare the whole way`, risk: 'low', result: `Six hours of ferocious silence follow, broken by one perfectly timed sneer. {witness} will tell the story for years, and your jaw aches from holding the expression.`, effects: [{ pop: 0.5 }, { fatigue: 6 }, { rel: { who: 'rival', respect: 2 } }] },

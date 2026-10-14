@@ -80,3 +80,9 @@ debut, breakout, rivalry, betrayal, alliance, faction, championship, injury, rec
   podcast / press_conference / interview / social_post (data:{quality:{base,mic,charisma,conf,pop,noise}, viral:{minQuality,chance}, controversy:true, handled:true}), confrontation (data:{won,physical:false,major:true}), promo_delivered, refusal_to_help, retirement, goal_set, decision.
   `quality` objects are evaluated to a 1-99 number from the player's stats plus noise; `viral:{minQuality:85,chance:.4}` rolls once. A `"@role"` string inside data is replaced by that role's id.
 * `{note:'text'}` a short extra line shown with the result.
+
+## Additions (round 6)
+- **Role tokens inside slot values**: a slot value may contain `{role.they}`, `{role.them}`, `{role.their}`, `{role.theirs}` etc.; resolved one level deep. Use them for any pronoun that refers to a wrestler cast member (cast picks `roster`, `rivalry`, `tag`, `champion`, `obligation`); only crowds, staff, media and fans take literal singular-they.
+- **Fans**: a cast `media` pick with `kind: 'fan'` is introduced without an outlet suffix.
+- **Surname preference**: `roster` and `tag` picks prefer candidates whose surname differs from the player and from anyone already cast; they fall back to the full pool if that leaves nobody.
+- **Memory callbacks**: `noAutoMemory: true` disables the auto-attached callback; `memory.noResults` forbids win/loss tally callbacks; `memory.allow` restricts callback kinds. Tally callbacks are never used in emotional categories (personal, mentor, alliance, betrayal, faction, injury, recovery, retirement, legacy, fans, finance, travel).

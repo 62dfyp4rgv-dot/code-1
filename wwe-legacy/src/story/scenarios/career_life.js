@@ -23,7 +23,7 @@ export default [
     cast: { exec: { pick: 'staff', role: 'executive' } },
     trigger: { background: ['prospect', 'indie'], stat: { matches: { lte: 5 } } },
     slots: { venue: ['a college gymnasium', 'a former bowling alley', 'a convention hall', 'a high-school field house'], watching: ['a single scout with a clipboard', 'a camera crew from head office', 'forty other hopefuls', 'a visiting executive who does not look up'] },
-    body: ['The tryout is held in {venue}, and the ring has clearly been assembled that morning. {exec.name} sits at the edge of the apron with {watching} behind {exec.their} shoulder.', 'You get ninety seconds of ring time and a promise that someone will call. Most people in the room will never hear from anyone.'],
+    body: ['The tryout is held in {venue}, and the ring has clearly been assembled that morning. {exec.name} sits at the edge of the apron. Also in the room: {watching}.', 'You get ninety seconds of ring time and a promise that someone will call. Most people in the room will never hear from anyone.'],
     choices: [
       { id: 'safe', label: 'Run the basics with perfect execution', risk: 'low', result: 'Every bump, every lock-up, every roll-through is textbook. Nobody gasps, but nobody frowns either, and your name ends up on the callback list.', effects: [{ conf: 3 }, { attr: { name: 'technical', delta: 1 } }, { pop: 0.1 }] },
       { id: 'flashy', label: 'Go for the highlight move', risk: 'high', outcomes: [
@@ -32,7 +32,7 @@ export default [
       { id: 'talk', label: 'Ask for a few seconds on the mic as well', risk: 'med', outcomes: [
         { weight: 2, bonus: { mic: 0.7, charisma: 0.5 }, text: 'You cut a thirty-second promo that makes people look up from their phones. It is the part they remember.', effects: [{ mic: 1 }, { pop: 0.5 }, { conf: 3 }] },
         { weight: 2, text: 'The words come out in the wrong order. You get through it, but the silence afterward is long.', effects: [{ conf: -3 }, { pop: -0.2 }] } ] },
-      { id: 'cheap_travel', label: 'Spend your savings on a hotel night before the tryout', risk: 'low', requires: { stat: { money: { gte: 1500 } } }, result: 'You sleep, eat properly, and arrive loose. It costs money you do not have to spare, but your body feels like yours.', effects: [{ money: -1200 }, { fatigue: -6 }, { conf: 2 }] },
+      { id: 'cheap_travel', label: 'Spend your savings on a hotel night afterwards', risk: 'low', requires: { stat: { money: { gte: 1500 } } }, result: 'You skip the long ride home, sleep, eat properly, and wake up loose. It costs money you do not have to spare, but your body feels like yours.', effects: [{ money: -1200 }, { fatigue: -6 }, { conf: 2 }] },
     ],
   },
   {
@@ -459,7 +459,7 @@ export default [
     id: 'life_rec_setback', category: 'recovery', title: 'A Setback in Rehab', weight: 2.5, cooldownDays: 60, maxPerCareer: 4, categoryCooldown: 8,
     cast: { doc: { pick: 'staff', role: 'doctor' } },
     trigger: { injured: true },
-    slots: { setback: ['a flare-up during a stretch', 'a drop in your strength numbers', 'swelling that came back overnight', 'a missed appointment after a snowstorm'], mood: ['discouraged', 'furious', 'numb', 'strangely calm'] },
+    slots: { setback: ['a flare-up during a stretch', 'a drop in your strength numbers', 'swelling that came back overnight', 'a missed appointment after a cancelled ride'], mood: ['discouraged', 'furious', 'numb', 'strangely calm'] },
     body: ['The setback is {setback}, and {doc.name} flags it on your chart with a short sigh. You feel {mood}, which is a feeling you are fully entitled to.', 'The calendar does not slow down for injuries. You can decide how to spend the next few days, and the plan you choose will shape the rest of the recovery.'],
     choices: [
       { id: 'grind', label: 'Grind harder in every session', risk: 'high', outcomes: [
@@ -783,7 +783,7 @@ export default [
   {
     id: 'life_leg_interview', category: 'legacy', title: 'A {format} About Your Legacy', weight: 2, cooldownDays: 180, maxPerCareer: 3, categoryCooldown: 10,
     cast: { host: { pick: 'media', kind: 'interviewer' } },
-    trigger: { any: [{ stat: { titleWins: { gte: 1 } } }, { stat: { careerYears: { gte: 6 } } }] },
+    trigger: { stat: { careerYears: { gte: 4 } }, any: [{ stat: { titleWins: { gte: 1 } } }, { stat: { careerYears: { gte: 6 } } }] },
     slots: { format: ['sit-down interview', 'magazine profile', 'radio call-in', 'hall-of-fame video'], topic: ['your first match', 'the toughest night of your career', 'your greatest rival', 'what you would do differently'] },
     body: ['{host.name} sets up for a {format}, and the first question is a hard one: {topic}. You can feel the weight of years behind the question.', 'Everything you say will be quoted. How you want to be remembered is partly up to you, and partly a matter of how you speak tonight.'],
     choices: [
@@ -1148,7 +1148,7 @@ export default [
     id: 'life_trv_missed_flight', category: 'travel', title: 'Stranded by {cause}', weight: 2, cooldownDays: 80, maxPerCareer: 4, categoryCooldown: 6,
     cast: { producer: { pick: 'staff', role: 'producer' } },
     trigger: { stat: { careerYears: { gte: 1 } } },
-    slots: { cause: ['a snowstorm', 'a mechanical delay', 'a wrong gate', 'a cancelled connection'], stakes: ['a television taping', 'a house show', 'a title match', 'a signing'] },
+    slots: { cause: ['a storm', 'a mechanical delay', 'a wrong gate', 'a cancelled connection'], stakes: ['a television taping', 'a house show', 'a title match', 'a signing'] },
     body: ['Because of {cause}, you are stuck in an airport with {stakes} in nine hours. {producer.name} is on the phone, and the voice on the line has already stopped being friendly.', 'Rebooking is a maze, the rental counters are empty and the departure board does not care about your problems.'],
     choices: [
       { id: 'drive', label: 'Rent a car and drive through the night', risk: 'med', outcomes: [
@@ -1179,8 +1179,8 @@ export default [
   {
     id: 'life_trv_van_ride', category: 'travel', title: 'A Long Ride: {drive}', weight: 1.5, cooldownDays: 60, maxPerCareer: 4, categoryCooldown: 6,
     trigger: { stat: { careerYears: { lte: 6 } } },
-    slots: { drive: ['a six-hour night drive', 'a snowy mountain route', 'a desert highway', 'a rush-hour crawl'], crew: ['two rookies', 'a veteran who snores', 'a chatty tag team', 'the usual crew'] },
-    body: ['You are on {drive} with {crew} in the back, and the radio has been stuck on one station for an hour. It is late, the coffee is cold, and the show is behind you.', 'Road trips give wrestlers time to talk, sleep, fight or plan. Tonight you can choose which.'],
+    slots: { drive: ['a six-hour night drive', 'a winding mountain route', 'a desert highway', 'a rush-hour crawl'], crew: ['two rookies', 'a veteran who snores', 'a chatty tag team', 'the usual crew'] },
+    body: ['The ride tonight is {drive}, with {crew} in the back, and the radio has been stuck on one station for an hour. It is late, the coffee is cold, and the show is behind you.', 'Road trips give wrestlers time to talk, sleep, fight or plan. Tonight you can choose which.'],
     choices: [
       { id: 'drive', label: 'Take the wheel so others can sleep', risk: 'med', result: 'You earn gratitude and tired eyes. Your passengers wake up rested, and you do not.', effects: [{ fatigue: 9 }, { conf: 2 }, { pop: 0.1 }] },
       { id: 'talk_shop', label: 'Talk shop and dissect the show', risk: 'low', result: 'The conversation covers pacing, finishes and all the ways the main event could have gone better. By dawn you have a notebook of ideas.', effects: [{ attr: { name: 'psychology', delta: 1 } }, { fatigue: 3 }, { conf: 1 }] },

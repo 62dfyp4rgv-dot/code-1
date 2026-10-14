@@ -149,6 +149,14 @@ const playerBinding = (p) => {
   return { id: p.id, name: p.name, first: p.name.split(' ')[0], last: p.name.split(' ').slice(-1)[0], isWrestler: true, ...g };
 };
 
+/** Prefer cast candidates who do not share a surname with the player or anyone already in the scene (keeps "Ellison vs Ellison" out of unrelated stories). */
+function preferDistinct(cands, bind) {
+  const last = (n) => String(n).split(' ').slice(-1)[0];
+  const used = new Set(Object.values(bind).filter((b) => b && b.last).map((b) => b.last));
+  const distinct = cands.filter((w) => !used.has(last(w.name)));
+  return distinct.length ? distinct : cands;
+}
+
 /** Bind cast roles. Returns {binding} or null if any role cannot be filled. */
 export function bindCast(t, ctx, seedKey) {
   const bind = { player: playerBinding(ctx.me) };
@@ -175,7 +183,7 @@ export function bindCast(t, ctx, seedKey) {
           if (taken.has(other) || !rel.tags.includes(spec.tag)) continue;
           const w = ctx.u.get(other); if (w && w.status === 'active') cands.push(w);
         }
-        if (cands.length) pick = hashPick(cands, `${seedKey}:${role}`);
+        if (cands.length) pick = hashPick(preferDistinct(cands, bind), `${seedKey}:${role}`);
         break;
       }
       case 'champion': {
@@ -192,11 +200,11 @@ export function bindCast(t, ctx, seedKey) {
         if (spec.gender) c2 = c2.filter((w) => w.gender === spec.gender);
         if (spec.alignment) c2 = c2.filter((w) => [].concat(spec.alignment).includes(w.alignment));
         if (spec.style) c2 = c2.filter((w) => [].concat(spec.style).includes(w.style));
-        if (c2.length) pick = hashPick(c2, `${seedKey}:${role}`);
+        if (c2.length) pick = hashPick(preferDistinct(c2, bind), `${seedKey}:${role}`);
         break;
       }
       case 'staff': bind[role] = { id: `staff:${spec.role}`, name: staffFor(ctx.c, spec.role), first: staffFor(ctx.c, spec.role).split(' ')[0], isWrestler: false, they: 'they', them: 'them', their: 'their', theirs: 'theirs' }; continue;
-      case 'media': { const nm = mediaFor(ctx.c, spec.kind, seedKey); bind[role] = { id: `media:${spec.kind}`, name: nm, first: nm.split(' ')[0], isWrestler: false, they: 'they', them: 'them', their: 'their', theirs: 'theirs' }; continue; }
+      case 'media': { const nm = spec.kind === 'fan' ? mediaFor(ctx.c, spec.kind, seedKey).replace(/\s*\([^)]*\)\s*$/, '') : mediaFor(ctx.c, spec.kind, seedKey); bind[role] = { id: `media:${spec.kind}`, name: nm, first: nm.split(' ')[0], isWrestler: false, they: 'they', them: 'them', their: 'their', theirs: 'theirs' }; continue; }
       default: throw new Error(`unknown cast pick "${spec.pick}" for role ${role}`);
     }
     if (!pick) return null;
@@ -223,12 +231,14 @@ export function titleCase(t) {
   }).join(' ');
 }
 export function render(str, bind, slots = {}, extra = {}) {
-  return tidy(String(str).replace(/\{([a-zA-Z0-9_]+)(?:\.([a-zA-Z0-9_]+))?\}/g, (m, a, b) => {
+  // slot values may themselves carry role tokens ({rival.their}); they are resolved one level deep
+  const fill = (text, depth) => String(text).replace(/\{([a-zA-Z0-9_]+)(?:\.([a-zA-Z0-9_]+))?\}/g, (m, a, b) => {
     if (b) { const o = bind[a]; if (!o || o[b] === undefined) throw new Error(`unresolved token ${m}`); return o[b]; }
-    if (slots[a] !== undefined) return slots[a];
-    if (extra[a] !== undefined) return extra[a];
-    throw new Error(`unresolved token ${m}`);
-  }));
+    const v = slots[a] !== undefined ? slots[a] : extra[a];
+    if (v === undefined) throw new Error(`unresolved token ${m}`);
+    return depth < 1 && slots[a] !== undefined && String(v).includes('{') ? fill(v, depth + 1) : v;
+  });
+  return tidy(fill(str, 0));
 }
 
 export function slotCombos(t, cap = 24) {
@@ -312,6 +322,16 @@ export function extrasOf(c, ctx) {
 }
 
 // ------------------------------------------------------------------------------------------ engine
+// Win/loss tallies ("N of your wins were clean") read as stat strings. They are suppressed in personal/emotional scenes, and
+// a template whose premise is itself about a result can opt out with `memory.noResults` / `memory.allow` / `noAutoMemory`.
+const NON_RESULT_HOOKS = ['you_betrayed_me', 'i_betrayed_you', 'broken_promise', 'old_insult', 'controversial_finish', 'controversial_finish_old', 'reconciled', 'respect', 'open_promise'];
+const NO_TALLY_CATEGORIES = new Set(['personal', 'mentor', 'alliance', 'betrayal', 'faction', 'injury', 'recovery', 'retirement', 'legacy', 'fans', 'finance', 'travel']);
+function memoryAllow(t) {
+  if (t.memory && t.memory.allow) return t.memory.allow;
+  if ((t.memory && t.memory.noResults) || NO_TALLY_CATEGORIES.has(t.category)) return NON_RESULT_HOOKS;
+  return undefined;
+}
+
 export class ScenarioEngine {
   constructor(templates) {
     this.templates = new Map();
@@ -381,12 +401,13 @@ export class ScenarioEngine {
     const instId = `${t.id}:${c.day}:${st.n}`;
     const text = (s) => render(s, bind, combo, extrasOf(c, ctx));
     const cooldown = { store: (c.flags.hookUse = c.flags.hookUse || {}), day: c.day, days: 60 };
-    let memLines = t.memory ? memoryLines(c.memory, c.player.id, bind[t.memory.role].id, bind[t.memory.role].name, { speaker: 'other', max: t.memory.max ?? 2, cooldown }) : [];
-    if (!t.memory) {
+    const allow = memoryAllow(t);
+    let memLines = t.memory ? memoryLines(c.memory, c.player.id, bind[t.memory.role].id, bind[t.memory.role].name, { speaker: 'other', max: t.memory.max ?? 2, cooldown, allow }) : [];
+    if (!t.memory && !t.noAutoMemory) {
       // any scene featuring a wrestler the player shares real history with may cite one remembered event (never invented)
       for (const [role, who] of Object.entries(bind)) {
         if (role.startsWith('__') || !who || !who.id || !c.universe.get(who.id)) continue;
-        const ml = memoryLines(c.memory, c.player.id, who.id, who.name, { speaker: 'narrator', max: 1, cooldown });
+        const ml = memoryLines(c.memory, c.player.id, who.id, who.name, { speaker: 'narrator', max: 1, cooldown, allow });
         if (ml.length) { memLines = ml.map((l) => ({ ...l, role })); break; }
       }
     }

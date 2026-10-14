@@ -152,7 +152,7 @@ export default [
   {
     id: 'ne_ret_phone_silence', category: 'retirement', title: `The Phone Has Been {silence}`, weight: 1.5, major: true, contexts: ['offseason', 'weekly'], cooldownDays: 365, maxPerCareer: 1, categoryCooldown: 15,
     trigger: { stat: { careerYears: { gte: 9 } }, daysSince: { match: { gte: 30 } }, injured: false },
-    slots: { silence: [`Silent for Two Weeks`, `Quiet Since the Holidays`, `Quiet for a Month`], sound: [`the refrigerator humming`, `a neighbor's mower`, `rain in the gutters`] },
+    slots: { silence: [`Silent for Two Weeks`, `Quiet for Six Weeks`, `Quiet for a Month`], sound: [`the refrigerator humming`, `a neighbor's mower`, `rain in the gutters`] },
     body: [`The phone has been quiet long enough that you keep checking it for a dead battery. In the kitchen the loudest thing is {sound}, and the schedule that used to run your life is now a blank page.`, `This is what it sounds like when a career takes a break, or when it has already ended and nobody has told you. Only one of those is a decision you get to make.`],
     choices: [
       { id: 'call_office', label: `Call the office and ask for dates`, risk: 'med', outcomes: [
@@ -543,7 +543,7 @@ export default [
     body: [`You have been working {move} as a new closer for a month, and tonight it earns {response}. {agent.name} watches the replay on a monitor and winces in the exact way a physician winces at a second opinion.`, `A finisher is a promise to the crowd, and nobody keeps believing a promise that they cannot read. Whatever you do with it now will tell the office what kind of professional you are.`],
     choices: [
       { id: 'keep', label: `Keep it: crowds learn what you teach them`, risk: 'med', outcomes: [
-        { weight: 2, bonus: { charisma: 0.4, overall: 0.3 }, text: `Within three weeks the building anticipates it and roars. A move that bombed in March is a trademark by April, and you cannot stop smiling.`, effects: [{ pop: 0.7 }, { conf: 4 }, { fatigue: 5 }] },
+        { weight: 2, bonus: { charisma: 0.4, overall: 0.3 }, text: `Within three weeks the building anticipates it and roars. A move that bombed in the first week is a trademark by the fourth, and you cannot stop smiling.`, effects: [{ pop: 0.7 }, { conf: 4 }, { fatigue: 5 }] },
         { weight: 1, text: `The crowd never learns it, and the reaction stays tepid. You carry the move like an unwanted child through another month of television.`, effects: [{ pop: -0.3 }, { conf: -3 }, { fatigue: 5 }] } ] },
       { id: 'ditch', label: `Go back to the finisher the crowd already knows`, risk: 'low', result: `Back to the old closer and the old pop it goes. It is safe, familiar and slightly disappointing, and you file the new move in a drawer.`, effects: [{ conf: -2 }, { pop: 0.1 }, { fatigue: -2 }] },
       { id: 'rework', label: `Rework the build-up with a coach before trying again`, risk: 'low', requires: { stat: { money: { gte: 400 } } }, result: `A week of private sessions teaches you that the move was fine and the setup was invisible. The new setup is cleaner and takes ten seconds longer, and the crowd finally gets it.`, effects: [{ money: -400 }, { attr: { name: 'technical', delta: 1 } }, { pop: 0.4 }, { fatigue: 6 }] },
@@ -622,7 +622,7 @@ export default [
         { weight: 1, text: `The request is met with the phrase budget cycle and a stare that closes the discussion. You leave without a raise and with the knowledge that you asked.`, effects: [{ conf: -3 }, { fatigue: 2 }] } ] },
       { id: 'quiet', label: `Say nothing and keep the number to yourself`, risk: 'low', result: `A smile, a finished coffee and a decision follow: knowing is its own tax. The number hums in the back of your head for weeks, shaping your moods without you noticing.`, effects: [{ conf: -3 }, { fatigue: 2 }] },
       { id: 'share', label: `Quietly pass the information to others in the locker room`, risk: 'high', result: `Within a week half the room has had the same conversation, and the office is suddenly fielding awkward questions. Some people thank you in whispers, and some never forgive you for making it real.`, effects: [{ rel: { who: 'peer', trust: -9, respect: -4 } }, { pop: 0.2 }, { conf: 2 }, { money: 1500 }] },
-      { id: 'tips', label: `Ask {peer.first} how they negotiated that deal`, risk: 'low', result: `{peer.first} turns out to be generous with advice and a little shy about the fee. You walk away with three specific phrases to use and an unexpected ally.`, effects: [{ rel: { who: 'peer', trust: 6, affinity: 5 } }, { attr: { name: 'psychology', delta: 1 } }, { fatigue: 2 }, { conf: 1 }] },
+      { id: 'tips', label: `Ask {peer.first} how {peer.they} negotiated that deal`, risk: 'low', result: `{peer.first} turns out to be generous with advice and a little shy about the fee. You walk away with three specific phrases to use and an unexpected ally.`, effects: [{ rel: { who: 'peer', trust: 6, affinity: 5 } }, { attr: { name: 'psychology', delta: 1 } }, { fatigue: 2 }, { conf: 1 }] },
     ],
   },
   {
@@ -702,7 +702,7 @@ export default [
   {
     id: 'ne_per_new_baby', category: 'personal', title: `A Call About the Future`, weight: 2, major: true, cooldownDays: 400, maxPerCareer: 1, categoryCooldown: 10,
     trigger: { stat: { careerYears: { gte: 3 } } },
-    slots: { timing: [`in the spring`, `the week of a big match`, `right in the middle of your busiest stretch`], tone: [`in a trembling voice`, `with a big grin and shaking hands`, `over a video call with a bad connection`] },
+    slots: { timing: [`in a matter of months`, `the week of a big match`, `right in the middle of your busiest stretch`], tone: [`in a trembling voice`, `with a big grin and shaking hands`, `over a video call with a bad connection`] },
     body: [`The call comes {tone}: you are going to be a parent, and the due date is {timing}. A rush of joy and an equal rush of arithmetic hit at the same time, and you can feel both of them in your chest.`, `Everything you do for a living, every bump, every drive, every unslept night, suddenly has someone else's name attached to it. The job will not stop being the job, but it will never again be only yours.`],
     choices: [
       { id: 'time_off', label: `Request time off around the birth and the first weeks`, risk: 'med', result: `The office grants three weeks with a sigh and a pay cut. You spend them learning to fold tiny clothes, and nobody on earth is more tired or more pleased with themselves.`, effects: [{ money: -3000 }, { pop: -0.5 }, { fatigue: -12 }, { conf: 5 }] },
