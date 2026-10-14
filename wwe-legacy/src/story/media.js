@@ -105,7 +105,7 @@ export function deliverPromo(career, { tone, targetId = null, claim = 'none', co
       // the callback has to fit the tone: no gloating in an apology or tribute, no 'you beat me' in a threat
       if (['respect', 'tribute', 'inspire'].includes(tone) && ['old_insult', 'broken_promise'].includes(kind)) continue;
       if (['apology', 'respect', 'tribute'].includes(tone) && ['old_insult', 'clean_dominance', 'controversial_finish', 'controversial_finish_old'].includes(kind)) continue;
-      if (tone === 'apology' && ['i_beat_you', 'you_beat_me'].includes(kind)) continue;
+      if (['apology', 'respect', 'tribute'].includes(tone) && ['i_beat_you', 'you_beat_me', 'long_rivalry'].includes(kind)) continue;
       if (['insult', 'humiliate', 'threat', 'boast'].includes(tone) && kind === 'you_beat_me') continue;
       if (['insult', 'humiliate', 'threat', 'boast', 'challenge'].includes(tone) && kind === 'broken_promise') continue;
       hookUse[hk] = career.day;
@@ -136,7 +136,12 @@ export function deliverPromo(career, { tone, targetId = null, claim = 'none', co
   if (claimDef === 'win_streak') addPromiseClaim({ kind: 'win_streak', params: { n: 5 }, text: 'I will win five in a row', deadlineDay: career.day + 120 }, { text: 'Five wins in a row, starting now. Mark my words.', refs: [], promise: true });
   if (claimDef === 'win_rumble') { const y = year || nextRumbleYear(career); addPromiseClaim({ kind: 'win_rumble', params: { year: y }, text: `I will win the ${y} Royal Rumble`, deadlineDay: career.day + 420 }, { text: `I guarantee I will win the ${y} Royal Rumble.`, refs: [], promise: true }); }
   if (claimDef === 'win_title') addPromiseClaim({ kind: 'win_title', text: 'I will win a championship', deadlineDay: career.day + 365 }, { text: 'I will be champion. Nothing will stop me.', refs: [], promise: true });
-  lines.push({ text: pick(promises.length ? [...PACK.closePromise, ...CLOSE_PROMISE] : [...PACK.close, ...CLOSE], seed + 'c'), refs: [] });
+  // a kind promo (apology, respect, tribute) must not end on a threat
+  const THREAT_CLOSE = /not forget|regret|pain|hurt|\bpay\b|fear|afraid|beware|tremble|hide|run\b|take that back|locker room|mark my words/i;
+  const closers = promises.length ? [...PACK.closePromise, ...CLOSE_PROMISE] : [...PACK.close, ...CLOSE];
+  const kindTone = ['apology', 'respect', 'tribute', 'inspire'].includes(tone);
+  const closePool = kindTone && closers.filter((l) => !THREAT_CLOSE.test(l)).length >= 5 ? closers.filter((l) => !THREAT_CLOSE.test(l)) : closers;
+  lines.push({ text: pick(closePool, seed + 'c'), refs: [] });
   const out = career.record({
     key, category: 'promo', type: 'promo_delivered', participants: [p.id, ...(targetId ? [targetId] : [])],
     refs: [...new Set(lines.flatMap((l) => l.refs))].filter((id) => career.memory.ledger.get(id)),
