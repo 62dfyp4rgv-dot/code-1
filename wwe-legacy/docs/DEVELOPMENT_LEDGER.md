@@ -101,3 +101,13 @@ One entry per Gauntlet round: what was targeted, what changed, what was measured
 - Largest losses: Independent reviewer score (6); Independent reviewer score (5.5); Independent reviewer score (6); Verified historical data (partial)
 - Regressions: memoryConsistency -0.25, narrativeQuality -0.29, mobileUsability -0.2
 - Report: docs/gauntlet/round-10.md
+
+## Round 11
+
+- Target: post-review fixes for memory and narrative; final verification
+- Changes: Memory R10 fixes (multi-way/tag summaries credit the real winner, lapsed/retired obligations, faction flag sync, hostile cast filter, settled broken promises, interference-only grudges, social win pools, cold promo reactions); narrative R10 fixes (speech-tag casing, warm hooks, broken-promise cooldown, heartfelt promos carry no claims); R9/R10 reviewer scores recorded
+- Mean 9.05 | min 7.64 | >=9: 6/12 | tests 195/195
+- Weakest: Scenario diversity 7.64, Memory consistency 8.03, Narrative quality 8.32
+- Largest losses: Independent reviewer score (6); Independent reviewer score (6.5); Independent reviewer score (7); Verified historical data (partial)
+- Regressions: none
+- Report: docs/gauntlet/round-11.md

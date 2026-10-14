@@ -1,36 +1,36 @@
 {
- "updated": "2026-10-14T14:07:02.896Z",
- "lastRound": 10,
- "mean": 8.89,
+ "updated": "2026-10-14T20:56:21.446Z",
+ "lastRound": 11,
+ "mean": 9.05,
  "scores": {
   "matchEngine": 9.8,
-  "playerAgency": 9.42,
-  "memoryConsistency": 7.63,
-  "achievementIntegrity": 9.82,
-  "scenarioDiversity": 7.72,
-  "narrativeQuality": 7.14,
+  "playerAgency": 9.52,
+  "memoryConsistency": 8.03,
+  "achievementIntegrity": 9.8,
+  "scenarioDiversity": 7.64,
+  "narrativeQuality": 8.32,
   "universeSimulation": 8.61,
   "careerProgression": 9.77,
-  "mobileUsability": 8.4,
+  "mobileUsability": 8.6,
   "technicalReliability": 10,
-  "performance": 8.79,
-  "replayability": 9.54
+  "performance": 8.98,
+  "replayability": 9.5
  },
  "nextFocus": [
   {
-   "category": "memoryConsistency",
-   "criterion": "Independent reviewer score",
-   "value": 6
-  },
-  {
    "category": "narrativeQuality",
    "criterion": "Independent reviewer score",
-   "value": 5.5
+   "value": 6
   },
   {
    "category": "mobileUsability",
    "criterion": "Independent reviewer score",
-   "value": 6
+   "value": 6.5
+  },
+  {
+   "category": "memoryConsistency",
+   "criterion": "Independent reviewer score",
+   "value": 7
   },
   {
    "category": "universeSimulation",
@@ -38,16 +38,16 @@
    "value": "partial"
   },
   {
-   "category": "narrativeQuality",
-   "criterion": "Commentary covers every observed engine event type",
-   "value": "62 types, 3 silent"
+   "category": "scenarioDiversity",
+   "criterion": "Authored, validated templates (target 2,000 would be complete)",
+   "value": 853
   }
  ],
  "resume": [
   "cd wwe-legacy",
   "npm install",
   "npm test",
-  "node tools/gauntlet.js --round 11 --targets \"<what you will improve>\" --changes \"<what you changed>\""
+  "node tools/gauntlet.js --round 12 --targets \"<what you will improve>\" --changes \"<what you changed>\""
  ],
  "features": {
   "complete": 26,

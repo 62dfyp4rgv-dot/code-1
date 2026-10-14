@@ -53,7 +53,7 @@
    "scores": {
     "narrativeQuality": 4.5,
     "memoryConsistency": 5.5,
-    "mobileUsability": 6.0
+    "mobileUsability": 6
    },
    "reviewers": [
     {
@@ -84,11 +84,11 @@
      "area": "mobile",
      "kind": "agent",
      "scores": {
-      "mobileUsability": 6.0,
+      "mobileUsability": 6,
       "clarity": 6.5,
-      "hierarchy": 6.0,
+      "hierarchy": 6,
       "matchScreen": 5.5,
-      "visualPolish": 6.0
+      "visualPolish": 6
      },
      "summary": "Coherent identity and 44px targets; toast covered titles, match HUD dense and decision list long, home lacked a primary CTA, record book spreadsheet-like."
     }
@@ -108,7 +108,7 @@
      "kind": "agent",
      "scores": {
       "narrativeQuality": 4.6,
-      "variety": 4.0,
+      "variety": 4,
       "voice": 5.5,
       "callbacks": 4.5
      },
@@ -146,8 +146,8 @@
    "note": "Fresh reviewers on the round-8 build (853 authored scenarios, new match types, social/life/faction features). Fixes for these findings were made afterwards (round 9). The memory auditor used an independent oracle over raw ledger events (hundreds of thousands of assertion evaluations; the false ones collapse to 12 root causes).",
    "scores": {
     "narrativeQuality": 5.5,
-    "memoryConsistency": 6.0,
-    "mobileUsability": 6.0
+    "memoryConsistency": 6,
+    "mobileUsability": 6
    },
    "reviewers": [
     {
@@ -166,7 +166,7 @@
      "area": "memory",
      "kind": "agent",
      "scores": {
-      "memoryConsistency": 6.0,
+      "memoryConsistency": 6,
       "invention_risk": 7,
       "player_visibility": 7
      },
@@ -178,13 +178,87 @@
      "area": "mobile",
      "kind": "agent",
      "scores": {
-      "mobileUsability": 6.0,
+      "mobileUsability": 6,
       "clarity": 6.5,
       "hierarchy": 5.5,
       "matchScreen": 6.5,
       "visualPolish": 6.5
      },
      "summary": "Coherent identity and clear red CTA, no overflow at 360/390/430; held back by a sticky CTA hidden under the tab bar, a board using 30-42% of small screens, invisible toasts/errors, and long flat lists."
+    }
+   ]
+  },
+  {
+   "round": 9,
+   "note": "Fresh reviewers on the round-9 build (reviewer scores as reported to the author; the full reports were handled in-session).",
+   "scores": {
+    "narrativeQuality": 5.5,
+    "memoryConsistency": 6.5,
+    "mobileUsability": 6.5
+   },
+   "reviewers": [
+    {
+     "area": "narrative",
+     "kind": "agent",
+     "scores": {
+      "narrativeQuality": 5.5
+     },
+     "summary": "Slot/pronoun seams largely fixed; commentary still stock-heavy; NPC speech thin."
+    },
+    {
+     "area": "memory",
+     "kind": "agent",
+     "scores": {
+      "memoryConsistency": 6.5
+     },
+     "summary": "Raw-event oracle: core ledger layers consistent; scenario/obligation layer drift remained."
+    },
+    {
+     "area": "mobile",
+     "kind": "agent",
+     "scores": {
+      "mobileUsability": 6.5
+     },
+     "summary": "Toast placement and sticky CTA issues; otherwise coherent at 360/390/430."
+    }
+   ]
+  },
+  {
+   "round": 10,
+   "note": "Fresh reviewers on the round-10 build. Memory auditor ran ~35 careers with an independent raw-event oracle (46 claim classes verified, 13 false/contradictory, collapsing to 12 root causes; fixes made afterwards). Narrative and mobile reviewers scored 6.0 and 6.5. Reviewers are fresh Claude subagents: independent in context, not in model family.",
+   "scores": {
+    "narrativeQuality": 6,
+    "memoryConsistency": 7,
+    "mobileUsability": 6.5
+   },
+   "reviewers": [
+    {
+     "area": "narrative",
+     "kind": "agent",
+     "scores": {
+      "narrativeQuality": 6
+     },
+     "summary": "Steady improvement 4.6 to 5.5 to 6.0; remaining issues: repeated broken-promise scenes, NPC role consistency, individual nonsense sentences, speech-tag casing."
+    },
+    {
+     "area": "memory",
+     "kind": "agent",
+     "scores": {
+      "memoryConsistency": 7,
+      "invention_risk": 8,
+      "player_visibility": 8
+     },
+     "claimsVerified": 46,
+     "claimsFalse": 13,
+     "summary": "Ledger-derived layers matched the oracle with no false claims; contradictions in scenario/obligation layer, multi-way and tag summaries, flag-versus-world drift (12 root causes, fixed after review)."
+    },
+    {
+     "area": "mobile",
+     "kind": "agent",
+     "scores": {
+      "mobileUsability": 6.5
+     },
+     "summary": "Objective pin, toast and world-editor error fixes applied; hierarchy and polish still short of 9."
     }
    ]
   }

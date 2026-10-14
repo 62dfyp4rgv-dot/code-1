@@ -1,8 +1,8 @@
 # Feature status (honest completion report)
 
-Generated from `tools/features.js` (each "complete" entry has a probe that must pass) and Gauntlet round 3 (2026-10-13T11:50:28.740Z).
+Generated from `tools/features.js` (each "complete" entry has a probe that must pass) and Gauntlet round 11 (2026-10-14T20:56:21.446Z).
 
-**18 complete · 7 partial · 3 unimplemented** of 28 tracked features.
+**26 complete · 2 partial · 2 unimplemented** of 30 tracked features.
 
 ## Foundation
 
@@ -18,17 +18,19 @@ Generated from `tools/features.js` (each "complete" entry has a probe that must 
 |---|---|---|
 | Singles, tag, submission, no-DQ, last man standing, iron man, ladder, cage, hell cell | **complete** |  |
 | Royal Rumble (30 entrants, timed entries, decisions) | **complete** |  |
-| Elimination Chamber / TLC / Money in the Bank / battle royal / handicap | **unimplemented** |  |
+| Elimination Match (4) and Elimination Chamber (6, staggered pod entries) | **complete** |  |
+| TLC, Money in the Bank (4-way ladder), battle royal (6, over-the-top eliminations), handicap (1 vs 2) | **complete** | Handicap is bookable with the player as the lone wrestler only; MITB is limited to PLE days; draws at the time limit remain possible (1-3%). |
+| Casket / inferno / buried alive / other novelty stipulations | **unimplemented** |  |
 | Triple threat and fatal four-way (3-4 sides, bystander pin break-ups, focus targeting) | **complete** |  |
 
 ## Career
 
 | Feature | Status | Note |
 |---|---|---|
-| Character creation (5-step wizard, styles, backgrounds, gimmick, finisher, signatures) | **partial** (declared complete, probe failed) |  |
+| Character creation (5-step wizard, styles, backgrounds, gimmick, finisher, signatures) | **complete** |  |
 | Progression: training, fatigue, injuries, popularity, contract/money | **complete** |  |
 | Finances: match pay, salary, merchandise, lifestyle costs, debt, contract renewal, statements in the ledger | **complete** | No investments, property or taxes beyond a flat withholding. |
-| Personal life (family, health, hobbies) beyond scenario choices | **partial** | Scenario-driven only; no standalone systems. |
+| Personal life: wellbeing, family and friends as persistent numbers; off-day activities; effects on recovery, confidence and story triggers | **complete** | No named family members, relationships or children; the numbers are abstract and scenarios can trigger on them (stat names wellbeing, family, socialLife). |
 | Retirement, Hall of Fame induction and evidence-backed legacy verdict | **complete** | HoF induction is recorded at retirement for the Class of the following year (no post-retirement time simulation). |
 
 ## Universe
@@ -39,10 +41,10 @@ Generated from `tools/features.js` (each "complete" entry has a probe that must 
 | Independent AI universe (AI-vs-AI matches, feuds, alliances, betrayals, injuries, title reigns) | **complete** |  |
 | Singles/midcard championships with lineage validation | **complete** |  |
 | Tag-team championships (AI defenses and changes; player can challenge and defend with a partner) | **complete** |  |
-| Factions: AI factions form/dissolve and tag together; the player joins or founds one through story scenes | **partial** | No faction management screen; recruitment/leadership decisions happen inside scenarios. |
+| Factions: AI factions form/dissolve and tag together; the player can found a stable with allies, leave it (trust cost) and browse the roster's factions | **complete** | No in-faction orders, leadership changes or faction-vs-faction booking beyond tag teams. |
 | Verified historical data (real rosters, title lineages, PLE results) | **partial** | Roster/titles are approximate and flagged approx:true; NOT verified against sources. |
-| Historical / modern modes with separation of fictional results | **partial** (declared complete, probe failed) |  |
-| Alternate-history and fully custom universe editor | **partial** | Generator supports fictional rosters; no editor UI. |
+| Historical / modern modes with separation of fictional results | **complete** |  |
+| Alternate-history and custom universe editor | **partial** | Fully fictional worlds and a roster editor (add up to 12 authored wrestlers, validated, replace similar fictional ones) are implemented; there is no editor for brands, titles, the calendar or real-roster edits. |
 
 ## Story
 
@@ -51,7 +53,7 @@ Generated from `tools/features.js` (each "complete" entry has a probe that must 
 | Scenario engine with validated templates (cast, slots, choices, effects) | **complete** |  |
 | Promo delivery with memory-grounded claims | **complete** |  |
 | Standalone interviews / podcasts / press conferences as player-initiated, memory-grounded flows | **complete** |  |
-| Social media / fan systems beyond scenarios | **unimplemented** |  |
+| Social media feed and posting (fan mood, ledger-derived reactions, rival shots, posts that move popularity and rivalries) | **complete** | Single-platform text feed; no images, DMs, follower growth simulation beyond popularity, or moderation mechanics. |
 
 ## Platform
 
@@ -59,15 +61,15 @@ Generated from `tools/features.js` (each "complete" entry has a probe that must 
 |---|---|---|
 | Versioned saves, slots, autosave, backup, migrations, checksum | **complete** |  |
 | Offline PWA (manifest, service worker), iPhone viewport UI | **complete** |  |
-| Settings: text size, themes, slots | **partial** (declared complete, probe failed) |  |
+| Settings: text size, themes, slots | **complete** |  |
 | Native iOS app / App Store build | **unimplemented** | Web PWA only (add to Home Screen). |
 
 ## Content counts (authored and generated are reported separately)
 
-- Authored scenario templates: **327** across 27 categories.
-- Validated generated configurations (template × slot combination, capped at 24 per template): **4443**. These are variations of the authored templates, not additional authored stories.
-- Achievements: **192** (11 secret, 8 era-gated); 192/192 proved reachable by synthesised legal event sequences.
-- Match types: 9 rulesets plus the Royal Rumble.
+- Authored scenario templates: **853** across 28 categories.
+- Validated generated configurations (template × slot combination, capped at 24 per template): **10723**. These are variations of the authored templates, not additional authored stories.
+- Achievements: **196** (11 secret, 8 era-gated); 196/196 proved reachable by synthesised legal event sequences.
+- Match types: 17 rulesets plus the Royal Rumble.
 - Real-name roster entries: 107; all are approximate (see below).
 
 ## Data accuracy
