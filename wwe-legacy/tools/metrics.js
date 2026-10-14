@@ -29,6 +29,7 @@ import { ERAS } from '../src/data/eras.js';
 /** build the sides a match type needs from three or four sample wrestlers */
 const sidesFor = (type, a, b, c3 = W.power, c4 = W.flyer, pa = W.partnerA, pb = W.partnerB) => {
   if (type === 'tag') return [[a, pa], [b, pb]];
+  if (getRuleset(type).teamSizes) return getRuleset(type).teamSizes.map((size, i) => [[a], [b, pb]][i].slice(0, size)); // handicap: uneven sides (1 vs 2)
   const n = waysOf(getRuleset(type));
   if (n === 2) return [[a], [b]];
   const extra = (w, id) => ({ ...w, id, name: `${w.name} II` });
@@ -65,7 +66,7 @@ export function matchMetrics({ n = 120 } = {}) {
       const e = MatchEngine.simulate({ seed: 7000 + i, type, sides, playerId: W[a].id }, {});
       const r = e.state.result;
       t.n++;
-      if (!r || !['pinfall', 'submission', 'dq', 'countout', 'ten_count', 'falls', 'objective', 'time_limit_draw', 'double_countout', 'stalemate'].includes(r.finish)) t.invalid++;
+      if (!r || !['pinfall', 'submission', 'dq', 'countout', 'ten_count', 'falls', 'objective', 'over_the_top', 'time_limit_draw', 'double_countout', 'stalemate'].includes(r.finish)) t.invalid++;
       else { t.finishes[r.finish] = (t.finishes[r.finish] || 0) + 1; if (r.winnerSide === null) t.draws++; t.maxRounds = Math.max(t.maxRounds, r.rounds); }
       if (type === 'singles' && r) {
         all.n++; all.finish[r.finish] = (all.finish[r.finish] || 0) + 1; all.rounds += r.rounds; all.mins += r.durationSec / 60;

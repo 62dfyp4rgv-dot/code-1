@@ -26,7 +26,7 @@ const addHeat = (state, n) => { state.crowd.heat = clamp(state.crowd.heat + n, 0
 const addStamina = (f, n) => { f.stamina = clamp(f.stamina + n, 0, f.maxStamina); };
 const paceTime = (f) => (f.tactics.pace === 'fast' ? 0.85 : f.tactics.pace === 'slow' ? 1.15 : 1);
 
-function hurt(state, f, part, amount, source) {
+export function hurt(state, f, part, amount, source) {
   if (f.bonus) amount *= 1 - f.bonus.resist; // handicap: the outnumbered wrestler shrugs off some punishment
   const before = f.dmg[part];
   f.dmg[part] = clamp(before + amount, 0, 100);
@@ -520,13 +520,14 @@ function connectHit(state, R, A, D, move, stance, fam) {
   const quality = crit ? 'devastating' : dmg > move.dmg * 1.1 ? 'clean' : 'solid';
   const type = move.cat === 'finisher' ? 'finisher_connected' : move.cat === 'signature' ? 'signature_connected' : 'move_connected';
   // hardcore (TLC): furniture and weapons bite back - the user takes a share of the impact (deterministic, no dice)
-  let recoil = 0;
+  let recoil = 0, hasRecoil = false;
   if (state.rules.hardcore && state.rules.recoil && isHardcoreMove(move)) {
+    hasRecoil = true;
     recoil = hurt(state, A, move.risk ? move.risk.part : 'arms', Math.max(2, move.dmg * state.rules.recoil), 'recoil');
   }
   emit(state, type, {
     actor: A.id, target: D.id, move: move.id, moveName: move.name, cat: move.cat, part: move.tgt, damage: Math.round(real * 10) / 10,
-    quality, stance: stance.id, illegal: move.illegal, ...(recoil ? { selfDamage: Math.round(recoil * 10) / 10 } : {}),
+    quality, stance: stance.id, illegal: move.illegal, ...(hasRecoil ? { selfDamage: Math.round(recoil * 10) / 10 } : {}),
   });
   // battle royal: a clean toss sends the target over the top rope - eliminated on the spot
   if (move.special === 'over_top' && state.rules.overTheTop) {
@@ -700,7 +701,7 @@ export function resolvePinChoice(state, choiceId) {
   // multi-way: a bystander dives in to break up the cover (they want the pin for themselves)
   if (waysOf(state.rules) > 2) {
     for (const w of Object.values(state.fighters)) {
-      if (w.id === A.id || w.id === D.id || w.pos === 'grounded' || staminaFrac(w) < 0.12) continue;
+      if (w.id === A.id || w.id === D.id || !w.legal || w.pos === 'grounded' || staminaFrac(w) < 0.12) continue; // eliminated men and unreleased chamber pods cannot save
       const p = (0.2 + (pin.lastCat === 'finisher' ? 0.22 : pin.lastCat === 'signature' ? 0.08 : 0) + (w.attrs.agility - 50) / 400) * 0.75 ** (w.saves || 0);
       if (R.next() < p) {
         w.saves = (w.saves || 0) + 1;

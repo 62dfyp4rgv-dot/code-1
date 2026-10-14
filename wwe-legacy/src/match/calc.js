@@ -141,6 +141,7 @@ export function kickoutChance(state, pinnedId, pinnerId, info = {}) {
   p += crowdBias(state, pinnedId) * (state.crowd.heat / 100) * 0.06;
   if (info.boost) p += info.boost;
   if (info.ropes) p += 0.05;
+  if (state.rules.kickoutBonus) p += state.rules.kickoutBonus; // crowded rings (battle royal): covers are harder to hold
   return clamp(p, 0.06, 0.97);
 }
 

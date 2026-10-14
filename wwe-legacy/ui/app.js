@@ -118,6 +118,15 @@ const A = {
   tab: ({ id }) => { S.tab = id; S.sub = null; S.sheet = null; render(); },
   openSub: ({ id }) => { S.sub = id; render(); },
   closeSub: () => { S.sub = S.tab === 'home' && S.sub === 'prep' ? 'booking' : null; S.ui.promoResult = null; S.ui.apResult = null; render(); },
+  cwset: ({ k, v }) => { const c = S.create; c.cw = { style: 'allrounder', alignment: 'tweener', gender: 'M', tier: 2, ...(c.cw || {}) }; c.cw[k] = k === 'tier' ? +v : v; c.cw.name = document.getElementById('in-cwname')?.value || c.cw.name; render(); if (c.cw.name) { const el = document.getElementById('in-cwname'); if (el) el.value = c.cw.name; } },
+  cwadd: () => {
+    const c = S.create; c.cw = { style: 'allrounder', alignment: 'tweener', gender: 'M', tier: 2, ...(c.cw || {}) };
+    const name = (document.getElementById('in-cwname')?.value || '').trim().replace(/\s+/g, ' ');
+    if (name.length < 3 || !name.includes(' ') || !/^[A-Za-z][A-Za-z .'-]*$/.test(name)) return toast('Use a first and last name, letters only.');
+    if ((c.custom || []).some((x) => x.name.toLowerCase() === name.toLowerCase())) return toast('That name is already in your list.');
+    c.custom = [...(c.custom || []), { ...c.cw, name }]; c.cw = { ...c.cw, name: '' }; render();
+  },
+  cwdel: ({ i }) => { S.create.custom = (S.create.custom || []).filter((_, j) => j !== +i); render(); },
   newCareer: () => { S.create = defaultCreate(); S.screen = 'create'; render(); },
   toTitle: async () => { await refreshSlots(); S.screen = 'title'; render(); },
   cset: ({ k, v }) => { syncCreate(); S.create[k] = k === 'startYear' ? +v : v; if (k === 'background') S.create.bonus = {}; render(); },
@@ -133,7 +142,7 @@ const A = {
     syncCreate();
     const c = S.create;
     try {
-      S.g.newCareer({ name: c.name, alignment: c.alignment, background: c.background, style: c.style, bonus: c.bonus, signatures: c.signatures.filter(Boolean), finisher: c.finisher, entrance: c.entrance, goal: c.goal, startYear: c.startYear, gender: c.gender, seed: c.seed, mode: c.world === 'fictional' ? 'custom' : undefined });
+      S.g.newCareer({ name: c.name, alignment: c.alignment, background: c.background, style: c.style, bonus: c.bonus, signatures: c.signatures.filter(Boolean), finisher: c.finisher, entrance: c.entrance, goal: c.goal, startYear: c.startYear, gender: c.gender, seed: c.seed, mode: c.world === 'fictional' ? 'custom' : undefined, customWrestlers: c.custom || [] });
       S.screen = 'main'; S.tab = 'home'; S.sub = null; S.notifSeen = 0; S.feed = [];
       checkAchievementToasts();
       await autosave(); render();
@@ -157,6 +166,7 @@ const A = {
   tlmin: ({ id }) => { S.ui.tlMin = +id; render(); },
 
   train: async ({ id }) => { try { const r = S.g.train(id); toast(r.message); await afterTime(); } catch (e) { err(e); } },
+  life: async ({ id }) => { try { const r = S.g.lifeAct(id); toast(`${r.message} Wellbeing ${r.deltas.wellbeing >= 0 ? '+' : ''}${r.deltas.wellbeing}.`); await afterTime(); } catch (e) { err(e); } },
   rest: async () => { try { toast(S.g.rest().message); await afterTime(); } catch (e) { err(e); } },
   advance: async () => { try { S.g.advanceToNextEvent(); await afterTime(); } catch (e) { err(e); } },
 
@@ -237,6 +247,10 @@ const A = {
       await autosave(); render();
     } catch (e) { err(e); }
   },
+  factionName: ({ v }) => { (S.ui.faction ||= { picks: [] }).name = v; render(); },
+  factionPick: ({ id }) => { const u = (S.ui.faction ||= { picks: [] }); u.picks = u.picks.includes(id) ? u.picks.filter((x) => x !== id) : [...u.picks, id].slice(0, 3); render(); },
+  factionFound: async () => { try { const u = (S.ui.faction ||= { picks: [] }); const r = S.g.foundFaction({ name: u.name || S.g.factionView().names[0], memberIds: u.picks }); u.picks = []; toast(`${r.faction.name} is founded.`); checkAchievementToasts(); await autosave(); render(); } catch (e) { err(e); } },
+  factionLeave: async () => { try { S.g.leaveFaction(); toast('You left the faction.'); await autosave(); render(); } catch (e) { err(e); } },
   socialSet: ({ v }) => { (S.ui.social ||= {}).tone = v; render(); },
   socialSend: async () => {
     try {

@@ -63,7 +63,7 @@ function def(id, name, cat, tgt, dmg, cost, acc, atk, from, vs, o = {}) {
 // pin-based surprise attacks and objective-match tools
 def('roll_up', 'Roll-Up Pin', 'technical', 'torso', 2, 4, 0.6, { technical: 0.6, agility: 0.4 }, [S], [S], { pinMove: true, time: 14, style: ['technician', 'highflyer'] });
 def('schoolboy', 'Schoolboy Pin', 'technical', 'torso', 2, 4, 0.56, { technical: 0.5, psychology: 0.5 }, [S], [S], { pinMove: true, time: 14 });
-def('knock_off', 'Knock Them Off', 'power', 'torso', 17, 8, 0.64, { power: 0.7, agility: 0.3 }, [S], [T], { toD: G, special: 'topple', rules: ['objective'], mom: 10, heat: 8 });
+def('knock_off', 'Knock Them Off', 'power', 'torso', 17, 8, 0.5, { power: 0.7, agility: 0.3 }, [S], [T], { toD: G, special: 'topple', rules: ['objective'], mom: 10, heat: 8 });
 
 // ---------------------------------------------------------------- strikes
 def('forearm', 'Forearm Smash', 'strike_light', 'head', 5, 3, 0.78, { striking: 0.8, power: 0.2 }, [S, C], [S, C]);
@@ -181,7 +181,7 @@ def('table_powerbomb', 'Powerbomb Through a Table', 'environmental', 'torso', 28
 def('ladder_table_splash', 'Splash Off the Ladder Through a Table', 'environmental', 'torso', 31, 14, 0.55, { agility: 0.8, power: 0.2 }, [T], [G], { mom: 18, heat: 18, toA: G, rules: ['weapons', 'hardcore'], risk: { part: 'torso', dmg: 10, note: 'crashes through the table' } });
 
 // battle royal: over-the-top-rope elimination (only when the ruleset has `overTheTop`)
-def('toss_over', 'Throw Over the Top Rope', 'power', 'torso', 6, 10, 0.5, { power: 0.9, grappling: 0.1 }, [S], [S, R], { special: 'over_top', rules: ['overTheTop'], mom: 6, heat: 6, time: 30 });
+def('toss_over', 'Throw Over the Top Rope', 'power', 'torso', 6, 10, 0.58, { power: 0.9, grappling: 0.1 }, [S], [S, R], { special: 'over_top', rules: ['overTheTop'], mom: 6, heat: 6, time: 30 });
 
 def('ground_pound_floor', 'Slam on the Floor', 'power', 'torso', 14, 9, 0.62, { power: 0.8, grappling: 0.2 }, [O], [O], { toD: G, mom: 7 });
 def('apron_drop', 'Apron Slam', 'power', 'torso', 15, 9, 0.6, { power: 0.8, grappling: 0.2 }, [O], [O], { mom: 8, toD: G, heat: 5 });

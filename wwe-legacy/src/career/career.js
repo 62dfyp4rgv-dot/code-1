@@ -2,6 +2,7 @@
 // projection and the achievement engine, and exposes ONE pipeline - record() - through which every
 // meaningful thing that happens is written down, projected and evaluated.
 import { Rng } from '../core/rng.js';
+import { recoveryBonus, lifeDay } from './life.js';
 import { clamp, deepClone, round1 } from '../core/util.js';
 import { Memory } from '../memory/memory.js';
 import { dayToDate } from '../memory/ledger.js';
@@ -51,7 +52,7 @@ export class Career {
       popularity: p.popularity ?? 10, confidence: p.confidence ?? 50, fatigue: 0, injuries: [], money: p.money ?? 5000, charisma: p.charisma ?? 40, mic: p.mic ?? 40,
       brand: p.brand || 'NXT', background: p.background || 'prospect', personality: p.personality || { aggression: 50, ego: 50, loyalty: 50, ambition: 60 },
       appearance: p.appearance || {}, entrance: p.entrance || { style: 'classic', music: 'Rising' }, goals: p.goals || [], contract: p.contract || null,
-      xp: {}, difficulty: 0.5, peakAttrs: {},
+      xp: {}, difficulty: 0.5, peakAttrs: {}, life: p.life ? { ...p.life } : { wellbeing: 60, family: 50, social: 40 },
     };
   }
 
@@ -175,6 +176,11 @@ export class Career {
         const r = this.record({ key: `${key}:respect`, category: 'relationship', type: 'respect_shown', participants: [me, ...opponents], refs: [out.event.id], summary: `${this.player.name} showed respect to ${oppNames} during the match.`, importance: 2, data: { matchId: booking.matchId } });
         events.push(r.event);
       }
+      // Money in the Bank: the engine grants nothing mechanical - the briefcase is recorded as a ledger fact only
+      if (st.type === 'mitb' && result === 'win') {
+        const mb = this.record({ key: `${key}:mitb`, category: 'career', type: 'milestone', refs: [out.event.id], participants: [me, ...opponents], summary: `${this.player.name} won the Money in the Bank briefcase.`, importance: 4, data: { kind: 'money_in_the_bank', matchId: booking.matchId } });
+        events.push(mb.event);
+      }
       this._postMatchProgress(out.event, f, booking, result, rating, opponents);
     }
     return { ...out, events, rating, result };
@@ -231,7 +237,8 @@ export class Career {
     for (let i = 0; i < n; i++) {
       this.day += 1;
       const p = this.player;
-      p.fatigue = clamp(p.fatigue - 4, 0, 100);
+      p.fatigue = clamp(p.fatigue - 4 - recoveryBonus(p), 0, 100);
+      lifeDay(this);
       if (this.day % 30 === 0 && !this.flags.retired) { maybeRenewContract(this); settleMonth(this); }
       if (this.day % 30 === 0) this.memory.record({ key: `decay:${this.day}`, day: this.day, category: 'world', type: 'world_decay', scope: 'world', canon: false, participants: [], summary: 'Time passes: old grudges cool and fear fades.', importance: 1, data: { days: 30 } });
       for (const inj of p.injuries) if (inj.daysLeft > 0) {

@@ -433,12 +433,12 @@ test('every match type terminates with a coherent result across builds and strat
       if (a === b) continue;
       const overrides = { [W[a].id]: profs[i % profs.length], [W[b].id]: profs[(i + 2) % profs.length] };
       const extra = (k) => ({ ...W[builds[(i + k * 2 + 1) % builds.length]], id: `extra${k}`, name: `Extra ${k}` });
-      const sides = type === 'tag' ? [[W[a], W.partnerA], [W[b], W.partnerB]] : waysOf(getRuleset(type)) > 2 ? [[W[a]], [W[b]], ...Array.from({ length: waysOf(getRuleset(type)) - 2 }, (_, k) => [extra(k + 1)])] : [[W[a]], [W[b]]];
+      const sides = type === 'tag' ? [[W[a], W.partnerA], [W[b], W.partnerB]] : getRuleset(type).teamSizes ? [[W[a]], [W[b], W.partnerB]] : waysOf(getRuleset(type)) > 2 ? [[W[a]], [W[b]], ...Array.from({ length: waysOf(getRuleset(type)) - 2 }, (_, k) => [extra(k + 1)])] : [[W[a]], [W[b]]];
       const m = MatchEngine.simulate({ seed: 1000 + i, type, sides, playerId: W[a].id }, overrides);
       const r = m.result;
       assert.ok(r, `${type} produced no result`);
       assert.ok(r.rounds <= 700);
-      assert.ok(['pinfall', 'submission', 'dq', 'countout', 'ten_count', 'falls', 'objective', 'time_limit_draw', 'double_countout', 'stalemate'].includes(r.finish), r.finish);
+      assert.ok(['pinfall', 'submission', 'dq', 'countout', 'ten_count', 'falls', 'objective', 'over_the_top', 'time_limit_draw', 'double_countout', 'stalemate'].includes(r.finish), r.finish);
       if (getRuleset(type).elimination && r.winnerSide !== null) assert.equal(r.eliminated.length, waysOf(getRuleset(type)) - 1);
       assert.equal(m.state.events.filter((x) => x.type === 'match_end').length, 1);
       assert.equal(m.getDecision(), null);

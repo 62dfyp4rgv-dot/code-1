@@ -7,6 +7,7 @@ import { Career } from './career/career.js';
 import { gainPop } from './career/pace.js';
 import { legacyScore, retirePlayer } from './career/legacy.js';
 import { LIFESTYLES, merchIncome } from './career/finance.js';
+import { lifeView, doLifeActivity } from './career/life.js';
 import { makeBooking, createEngine } from './career/booking.js';
 import { MatchEngine } from './match/engine.js';
 import { narrate } from './match/commentary.js';
@@ -30,6 +31,7 @@ import { buildPairSummary } from './memory/summaries.js';
 import { memoryLines } from './story/dialogue.js';
 import { deliverPromo, PROMO_TONES, CLAIMS } from './story/media.js';
 import { socialOptions, postToSocial, socialFeed } from './story/social.js';
+const FACTION_NAMES = ['The Syndicate', 'Iron Circle', 'Night Shift', 'The Outliers', 'Rope Burn', 'The Long Count', 'Cold Open', 'Third Row Society'];
 import { appearanceOptions, startAppearance, answerAppearance, appearanceView, cancelAppearance, APPEARANCE_KINDS } from './story/appearances.js';
 
 export const BACKGROUNDS = {
@@ -64,7 +66,11 @@ export const ENTRANCES = {
   menace: { label: 'Menacing', desc: 'Make them hate you (heels).', heat: 9, momentum: 4, heel: true },
 };
 
-export const STIPULATION_HEAT = { singles: 0, tag: 0, triple_threat: 15, fatal_four: 30, elimination: 45, chamber: 70, no_dq: 40, submission: 30, iron_man: 55, last_man: 60, ladder: 65, cage: 65, hell_cell: 85 };
+export const STIPULATION_HEAT = { singles: 0, tag: 0, triple_threat: 15, fatal_four: 30, elimination: 45, chamber: 70, no_dq: 40, submission: 30, iron_man: 55, last_man: 60, ladder: 65, cage: 65, hell_cell: 85, tlc: 55, mitb: 0, battle_royal: 25, handicap: 35 };
+/** match types unlocked by something other than rivalry heat: id -> { when(game) -> bool, lock: label shown while unavailable } */
+const SPECIAL_STIPULATIONS = {
+  mitb: { when: (g) => { const ev = g.nextEvent(); return !!ev && ev.day === g.c.day && ev.kind === 'ple'; }, lock: 'Premium Live Event only' },
+};
 
 const POST_WIN = ['celebrate', 'show_respect', 'cut_promo', 'attack_rival', 'call_out', 'talk_management', 'seek_treatment', 'help_up'];
 const POST_LOSS = ['show_respect', 'vow_revenge', 'request_rematch', 'argue_result', 'talk_management', 'seek_treatment', 'walk_away'];
@@ -129,6 +135,7 @@ export class Game {
     career.universe = Universe.create({ seed, mode: spec.mode === 'custom' ? 'custom' : career.mode, year: startYear });
     career.universe._mainBrand = brands.includes('WWF') ? 'WWF' : brands[0];
     career.universe._syncBrandNames();
+    if (spec.customWrestlers && spec.customWrestlers.length) career.universe.addCustom(spec.customWrestlers, startYear);
     career.record({ key: 'debut', category: 'career', type: 'debut', summary: `${career.player.name} makes their professional debut${brand ? ` on ${brand}` : ''}.`, importance: 4, data: { brand, show: brand, background: spec.background || 'prospect', era: career.era } });
     career.player.lifestyle = 'comfortable';
     career.player.contract = { endDay: career.day + 730, salary: { prospect: 60000, indie: 90000, international: 250000, established: 600000 }[spec.background || 'prospect'] ?? 60000, brand };
@@ -214,6 +221,16 @@ export class Game {
     for (const i of p.injuries) i.daysLeft = Math.max(0, i.daysLeft - 1);
     c.advanceDays(1); this._universeTick(); this._rollScenario(1);
     return { fatigue: Math.round(p.fatigue), message: 'You rested and recovered.' };
+  }
+
+  lifeView() { return lifeView(this.c); }
+  lifeAct(id) {
+    const c = this.c;
+    if (c.flags.phase !== 'home') throw new Error('finish the current match first');
+    this._blockedByScenario();
+    const r = doLifeActivity(c, id);
+    c.advanceDays(1); this._universeTick(); this._rollScenario(1);
+    return r;
   }
 
   train(focus) {
@@ -337,6 +354,43 @@ export class Game {
     const f = Object.values(c.memory.world.factions).find((x) => x.members.includes(me));
     return f ? { id: f.id, name: f.name, leader: f.leader, members: f.members.filter((id) => id !== me), trust: f.trust ?? 0, since: f.formedDay } : null;
   }
+  /** factions: the player's own stable, the candidates they could recruit, and the AI factions of the universe */
+  factionView() {
+    const c = this.c, me = c.player.id, u = this.universe, w = c.memory.world;
+    const nm = (id) => (id === me ? c.player.name : u.get(id)?.name || id);
+    const mine = this.myFaction();
+    const inFaction = new Set(Object.values(w.factions).flatMap((f) => f.members));
+    // how much the OTHER wrestler trusts the player (relationship trust is stored per direction)
+    const trustIn = (x) => { const r = getRel(w, me, x.id); return { r, t: r.trust[r.a === x.id ? 0 : 1] }; };
+    const candidates = mine ? [] : u.list((x) => x.id !== me && !inFaction.has(x.id) && x.brand === c.player.brand).map((x) => ({ x, ...trustIn(x) }))
+      .filter(({ r, t }) => r.tags.includes('ally') || r.tags.includes('mentor') || t >= 25).sort((a, b) => b.t - a.t).slice(0, 8)
+      .map(({ x, t }) => ({ id: x.id, name: x.name, trust: Math.round(t), style: x.style, alignment: x.alignment }));
+    return {
+      mine: mine ? { ...mine, leaderName: nm(mine.leader), memberNames: mine.members.map(nm), id: mine.id } : null,
+      candidates, names: FACTION_NAMES,
+      ai: Object.values(u.factions).filter((f) => f.status === 'active').map((f) => ({ id: f.id, name: f.name, leader: nm(f.leader), members: f.members.map(nm), alignment: f.alignment || null })),
+    };
+  }
+  foundFaction({ name, memberIds }) {
+    const c = this.c, me = c.player.id;
+    this._blockedByScenario();
+    if (this.myFaction()) throw new Error('you already belong to a faction');
+    const view = this.factionView();
+    if (!FACTION_NAMES.includes(name)) throw new Error('choose one of the available names');
+    const ids = [...new Set(memberIds || [])];
+    if (ids.length < 1 || ids.length > 3) throw new Error('a faction needs one to three recruits');
+    for (const id of ids) if (!view.candidates.some((x) => x.id === id)) throw new Error('that wrestler is not willing to join');
+    const factionId = `pf_${c.day}`;
+    const r = c.record({ key: `faction:found:${c.day}`, category: 'relationship', type: 'faction_formed', participants: [me, ...ids], summary: `${c.player.name} founded ${name} with ${ids.map((id) => this.universe.get(id).name).join(' and ')}.`, importance: 4, data: { factionId, name, leader: me, byPlayer: true } });
+    return { event: r.event, unlocked: r.unlocked, faction: this.myFaction() };
+  }
+  leaveFaction() {
+    const c = this.c, me = c.player.id, f = this.myFaction();
+    this._blockedByScenario();
+    if (!f) throw new Error('you are not in a faction');
+    const r = c.record({ key: `faction:left:${f.id}:${c.day}`, category: 'relationship', type: 'faction_left', participants: [me, ...f.members], summary: `${c.player.name} left ${f.name}.`, importance: 3, data: { factionId: f.id, member: me, byPlayer: true } });
+    return { event: r.event, unlocked: r.unlocked };
+  }
   opponentCard(w) {
     const c = this.c, me = c.player.id;
     const rel = getRel(c.memory.world, me, w.id), rv = getRivalry(c.memory.world, me, w.id);
@@ -367,7 +421,11 @@ export class Game {
   availableStipulations(opponentId) {
     const rv = getRivalry(this.c.memory.world, this.c.player.id, opponentId);
     const heat = rv ? rv.heat : 0;
-    return MATCH_TYPE_IDS.filter((t) => t !== 'tag').map((t) => ({ id: t, name: getRuleset(t).name, desc: getRuleset(t).desc, unlocked: heat >= STIPULATION_HEAT[t], need: STIPULATION_HEAT[t], heat: Math.round(heat) }));
+    return MATCH_TYPE_IDS.filter((t) => t !== 'tag').map((t) => {
+      const special = SPECIAL_STIPULATIONS[t]; // no rival needed: a calendar condition decides
+      const unlocked = special ? special.when(this) : heat >= STIPULATION_HEAT[t];
+      return { id: t, name: getRuleset(t).name, desc: getRuleset(t).desc, unlocked, need: STIPULATION_HEAT[t], heat: Math.round(heat), ...(special && !unlocked ? { lock: special.lock } : {}) };
+    });
   }
 
   /** Book the match for the next event. Returns a booking summary. */
@@ -395,7 +453,7 @@ export class Game {
       if (title && title.cls === 'tag') type = 'tag';
     }
     if (type === 'tag' && !(title && title.cls === 'tag') && !forced) throw new Error('tag matches are booked through tag championships or story situations');
-    if (type !== 'singles' && type !== 'tag' && !forced && !stips.find((s) => s.id === type)?.unlocked) throw new Error(`${type} is not unlocked against this opponent yet`);
+    if (type !== 'singles' && type !== 'tag' && !forced && !stips.find((s) => s.id === type)?.unlocked) throw new Error(SPECIAL_STIPULATIONS[type] ? `${type} is only available on a Premium Live Event` : `${type} is not unlocked against this opponent yet`);
     if (!PLANS[plan]) throw new Error('unknown plan');
     const ent = entrance || c.player.entrance.style;
     let partners = [], oppPartners = [];
@@ -409,6 +467,10 @@ export class Game {
         .sort((a, b) => Math.abs(this._overall(a) - this._overall(w)) - Math.abs(this._overall(b) - this._overall(w)));
       if (rest.length < ways - 2) throw new Error('not enough wrestlers are available for that match');
       fieldOpps = [w, ...rest.slice(0, ways - 2)];
+    } else if (type === 'handicap') {
+      // 1 vs 2: you are the lone wrestler; the office adds a second foe (the opponent's ally if there is one)
+      if (stakes === 'title') throw new Error('handicap matches cannot be booked for a championship');
+      fieldOpps = [w, this._handicapPartner(w)];
     }
     const booking = makeBooking(c, fieldOpps, {
       partners, opponentPartners: oppPartners,
@@ -421,6 +483,15 @@ export class Game {
     if (title) c.flags.lastTitleShot = c.day;
     c.flags.phase = 'prematch';
     return booking;
+  }
+  /** The second foe in a handicap match: the opponent's ally if free, otherwise the closest-rated same-brand wrestler of the same gender. */
+  _handicapPartner(opp) {
+    const c = this.c, u = this.universe;
+    const pool = u.available(c.day, (x) => x.id !== c.player.id && x.id !== opp.id && u.sameBrand(x, c.player.brand) && x.gender === opp.gender);
+    if (!pool.length) throw new Error('not enough wrestlers are available for that match');
+    const alliance = Object.values(u.alliances).find((a) => (a.a === opp.id || a.b === opp.id) && pool.some((x) => x.id === (a.a === opp.id ? a.b : a.a)));
+    const ally = alliance && pool.find((x) => x.id === (alliance.a === opp.id ? alliance.b : alliance.a));
+    return ally || pool.sort((a, b) => Math.abs(this._overall(a) - this._overall(opp)) - Math.abs(this._overall(b) - this._overall(opp)))[0];
   }
   /** Pick tag partners: the player's best ally (or a compatible same-brand wrestler) and the opponent's partner. */
   _tagPartners(opp, tagTitle = null) {
@@ -565,7 +636,7 @@ export class Game {
     const opp = s.fighters[s.teams[1 - me.side][0]];
     const multi = waysOf(s.rules) > 2;
     const legalOpp = multi ? s.fighters[engineOpponentOf(s, me.id)] : (s.fighters[Object.values(s.fighters).find((f) => f.side !== me.side && f.legal)?.id] || opp);
-    const view = (f) => ({ id: f.id, name: f.name, stamina: Math.round(f.stamina), maxStamina: f.maxStamina, momentum: Math.round(f.momentum), confidence: Math.round(f.confidence), dmg: Object.fromEntries(Object.entries(f.dmg).map(([k, v]) => [k, Math.round(v)])), pos: f.pos, legal: f.legal, alignment: f.alignment, dazed: f.dazed > 0, tactics: f.tactics, style: f.style });
+    const view = (f) => ({ id: f.id, name: f.name, stamina: Math.round(f.stamina), maxStamina: f.maxStamina, momentum: Math.round(f.momentum), confidence: Math.round(f.confidence), dmg: Object.fromEntries(Object.entries(f.dmg).map(([k, v]) => [k, Math.round(v)])), pos: f.pos, legal: f.legal, alignment: f.alignment, dazed: f.dazed > 0, tactics: f.tactics, style: f.style, climb: f.climb });
     return {
       type: s.type, rules: s.rules, time: Math.round(s.time), timeLimit: s.timeLimit, phase: s.phase, round: s.round, crowd: Math.round(s.crowd.heat),
       referee: s.referee.state, me: view(me), opp: view(legalOpp), team: s.rules.tag ? { mine: s.teams[me.side].map((id) => view(s.fighters[id])), theirs: s.teams[1 - me.side].map((id) => view(s.fighters[id])) } : null,

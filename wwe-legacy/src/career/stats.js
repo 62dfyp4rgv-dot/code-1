@@ -13,7 +13,7 @@ const blank = () => ({
   byYear: {}, ple: {}, mainEvents: 0, pleMatches: 0, wmMatches: 0,
   rumble: { entries: 0, eliminations: 0, bestEliminations: 0, longestSurvivalSec: 0, wins: 0, finalTwo: 0, bestEntryWin: null, consecutiveWins: 0, bestConsecutiveWins: 0 },
   bestMatch: null, bestPromo: null, bestInterview: null,
-  promos: 0, podcasts: 0, pressConferences: 0, interviews: 0, viral: 0, socialPosts: 0,
+  lifeActivities: 0, promos: 0, podcasts: 0, pressConferences: 0, interviews: 0, viral: 0, socialPosts: 0,
   injuries: 0, comebacks: 0, upsets: 0, cleanWins: 0, finisherWins: 0, nonFinisherWins: 0,
   totalDurationSec: 0, matchesRated: 0, ratingSum: 0, fiveStar: 0,
   earnings: { matches: 0, salary: 0, merch: 0, spent: 0 },
@@ -128,6 +128,7 @@ export class CareerStats {
         if (!s.bestInterview || d.quality > s.bestInterview.quality) s.bestInterview = { id: ev.id, quality: d.quality };
         break;
       case 'finance_month': s.earnings.salary += d.salary; s.earnings.merch += d.merch; s.earnings.spent += d.expenses; break;
+      case 'life_activity': s.lifeActivities++; break;
       case 'social_post': s.socialPosts++; if (d.viral) { s.viral++; first('viral'); } break;
       case 'injury': s.injuries++; break;
       case 'debut': first('debut'); break;

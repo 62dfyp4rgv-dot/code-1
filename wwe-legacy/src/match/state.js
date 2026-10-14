@@ -86,6 +86,8 @@ export function createMatchState(cfg) {
       if (!rules.pinfall) for (const id of BASIC_HOLDS) if (!f.moveIds.includes(id)) f.moveIds.push(id);
       // rule-granted moves: table/chair work in hardcore matches, the over-the-top toss in battle royals
       if (rules.hardcore) for (const id of HARDCORE_MOVES) if (!f.moveIds.includes(id)) f.moveIds.push(id);
+      // ladder / cage: anyone can try to knock a climber off (the move existed in the registry but was in nobody's set)
+      if (rules.objective && !f.moveIds.includes('knock_off')) f.moveIds.push('knock_off');
       if (rules.overTheTop) for (const id of OVER_TOP_MOVES) if (!f.moveIds.includes(id)) f.moveIds.push(id);
       f.legal = idx === 0;
       f.pos = idx === 0 ? 'standing' : 'apron';

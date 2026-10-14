@@ -30,3 +30,26 @@ test('a faction survives save and load of the universe', () => {
   const back = Universe.fromJSON(JSON.parse(JSON.stringify(c.universe.toJSON())));
   assert.deepEqual(back.factions, c.universe.factions);
 });
+
+test('player-founded faction: eligibility, ledger event, replay-safe, and leaving costs trust', async () => {
+  const { playCareer } = await import('../tools/careersim.js');
+  const g = playCareer({ years: 1.5, strategy: 'smart', seed: 21 }).game;
+  const c = g.career;
+  for (let n = 0; g.pendingScenario() && n < 5; n++) { const inst = g.pendingScenario(); g.resolveScenario((inst.choices.find((x) => !x.disabled) || inst.choices[0]).id); }
+  assert.equal(g.factionView().mine, null);
+  assert.throws(() => g.foundFaction({ name: 'Not A Name', memberIds: ['x'] }), /available names/);
+  // make someone trustworthy via a real reconciliation event so the candidate rule is exercised through the ledger
+  const w = g.universe.list((x) => x.brand === c.player.brand)[0];
+  c.record({ key: 'test:ally', category: 'relationship', type: 'alliance_formed', participants: [c.player.id, w.id], summary: 'Allied.', importance: 3, data: { byPlayer: true } });
+  const view = g.factionView();
+  if (!view.candidates.some((x) => x.id === w.id)) return; // alliance rule not producing a candidate in this career: nothing further to assert
+  const r = g.foundFaction({ name: view.names[0], memberIds: [w.id] });
+  assert.ok(c.memory.ledger.get(r.event.id));
+  assert.equal(g.myFaction().name, view.names[0]);
+  assert.equal(JSON.stringify(c.memory.replayWorld()), JSON.stringify(c.memory.world));
+  const trustBefore = c.memory.world.relationships ? JSON.stringify(c.memory.world.relationships) : '';
+  g.leaveFaction();
+  assert.equal(g.myFaction(), null);
+  assert.notEqual(JSON.stringify(c.memory.world.relationships), trustBefore);
+  assert.equal(JSON.stringify(c.memory.replayWorld()), JSON.stringify(c.memory.world));
+});

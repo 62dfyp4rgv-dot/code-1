@@ -41,7 +41,7 @@ export function buildContext(career) {
       popularity: p.popularity, confidence: p.confidence, fatigue: p.fatigue, money: p.money, overall: c.overall(), matches: s.matches, wins: s.wins, losses: s.losses,
       winStreak: Math.max(0, s.streak.current), loseStreak: Math.max(0, -s.streak.current), titleWins: s.titles.won, titlesHeld: Object.keys(s.titles.current).length, defenses: s.titles.defenses,
       rating: ratingAvg, careerYears: c.day / 365.25, mic: p.mic, charisma: p.charisma, promos: s.promos, injuries: s.injuries, daysChampion: c.stats.totalDaysChampion(c.day),
-      mainEvents: s.mainEvents, pleMatches: s.pleMatches, rumbleEntries: s.rumble.entries, popularityRank: 0,
+      mainEvents: s.mainEvents, pleMatches: s.pleMatches, rumbleEntries: s.rumble.entries, popularityRank: 0, wellbeing: (p.life || {}).wellbeing ?? 60, family: (p.life || {}).family ?? 50, socialLife: (p.life || {}).social ?? 40,
     },
     recentLosses: recent.filter((e) => e.data.result === 'loss').length, recentWins: recent.filter((e) => e.data.result === 'win').length,
     injured, serious, holdsTitle: Object.keys(s.titles.current).length > 0, rivals, ev,
@@ -275,7 +275,7 @@ export function collectEffects(effects, bind, ctx, rng) {
     const v = e[key];
     const who = (r) => { const b = bind[r]; if (!b) throw new Error(`effect refers to unknown role ${r}`); return b; };
     switch (key) {
-      case 'pop': case 'conf': case 'fatigue': case 'money': case 'mic': case 'charisma': out.state.push({ k: key, d: v }); break;
+      case 'pop': case 'conf': case 'fatigue': case 'money': case 'mic': case 'charisma': case 'wellbeing': case 'family': case 'social': out.state.push({ k: key, d: v }); break;
       case 'attr': out.state.push({ k: 'attr', name: v.name, d: v.delta }); break;
       case 'rel': {
         const b = who(v.who); if (!b.isWrestler) throw new Error('rel needs a wrestler');
@@ -479,6 +479,7 @@ export class ScenarioEngine {
         case 'pop': gainPop(p, s.d); break;
         case 'conf': p.confidence = clamp(p.confidence + s.d, 0, 100); break;
         case 'fatigue': p.fatigue = clamp(p.fatigue + s.d, 0, 100); break;
+        case 'wellbeing': case 'family': case 'social': { const l = (p.life ||= { wellbeing: 60, family: 50, social: 40 }); l[s.k] = clamp(l[s.k] + s.d, 0, 100); break; }
         case 'money': p.money = Math.max(-50000, p.money + s.d); break;
         case 'mic': p.mic = clamp(p.mic + s.d, 0, 99); break;
         case 'charisma': p.charisma = clamp(p.charisma + s.d, 0, 99); break;

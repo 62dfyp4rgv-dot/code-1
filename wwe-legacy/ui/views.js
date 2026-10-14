@@ -68,6 +68,20 @@ const STYLE_INFO = {
   brawler: 'Hard strikes, corner attacks, toughness.', technician: 'Holds, counters, mat wrestling.', highflyer: 'Aerial offence, speed, risk.',
   powerhouse: 'Slams, strength, big moves.', showman: 'Crowd control, signature spots.', submission: 'Joint locks and grinding pressure.', allrounder: 'No weakness, no specialty.',
 };
+function worldEditor(c) {
+  const custom = c.custom || [], cw = c.cw || { style: 'allrounder', alignment: 'tweener', gender: 'M', tier: 2 };
+  const chip = (k, v, label) => `<button class="chip ${String(cw[k]) === String(v) ? 'on' : ''}" data-action="cwset" data-k="${k}" data-v="${v}">${label}</button>`;
+  return `<details class="fold card" id="world-editor" ${custom.length || c.cw ? "open" : ""}><summary>World editor: add your own wrestlers (${custom.length}/12)</summary>
+    <p class="muted">Custom wrestlers replace similar fictional ones, so the roster and title lineages stay intact. They live in the world like everyone else: they feud, win titles and retire.</p>
+    ${custom.map((x, i) => `<div class="row spread"><span><b>${esc(x.name)}</b> <span class="muted">${cap(x.style)} · ${cap(x.alignment)} · tier ${x.tier} · ${x.gender}</span></span><button class="btn small ghost" data-action="cwdel" data-i="${i}">Remove</button></div>`).join('')}
+    <label class="f">Ring name<input type="text" id="in-cwname" maxlength="28" autocomplete="off" placeholder="First Last"></label>
+    <div class="eyebrow">Style</div><div class="chips wrap">${STYLES.map((s) => chip('style', s, cap(s))).join('')}</div>
+    <div class="eyebrow">Alignment</div><div class="chips">${['face', 'heel', 'tweener'].map((a) => chip('alignment', a, cap(a))).join('')}</div>
+    <div class="eyebrow">Gender</div><div class="chips">${chip('gender', 'M', 'Male')}${chip('gender', 'F', 'Female')}</div>
+    <div class="eyebrow">Standing</div><div class="chips">${[[0, 'Rookie'], [1, 'Mid-card'], [2, 'Upper mid'], [3, 'Main eventer'], [4, 'Legend']].map(([v, l]) => chip('tier', v, l)).join('')}</div>
+    <button class="btn" data-action="cwadd" id="btn-cwadd" ${custom.length >= 12 ? 'disabled' : ''}>Add to the world</button></details>`;
+}
+
 export function create(S) {
   const c = S.create, opts = Game.creationOptions();
   const step = c.step;
@@ -95,7 +109,8 @@ export function create(S) {
     body = `<div class="col"><div class="eyebrow">Entrance</div>${Object.entries(ENTRANCES).map(([id, e]) => `<button class="btn" data-action="cset" data-k="entrance" data-v="${id}" style="${c.entrance === id ? 'border-color:var(--rope);' : ''}"><span class="t"><b>${esc(e.label)}</b><small>${esc(e.desc)}</small></span></button>`).join('')}</div>
       <div class="col"><div class="eyebrow">Career goal</div><div class="chips">${opts.goals.map((g) => `<button class="chip ${c.goal === g ? 'on' : ''}" data-action="cset" data-k="goal" data-v="${esc(g)}">${esc(g)}</button>`).join('')}</div></div>
       <div class="col"><div class="eyebrow">Start year</div><div class="chips">${opts.startYears.map((y) => `<button class="chip ${c.startYear === y ? 'on' : ''}" data-action="cset" data-k="startYear" data-v="${y}">${y}</button>`).join('')}</div><p class="muted">${esc(eraForYear(c.startYear).name)}: ${esc(eraForYear(c.startYear).desc)}</p></div>
-      <div class="col"><div class="eyebrow">World</div><div class="chips"><button class="chip ${c.world !== 'fictional' ? 'on' : ''}" data-action="cset" data-k="world" data-v="real">Real names (approximate)</button><button class="chip ${c.world === 'fictional' ? 'on' : ''}" data-action="cset" data-k="world" data-v="fictional">Fully fictional</button></div><p class="muted">${c.world === 'fictional' ? 'An invented roster and an alternate history. Nothing here is presented as real.' : 'Real wrestler names with approximate rosters and results flagged as unverified. Everything that happens afterwards is simulated alternate history.'}</p></div>`;
+      <div class="col"><div class="eyebrow">World</div><div class="chips"><button class="chip ${c.world !== 'fictional' ? 'on' : ''}" data-action="cset" data-k="world" data-v="real">Real names (approximate)</button><button class="chip ${c.world === 'fictional' ? 'on' : ''}" data-action="cset" data-k="world" data-v="fictional">Fully fictional</button></div><p class="muted">${c.world === 'fictional' ? 'An invented roster and an alternate history. Nothing here is presented as real.' : 'Real wrestler names with approximate rosters and results flagged as unverified. Everything that happens afterwards is simulated alternate history.'}</p></div>
+      ${worldEditor(c)}`;
   } else {
     body = `<div class="card"><h3>${esc(c.name || 'The Rookie')}</h3>
       ${kv('Style', cap(c.style))}${kv('Alignment', cap(c.alignment))}${kv('Background', esc(bg.name))}${kv('Finisher', esc(c.finisher.name))}${kv('Signatures', esc(c.signatures.filter(Boolean).map((s) => s.name).join(', ') || 'Style defaults'))}${kv('Entrance', esc(ENTRANCES[c.entrance].label))}${kv('Start', `${c.startYear} (${esc(eraForYear(c.startYear).name)}${c.world === 'fictional' ? ', fictional world' : ''})`)}${kv('Goal', esc(c.goal || 'None yet'))}</div>`;
@@ -133,6 +148,13 @@ export function home(S) {
   const timeCard = ph === 'home' && !h.scenario && !c.flags.retired ? `<div class="card"><div class="row spread"><h2>${today ? 'Show day' : 'Before the show'}</h2>${today ? '' : `<span class="pill">${next ? `${next.inDays} day${next.inDays === 1 ? '' : 's'}` : ''}</span>`}</div>
       ${today ? '<p class="muted">Training is off until after tonight\'s show.</p>' : `<div class="grid2">${Object.entries(TRAINING).map(([id, t]) => `<button class="btn small" data-action="train" data-id="${id}"><span class="t">${esc(t.label)}<small class="fx">+${cap(t.attr)}</small></span></button>`).join('')}</div>
       <div class="row"><button class="btn grow" data-action="rest" id="btn-rest">Rest a day <small class="muted">(-22 fatigue)</small></button></div>`}</div>` : '';
+  const lf = ph === 'home' && !h.scenario && !c.flags.retired ? g.lifeView() : null;
+  const lifeCard = lf ? `<details class="fold card" id="life-card"><summary>Life outside the ring · ${esc(lf.mood)}</summary>
+      <div class="stat"><span>Wellbeing</span>${bar(lf.wellbeing, 100, lf.wellbeing < 35 ? 'rope' : 'good')}<span class="num">${lf.wellbeing}</span></div>
+      <div class="stat"><span>Family</span>${bar(lf.family, 100, lf.family < 20 ? 'rope' : 'good')}<span class="num">${lf.family}</span></div>
+      <div class="stat"><span>Friends</span>${bar(lf.social, 100, 'brass')}<span class="num">${lf.social}</span></div>
+      <p class="muted" style="font-size:.85rem">${lf.recovery >= 0 ? `Wellbeing speeds recovery by ${lf.recovery} fatigue a day.` : `Burnout slows recovery by ${-lf.recovery} fatigue a day.`} Family fades with time on the road.</p>
+      ${today ? '<p class="muted">Off-day activities are unavailable on show day.</p>' : Object.entries(lf.activities).map(([id, a]) => `<button class="btn" data-action="life" data-id="${id}"><span class="t"><b>${esc(a.label)}</b><small>${esc(a.desc)}</small></span><span class="r">${a.cost ? '$' + a.cost : 'Free'}</span></button>`).join('')}</details>` : '';
   const injuries = h.status.injuries;
   return `<main class="screen">
     <div class="banner">
@@ -145,6 +167,8 @@ export function home(S) {
     ${action}
     ${held.length ? `<div class="card" style="border-color:var(--brass-fill)"><div class="eyebrow">Champion</div>${held.map((t) => `<div class="row spread"><h3>${esc(t.name)}</h3><span class="pill brass">${c.day - t.since} days · ${t.defenses} def.</span></div>`).join('')}</div>` : ''}
     ${h.lastScenario && c.day - h.lastScenario.day < 3 ? `<div class="card plain"><div class="eyebrow">${esc(h.lastScenario.title)}</div><p>${esc(h.lastScenario.text)}</p></div>` : ''}
+    ${timeCard}
+    ${lifeCard}
     <div class="card">
       <div class="stat"><span>Fatigue</span>${bar(h.status.fatigue, 100, h.status.fatigue > 70 ? 'rope' : '')}<span class="num">${h.status.fatigue}</span></div>
       <div class="stat"><span>Popularity</span>${bar(h.status.popularity, 100, 'brass')}<span class="num">${h.status.popularity}</span></div>
@@ -152,7 +176,6 @@ export function home(S) {
       ${kv('Bank', `$${h.status.money.toLocaleString()}`)}
       ${injuries.length ? injuries.map((i) => `<div class="row"><span class="pill bad">${i.severity > 1 ? 'Serious' : 'Minor'}</span><span>${cap(i.part)} injury · ${i.daysLeft} days left</span></div>`).join('') : '<div class="row"><span class="pill good">Healthy</span></div>'}
     </div>
-    ${timeCard}
     ${h.notifications.length ? `<div class="card"><h3>Recent</h3>${h.notifications.slice().reverse().map((n) => `<div class="row"><span class="pill brass">Achievement</span><span>${esc(n.name)}</span></div>`).join('')}</div>` : ''}
   </main>`;
 }
@@ -170,7 +193,7 @@ function book(S) {
     ${opps.map((o) => oppCard(o, S.ui.oppId === o.id)).join('')}</main>`;
 }
 
-const stipBtn = (sel) => (s) => `<button class="btn" ${s.unlocked ? '' : 'disabled'} data-action="pset" data-k="type" data-v="${s.id}" style="${sel.type === s.id ? 'border-color:var(--rope)' : ''}"><span class="t"><b>${esc(s.name)}</b><small>${esc(s.desc)}</small></span><span class="r">${s.unlocked ? '' : `Rivalry ${s.need}`}</span></button>`;
+const stipBtn = (sel) => (s) => `<button class="btn" ${s.unlocked ? '' : 'disabled'} data-action="pset" data-k="type" data-v="${s.id}" style="${sel.type === s.id ? 'border-color:var(--rope)' : ''}"><span class="t"><b>${esc(s.name)}</b><small>${esc(s.desc)}</small></span><span class="r">${s.unlocked ? '' : (s.lock || `Rivalry ${s.need}`)}</span></button>`;
 
 function prep(S) {
   const g = S.g, o = g.universe.get(S.ui.oppId);
@@ -220,7 +243,7 @@ export function match(S) {
     <div class="board" id="board" aria-live="polite">
       <div class="names"><div class="nm">${esc(mv.me.name)}</div><div class="clock num">${mmss(mv.time)}<small>${esc(mv.phase)} · ${mmss(mv.timeLimit)}</small></div><div class="nm r">${esc(mv.opp.name)}</div></div>
       <div class="grid2" style="gap:12px">${fighterBoard(mv.me, false)}${fighterBoard(mv.opp, true)}</div>
-      ${mv.ways > 2 ? `<div class="others"><span class="eyebrow" style="color:var(--mat-ink)">Also in the ring</span>${mv.others.map((o) => `<span class="pill" style="color:var(--mat-ink)">${esc(o.name)} · STA ${o.stamina} · MOM ${o.momentum}</span>`).join('')}</div>` : ''}
+      ${mv.ways > 2 ? `<div class="others"><span class="eyebrow" style="color:var(--mat-ink)">Also in the ring</span>${mv.others.map((o) => `<span class="pill" style="color:var(--mat-ink)">${esc(o.name)} · STA ${o.stamina} · MOM ${o.momentum}${mv.objective ? ` · Climb ${o.climb}/${mv.objective.steps}` : ''}</span>`).join('')}</div>` : ''}
       <div class="heat"><span>Crowd</span>${bar(mv.crowd)}<span>${mv.referee === 'watching' ? 'Ref watching' : mv.referee === 'down' ? 'REF DOWN' : 'Ref distracted'}</span></div>
       ${mv.rules.tag && mv.team ? `<div class="posrow"><span class="eyebrow" style="color:var(--mat-ink)">Legal: ${esc(mv.team.mine.find((x) => x.legal)?.name || '')}</span><span class="eyebrow" style="color:var(--mat-ink)">Legal: ${esc(mv.team.theirs.find((x) => x.legal)?.name || '')}</span></div>` : ''}
       ${mv.rules.ironMan ? `<div class="posrow"><b class="num">Falls ${mv.falls[mv.mySide]}</b><b class="num">Falls ${mv.falls[1 - mv.mySide]}</b></div>` : ''}
@@ -257,10 +280,13 @@ function decisionPanel(S, d, mv) {
   } else if (d.kind === 'apron') {
     head = `<div class="prompt"><div class="eyebrow">On the apron</div><h2>${d.context.pin ? 'Your partner is being pinned!' : 'Support your partner'}</h2></div>`;
   }
+  // when every option shows a success chance, rank them: best odds first and marked
+  if (shown.length > 1 && shown.every((o) => o.pct != null)) shown = [...shown].sort((a, b) => b.pct - a.pct);
+  const bestId = shown.length > 1 && shown.every((o) => o.pct != null) && shown[0].pct > shown[1].pct ? shown[0].id : null;
   const btn = (o) => {
     const hint = o.hint ? `<span class="hint ${(o.hint.split(' ')[0] || '').replace(/\W/g, '')} ${/%/.test(o.hint) ? 'n' : ''}">${esc(o.hint)}${o.pct != null ? ` ${o.pct}%` : ''}</span>` : '';
     const cost = o.cost > 0 ? `<span class="r">${o.cost} STA</span>` : o.cost < 0 ? `<span class="r">+${-o.cost} STA</span>` : o.free ? '<span class="r">Free</span>' : '';
-    return `<button class="btn" data-action="choose" data-id="${esc(o.id)}"><span class="t"><b>${esc(o.label)}</b>${o.desc ? `<small>${esc(o.desc)}</small>` : ''}</span><span class="col" style="align-items:flex-end;gap:4px">${hint}${cost}</span></button>`;
+    return `<button class="btn${o.id === bestId ? ' best' : ''}" data-action="choose" data-id="${esc(o.id)}"><span class="t"><b>${esc(o.label)}${o.id === bestId ? ' <span class="pill good">Best odds</span>' : ''}</b>${o.desc ? `<small>${esc(o.desc)}</small>` : ''}</span><span class="col" style="align-items:flex-end;gap:4px">${hint}${cost}</span></button>`;
   };
   return `<div class="col" id="decision" data-kind="${d.kind}">${head}${chips}<div class="opts">${shown.map(btn).join('')}</div></div>`;
 }
@@ -393,11 +419,27 @@ export function more(S) {
   if (s === 'relationships') return relationships(S);
   if (s === 'media') return media(S);
   if (s === 'social') return social(S);
+  if (s === 'factions') return factions(S);
   if (s === 'matches') return matches(S);
   if (s === 'settings') return settingsView(S);
   if (s === 'finances') return finances(S);
-  const items = [['matches', 'Matches', 'Every match you have wrestled'], ['rivalries', 'Rivalries', 'Heat, history, grudges'], ['media', 'Media', 'Cut promos and make promises'], ['social', 'Social', 'Your feed, fan mood, post'], ['achievements', 'Achievements', 'Earned, in progress and secret'], ['relationships', 'Relationships', 'Allies, enemies and trust'], ['finances', 'Finances', 'Contract, merchandise, lifestyle'], ['settings', 'Settings & Saves', 'Text size, theme, save slots']];
+  const items = [['matches', 'Matches', 'Every match you have wrestled'], ['rivalries', 'Rivalries', 'Heat, history, grudges'], ['media', 'Media', 'Cut promos and make promises'], ['social', 'Social', 'Your feed, fan mood, post'], ['factions', 'Factions', 'Your stable and the rest of the roster'], ['achievements', 'Achievements', 'Earned, in progress and secret'], ['relationships', 'Relationships', 'Allies, enemies and trust'], ['finances', 'Finances', 'Contract, merchandise, lifestyle'], ['settings', 'Settings & Saves', 'Text size, theme, save slots']];
   return `<main class="screen">${header('More')}${items.map(([id, l, d]) => `<button class="btn" data-action="openSub" data-id="${id}"><span class="t"><b>${l}</b><small>${d}</small></span><span class="r">›</span></button>`).join('')}</main>`;
+}
+
+function factions(S) {
+  const g = S.g, v = g.factionView(), ui = (S.ui.faction ||= { picks: [] });
+  const name = ui.name || v.names[0];
+  const mine = v.mine
+    ? `<div class="card"><h3>${esc(v.mine.name)}</h3>${kv('Leader', esc(v.mine.leaderName))}${kv('Members', esc(v.mine.memberNames.join(', ') || 'Just you'))}${kv('Trust', v.mine.trust)}
+        <button class="btn" data-action="factionLeave" id="btn-faction-leave"><span class="t"><b>Leave ${esc(v.mine.name)}</b><small>The others will remember it</small></span></button></div>`
+    : `<div class="card"><h3>Found a faction</h3>
+        ${v.candidates.length ? `<p class="muted">Pick one to three allies who trust you.</p><div class="chips wrap">${v.candidates.map((x) => `<button class="chip ${ui.picks.includes(x.id) ? 'on' : ''}" data-action="factionPick" data-id="${x.id}">${esc(x.name)} · trust ${x.trust}</button>`).join('')}</div>
+        <div class="eyebrow">Name</div><div class="chips wrap">${v.names.map((n) => `<button class="chip ${name === n ? 'on' : ''}" data-action="factionName" data-v="${esc(n)}">${esc(n)}</button>`).join('')}</div>
+        <button class="btn primary" data-action="factionFound" id="btn-faction-found" ${ui.picks.length ? '' : 'disabled'}>Found ${esc(name)}</button>`
+      : '<p class="muted">Nobody trusts you enough yet. Build alliances through matches and story scenes first.</p>'}</div>`;
+  return `<main class="screen" id="factions">${header('Factions', 'Stables and alliances', back('closeSub'))}${mine}
+    <div class="card"><h3>Around the roster</h3>${v.ai.map((f) => `<div class="kv"><span><b>${esc(f.name)}</b><br><span class="muted" style="font-size:.85rem">Led by ${esc(f.leader)}</span></span><span class="v" style="text-align:right">${esc(f.members.join(', '))}</span></div>`).join('') || '<p class="muted">No active factions right now.</p>'}</div></main>`;
 }
 
 function social(S) {
@@ -576,14 +618,14 @@ export function rumble(S) {
   let panel = '';
   if (e.over) {
     const win = e.result.winner === g.career.player.id;
-    panel = `<div class="card"><h2>${win ? 'You won the Royal Rumble!' : v.out ? 'You are eliminated' : `${esc(e.result.winnerName)} wins`}</h2><button class="btn primary" data-action="finishRumble" id="btn-finish-rumble">See the result</button></div>`;
+    panel = `<div class="card"><h2>${win ? 'You won the Royal Rumble!' : v.out ? 'You are eliminated' : `${esc(e.result.winnerName)} wins`}</h2><button class="btn primary sticky-cta" data-action="finishRumble" id="btn-finish-rumble">See the result</button></div>`;
   } else if (d) {
     const head = d.kind === 'danger' ? `<div class="prompt"><div class="eyebrow">Danger</div><h2>${esc(e.state.fighters[d.attacker].name)} is trying to eliminate you!</h2></div>`
       : d.kind === 'team' ? '<div class="prompt"><div class="eyebrow">Alliance</div><h2>Who do you team up with?</h2></div>' : `<div class="prompt"><div class="eyebrow">Your move · ${Math.floor(v.t / 60)} min</div><h2>Survive and eliminate</h2></div>`;
     const opts = d.options.filter((o) => o.enabled !== false);
     panel = `<div class="col" id="decision" data-kind="${d.kind}">${head}<div class="opts">${opts.map((o) => `<button class="btn" data-action="rchoose" data-id="${esc(o.id)}"><span class="t"><b>${esc(o.label)}</b>${o.desc ? `<small>${esc(o.desc)}</small>` : ''}</span>${o.p != null ? `<span class="hint ${o.p >= 0.65 ? 'Good' : o.p >= 0.45 ? 'Fair' : 'Risky'}">${Math.round(o.p * 100)}%</span>` : ''}</button>`).join('')}</div></div>`;
   }
-  const lines = S.feed.slice(-40);
+  const lines = S.feed.slice(e.over ? -6 : -40);
   return `<div class="match" id="rumble">
     <div class="board" aria-live="polite">
       <div class="names"><div class="nm">Royal Rumble ${v.year}</div><div class="clock num">${Math.floor(v.t / 60)}:${String(v.t % 60).padStart(2, '0')}<small>${v.entered}/30 entered</small></div><div class="nm r">${v.out ? 'Eliminated' : `Entry #${v.entry}`}</div></div>

@@ -45,10 +45,11 @@ add('marathon', 'Marathon Man', 'Wrestle a match lasting at least 45 minutes.', 
 add('quick_win', 'Blink and You Miss It', 'Win a match in under two minutes.', 'in-ring', 'uncommon', mrCount({ ...win, 'data.durationSec': { lte: 120 } }));
 add('flawless', 'Flawless Victory', 'Win a match while taking almost no damage.', 'in-ring', 'rare', mrCount({ ...win, 'data.damageTaken': { lte: 20 }, 'data.durationSec': { gte: 300 } }));
 add('war', 'A War', 'Win an extended match after enduring severe punishment.', 'in-ring', 'epic', { custom: 'survived_war', args: { minutes: 20, damage: 220 }, watch: ['match_result'] });
-for (const t of ['tag', 'submission', 'no_dq', 'last_man', 'iron_man', 'ladder', 'cage', 'hell_cell']) {
-  const nm = { tag: 'Tag Team', submission: 'Submission', no_dq: 'No DQ', last_man: 'Last Man Standing', iron_man: 'Iron Man', ladder: 'Ladder', cage: 'Steel Cage', hell_cell: 'Hell in a Cell' }[t];
-  add(`win_${t}`, `${nm} Winner`, `Win a ${nm} match.`, 'in-ring', t === 'hell_cell' || t === 'iron_man' ? 'rare' : 'uncommon', mrCount({ ...win, 'data.matchType': t }));
+for (const t of ['tag', 'submission', 'no_dq', 'last_man', 'iron_man', 'ladder', 'cage', 'hell_cell', 'tlc']) {
+  const nm = { tag: 'Tag Team', submission: 'Submission', no_dq: 'No DQ', last_man: 'Last Man Standing', iron_man: 'Iron Man', ladder: 'Ladder', cage: 'Steel Cage', hell_cell: 'Hell in a Cell', tlc: 'Tables, Ladders & Chairs' }[t];
+  add(`win_${t}`, `${nm} Winner`, `Win a ${nm} match.`, 'in-ring', t === 'hell_cell' || t === 'iron_man' || t === 'tlc' ? 'rare' : 'uncommon', mrCount({ ...win, 'data.matchType': t }));
 }
+add('win_mitb', 'Briefcase Holder', 'Win the Money in the Bank ladder match and take down the briefcase.', 'in-ring', 'epic', { count: { type: 'milestone', where: { 'data.kind': 'money_in_the_bank' } }, gte: 1 });
 add('all_stipulations', 'Stipulation Specialist', 'Win in five different match types.', 'in-ring', 'epic', { distinct: { type: 'match_result', field: 'data.matchType', where: win }, gte: 5 });
 add('matches_100', 'Veteran of the Ring', 'Wrestle 100 matches.', 'in-ring', 'uncommon', mrCount({}, 100));
 for (const n of [1, 10, 25, 50, 100, 250, 500, 1000]) {
@@ -202,3 +203,5 @@ add('dq_artist', 'Heel Tactics', 'Win three matches by DQ or count-out.', 'rare'
 add('ten_matches_ple', 'PLE Veteran', 'Wrestle ten matches on PLEs.', 'rare', 'rare', mrCount({ 'data.ppv': { exists: true } }, 10));
 
 export const ACHIEVEMENT_DEFS = D;
+add('family_5', 'Home for Dinner', 'Spend five days with your family.', 'personal', 'common', { count: { type: 'life_activity', where: { 'data.activity': 'family' } }, gte: 5 });
+add('life_balanced', 'Well Rounded', 'Try every kind of off-day activity: family, hobby, physio, a night out and the old gym.', 'personal', 'uncommon', { all: [{ count: { type: 'life_activity', where: { 'data.activity': 'family' } }, gte: 1 }, { count: { type: 'life_activity', where: { 'data.activity': 'hobby' } }, gte: 1 }, { count: { type: 'life_activity', where: { 'data.activity': 'physio' } }, gte: 1 }, { count: { type: 'life_activity', where: { 'data.activity': 'night_out' } }, gte: 1 }, { count: { type: 'life_activity', where: { 'data.activity': 'old_gym' } }, gte: 1 }] });

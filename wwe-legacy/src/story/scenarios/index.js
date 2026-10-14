@@ -9,5 +9,6 @@ import newB from './new_b.js';
 import newC from './new_c.js';
 import newD from './new_d.js';
 import newE from './new_e.js';
-export const SCENARIO_GROUPS = { core, career_life: careerLife, relationships, media_fans: mediaFans, marquee, new_a: newA, new_b: newB, new_c: newC, new_d: newD, new_e: newE };
+import newLife from './new_life.js';
+export const SCENARIO_GROUPS = { core, career_life: careerLife, relationships, media_fans: mediaFans, marquee, new_a: newA, new_b: newB, new_c: newC, new_d: newD, new_e: newE, new_life: newLife };
 export const SCENARIO_TEMPLATES = Object.values(SCENARIO_GROUPS).flat();

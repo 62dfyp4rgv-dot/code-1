@@ -61,12 +61,12 @@ export const RULESETS = {
   },
   mitb: {
     id: 'mitb', name: 'Money in the Bank', teamSize: 1, ways: 4, pinfall: false, submission: false, dq: false, countout: false,
-    weapons: true, outside: true, ropeBreaks: false, objective: 'ladder', prize: 'briefcase', timeLimit: 40,
+    weapons: true, outside: true, ropeBreaks: false, objective: 'ladder', prize: 'briefcase', timeLimit: 45,
     desc: 'Four wrestlers, one briefcase hanging above the ring. Climb the ladder and unhook it; any foe can knock a climber off. Nobody wins by pinfall. Premium Live Event only.',
   },
   battle_royal: {
     id: 'battle_royal', name: 'Battle Royal', teamSize: 1, ways: 6, elimination: true, overTheTop: true, pinfall: true, submission: true, dq: false, countout: false,
-    weapons: false, outside: false, ropeBreaks: true, timeLimit: 45,
+    weapons: false, outside: false, ropeBreaks: true, kickoutBonus: 0.06, timeLimit: 50,
     desc: 'Six wrestlers in the ring. Fall to a pin or submission, or get thrown over the top rope, and you are out. The last one in wins.',
   },
   handicap: {

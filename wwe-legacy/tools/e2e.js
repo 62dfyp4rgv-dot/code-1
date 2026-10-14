@@ -100,11 +100,17 @@ for (let i = 0; i < 6; i++) await click('[data-action=bonus][data-k=grappling][d
 await noOverflow('create-style'); await click('#btn-next');
 await page.selectOption('#sig-0', 'sig_arm'); await page.fill('#signame-0', 'Iron Wrench');
 await page.selectOption('#fin-tpl', 'fin_sub_arms'); await page.fill('#fin-name', 'Dalton Lock');
-await click('#btn-next'); await click('[data-k=entrance][data-v=menace]'); await click('#btn-next');
+await click('#btn-next'); await click('[data-k=entrance][data-v=menace]');
+// world editor: add a custom wrestler through the wizard
+await click('#world-editor summary'); await page.fill('#in-cwname', 'Rook Calder');
+await click('[data-action=cwset][data-k=alignment][data-v=heel]'); await click('[data-action=cwset][data-k=tier][data-v="3"]');
+await click('#btn-cwadd'); await noOverflow('create-world-editor');
+await click('#btn-next');
 await shot('03-create-review'); await page.evaluate(() => { window.__S.create.seed = 4242; });
 await click('#btn-begin');
 await page.waitForSelector('.tabbar');
 check('career created with entered name', (await state(() => window.__S.g.career.player.name)) === 'Iron Mike Dalton');
+check('custom wrestler from the world editor exists in the universe', (await state(() => window.__S.g.universe.list(() => true).some((w) => w.name === 'Rook Calder' && w.alignment === 'heel' && w.tier === 3))) === true);
 check('finisher name chosen in UI is stored', (await state(() => window.__S.g.career.player.finisher.name)) === 'Dalton Lock');
 await noOverflow('home'); await shot('04-home');
 
@@ -206,6 +212,14 @@ check('social post written through the UI and recorded', socState.posts === 1 &&
 await click('#btn-social-done');
 check('the post appears in the feed', (await page.locator('#social .list .item').first().innerText()).length > 10);
 await click('[data-action=closeSub]');
+
+// personal life: open the card, spend a day with family
+await click('[data-action=tab][data-id=home]'); await clearScn();
+if (await page.locator('#life-card').count() && !(await page.locator('#btn-book').count())) {
+await click('#life-card summary'); await noOverflow('home life card'); await shot('04b-home-life');
+await click('[data-action=life][data-id=family]'); await page.waitForSelector('.toast'); await clearScn();
+check('life activity recorded in the ledger', (await state(() => window.__S.g.career.memory.ledger.ofType('life_activity').length)) === 1);
+}
 
 // legacy / Hall of Fame view (read-only here; retiring is covered by unit tests)
 await click('[data-action=tab][data-id=career]'); await click('#btn-legacy'); await page.waitForSelector('#legacy');

@@ -87,6 +87,7 @@ function narrateRaw(state, ev, bump = 0) {
   const positioning = ev.cat === 'positioning' && POSITION[ev.move];
   switch (ev.type) {
     case 'move_connected': {
+      if (ev.move === 'toss_over') return pick([`${a} gets both hands on ${t} and heaves toward the top rope!`, `${aL} hoists ${tL} up and drives for the top rope!`, `${aL} muscles ${tL} up to the top rope - ${tL} is teetering!`], q, 61);
       const verb = pick(VERB[ev.cat] || ['hits'], q, 2);
       const dirty = ev.cat === 'illegal' || ev.cat === 'environmental';
       const tail = dirty || H(q, 3) % 3 ? '' : pick(IMPACT_TAIL[ev.quality] || [''], q, 3);
@@ -97,6 +98,7 @@ function narrateRaw(state, ev, bump = 0) {
       if (ev.cat === 'positioning') return positioning ? posLine(POSITION[ev.move], 50) : cyc([`${aL} sets up the next spot.`, `${a} changes position.`, `${aL} moves into position.`], 50);
       if (ev.cat === 'submission') return cyc([`${a} applies ${the(mvPlain)} to ${tL}'s ${ev.part}.`, `${aL} grinds ${the(mvPlain)} into ${tL}.`], 51);
       const adj = ev.quality === 'devastating' ? 'devastating' : dirty ? 'nasty' : ev.quality === 'clean' ? 'clean' : 'solid';
+      const recoilTail = ev.selfDamage > 0 ? ` ${pick([`${aL} feels that one too.`, `The impact rattles ${aL} as well.`, `${aL} pays for it with a wince.`, `It hurts ${aL} nearly as much.`], q, 62)}` : '';
       return say(CONNECT_KEY[ev.cat], [
         `${a} ${verb} ${t} with ${art(adj)} ${mvPlain}. ${tail}`,
         `${mvPlain} from ${a}, and it connects with ${tL}'s ${ev.part}. ${tail}`,
@@ -104,7 +106,7 @@ function narrateRaw(state, ev, bump = 0) {
         `${art(adj)[0].toUpperCase()}${art(adj).slice(1)} ${mvPlain}! ${aL} ${verb} ${tL}. ${tail}`,
         `${aL} finds the opening: ${mvPlain} to the ${ev.part}.${late ? ' Every shot counts now.' : ''} ${tail}`,
         `${mvPlain}. ${tL} feels that one in the ${ev.part}. ${tail}`,
-      ], 4, true).trim();
+      ], 4, true).trim() + recoilTail;
     }
     case 'signature_connected': return say('signature', [
       `${a} hits ${mv}! The crowd erupts.`, `That's ${aL}'s signature - ${mv} drives into ${tL}!`, `${mv}! ${aL} has been saving that.`,
@@ -114,19 +116,22 @@ function narrateRaw(state, ev, bump = 0) {
       `${a} hits ${mv}!! This could be it!`, `${mv}!! ${tL} is laid out.`, `${aL} hits the finish - ${mv}! Cover coming?`,
       `${mvPlain}!!! ${tL} did not see that coming.`, `Everything ${aL} had went into that ${mv}!`,
     ], 6, true);
-    case 'move_blocked': if (ev.cat === 'positioning') return posLine([`${tL} refuses to be moved.`, `${t} plants ${tpos0}feet and shuts the attempt down.`, `${aL} cannot force the issue; ${tL} holds ${tpos0}ground.`], 56);
+    case 'move_blocked': if (ev.move === 'toss_over') return pick([`${t} hooks a leg around the middle rope and will not go over!`, `${tL} hangs on to the top rope and refuses to be tossed.`, `${aL} cannot get ${tL} over - ${tL} digs in.`], q, 63);
+      if (ev.cat === 'positioning') return posLine([`${tL} refuses to be moved.`, `${t} plants ${tpos0}feet and shuts the attempt down.`, `${aL} cannot force the issue; ${tL} holds ${tpos0}ground.`], 56);
       return say('blocked', [
       `${t} blocks ${myMv}.`, `${a} goes for ${myMv} but ${tL} shuts it down.`, `${tL} reads ${the(mvPlain)} and absorbs it.`,
       `${aL}'s ${mvPlain} is smothered before it gets going.`, `Blocked! ${tL} was ready for ${the(mvPlain)}.`, `${tL} plants and refuses to be moved - ${the(mvPlain)} goes nowhere.`,
     ], 7, true);
     case 'finisher_blocked': return pick([`${t} survives ${a}'s ${mv} attempt by blocking it!`, `${tL} stops ${the(mvPlain)} cold! ${aL} cannot believe it.`], q, 8);
-    case 'move_dodged': if (ev.cat === 'positioning') return posLine([`${t} slips away before ${aL} can set up.`, `${tL} wriggles free of the attempt.`, `${aL} grabs at ${tL} and gets nothing.`], 57);
+    case 'move_dodged': if (ev.move === 'toss_over') return pick([`${t} slips under the toss and ${aL} nearly goes over instead!`, `${tL} ducks out of the toss at the last second.`], q, 64);
+      if (ev.cat === 'positioning') return posLine([`${t} slips away before ${aL} can set up.`, `${tL} wriggles free of the attempt.`, `${aL} grabs at ${tL} and gets nothing.`], 57);
       return say('dodged', [
       `${t} slips away from ${the(mvPlain)}${ev.selfDamage ? ` and ${a} crashes hard` : ''}.`, `${a} misses ${myMv} - ${t} dodged it${ev.selfDamage ? ' and ' + aL + ' is hurt by the miss' : ''}!`,
       `${tL} sidesteps ${the(mvPlain)}${ev.selfDamage ? ', and the miss costs ' + aL : ''}.`, `Nothing but air! ${aL} whiffs on ${myMv}.`, `${tL} ducks ${the(mvPlain)} like it was telegraphed.`,
     ], 9, true);
     case 'finisher_dodged': return pick([`${t} dodges ${a}'s ${mv}! What an escape!`, `${mv} finds nothing! ${tL} slid out of danger.`], q, 10);
-    case 'move_reversed': if (ev.cat === 'positioning') return posLine([`${t} turns the tables on ${aL}'s attempt to take control.`, `${tL} spins out and takes charge instead.`], 58);
+    case 'move_reversed': if (ev.move === 'toss_over') return pick([`${t} reverses the toss and turns the tables on ${a}!`, `${tL} blocks the throw and sends ${aL} crashing into the ropes!`], q, 65);
+      if (ev.cat === 'positioning') return posLine([`${t} turns the tables on ${aL}'s attempt to take control.`, `${tL} spins out and takes charge instead.`], 58);
       return ev.baited ? `${t} baited ${a} into it and reverses ${mv}!` : say('reversed', [
       `${t} reverses ${myMv} and turns it around!`, `Reversal! ${t} counters ${the(mvPlain)} and hits back.`, `${tL} was waiting for ${the(mvPlain)} - and flips it on ${aL}!`,
       `${aL} tries ${myMv} and gets it turned right back ${pron(state, ev.actor)[0] === 'they' ? 'on them' : 'on ' + pron(state, ev.actor)[1]}!`, `Beautiful counter by ${tL}!`,
@@ -170,7 +175,8 @@ function narrateRaw(state, ev, bump = 0) {
     case 'tactic': return ev.tactic.startsWith('target_') ? pick([`${a} starts working on the ${ev.tactic.slice(7)}.`, `${aL} has picked a target: the ${ev.tactic.slice(7)}.`], q, 29) : ev.tactic.startsWith('pace_') ? `${a} changes the pace.` : `${a} studies ${nm(ev.target) === 'Someone' ? 'the opponent' : t}.`;
     case 'focus': return pick([`${a} turns on ${t}.`, `${aL} switches targets and goes after ${tL}.`, `${aL} spots ${tL} and changes direction.`], q, 45);
     case 'jump_in': return pick([`${a} charges back into the thick of it!`, `${aL} has seen enough waiting - back into the fray!`, `${aL} slides in and takes control of the chaos.`], q, 46);
-    case 'eliminated': return pick([`${t} is ELIMINATED by ${a}! ${ev.remaining} left.`, `That's it for ${tL}! ${aL} sends ${tL} packing - ${ev.remaining} remain.`, `${tL} has been eliminated! ${ev.remaining} competitors left.`], q, 47);
+    case 'eliminated': if (ev.finish === 'over_the_top') return pick([`${t} goes OVER THE TOP ROPE! ${aL} has eliminated ${tL} - ${ev.remaining} left!`, `Over the top and out! ${aL} dumps ${tL} to the floor - ${ev.remaining} remain.`, `${tL} hits the floor, both feet down - ${tL} is eliminated by ${aL}! ${ev.remaining} competitors left.`, `That's the toss! ${aL} sends ${tL} over the top rope and ${tL} is gone. ${ev.remaining} remain.`], q, 66);
+      return pick([`${t} is ELIMINATED by ${a}! ${ev.remaining} left.`, `That's it for ${tL}! ${aL} sends ${tL} packing - ${ev.remaining} remain.`, `${tL} has been eliminated! ${ev.remaining} competitors left.`], q, 47);
     case 'entry': return pick([`The next pod opens: number ${ev.number} is ${a}!`, `Entrant number ${ev.number}: ${a} bursts out of the pod!`, `${a} is released into the chamber - number ${ev.number}!`], q, 48);
     case 'player_out': return `${a} is out of the match and can only watch from here.`;
     case 'taunt': return say('taunt', [`${a} taunts ${t}.`, `${aL} soaks in the boos and mocks ${tL}.`, `${aL} stands over ${tL} and waits.`], 30, true);
@@ -206,12 +212,12 @@ function narrateRaw(state, ev, bump = 0) {
     case 'climb': return ev.rung >= ev.steps ? `${a} reaches the top - hands on the prize!` : say('climb', [`${a} climbs another rung - ${ev.steps - ev.rung} to go.`, `${aL} reaches for the next rung. ${ev.steps - ev.rung} left to climb.`, `Up goes ${aL}, ${ev.steps - ev.rung} ${ev.steps - ev.rung === 1 ? 'rung' : 'rungs'} from the top.`], 43, true);
     case 'slip': return say('slip', [`${a} slips and tumbles down!`, `${aL}'s footing goes - down ${pron(state, ev.actor)[0] === 'they' ? 'they' : pron(state, ev.actor)[0]} comes!`, `Disaster! ${aL} loses ${posA} balance on the ladder!`, `${aL} slides off the rung and crashes to the mat!`], 44, true);
     case 'toppled': return `${a} knocks ${t} off - a huge fall!`;
-    case 'objective': return `${a} claims the prize!`;
+    case 'objective': return state.rules.prize === 'briefcase' ? pick([`${a} unhooks the briefcase - Money in the Bank belongs to ${aL}!`, `${a} pulls the briefcase down! The contract is ${aL}'s!`], q, 67) : `${a} claims the prize!`;
     case 'fall': return `FALL! ${state.fighters[state.teams[ev.side][0]].name}'s side scores by ${ev.finish}. (${ev.falls[0]}-${ev.falls[1]})`;
     case 'time_limit': return `Time limit expires.`;
     case 'surprise_pin': return `${a} springs a surprise roll-up on ${t}!`;
     case 'match_end': {
-      const how = { objective: state.rules.objective === 'cage' ? 'escaping the cage' : 'retrieving the prize', pinfall: 'pinfall', submission: 'submission', dq: 'disqualification', countout: 'count-out', ten_count: 'ten count', falls: 'more falls' }[ev.finish] || String(ev.finish).replace(/_/g, ' ');
+      const how = { objective: state.rules.objective === 'cage' ? 'escaping the cage' : state.rules.prize === 'briefcase' ? 'retrieving the briefcase' : 'retrieving the prize', pinfall: 'pinfall', submission: 'submission', dq: 'disqualification', countout: 'count-out', ten_count: 'ten count', falls: 'more falls', over_the_top: 'throwing the last man over the top rope' }[ev.finish] || String(ev.finish).replace(/_/g, ' ');
       return ev.winner ? `${nm(ev.winner)} wins by ${how}.` : `The match ends in a ${String(ev.finish).replace(/_/g, ' ')}.`;
     }
     default: return '';

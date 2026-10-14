@@ -224,3 +224,4 @@ details.fold[open] > summary::after { content: "\2212"; }
 summary { min-height: 44px; display: flex; align-items: center; }
 summary.kv { justify-content: space-between; }
 button.item { min-height: 44px; }
+.btn.best { border-color: var(--brass-fill); box-shadow: inset 3px 0 0 var(--brass-fill); }

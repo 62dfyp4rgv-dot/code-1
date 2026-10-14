@@ -192,9 +192,12 @@ const RULES = {
       adjustRel(world, ev.participants[j], ev.participants[i], { trust: 10, affinity: 8 }, ev.id, ev.day);
     }
   },
-  faction_left(world, ev) {
+  faction_left(world, ev, ctx) {
     const f = world.factions[ev.data.factionId];
-    if (f) f.members = f.members.filter((m) => m !== ev.data.member);
+    if (!f) return;
+    f.members = f.members.filter((m) => m !== ev.data.member);
+    // walking out on the stable costs trust with whoever stays
+    if (ctx && ev.data.member === ctx.playerId) for (const m of f.members) adjustRel(world, m, ctx.playerId, { trust: -10, respect: -3 }, ev.id, ev.day);
   },
   refusal_to_help(world, ev) {
     const [me, other] = ev.participants;

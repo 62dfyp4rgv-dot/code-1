@@ -110,6 +110,36 @@ export class Universe {
     w.lastMatchDay = -999;
   }
 
+  /** World editor: add player-authored wrestlers to the starting roster. Each replaces the nearest non-champion fictional wrestler of the
+   *  same brand and gender, so roster sizes and title lineages stay intact. Returns the created wrestlers. */
+  addCustom(list, year = this.startYear) {
+    const STYLE_IDS = ['brawler', 'technician', 'highflyer', 'powerhouse', 'showman', 'submission', 'allrounder'];
+    if (!Array.isArray(list)) throw new Error('custom wrestlers must be a list');
+    if (list.length > 12) throw new Error('at most twelve custom wrestlers');
+    const rng = new Rng(`custom:${this.seed}:${year}`);
+    const taken = new Set(Object.values(this.roster).map((w) => w.name.toLowerCase()));
+    const out = [];
+    list.forEach((spec, i) => {
+      const name = String(spec.name || '').trim().replace(/\s+/g, ' ');
+      if (name.length < 3 || name.length > 28 || !/^[A-Za-z][A-Za-z .'-]*$/.test(name) || !name.includes(' ')) throw new Error(`"${name}" is not a valid ring name (first and last name, letters only)`);
+      if (taken.has(name.toLowerCase())) throw new Error(`there is already a wrestler called ${name}`);
+      taken.add(name.toLowerCase());
+      const style = STYLE_IDS.includes(spec.style) ? spec.style : 'allrounder';
+      const gender = spec.gender === 'F' ? 'F' : 'M';
+      const tier = Math.max(0, Math.min(4, spec.tier ?? 2));
+      const alignment = ['face', 'heel', 'tweener'].includes(spec.alignment) ? spec.alignment : 'tweener';
+      const brandKey = this.split && spec.brandKey === 'second' ? 'second' : spec.brandKey === 'dev' && year >= 2010 ? 'dev' : 'main';
+      const w = generateWrestler(rng, { id: `c${i + 1}`, tier, style, gender, alignment, name });
+      w.brandKey = brandKey; w.custom = true; this._finalize(w, year, rng);
+      const swap = Object.values(this.roster).filter((x) => /^f\d+$/.test(x.id) && x.brandKey === brandKey && x.gender === gender && !this._holdsTitle(x.id))
+        .sort((a, b) => Math.abs(a.tier - tier) - Math.abs(b.tier - tier) || (a.id < b.id ? -1 : 1))[0];
+      if (swap) delete this.roster[swap.id];
+      this.roster[w.id] = w; out.push(w);
+    });
+    this._syncBrandNames();
+    return out;
+  }
+
   _syncBrandNames() {
     for (const w of Object.values(this.roster)) w.brand = this.brandName(w.brandKey);
   }

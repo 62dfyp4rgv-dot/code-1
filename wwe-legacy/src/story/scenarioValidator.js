@@ -39,7 +39,7 @@ function checkTriggerShape(trig, errors, where = 'trigger') {
     if (['all', 'any'].includes(k)) v.forEach((x) => checkTriggerShape(x, errors, `${where}.${k}`));
     if (k === 'not') checkTriggerShape(v, errors, `${where}.not`);
     if (k === 'era' && !Array.isArray(v)) errors.push(`${where}.era must be an array`);
-    if (k === 'stat') for (const n of Object.keys(v)) if (!['popularity', 'confidence', 'fatigue', 'money', 'overall', 'matches', 'wins', 'losses', 'winStreak', 'loseStreak', 'titleWins', 'titlesHeld', 'defenses', 'rating', 'careerYears', 'mic', 'charisma', 'promos', 'injuries', 'daysChampion', 'mainEvents', 'pleMatches', 'rumbleEntries'].includes(n)) errors.push(`${where}.stat: unknown stat "${n}"`);
+    if (k === 'stat') for (const n of Object.keys(v)) if (!['popularity', 'confidence', 'fatigue', 'money', 'overall', 'matches', 'wins', 'losses', 'winStreak', 'loseStreak', 'titleWins', 'titlesHeld', 'defenses', 'rating', 'careerYears', 'mic', 'charisma', 'promos', 'injuries', 'daysChampion', 'mainEvents', 'pleMatches', 'rumbleEntries', 'wellbeing', 'family', 'socialLife'].includes(n)) errors.push(`${where}.stat: unknown stat "${n}"`);
     if (k === 'daysSince') for (const n of Object.keys(v)) if (!['match', 'promo', 'scenario'].includes(n)) errors.push(`${where}.daysSince: unknown "${n}"`);
   }
 }
