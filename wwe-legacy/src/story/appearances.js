@@ -56,7 +56,7 @@ export function candidateQuestions(c, extras = {}) {
     const oppName = opp ? nameOf(c, opp) : 'your opponent';
     const days = c.day - m.day;
     const when = days === 0 ? 'tonight' : days === 1 ? 'last night' : days <= 7 ? `${days} days ago` : 'recently';
-    const fx = { finish: String(m.data.finish || 'finish').replace(/_/g, ' '), move: m.data.finishMoveName || null };
+    const fx = { finish: String(m.data.finish || 'finish').replace(/_/g, ' '), move: m.data.finishMoveName || null, days };
     if (m.data.result === 'win') qs.push({ id: 'last_match', fx, ctx: 'last_match_win', subject: opp, refs: [m.id], text: `You beat ${oppName} ${when} by ${String(m.data.finish).replace(/_/g, ' ')}. What did you see out there that others missed?` });
     else if (m.data.result === 'loss') qs.push({ id: 'last_match', fx, ctx: 'last_match_loss', subject: opp, refs: [m.id], text: `${oppName} beat you ${when}. People are asking whether you were outclassed. Were you?` });
     else qs.push({ id: 'last_match', draw: true, fx, ctx: 'last_match_loss', subject: opp, refs: [m.id], text: `Your match with ${oppName} ${when} ended without a winner. Who do you think deserved the win?` });
@@ -261,7 +261,9 @@ export function answerAppearance(c, answerId, extras = {}) {
   // authored variants (src/story/answers_pack.js) share the pool with the fact-specific line above, picked by a seeded hash
   const packTopic = q.id === 'title' && q.holder ? 'title_holder' : q.id === 'last_match' && q.ctx !== 'last_match_win' ? (q.draw ? 'last_match_draw' : 'last_match_loss') : q.id; // the authored last_match lines assume a win
   const pack = (packTopic === 'title_holder' ? TITLE_HOLDER[answerId] || [] : (ANSWER_PACK[answerId] || {})[packTopic] || []).map((l) => fillAnswer(l, facts, subj));
-  const pool = [...pack, legacy];
+  // lines that talk about 'tonight' or 'last night' only fit a match that really was that recent
+  const fresh = (l) => !(/\b(tonight|last night|this evening)\b/i.test(l)) || (q.fx && q.fx.days <= 1);
+  const pool = [...pack.filter(fresh), legacy];
   const text = pool[parseInt(hash53(`${s.seed}:${q.id}:${answerId}:say`), 36) % pool.length];
   const sr0 = REACT_STANCE[answerId] ? REACT_STANCE[answerId][tier(quality)] : REACT[tier(quality)];
   const sr = [...((REACTIONS[answerId] || {})[tier(quality)] || []), ...sr0];
