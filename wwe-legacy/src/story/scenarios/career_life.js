@@ -393,7 +393,7 @@ export default [
     cast: { doc: { pick: 'staff', role: 'doctor' } },
     trigger: { stat: { fatigue: { gte: 35 } }, injured: false },
     slots: { location: ['front of a silent arena', 'the middle of a roaring crowd', 'front of the family section', 'a half-empty building'], landing: ['a bad bump on the apron', 'a missed catch', 'a slip off the top rope', 'a flip that came up short'] },
-    body: ['During the final minutes, you took {landing} in {location}. You finished the match, but now your hand shakes as you unwrap your tape.', '"Let me see that," {doc.name} says, walking your way. You can feel something that is not right, though how wrong is not clear.'],
+    body: ['During the final minutes, you were caught up in {landing} in {location}. You finished the match, but now your hand shakes as you unwrap your tape.', '"Let me see that," {doc.name} says, walking your way. You can feel something that is not right, though how wrong is not clear.'],
     choices: [
       { id: 'honest', label: 'Show {doc.name} exactly where it hurts', risk: 'low', result: '{doc.name} presses, tests and frowns. It is a sprain and not a break; you will be off for a bit but fine for the long run.', effects: [{ injury: { part: 'legs', severity: 1, days: 10 } }, { fatigue: -6 }, { conf: 1 }] },
       { id: 'tough', label: 'Wave it off and walk out under your own power', risk: 'high', outcomes: [
@@ -488,7 +488,7 @@ export default [
     id: 'life_rec_physio', category: 'recovery', title: 'Choosing a Physio: {clinic}', weight: 2, cooldownDays: 90, maxPerCareer: 3, categoryCooldown: 8,
     cast: { doc: { pick: 'staff', role: 'doctor' } },
     trigger: { injured: true, stat: { money: { gte: 500 } } },
-    slots: { clinic: ['the company physio', 'a private sports clinic', 'a hydrotherapy studio', 'a retired wrestler\'s rehab gym'], schedule: ['early mornings', 'late nights', 'weekends only', 'split sessions'] },
+    slots: { clinic: ['the company physio', 'a private sports clinic', 'a hydrotherapy studio', 'a retired wrestler\'s rehab gym'], schedule: ['early mornings', 'late nights', 'weekends', 'split sessions'] },
     body: ['You have two weeks to decide on a rehab home. {doc.name} gives you a short list, and the one you keep coming back to is {clinic}, with {schedule} as the only workable hours.', 'The cheapest option is free and a little impersonal; the best ones cost money and time. Your future knees will remember this decision.'],
     choices: [
       { id: 'company', label: 'Stay with the company physio', risk: 'low', result: 'The care is solid, free, and a little rushed. You get what you pay for, and it is enough.', effects: [{ fatigue: -3 }, { conf: 1 }] },
@@ -519,7 +519,7 @@ export default [
   {
     id: 'life_rec_sleep_debt', category: 'recovery', title: 'The Sleep Debt in {spot}', weight: 2, cooldownDays: 90, maxPerCareer: 3, categoryCooldown: 8,
     trigger: { stat: { fatigue: { gte: 60 } } },
-    slots: { spot: ['hotel rooms', 'the tour bus', 'airport lounges', 'a friend\'s couch'], culprit: ['red-eye flights', 'late-night loading docks', 'thin hotel walls', 'a habit of watching old tape until dawn'] },
+    slots: { spot: ['hotel rooms', 'the tour bus', 'airport lounges', 'a friend\'s spare room'], culprit: ['red-eye flights', 'late-night loading docks', 'thin hotel walls', 'a habit of watching old tape until dawn'] },
     body: ['You have been sleeping in {spot} for weeks, and the worst of it comes from {culprit}. Your reflexes are a half-second off, and everyone who has seen you in the ring has noticed.', 'A tired wrestler is a dangerous wrestler, and not just to themselves. There is no quick fix, but there are options.'],
     choices: [
       { id: 'discipline', label: 'Set a strict bedtime and defend it', risk: 'low', result: 'You turn off the lights at the same hour every night. You miss a few late hangouts and gain back your reflexes.', effects: [{ fatigue: -14 }, { pop: -0.1 }, { conf: 2 }] },
@@ -708,7 +708,7 @@ export default [
     id: 'life_ret_veteran_farewell', category: 'retirement', title: 'A Legend Says Goodbye in {venue}', weight: 1.5, cooldownDays: 200, maxPerCareer: 2, categoryCooldown: 10,
     cast: { legend: { pick: 'roster', tier: { gte: 3 } } },
     trigger: { stat: { careerYears: { gte: 2 } } },
-    slots: { venue: ['the locker room', 'the ring after the show', 'a hotel ballroom', 'a hometown arena'], gesture: ['a handshake line', 'a speech from the company', 'a montage of old clips', 'a group photo'] },
+    slots: { venue: ['the locker room', 'the ring after the show', 'a hotel ballroom', 'a hometown arena'], gesture: ['a handshake line', 'a speech from the office', 'a montage of old clips', 'a group photo'] },
     body: ['{legend.name} is saying goodbye, and the whole roster has gathered in {venue} for it. The company has planned {gesture}, and the room is quieter than it has ever been.', 'You are asked if you want to say a few words. It is a small honor and a delicate one.'],
     choices: [
       { id: 'speak', label: 'Speak about what {legend.first} taught you', risk: 'med', outcomes: [
@@ -751,7 +751,7 @@ export default [
   {
     id: 'life_ret_family_ultimatum', category: 'retirement', title: 'The Talk at the {place}', weight: 2, major: true, cooldownDays: 240, maxPerCareer: 2, categoryCooldown: 15,
     trigger: { injured: true, stat: { careerYears: { gte: 8 } } },
-    slots: { place: ['kitchen table', 'hospital waiting room', 'airport gate', 'back porch'], who: ['your partner', 'your mother', 'your oldest friend', 'your grown child'] },
+    slots: { place: ['kitchen table', 'hospital cafeteria', 'airport gate', 'edge of the porch'], who: ['your partner', 'your mother', 'your oldest friend', 'your grown child'] },
     body: ['{who} sits you down at the {place} and says it plainly: the injuries are getting worse, the time at home is getting shorter, and they want you to stop.', 'No one is shouting. It would be easier if they were. This is love that is also fear, and it will not go away just because you deny it.'],
     choices: [
       { id: 'stop', label: 'Promise to retire and wrap things up well', risk: 'high', result: 'You say yes, and the relief on their face tells you how long they have been holding it in. You still have a few matches to finish, and a career to close on your terms.', effects: [{ event: { type: 'retirement', participants: [], summary: '{player.name} retired for the sake of family and health.', importance: 5, data: {} } }, { conf: 1 }, { pop: 0.8 }] },
@@ -812,7 +812,7 @@ export default [
   },
   {
     id: 'life_leg_documentary', category: 'legacy', title: 'A Documentary Crew Wants Your Story', weight: 1.5, major: true, cooldownDays: 365, maxPerCareer: 1, categoryCooldown: 15,
-    cast: { host: { pick: 'media', kind: 'host' } },
+    cast: { host: { pick: 'media', kind: 'fan' } },
     trigger: { minYear: 2000, stat: { careerYears: { gte: 8 }, popularity: { gte: 50 } } },
     slots: { angle: ['your rise from nothing', 'a bitter feud', 'a comeback story', 'the cost of fame'], crew: ['a small crew and a big idea', 'a cable network\'s camera crew', 'a student film team', 'a crew from an international production house'] },
     body: ['{host.name} arrives with {crew}, making a film about {angle}. They want access: your training, your home, your hardest memories.', 'A good documentary can define a career for decades. A bad one can follow you the same way.'],
@@ -966,7 +966,7 @@ export default [
     id: 'life_fin_investment_pitch', category: 'finance', title: 'A Business Pitch {pitch}', weight: 1.5, cooldownDays: 240, maxPerCareer: 2, categoryCooldown: 10,
     cast: { vet: { pick: 'roster', tier: { gte: 2 } } },
     trigger: { stat: { money: { gte: 9000 }, careerYears: { gte: 2 } } },
-    slots: { pitch: ['over steaks', 'in a hotel bar', 'after the show', 'during a long car ride'], venture: ['a gym franchise', 'a food truck', 'a clothing line', 'a stake in a rental property'] },
+    slots: { pitch: ['over steaks', 'in a hotel bar', 'after the show', 'during a long car ride'], venture: ['a gym franchise', 'a food truck', 'a clothing line', 'a rental-property partnership'] },
     body: ['{vet.name} brings it up {pitch}: a chance to buy into {venture}. {vet.they} has done the math on a napkin and cannot stop smiling.', 'Wrestlers are natural targets for pitches, and sometimes natural targets for good ones. The trick is to tell them apart.'],
     choices: [
       { id: 'all_in', label: 'Go all in on the venture', risk: 'high', requires: { stat: { money: { gte: 9000 } } }, outcomes: [
@@ -1283,18 +1283,18 @@ export default [
     ],
   },
   {
-    id: 'life_per_old_friend', category: 'personal', title: 'An Old Acquaintance Turns Up', weight: 1.5, cooldownDays: 150, maxPerCareer: 3, categoryCooldown: 10,
-    cast: { friend: { pick: 'roster', tier: { lte: 1 } } },
+    id: 'life_per_old_friend', category: 'personal', title: 'An Old Friend Turns Up', weight: 1.5, cooldownDays: 150, maxPerCareer: 3, categoryCooldown: 10,
+    cast: { friend: { pick: 'tag', tag: 'ally' } },
     trigger: { stat: { popularity: { gte: 35 }, careerYears: { gte: 2 } } },
     slots: { need: ['a job', 'a place to stay', 'an introduction', 'forgiveness'], meet: ['at a diner near the arena', 'outside the stage door', 'through a message from a mutual friend', 'in a hotel lobby'] },
-    body: ['{friend.name} comes to you {meet}. You worked some of the same small shows years ago, and now you are on different rungs. {friend.they} is asking for {need}.', 'It is awkward in the way old acquaintances are awkward when one of you has done well. The things you used to share are harder to name.'],
+    body: ['{friend.name} comes to you {meet}. You came up through the small shows together, and now you are on different rungs. {friend.they} is asking for {need}.', 'It is awkward in the way old friendships are awkward when one of you has done well. The things you used to share are harder to name.'],
     choices: [
       { id: 'help_fully', label: 'Help in every way you can', risk: 'med', outcomes: [
         { weight: 2, text: '{friend.first} makes the most of the chance, and the old bond becomes stronger than before.', effects: [{ rel: { who: 'friend', trust: 8, respect: 5, affinity: 6 } }, { tag: { who: 'friend', tag: 'ally' } }, { conf: 3 }, { fatigue: 4 }] },
-        { weight: 1, text: '{friend.first} struggles to repay your effort and starts leaning on it. The arrangement tightens, and not in a good way.', effects: [{ rel: { who: 'friend', trust: 1 } }, { conf: -2 }, { fatigue: 5 }] } ] },
+        { weight: 1, text: '{friend.first} struggles to repay your effort and starts leaning on it. The friendship tightens, and not in a good way.', effects: [{ rel: { who: 'friend', trust: 1 } }, { conf: -2 }, { fatigue: 5 }] } ] },
       { id: 'small_help', label: 'Offer a small, clear piece of help', risk: 'low', result: 'A kind word to the right person and a modest gesture. It is useful and honest about its limits.', effects: [{ rel: { who: 'friend', respect: 3, affinity: 3 } }, { money: -200 }] },
       { id: 'honest_talk', label: 'Have a frank talk about how things have changed', risk: 'low', result: 'It is not easy, and it is cleansing. You leave with fewer illusions and more respect.', effects: [{ rel: { who: 'friend', respect: 4, trust: 3 } }, { conf: 2 }] },
-      { id: 'distance', label: 'Keep your distance politely', risk: 'low', result: 'You smile, promise to catch up soon, and do not. The connection cools like a cup of coffee.', effects: [{ rel: { who: 'friend', affinity: -6, trust: -3 } }, { fatigue: -2 }] },
+      { id: 'distance', label: 'Keep your distance politely', risk: 'low', result: 'You smile, promise to catch up soon, and do not. The friendship cools like a cup of coffee.', effects: [{ rel: { who: 'friend', affinity: -6, trust: -3 } }, { fatigue: -2 }] },
     ],
   },
   {

@@ -193,6 +193,8 @@ export class Game {
   }
 
   // ------------------------------------------------------------------ time use
+  /** a retired wrestler no longer cuts promos, gives interviews, posts or trains */
+  _requireActive() { if (this.c.flags.retired) throw new Error('your career is over'); }
   _blockedByScenario() {
     if (this.c.flags.scenario) throw new Error('resolve the pending situation first');
     if (this.c.flags.retired && this.c.flags.phase !== 'retired' && typeof this.c.flags.retired === 'object') this.c.flags.phase = 'retired';
@@ -232,6 +234,7 @@ export class Game {
   lifeView() { return lifeView(this.c); }
   lifeAct(id) {
     const c = this.c;
+    this._requireActive();
     if (c.flags.phase !== 'home') throw new Error('finish the current match first');
     this._blockedByScenario();
     const r = doLifeActivity(c, id);
@@ -816,9 +819,10 @@ export class Game {
     const c = this.c, nm = (id) => this.universe.get(id)?.name || id;
     return { ...socialOptions(c), feed: socialFeed(c, { nameOf: nm }) };
   }
-  socialPost({ tone, targetId = null }) { this._blockedByScenario(); return postToSocial(this.c, { tone, targetId, nextEvent: this.nextEvent() }); }
+  socialPost({ tone, targetId = null }) { this._requireActive(); this._blockedByScenario(); return postToSocial(this.c, { tone, targetId, nextEvent: this.nextEvent() }); }
   promoOptions() { return { tones: PROMO_TONES, claims: CLAIMS, pending: this.c.flags.promoPending || null }; }
   promo(o) {
+    this._requireActive();
     const r = deliverPromo(this.c, o);
     this.c.flags.promoPending = null;
     return r;
@@ -882,7 +886,7 @@ export class Game {
 
   // ---- interviews, podcasts, press conferences
   appearanceOptions() { return appearanceOptions(this.c); }
-  startAppearance(kind) { this._blockedByScenario(); return startAppearance(this.c, kind, { nextEvent: this.nextEvent() }); }
+  startAppearance(kind) { this._requireActive(); this._blockedByScenario(); return startAppearance(this.c, kind, { nextEvent: this.nextEvent() }); }
   answerAppearance(id) { return answerAppearance(this.c, id, { nextEvent: this.nextEvent() }); }
   appearanceView() { return appearanceView(this.c); }
   cancelAppearance() { cancelAppearance(this.c); }

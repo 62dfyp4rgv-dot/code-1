@@ -214,7 +214,15 @@ export class AchievementEngine {
   }
 
   toJSON() { return { unlocked: this.unlocked, progress: this.progress }; }
-  load(j) { this.unlocked = j.unlocked || {}; this.progress = j.progress || {}; }
+  /** a saved unlock only counts if the ledger holds the matching achievement_unlocked event (forged unlocks are dropped on load) */
+  load(j) {
+    const L = this.memory.ledger, ok = {};
+    for (const [id, rec] of Object.entries((j && j.unlocked) || {})) {
+      const ev = rec && L.get(rec.event);
+      if (ev && ev.type === 'achievement_unlocked' && ev.data.achievementId === id) ok[id] = rec;
+    }
+    this.unlocked = ok; this.progress = (j && j.progress) || {};
+  }
 }
 
 import { matches as whereMatches } from '../memory/ledger.js';

@@ -347,7 +347,7 @@ export default [
     id: 'wm_night_before', category: 'wrestlemania', title: `The Night Before WrestleMania`, weight: 2, major: true, cooldownDays: 330, maxPerCareer: 4, categoryCooldown: 10, contexts: ['weekly', 'post_show'],
     cast: { mentor: { pick: 'tag', tag: 'mentor' } },
     trigger: { minYear: 1985, eventWithin: { id: 'wrestlemania', days: 1 }, stat: { popularity: { gte: 20 } } },
-    slots: { setting: [`a hotel lobby near midnight`, `a diner that stays open all night`, `the roof of the hotel`], burden: [`a lifetime of work`, `everything you gave up to get here`, `a decade of bruises`] },
+    slots: { setting: [`a hotel lobby`, `a diner that stays open all night`, `the quiet top floor of the hotel`], burden: [`a lifetime of work`, `everything you gave up to get here`, `a decade of bruises`] },
     body: [`It is nearly midnight in {setting}, and {mentor.name} has found you. {mentor.they} sits down without a word and orders two coffees. In the quiet you can feel {burden} sitting on your chest.`, `"You do not have to sleep," {mentor.first} says, "but you should decide what you do with this night."`],
     choices: [
       { id: 'listen', label: `Sit with {mentor.first} and listen until dawn`, risk: 'low', result: `{mentor.first} talks about the nerves, the ones that never leave. By sunrise you are tired and strangely at peace.`, effects: [{ rel: { who: 'mentor', trust: 8, affinity: 8 } }, { conf: 4 }, { fatigue: 6 }] },
@@ -450,7 +450,7 @@ export default [
     cast: { rival: { pick: 'rivalry', minHeat: 20, status: 'active' } },
     trigger: { minYear: 1985, eventWithin: { id: 'wrestlemania', days: 30 } },
     slots: { place: [`a secluded corner of the hotel`, `the back seat of a rental car`, `the quiet end of the catering hall`], terms: [`You let me win this one, and I make sure you get the next`, `You hand me your best spot, and I owe you a favor`, `We split the finish and share the credit`] },
-    body: [`{rival.name} finds you in {place} and lays out a proposal in a flat, unemotional voice. "{terms}."`, `It is a clever offer. It also means giving a rival something you cannot get back.`],
+    body: [`{rival.name} finds you in {place} and lays out a proposal in a flat, unemotional voice. "{terms}."`, `"Think it over," {rival.first} says. A clever offer, and one that means giving a rival something you cannot get back.`],
     choices: [
       { id: 'deal', label: `Make the deal and shake on it`, risk: 'med', result: `You agree, and the handshake lasts a beat too long. Neither of you trusts the other, but both of you believe the numbers.`, effects: [{ rel: { who: 'rival', trust: 8, respect: 4, heat: -10 } }, { tag: { who: 'rival', tag: 'alliance_possible' } }, { pop: 0.1 }, { conf: -2 }] },
       { id: 'reject', label: `Reject it and keep the feud real`, risk: 'low', result: `You tell {rival.first} to earn it in the ring. {rival.they} nods, almost pleased, and walks away.`, effects: [{ rel: { who: 'rival', respect: 6 } }, { rivalry: { who: 'rival', heat: 8 } }, { conf: 3 }, { pop: 0.3 }] },
@@ -630,10 +630,10 @@ export default [
     cast: { boss: { pick: 'staff', role: 'creative' }, champ: { pick: 'champion', class: 'world' } },
     trigger: { holdsTitle: false, stat: { titleWins: { gte: 1 } }, recent: { lossesGte: 2 } },
     slots: { feel: [`a hole in the middle of your week`, `a kind of silence you have not heard in months`, `a plain, empty locker room`], pitch: [`a fresh program`, `a mentor role`, `a lengthy rest`] },
-    body: [`Without a belt on your shoulder, there is {feel}. The gold is on {champ.name}'s shoulder now, and the agents have started calling you by your first name.`, `{boss.name} offers {pitch}. The thing about losing a title is that every choice you make next gets read as a reaction to it.`],
+    body: [`Without a belt on your shoulder, there is {feel}, and the agents have started calling you by your first name.`, `{boss.name} offers {pitch}. The thing about losing a title is that every choice you make next gets read as a reaction to it.`],
     choices: [
-      { id: 'rematch', label: `Demand a rematch and reclaim what is yours`, risk: 'high', outcomes: [
-        { weight: 2, bonus: { confidence: 0.5, popularity: 0.3 }, text: `You make a compelling case for a second chance. The office books it, and the build writes itself.`, effects: [{ booking: { who: 'champ', type: 'singles', stakes: 'title' } }, { promise: { kind: 'win_title', who: 'champ', text: `I will win my title back from {champ.name}`, deadlineDays: 90 } }, { pop: 0.8 }, { conf: 3 }] },
+      { id: 'rematch', label: `Demand a title shot and go after the gold`, risk: 'high', outcomes: [
+        { weight: 2, bonus: { confidence: 0.5, popularity: 0.3 }, text: `You make a compelling case for a shot at the gold. The office books it, and the build writes itself.`, effects: [{ booking: { who: 'champ', type: 'singles', stakes: 'title' } }, { promise: { kind: 'win_title', who: 'champ', text: `I will win the world title from {champ.name}`, deadlineDays: 90 } }, { pop: 0.8 }, { conf: 3 }] },
         { weight: 1, text: `The request is shelved and a few eyebrows go up at your insistence.`, effects: [{ pop: -0.2 }, { conf: -3 }] } ] },
       { id: 'grace', label: `Take a gracious step back and lead by example`, risk: 'low', result: `You congratulate the champion, offer help to younger wrestlers, and keep your name warm. The locker room approves.`, effects: [{ rel: { who: 'champ', respect: 8, trust: 5 } }, { pop: 0.3 }, { conf: -1 }] },
       { id: 'bitter', label: `Lash out at the booking and the champion`, risk: 'high', outcomes: [
@@ -911,7 +911,7 @@ export default [
   },
   {
     id: 'opp_documentary_crew', category: 'opportunity', title: `A Camera Crew Wants to Follow You`, weight: 2, major: true, cooldownDays: 365, maxPerCareer: 2, categoryCooldown: 20,
-    cast: { exec: { pick: 'staff', role: 'executive' }, host: { pick: 'media', kind: 'host' } },
+    cast: { exec: { pick: 'staff', role: 'executive' }, host: { pick: 'media', kind: 'fan' } },
     trigger: { minYear: 2010, stat: { popularity: { gte: 40 }, careerYears: { gte: 2 } } },
     slots: { outlet: [`a streaming service`, `a cable network`, `an independent film studio`], scope: [`your road to the next big event`, `a year in your life`, `your family and your training`] },
     body: [`{exec.name} has an offer: {outlet} wants to film a documentary about {scope}, with {host.name} presenting. They want access to your home, gym and locker room.`, `Fame has a price, and so does honesty. Anything on camera can come back to you later.`],
@@ -982,7 +982,7 @@ export default [
     cast: { host: { pick: 'media', kind: 'host' }, boss: { pick: 'staff', role: 'executive' } },
     trigger: { stat: { popularity: { gte: 30 } } },
     slots: { cause: [`Children's Hospital`, `Veterans' Fund`, `Food Bank`, `Local Gym Rebuild`], format: [`a special exhibition match`, `a live auction and a short match`, `a meet-and-greet with the fans`] },
-    body: [`{host.name} is emceeing the {cause} benefit and wants you as the headliner for {format}. {boss.name} wants the company's name on it, and a fair share of the cameras.`, `It is a good cause and a fine stage. It is also a night off from your regular schedule that your body probably needs.`],
+    body: [`{host.name} is emceeing the {cause} benefit and wants you as the headliner for {format}. {boss.name} wants the company's name on it, and a fair share of the cameras.`, `A good cause and a fine stage, though also a night off from your regular schedule that your body probably needs.`],
     choices: [
       { id: 'give_all', label: `Give the night everything and donate your fee`, risk: 'low', outcomes: [
         { weight: 3, bonus: { charisma: 0.5 }, text: `The room is moved by your effort, and the donation total beats every target. Photos of you with the families circulate for weeks.`, effects: [{ pop: 1.0 }, { conf: 3 }, { money: -3000 }, { fatigue: 10 }] },

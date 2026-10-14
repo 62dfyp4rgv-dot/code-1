@@ -761,7 +761,7 @@ export default [
     cast: { mentor: { pick: 'tag', tag: 'mentor' }, host: { pick: 'media', kind: 'interviewer' } }, memory: { role: 'mentor', max: 2, noResults: true },
     trigger: { stat: { popularity: { gte: 30 } }, mem: [{ role: 'mentor', trustGte: 5 }] },
     slots: { critique: [`that you lean on the crowd more than you should`, `that you have gone soft when it counts`, `that you hide behind catchphrases`], delivery: [`in a calm voice that made it sound worse`, `with a smile that did not help`, `with a speech about wanting only the best for you`] },
-    body: [`{host.name} plays you the clip from last night: {mentor.name}, asked about your career, saying {critique}, {delivery}. It is not wrong, which is most of the trouble.`, `{mentor.first} could have said it to you in a gym, and chose a microphone. Either it was careless or it was a message, and you cannot tell which.`],
+    body: [`{host.name} plays you the clip: {mentor.name}, asked about your career, saying {critique}, {delivery}. It is not wrong, which is most of the trouble.`, `{mentor.first} could have said it to you in a gym, and chose a microphone. Either it was careless or it was a message, and you cannot tell which.`],
     choices: [
       { id: 'agree', label: `Agree publicly and thank {mentor.first} for the honesty`, risk: 'low', result: `Your answer is gracious and a touch rueful, and the crowd takes to the grace. {mentor.first} sends a one-line reply that says "good answer", which feels like a medal.`, effects: [{ rel: { who: 'mentor', respect: 5, trust: 3 } }, { pop: 0.3 }, { conf: -1 }, { attr: { name: 'psychology', delta: 1 } }] },
       { id: 'call', label: `Call {mentor.first} and ask why it had to be public`, risk: 'med', outcomes: [

@@ -21,7 +21,7 @@ export default [
   {
     id: 'riv_step_aside', category: 'rivalry', title: 'Step Aside, Says {rival.name}', weight: 2, cooldownDays: 100, maxPerCareer: 2,
     trigger: { stat: { popularity: { gte: 30 } }, eventWithin: { kind: 'ple', days: 45 } }, cast: { rival: { pick: 'rivalry', minHeat: 20 } }, memory: { role: 'rival', max: 1 },
-    slots: { offer: [`an envelope with real money in it`, `a cut of the payday if you step aside`, `a spot on the better house shows and a bonus to match`, `a favor you can cash in later and a fat envelope to go with it`], deadline: [`by Friday`, `before the card is finalized`, `before tonight's show`, `before the contracts go out`] },
+    slots: { offer: [`an envelope with real money in it`, `a cut of the payday`, `a spot on the better house shows and a bonus to match`, `a favor you can cash in later and a fat envelope to go with it`], deadline: [`by Friday`, `before the card is finalized`, `before tonight's show`, `before the contracts go out`] },
     body: [`The word in the back is that the office is weighing you for a big spot at the next premium event, and {rival.name} wants the same slot. {rival.first} is offering {offer} if you tell management you are not ready.`, `{rival.first} wants an answer {deadline}. Saying yes would be easy, and so would regretting it.`],
     choices: [
       { id: 'sell', label: 'Step aside and take the offer', risk: 'low', result: `You tell the office you would like more time. {rival.first} keeps the promise, and you carry the knowledge that you sold a slot.`, effects: [{ money: 12000 }, { conf: -6 }, { pop: -0.4 }, { rel: { who: 'rival', respect: -6, fear: -3 } }] },
@@ -94,7 +94,7 @@ export default [
     id: 'riv_mind_games', category: 'rivalry', title: 'Mind Games Before the Big Night', weight: 2, cooldownDays: 70, maxPerCareer: 3, contexts: ['pre_show', 'show_day', 'weekly'],
     trigger: { rivalry: { minHeat: 25 }, stat: { losses: { gte: 1 } }, eventWithin: { kind: 'ple', days: 10 } }, cast: { rival: { pick: 'rivalry', minHeat: 25 } },
     slots: { stunt: [`taped a photo of your last loss inside your locker`, `moved your bags to the cold end of the hall`, `told the whole catering line you are limping`, `left a pair of knee pads wrapped as a gift on your bench`], bait: [`You were in a perfectly good mood this morning.`, `You had planned a quiet pre-show meal.`, `Your gear bag was already packed and zipped.`, `You had just started to feel loose.`] },
-    body: [`{rival.name} has been working on you since the arena doors opened. First {rival.they} {stunt}, then calls across the hall to ask whether you slept well, and the whole locker room waits to see what you do. {bait}`, `It is a bad idea to react, and a worse idea to look like you did not notice.`],
+    body: [`{rival.name} has been working on you since the arena doors opened. First {rival.they} {stunt}, then called across the hall to ask whether you slept well, and now the whole locker room waits to see what you do. {bait}`, `Reacting is a bad idea, and looking like you did not notice is a worse one.`, `"Nothing to say?" {rival.they} asks the hallway, to nobody and everybody.`],
     choices: [
       { id: 'ignore', label: 'Ignore it and keep your head down', risk: 'low', result: `You warm up in silence. {rival.first} does not get the reaction, and you get a better night than you expected.`, effects: [{ conf: 3 }, { fatigue: -2 }, { rel: { who: 'rival', respect: 2 } }] },
       { id: 'mirror', label: 'Return the favor, harder', risk: 'high', outcomes: [
@@ -122,13 +122,13 @@ export default [
     id: 'riv_champ_deal', category: 'rivalry', title: 'A Deal from the Champion', weight: 2, cooldownDays: 100, maxPerCareer: 2,
     trigger: { stat: { popularity: { gte: 40 }, overall: { gte: 55 } }, holdsTitle: false }, cast: { champ: { pick: 'champion', class: 'world' } },
     slots: { venue: [`the champion's private locker room`, `a rented office behind the arena`, `the production truck`, `a hotel suite`], price: [`a clean loss when we first meet`, `a favor on a night of my choosing`, `a slice of your merchandise income`] },
-    body: [`{champ.name} invites you to {venue} and gets straight to it. "You are on your way up, and I can open the door. In return, I want {price}."`, `It is a straightforward business offer from the most powerful person on the roster. You can also hear what it says about what {champ.they} thinks of you.`],
+    body: [`{champ.name} invites you to {venue} and gets straight to it. "You are on your way up, and I can open the door. In return, I want {price}."`, `"Think of it as an investment," {champ.first} adds. A straightforward business offer from the most powerful person on the roster, it also says plenty about what {champ.they} thinks of you.`],
     choices: [
       { id: 'take', label: 'Take the deal', risk: 'med', result: `You shake on it. The door does open, but you owe now, and {champ.first} reminds you with a look every time you meet.`, effects: [{ pop: 0.8 }, { money: 8000 }, { conf: -2 }, { rel: { who: 'champ', trust: -3, respect: 2 } }, { flag: 'owes_champion' }] },
       { id: 'decline', label: 'Decline: you will earn it', risk: 'low', outcomes: [
         { weight: 2, bonus: { confidence: 0.5 }, text: `{champ.first} studies you for a long moment, then nods. "Good. Then earn it." You feel taller walking out.`, effects: [{ conf: 5 }, { rel: { who: 'champ', respect: 6 } }, { pop: 0.2 }] },
         { weight: 1, text: `{champ.first} shrugs. "Your loss." The door closes, and for a month the schedule feels colder.`, effects: [{ rel: { who: 'champ', respect: -2, heat: 4 } }, { conf: 1 }, { pop: -0.2 }] } ] },
-      { id: 'bargain', label: 'Counter-offer: a rematch instead', risk: 'med', result: `Surprised, {champ.first} agrees to a conditional rematch if you can win something first. You walk away with a promise, not a handshake.`, effects: [{ promise: { kind: 'win_match', who: 'champ', text: `I will beat {champ.name} on my terms`, deadlineDays: 90 } }, { rel: { who: 'champ', respect: 3, heat: 4 } }, { conf: 2 }] },
+      { id: 'bargain', label: 'Counter-offer: a title match instead', risk: 'med', result: `Surprised, {champ.first} agrees to a title match of their own if you can win something first. You walk away with a promise, not a handshake.`, effects: [{ promise: { kind: 'win_match', who: 'champ', text: `I will beat {champ.name} on my terms`, deadlineDays: 90 } }, { rel: { who: 'champ', respect: 3, heat: 4 } }, { conf: 2 }] },
       { id: 'leak', label: 'Walk out and tell the locker room', risk: 'high', result: `The story is all over the roster by midnight. Management is embarrassed and the champion is furious. Some of the veterans quietly like you for it.`, effects: [{ pop: 0.5 }, { rel: { who: 'champ', heat: 16, respect: -3 } }, { rivalry: { who: 'champ', heat: 12 } }, { conf: 2 }] },
     ],
   },
@@ -233,7 +233,7 @@ export default [
   },
   {
     id: 'bet_faction_leader_cross', category: 'betrayal', title: 'The Leader\'s Back Is Turned', weight: 2, major: true, cooldownDays: 120, maxPerCareer: 2,
-    trigger: { stat: { popularity: { gte: 25 } } }, cast: { boss: { pick: 'tag', tag: 'ally' }, exec: { pick: 'staff', role: 'executive' } }, memory: { role: 'boss', max: 1 },
+    trigger: { flag: 'in_stable', stat: { popularity: { gte: 25 } } }, cast: { boss: { pick: 'tag', tag: 'ally' }, exec: { pick: 'staff', role: 'executive' } }, memory: { role: 'boss', max: 1 },
     slots: { crew: [`the group you run with`, `the crew around {boss.them}`, `the whole clique`], promise: [`a spot as their own champion`, `a bigger percentage of the merchandise`, `a seat at the bookers' table`] },
     body: [`{exec.name} takes you to a quiet office and says what nobody has said out loud: {boss.name} is holding {crew} back. Take {boss.their} place at the head of the table, and the office will back you with {promise}.`, `You have been loyal to {boss.first}. {boss.they} has also been taking more than a fair cut for a long time.`],
     choices: [
@@ -278,7 +278,7 @@ export default [
   {
     id: 'bet_partner_secret_exit', category: 'betrayal', title: '{partner.name} Is Thinking of Leaving', weight: 3, cooldownDays: 100, maxPerCareer: 2,
     trigger: {}, cast: { partner: { pick: 'tag', tag: 'ally' }, gm: { pick: 'staff', role: 'gm' } }, memory: { role: 'partner', max: 1 },
-    slots: { where: [`a parked rental car`, `the roof of the parking garage`, `a booth in an empty diner`, `a hotel stairwell`], offer: [`a bigger deal from the other brand`, `a guaranteed spot in another promotion`, `a part in a movie`, `an offer to coach full-time`] },
+    slots: { where: [`a parked rental car`, `a corner of the parking garage`, `a booth in an empty diner`, `a hotel stairwell`], offer: [`a bigger deal from the other brand`, `a guaranteed spot in another promotion`, `a part in a movie`, `an offer to coach full-time`] },
     body: [`{partner.name} makes you swear not to tell anyone, then spills it in {where}: {partner.they} has {offer} and is leaning toward taking it. "I wanted you to hear it from me," {partner.they} says.`, `{gm.name} has been asking you pointed questions all week. The secret is going to become expensive to keep.`],
     choices: [
       { id: 'keep', label: 'Keep the secret, no matter what', risk: 'med', outcomes: [
@@ -290,15 +290,15 @@ export default [
     ],
   },
   {
-    id: 'bet_second_chance', category: 'betrayal', title: '{former.name} Asks for a Second Chance', weight: 2, cooldownDays: 120, maxPerCareer: 2,
+    id: 'bet_second_chance', category: 'betrayal', title: 'Asking {former.name} for a Second Chance', weight: 2, cooldownDays: 120, maxPerCareer: 2,
     trigger: { mem: [{ role: 'former', betrayal: true }] }, cast: { former: { pick: 'tag', tag: 'betrayal' } }, memory: { role: 'former', max: 3 },
-    slots: { how: [`a long, awkward message`, `a coffee left on your bench`, `a late-night knock on your hotel door`, `an apology passed through a trainer`], reason: [`facing a bad run of injuries`, `finally losing {former.their} place in the stable`, `being betrayed by a new partner`, `tired of what the crew says about {former.them}`] },
-    body: [`The first sign is {how}, and it is from {former.name}. {former.they} is {reason}, and is asking for another chance.`, `The betrayal sits between you like a third person in the room. Forgiving would be hard; refusing would be easy.`],
+    slots: { how: [`a long, awkward message`, `a coffee left on {former.their} bench`, `a late-night knock on {former.their} hotel door`, `an apology passed through a trainer`], reason: [`facing a bad run of injuries`, `finally losing {former.their} place in the stable`, `being betrayed by a new partner`, `tired of what the crew says about {former.them}`] },
+    body: [`You reach out to {former.name} with {how}. {former.they} is {reason}, which is the only reason you have the nerve to ask for another chance.`, `The betrayal sits between you like a third person in the room. Forgiving you would be hard for {former.first}; slamming the door would be easy.`],
     choices: [
-      { id: 'forgive', label: 'Forgive {former.them}, and say so publicly', risk: 'med', result: `You say it on camera. The crowd applauds, and {former.first} cannot look at you for several minutes.`, effects: [{ event: { type: 'reconciliation', participants: ['former'], summary: `Forgave {former.name} after the betrayal.`, data: { formerRival: true } } }, { pop: 0.5 }, { conf: 2 }, { tag: { who: 'former', tag: 'reconciled' } }] },
-      { id: 'prove_it', label: 'Make {former.them} earn it, slowly', risk: 'low', result: `You set terms. {former.first} agrees to all of them, and you start the long climb back to trust.`, effects: [{ rel: { who: 'former', trust: 5, respect: 4 } }, { conf: 1 }] },
-      { id: 'refuse', label: 'Refuse. Some things stay broken', risk: 'low', result: `The silence is complete. {former.first} nods once and leaves, and the room treats you with a little more distance.`, effects: [{ rel: { who: 'former', heat: 4, trust: -3 } }, { conf: 1 }, { pop: 0.1 }] },
-      { id: 'use', label: 'Accept, then use {former.them} for your own ends', risk: 'high', outcomes: [
+      { id: 'forgive', label: 'Apologize in public and ask to be forgiven', risk: 'med', result: `You say it on camera. The crowd applauds, and {former.first} cannot look at you for several minutes.`, effects: [{ event: { type: 'reconciliation', participants: ['former'], summary: `Made amends with {former.name} after the betrayal.`, data: { formerRival: true } } }, { pop: 0.5 }, { conf: 2 }, { tag: { who: 'former', tag: 'reconciled' } }] },
+      { id: 'prove_it', label: 'Offer to earn it back, slowly', risk: 'low', result: `{former.first} sets the terms, and you agree to all of them. It is the start of a long climb back to trust.`, effects: [{ rel: { who: 'former', trust: 5, respect: 4 } }, { conf: 1 }] },
+      { id: 'refuse', label: 'Back off: some things stay broken', risk: 'low', result: `You see how little is left to ask for and walk away. {former.first} nods once, and the room treats you with a little more distance.`, effects: [{ rel: { who: 'former', heat: 4, trust: -3 } }, { conf: 1 }, { pop: 0.1 }] },
+      { id: 'use', label: 'Apologize, then use {former.them} for your own ends', risk: 'high', outcomes: [
         { weight: 1, bonus: { overall: 0.4 }, text: `You keep {former.first} close and useful. It pays off in two weeks, and nobody can tell it was calculated.`, effects: [{ pop: 0.5 }, { money: 3000 }, { rel: { who: 'former', trust: -2 } }] },
         { weight: 1, text: `{former.first} spots it right away. The second betrayal is worse than the first, and the whole locker room hears about it.`, effects: [{ pop: -0.6 }, { conf: -4 }, { rel: { who: 'former', heat: 14, trust: -12 } }] } ] },
     ],
@@ -468,7 +468,7 @@ export default [
     id: 'ali_lose_for_ally', category: 'alliance', title: '{ally.name} Asks You to Lose', weight: 2, cooldownDays: 90, maxPerCareer: 3,
     trigger: { stat: { popularity: { gte: 30 } } }, cast: { ally: { pick: 'tag', tag: 'ally' } }, memory: { role: 'ally', max: 1 },
     slots: { pitch: [`a push the office is thinking about`, `a stretch of poor numbers that needs a spark`, `a contract talk that might end this month`, `a comeback from a long layoff`], payment: [`a favor owed`, `a cut of {ally.their} next bonus`, `a place in {ally.their} next big story`] },
-    body: [`{ally.name} asks you, quietly, to take a clean loss to {ally.them} the next time you meet. {ally.they} says it will help with {pitch}, and offers {payment} in return.`, `It is a fair ask between friends. It is also the kind of loss that stays on the record.`],
+    body: [`{ally.name} asks you, quietly, to take a clean loss to {ally.them} the next time you meet. {ally.they} says it will help with {pitch}, and offers {payment} in return.`, `Between friends, it is a fair ask, but it is also the kind of loss that stays on the record.`],
     choices: [
       { id: 'lose', label: 'Agree and put {ally.them} over', risk: 'med', result: `You lose clean and sell it generously. {ally.first} owes you one, and the fans notice that you did not have to.`, effects: [{ rel: { who: 'ally', trust: 10, respect: 8, affinity: 4 } }, { pop: -0.4 }, { conf: -2 }, { money: 4000 }] },
       { id: 'refuse', label: 'Refuse: you need your own wins', risk: 'low', result: `{ally.first} says {ally.they} understands. The friendship cools a few degrees.`, effects: [{ rel: { who: 'ally', trust: -6, respect: 1 } }, { conf: 2 }] },
@@ -507,7 +507,7 @@ export default [
   {
     id: 'ali_tag_title_help', category: 'alliance', title: 'The Tag Champions Make an Offer', weight: 2, cooldownDays: 120, maxPerCareer: 2,
     trigger: { stat: { popularity: { gte: 25 } } }, cast: { champ: { pick: 'champion', class: 'tag' }, mate: { pick: 'roster', sameBrand: true } },
-    slots: { terms: [`a shot at the belts in return for a favor`, `a fill-in partner for a title defense`, `a few weeks as an insurance policy`], pace: [`before the next show`, `by Friday`, `by the end of the tour`] },
+    slots: { terms: [`a title defense against you with a finish they choose`, `a fill-in partner for a title defense`, `a few weeks as an insurance policy`], pace: [`before the next show`, `by Friday`, `by the end of the tour`] },
     body: [`The tag champions, led by {champ.name}, need a favor: {terms}. They want an answer {pace}.`, `{mate.name} overhears and offers to step in if you decline. That is not the same as a guarantee, but it is a quiet push.`],
     choices: [
       { id: 'team', label: 'Team up with the champions', risk: 'med', outcomes: [
@@ -596,7 +596,7 @@ export default [
     id: 'ali_corner_offer', category: 'alliance', title: '{ally.name} Wants to Be in Your Corner', weight: 2, cooldownDays: 90, maxPerCareer: 3,
     trigger: { eventWithin: { kind: 'ple', days: 12 }, stat: { popularity: { gte: 30 } } }, cast: { ally: { pick: 'tag', tag: 'ally' }, rival: { pick: 'rivalry', minHeat: 15 } },
     slots: { reason: [`to keep the rival's allies honest`, `because you need a second pair of eyes`, `to make a statement to the office`], risk: [`the referee might not like it`, `a distraction could cost you the match`, `the bookers may use it for a swerve`] },
-    body: [`{ally.name} volunteers to stand at ringside for your next showdown with {rival.name} {reason}. "I owe you," {ally.they} says, and it is not an empty promise.`, `It is a good gesture, and a complication: {risk}.`],
+    body: [`{ally.name} volunteers to stand at ringside for your next showdown with {rival.name} {reason}. "I owe you," {ally.they} says, and it is not an empty promise.`, `"I owe you," {ally.they} repeats. The gesture is good, and so is the complication: {risk}.`],
     choices: [
       { id: 'accept', label: 'Accept the ringside help', risk: 'low', result: `{ally.first} walks you out. The crowd pops, and so does the rival's temper.`, effects: [{ pop: 0.4 }, { rel: { who: 'ally', trust: 6, respect: 4 } }, { rel: { who: 'rival', heat: 5 } }] },
       { id: 'swerve', label: 'Accept, and plan a swerve', risk: 'high', outcomes: [
@@ -868,7 +868,7 @@ export default [
     id: 'men_haze_test', category: 'mentor', title: '{vet.name} Tests Your Nerve', weight: 3, cooldownDays: 90, maxPerCareer: 3,
     trigger: { stat: { careerYears: { lte: 3 } } }, cast: { vet: { pick: 'roster', tier: { gte: 3 }, sameBrand: true } },
     slots: { test: [`a stiff, no-warning chop in the first exchange`, `a sudden change of finish in the ring`, `a deliberately unfriendly crowd plant`, `a backstage rib that leaves you in a wet costume`], mood: [`a straight face`, `a hint of a smile`, `a long stare`] },
-    body: [`Tonight, {vet.name} springs {test} on you, and watches for your response with {mood}. This is an old initiation, and everybody in the locker room knows it.`, `Take it wrong and you are marked as soft. Take it right and you may earn something money cannot buy.`],
+    body: [`Tonight, {vet.name} tests you with {test}, and watches for your response with {mood}. This is an old initiation, and everybody in the locker room knows it.`, `Take it wrong and you are marked as soft. Take it right and you may earn something money cannot buy.`],
     choices: [
       { id: 'take_it', label: 'Take it and keep going', risk: 'med', outcomes: [
         { weight: 2, bonus: { confidence: 0.5 }, text: `You ride it out without a word. At the end, {vet.first} offers a short nod. It is the first real respect you have earned.`, effects: [{ rel: { who: 'vet', respect: 8, trust: 4 } }, { conf: 4 }, { fatigue: 5 }, { tag: { who: 'vet', tag: 'respected_by' } }] },
@@ -1014,7 +1014,7 @@ export default [
     id: 'men_gear_gift', category: 'mentor', title: 'A Gift Worth More Than Money', weight: 2, cooldownDays: 150, maxPerCareer: 2,
     trigger: { stat: { popularity: { gte: 25 } } }, cast: { vet: { pick: 'roster', tier: { gte: 3 } } },
     slots: { item: [`a worn leather jacket`, `a pair of boots, famous scuff and all`, `a robe, faded name still stitched inside`, `a championship-style belt from a long-ago tour`], condition: [`"Don't sell it."`, `"Earn it."`, `"It's lucky, but not for the reasons you think."`] },
-    body: [`{vet.name} presents you with {item}, handed over in a quiet moment. {condition}`, `It is a gesture of trust, though in a business where everything is a trade, it is hard to know what is being traded.`],
+    body: [`{vet.name} presents you with {item}, handed over in a quiet moment. {condition}`, `A gesture of trust, though in a business where everything is a trade, it is hard to know what is being traded.`],
     choices: [
       { id: 'wear', label: 'Wear it to the ring, with pride', risk: 'low', result: `You wear it out and the veterans see it. For one night, you carry a lineage, and the crowd responds to something it cannot name.`, effects: [{ pop: 0.5 }, { rel: { who: 'vet', respect: 6, affinity: 5 } }, { conf: 3 }] },
       { id: 'keep', label: 'Keep it safe and never wear it', risk: 'low', result: `You put it in a case. {vet.first} sees it there and says nothing, and you understand each other.`, effects: [{ rel: { who: 'vet', trust: 5 } }, { conf: 2 }] },

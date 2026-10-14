@@ -115,3 +115,17 @@ test('"the loss still stings" scenes only fire after a loss to that rival, and n
   const after = ids(['weekly']);
   assert.ok(after.includes('riv_loss_gloat'), 'gloating is available right after a loss to the rival: ' + after.length);
 });
+
+test('a forged achievement unlock in a save is dropped on load; retired wrestlers cannot cut promos or post', async () => {
+  const { Career } = await import('../src/career/career.js');
+  const g = new Game(); g.newCareer({ name: 'Forger Test', seed: 61, startYear: 2024 });
+  const c = g.career;
+  const json = JSON.parse(JSON.stringify(c.toJSON()));
+  json.achievements.unlocked.fake_ach = { id: 'fake_ach', name: 'Forged', event: 'E999999', evidence: ['E999998'], day: 1 };
+  const back = Career.fromJSON(json);
+  assert.ok(!back.achievements.unlocked.fake_ach, 'forged unlock must not survive a load');
+  c.flags.retired = { day: c.day, reason: 'choice' };
+  assert.throws(() => g.socialPost({ tone: 'gratitude' }), /career is over/);
+  assert.throws(() => g.startAppearance('interview'), /career is over/);
+  assert.throws(() => g.promo({ tone: 'boast' }), /career is over/);
+});

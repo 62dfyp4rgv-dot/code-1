@@ -197,7 +197,7 @@ export default [
     choices: [
       { id: 'rematch', label: `Demand a rematch and promise to settle the score`, risk: 'high', result: `The challenge is made loudly enough for the corridor to hear, and the office books it by the afternoon. Now there is a clock on your word and a bruise already waiting.`, effects: [{ booking: { who: 'rival', type: 'singles' } }, { promise: { kind: 'win_match', who: 'rival', text: `I will beat {rival.name} before I am done`, deadlineDays: 150 } }, { pop: 0.7 }, { fatigue: 7 }] },
       { id: 'quiet', label: `Settle it quietly: tell {rival.first} the better one won`, risk: 'low', result: `{rival.first} stares at you for a moment, then says thanks in a voice that needs clearing. It is an act of grace, and also a way of closing a door that will not open again.`, effects: [{ rel: { who: 'rival', respect: 8, heat: -10 } }, { conf: -2 }] },
-      { id: 'prepare', label: `Spend a month studying every minute of the loss`, risk: 'med', result: `The tape plays on a hotel-room television until you can predict each beat. You do not get the rematch yet, but you know exactly what you would do with one.`, effects: [{ attr: { name: 'technical', delta: 1 } }, { conf: 3 }, { fatigue: 6 }, { rivalry: { who: 'rival', heat: 5 } }] },
+      { id: 'prepare', label: `Spend a month studying every minute of the losses`, risk: 'med', result: `The tape plays on a hotel-room television until you can predict each beat. You do not get the rematch yet, but you know exactly what you would do with one.`, effects: [{ attr: { name: 'technical', delta: 1 } }, { conf: 3 }, { fatigue: 6 }, { rivalry: { who: 'rival', heat: 5 } }] },
       { id: 'let_go', label: `Nod back and let the thread stay loose`, risk: 'low', result: `You nod back and keep walking, and the stranger-like politeness of it is a small grief of its own. The tally stays in your head, but it stops asking to be paid.`, effects: [{ conf: -1 }, { fatigue: -3 }, { pop: 0.1 }] },
     ],
   },
@@ -597,7 +597,7 @@ export default [
   {
     id: 'ng_wm_tunnel_rival', category: 'wrestlemania', title: `{rival.name} in the Tunnel`, weight: 2.5, major: true, contexts: ['post_show', 'post_match'], cooldownDays: 330, maxPerCareer: 3, categoryCooldown: 10,
     cast: { rival: { pick: 'rivalry', minHeat: 15, status: 'active' } }, memory: { role: 'rival', max: 2 },
-    trigger: { minYear: 1985, event: 'wrestlemania' },
+    trigger: { minYear: 1985, event: 'wrestlemania', mem: [{ role: 'rival', last: { within: 1 } }] },
     slots: { state: [`limping`, `still catching {rival.their} breath`, `holding a towel to {rival.their} face`], gesture: [`says nothing at all`, `offers a hand`, `laughs in a way that is difficult to read`] },
     body: [`The big night is behind you, and {rival.name} is waiting at the end of the tunnel, {state}. When you come level, {rival.first} {gesture}.`, `Whatever the scoreboard says, the crowd has already gone home with its own version. The two of you stand under a flickering light with the noise still ringing in your ears.`],
     choices: [
@@ -735,7 +735,7 @@ export default [
     slots: { official: [`a security officer`, `a baggage handler`, `a customs inspector`], question: [`whether it is real gold`, `whether you have a receipt for it`, `whether it can be checked as luggage`] },
     body: [`The title belt has gone through the scanner at the airport, and {official} wants to know {question}. A line of travellers is forming behind you, and a few have started to stare.`, `It is the least glamorous place to be a champion. The belt is worth a fortune to you and a puzzle to everyone else, and your flight leaves in forty minutes.`],
     choices: [
-      { id: 'laugh', label: `Laugh, open the case and explain everything`, risk: 'low', result: `The official tries it on, grins and hands it back with a salute. "Carry on, champ," the official says. Half the queue asks for a photo, and you miss the early boarding but not the goodwill.`, effects: [{ pop: 0.4 }, { conf: 2 }, { fatigue: 3 }] },
+      { id: 'laugh', label: `Laugh, open the case and explain everything`, risk: 'low', result: `The official tries it on, grins and hands it back with a salute. "Carry on, then," the official says. Half the queue asks for a photo, and you miss the early boarding but not the goodwill.`, effects: [{ pop: 0.4 }, { conf: 2 }, { fatigue: 3 }] },
       { id: 'charm', label: `Put on the full champion act and win the room`, risk: 'med', outcomes: [
         { weight: 2, bonus: { charisma: 0.6 }, text: `You deliver a mock victory speech to the queue, and the officer lets you through to a round of applause. The whole thing takes four minutes and earns you a free upgrade.`, effects: [{ pop: 0.7 }, { conf: 3 }, { money: 100 }] },
         { weight: 1, text: `The act goes on too long and the officer's patience runs out. You make the flight with seconds to spare and a story about the argument already on its way around the building.`, effects: [{ pop: -0.2 }, { conf: -2 }, { fatigue: 5 }] } ] },

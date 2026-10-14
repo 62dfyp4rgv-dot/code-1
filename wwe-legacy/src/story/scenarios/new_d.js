@@ -16,7 +16,7 @@ export default [
       { id: 'polish', label: 'Give the polished answer you have used before', risk: 'low', result: `The answer is smooth, warm and fully rehearsed. It will cut together nicely, and nobody will remember a word of it.`, effects: [{ pop: 0.2 }] },
       { id: 'joke', label: 'Answer with a joke about your clumsy first year', risk: 'med', outcomes: [
         { weight: 2, bonus: { mic: 0.6 }, text: `The story about your first show and the borrowed boots gets a real laugh from the crew. It also tells the audience more about you than a solemn answer would have.`, effects: [{ pop: 0.7 }, { conf: 1 }] },
-        { weight: 1, text: `The joke goes sour halfway through, and you realise it sounds like you are mocking the person who helped you. The interviewer moves on quickly, and so do you.`, effects: [{ pop: -0.3 }, { conf: -3 }] } ] },
+        { weight: 1, text: `The joke goes sour halfway through, and you realize it sounds like you are mocking the person who helped you. The interviewer moves on quickly, and so do you.`, effects: [{ pop: -0.3 }, { conf: -3 }] } ] },
       { id: 'private', label: 'Say that story is private and move on', risk: 'low', result: `"That one I keep." The interviewer nods and respects it, though the segment loses its heart. Something warm stays in your chest anyway.`, effects: [{ conf: 2 }, { pop: -0.1 }, { fatigue: -2 }] },
     ],
   },
@@ -64,7 +64,7 @@ export default [
       segment: [`a live cooking demonstration`, `a turn at the weather map`, `a trivia game against two eight-year-olds`, `a bedtime story hour for the breakfast crowd`],
       hazard: [`an open flame at your elbow`, `a set the size of a closet`, `a producer shouting a countdown in your ear`, `a studio audience of retirees in the front row`],
     },
-    body: [`The company wanted exposure, and exposure arrives at twenty to seven. {host.name} has you booked for {segment}, with {hazard}.`, `The host has the warm, practised smile of someone who has done this with athletes, politicians and one very confused parrot. You have ninety seconds, and none of it is rehearsed.`],
+    body: [`The company wanted exposure, and exposure arrives at twenty to seven. {host.name} has you booked for {segment}, with {hazard}.`, `The host has the warm, practiced smile of someone who has done this with athletes, politicians and one very confused parrot. You have ninety seconds, and none of it is rehearsed.`],
     choices: [
       { id: 'straight', label: 'Play it completely straight and sweet', risk: 'low', result: `You do the segment properly, polite and gentle with everyone in the studio. The host thanks you with an actual hug, and the station's inbox fills with kind letters.`, effects: [{ pop: 0.6 }, { conf: 2 }, { fatigue: 3 }] },
       { id: 'menace', label: 'Stay in character and menace the segment', risk: 'high', outcomes: [
@@ -288,7 +288,7 @@ export default [
       { id: 'banter', label: 'Match the legend joke for joke', risk: 'med', outcomes: [
         { weight: 2, bonus: { mic: 0.6 }, text: `The two of you trade barbs about hair, knees and bad managers, and the host is wiping tears. It is the funniest episode of the season and a little bit of a rescue of a tired afternoon.`, effects: [{ pop: 0.9 }, { conf: 2 }, { rel: { who: 'legend', respect: 3 } }] },
         { weight: 1, text: `One joke crosses a line you did not see, and the legend goes silent for a long moment. The rest of the episode is kind but careful.`, effects: [{ pop: 0.1 }, { conf: -3 }, { rel: { who: 'legend', respect: -4 } }] } ] },
-      { id: 'ask_advice', label: 'Ask {legend.first} for real advice on the air', risk: 'low', result: `The legend takes the question seriously. "Three things," {legend.first} says, and gives three hard, practical lessons. Afterwards {legend.first} offers to look at your footage, and you realise something has begun.`, effects: [{ tag: { who: 'legend', tag: 'mentor' } }, { rel: { who: 'legend', respect: 4, trust: 3 } }, { attr: { name: 'psychology', delta: 1 } }, { fatigue: 3 }] },
+      { id: 'ask_advice', label: 'Ask {legend.first} for real advice on the air', risk: 'low', result: `The legend takes the question seriously. "Three things," {legend.first} says, and gives three hard, practical lessons. Afterwards {legend.first} offers to look at your footage, and you realize something has begun.`, effects: [{ tag: { who: 'legend', tag: 'mentor' } }, { rel: { who: 'legend', respect: 4, trust: 3 } }, { attr: { name: 'psychology', delta: 1 } }, { fatigue: 3 }] },
       { id: 'gesture', label: 'Quietly pay for the legend\'s travel and hotel', risk: 'low', result: `You settle the bill before anyone can protest, and the host pretends not to notice. The legend finds out, and does not mention it, which is how you know it mattered.`, effects: [{ money: -2200 }, { conf: 3 }, { rel: { who: 'legend', respect: 4, affinity: 5 } }] },
     ],
   },
@@ -426,7 +426,7 @@ export default [
       gift: [`a framed poster signed by the whole crew`, `a sheet cake the size of a ring apron`, `a stack of letters from fans`, `a small banner, rolled up and tied with ribbon`],
       speaker: [`a retired referee`, `the ring announcer`, `a young wrestler who looks terrified`, `a fan who has been to every show in your region`],
     },
-    body: [`The company marks your long run with a short, rather awkward ceremony at the media table. From behind a curtain comes {gift}, and {speaker} stumbles through a speech that is much better than they think it is.`, `Afterward, {reporter.name} lowers the camera. "What do you want to be remembered for?" {reporter.first} asks. It is a simple question, and you realise with a jolt that you have never been asked it.`],
+    body: [`The company marks your long run with a short, rather awkward ceremony at the media table. From behind a curtain comes {gift}, and {speaker} stumbles through a speech that is much better than they think it is.`, `Afterward, {reporter.name} lowers the camera. "What do you want to be remembered for?" {reporter.first} asks. It is a simple question, and you realize with a jolt that you have never been asked it.`],
     choices: [
       { id: 'thanks', label: 'Thank the people who made it possible, by name', risk: 'low', result: `You thank the trainers, the referees, the families and the fans who stayed, and your voice wobbles at the third name. Applause starts at the back and does not stop quickly.`, effects: [{ pop: 0.5 }, { conf: 3 }, { fatigue: 2 }, { event: { type: 'press_conference', participants: ['reporter'], summary: 'Gave a heartfelt speech at a career ceremony.', data: { quality: { base: 68, charisma: 0.5 }, viral: { minQuality: 88, chance: 0.2 } } } }] },
       { id: 'forward', label: 'Say the best chapter has not been written yet', risk: 'low', result: `You turn the sentiment into a challenge, and the room cheers. The reporter writes that the veteran is still hungry, and you decide that is worth being.`, effects: [{ pop: 0.5 }, { conf: 2 }, { fatigue: 2 }] },
@@ -450,8 +450,8 @@ export default [
         { weight: 1, text: `By morning the post has been clipped, mocked and turned into a joke about wrestlers being sensitive. You delete it, which only adds another round.`, effects: [{ pop: -0.5 }, { conf: -3 }] } ] },
       { id: 'call_friend', label: 'Message a friend in the locker room and ask if they are up', risk: 'low', result: `The reply arrives in under a minute: a picture of a diner menu and the words "Meet me." You eat eggs in a booth at some indecent hour and talk about nothing, and it is the best part of your week.`, effects: [{ conf: 3 }, { fatigue: 2 }] },
       { id: 'clapback', label: 'Answer the worst comment with a perfect clapback', risk: 'med', outcomes: [
-        { weight: 2, bonus: { mic: 0.6 }, text: `The reply is short, devastating and wickedly funny, and it travels. It feels good for an hour, until you realise you are still awake and still alone.`, effects: [{ pop: 0.7 }, { conf: 2 }, { fatigue: 3 }] },
-        { weight: 1, text: `The commenter turns out to be a fourteen-year-old with a joke account, and the screenshot of your reply makes you look small. You apologise at dawn.`, effects: [{ pop: -0.6 }, { conf: -3 }, { fatigue: 3 }] } ] },
+        { weight: 2, bonus: { mic: 0.6 }, text: `The reply is short, devastating and wickedly funny, and it travels. It feels good for an hour, until you realize you are still awake and still alone.`, effects: [{ pop: 0.7 }, { conf: 2 }, { fatigue: 3 }] },
+        { weight: 1, text: `The commenter turns out to be a fourteen-year-old with a joke account, and the screenshot of your reply makes you look small. You apologize at dawn.`, effects: [{ pop: -0.6 }, { conf: -3 }, { fatigue: 3 }] } ] },
     ],
   },
   {
@@ -553,7 +553,7 @@ export default [
       { id: 'honest', label: 'Answer honestly, even if your voice catches', risk: 'med', result: `You stop smiling and tell the truth for about two minutes. The viewer count dips and then climbs, and the chat fills with people thanking you for being a person.`, effects: [{ pop: 0.7 }, { conf: -1 }, { fatigue: 2 }, { event: { type: 'social_post', participants: [], summary: 'Answered a hard question honestly on a live chat.', data: { quality: { base: 66, charisma: 0.5, noise: 8 }, viral: { minQuality: 86, chance: 0.3 } } } }] },
       { id: 'deflect', label: 'Laugh and move on to a question about snacks', risk: 'low', result: `You give a flawless, easy laugh and go on to the next one. A few viewers notice the swerve, and the chat stays friendly.`, effects: [{ pop: 0.2 }, { conf: 1 }] },
       { id: 'story', label: 'Answer with a funny story that sidesteps the point', risk: 'low', outcomes: [
-        { weight: 2, bonus: { charisma: 0.4 }, text: `The story involves a goat, a hotel clerk and a bag of ice, and it brings the house down. Nobody realises you answered a different question.`, effects: [{ pop: 0.6 }, { conf: 1 }] },
+        { weight: 2, bonus: { charisma: 0.4 }, text: `The story involves a goat, a hotel clerk and a bag of ice, and it brings the house down. Nobody realizes you answered a different question.`, effects: [{ pop: 0.6 }, { conf: 1 }] },
         { weight: 1, text: `Halfway through the story you lose the thread, and the chat starts to type in the polite way people do when they notice. You end the chat early.`, effects: [{ pop: -0.2 }, { conf: -2 }] } ] },
       { id: 'end_chat', label: 'Say thank you and end the chat there', risk: 'low', result: `The screen goes dark and you sit holding the phone. A few viewers are unhappy, but more send you messages of understanding.`, effects: [{ conf: 2 }, { pop: -0.2 }, { fatigue: -2 }] },
     ],
@@ -687,7 +687,7 @@ export default [
       complaint: [`your character has gone stale`, `the matches all feel the same`, `you stopped taking risks`, `the crowd seems to care less than it did`],
       place: [`the merchandise table`, `the autograph line`, `the exit corridor`, `the parking lot`],
     },
-    body: [`At {place}, {fan.name} waits until the line thins and then says it softly: "I still come to the shows. But {complaint}."`, `There is no malice in it, which is what makes it land. This is somebody who wanted to love the work and tried, and you recognise the same quiet disappointment you have had about other people's work.`],
+    body: [`At {place}, {fan.name} waits until the line thins and then says it softly: "I still come to the shows. But {complaint}."`, `There is no malice in it, which is what makes it land. This is somebody who wanted to love the work and tried, and you recognize the same quiet disappointment you have had about other people's work.`],
     choices: [
       { id: 'listen', label: 'Ask them to say more, and write it down', risk: 'low', result: `{fan.first} stammers, then talks for ten minutes, and you fill the back of a flyer. Some of it is unfair and some of it is the truest note you have had in a year.`, effects: [{ conf: -2 }, { attr: { name: 'psychology', delta: 1 } }, { pop: 0.3 }, { fatigue: 2 }] },
       { id: 'defend', label: 'Defend the work and explain the choices', risk: 'low', result: `You give reasons, and the reasons are good. {fan.first} nods, unconvinced, and the lines of a conversation close for the evening.`, effects: [{ conf: 2 }, { pop: -0.2 }] },
@@ -712,7 +712,7 @@ export default [
       { id: 'gear', label: 'Send real gear to the youngest one after the show', risk: 'low', result: `A parcel with a worn shirt and a signed belt strap reaches {fan.first} the following week. The youngest sleeps in it, and someone writes you a very long letter.`, effects: [{ money: -400 }, { conf: 3 }, { pop: 0.3 }] },
       { id: 'tease', label: 'Stay in character and mock the costumes mercilessly', risk: 'high', outcomes: [
         { weight: 1, bonus: { charisma: 0.6 }, text: `The group is thrilled to be abused by you, and the whole section laughs along. It is a master class in a sort of affection nobody else is allowed to show.`, effects: [{ pop: 0.9 }, { conf: 1 }] },
-        { weight: 2, text: `One of them tears up, and the rest are quiet and hurt. You apologise afterwards, but the damage cannot be unseen.`, effects: [{ pop: -0.6 }, { conf: -4 }] } ] },
+        { weight: 2, text: `One of them tears up, and the rest are quiet and hurt. You apologize afterwards, but the damage cannot be unseen.`, effects: [{ pop: -0.6 }, { conf: -4 }] } ] },
     ],
   },
   {
@@ -741,7 +741,7 @@ export default [
       habit: [`waits outside the bus at every town`, `writes you thirty letters a week`, `knows the names of your family`, `appears at three different shows in three states`],
       mood: [`trembling with joy`, `strangely calm`, `crying openly`, `formal as a diplomat`],
     },
-    body: [`{fan.name} is {mood} when you meet, and you realise the same face has been in the crowd for weeks. The fan {habit}, and you cannot decide whether to be flattered or afraid.`, `The security lead catches your eye from across the lot. Nothing has happened, and that is exactly why you must decide now.`],
+    body: [`{fan.name} is {mood} when you meet, and you realize the same face has been in the crowd for weeks. The fan {habit}, and you cannot decide whether to be flattered or afraid.`, `The security lead catches your eye from across the lot. Nothing has happened, and that is exactly why you must decide now.`],
     choices: [
       { id: 'boundary', label: 'Be kind and set a clear boundary face to face', risk: 'med', outcomes: [
         { weight: 2, bonus: { charisma: 0.5 }, text: `You say the words clearly and without anger, and {fan.first} nods, red-eyed, and agrees. The attention eases off, and the apology that comes in the mail is genuine.`, effects: [{ conf: 3 }, { pop: 0.2 }, { fatigue: 2 }] },
@@ -869,7 +869,7 @@ export default [
     trigger: { minYear: 1985, eventWithin: { id: 'wrestlemania', days: 20 }, stat: { popularity: { gte: 20 } } },
     slots: {
       guest: [`a parent`, `your oldest friend`, `a sibling`, `your first coach`],
-      problem: [`cannot afford the trip`, `could not get a ticket before they sold out`, `had a flight cancelled`, `says they are too nervous to attend in case they cry`],
+      problem: [`cannot afford the trip`, `could not get a ticket before they sold out`, `had a flight canceled`, `says they are too nervous to attend in case they cry`],
     },
     body: [`You have mentioned to {agent.name} that you want {guest} in the building for the biggest night of your year, and the news is not good. "I tried," {agent.first} says. The person you want there {problem}, and the date is moving closer.`, `Nobody who has done this job will tell you that the match matters more than the people who made you. They will only tell you that the time to fix it is now.`],
     choices: [
@@ -1040,7 +1040,7 @@ export default [
     choices: [
       { id: 'pitch_self', label: 'Pitch the next year of your own character', risk: 'med', outcomes: [
         { weight: 2, bonus: { charisma: 0.4, mic: 0.3 }, text: `You talk for twenty minutes without notes and notice that the room has stopped typing, which is the best compliment a writers\' room can give. Two of your ideas go straight to the whiteboard.`, effects: [{ pop: 0.8 }, { conf: 3 }, { mic: 1 }, { fatigue: 3 }] },
-        { weight: 1, text: `Halfway through the pitch you realise you are describing a version of yourself that does not exist. The room is polite, and nothing makes it to the board.`, effects: [{ conf: -2 }, { fatigue: 3 }] } ] },
+        { weight: 1, text: `Halfway through the pitch you realize you are describing a version of yourself that does not exist. The room is polite, and nothing makes it to the board.`, effects: [{ conf: -2 }, { fatigue: 3 }] } ] },
       { id: 'pitch_other', label: 'Use your turn to pitch a story for someone else', risk: 'low', result: `You ask for a spot for a talented wrestler stuck near the bottom of the card, and the room is momentarily silent. The idea is adopted, mostly, and a younger performer will never know whose voice was in the room.`, effects: [{ conf: 3 }, { pop: 0.2 }, { fatigue: 2 }] },
       { id: 'listen', label: 'Stay quiet and learn how the machine actually works', risk: 'low', result: `You take eight pages of notes and speak twice. By the end, you understand why the show feels the way it does, and why every decision is a trade-off between six people.`, effects: [{ attr: { name: 'psychology', delta: 1 } }, { conf: 1 }, { fatigue: 1 }] },
       { id: 'wild', label: 'Pitch something so strange the room has to react', risk: 'high', outcomes: [
