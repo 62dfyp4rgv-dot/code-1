@@ -225,3 +225,20 @@ summary { min-height: 44px; display: flex; align-items: center; }
 summary.kv { justify-content: space-between; }
 button.item { min-height: 44px; }
 .btn.best { border-color: var(--brass-fill); box-shadow: inset 3px 0 0 var(--brass-fill); }
+
+/* round-8 mobile review fixes */
+.screen:not(.noTab) .sticky-cta { bottom: calc(var(--tab-h) + 8px + env(safe-area-inset-bottom, 0px)); }
+.sticky-cta { box-shadow: 0 -14px 14px -6px var(--bg); }
+.board.multi { position: static; }
+.dmg { grid-template-columns: repeat(auto-fit, minmax(76px, 1fr)); }
+.dmg b { min-width: 0; }
+.others { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+.others .pill { flex: none; white-space: nowrap; }
+.btn[disabled] { opacity: .75; }
+.btn[disabled] .r { color: var(--ink); font-weight: 600; opacity: 1; }
+.toast { white-space: normal; border-radius: 14px; line-height: 1.2; }
+.record-ev { min-width: 44px; padding: 1px 12px; }
+.kv .v { white-space: nowrap; }
+.screen:not(.noTab) .sticky-cta + * { }
+.chips.wrap-always { flex-wrap: wrap; -webkit-mask-image: none; mask-image: none; }
+.create-nav { position: sticky; bottom: 0; background: var(--bg); padding: 8px 0; box-shadow: 0 -10px 10px -6px var(--bg); }

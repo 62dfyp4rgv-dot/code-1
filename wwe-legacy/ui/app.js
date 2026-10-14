@@ -40,6 +40,7 @@ function toast(text, kind = '') {
   S.toast = { text, kind, key: null }; // key = the screen it first appears on; it is dropped as soon as the player navigates elsewhere
   clearTimeout(toast.t);
   toast.t = setTimeout(() => { S.toast = null; render(); }, kind === 'ach' ? 2600 : 2200);
+  render();
 }
 
 async function autosave() {
@@ -51,7 +52,10 @@ function checkAchievementToasts() {
   const c = S.g.career;
   if (!c) return;
   const n = c.notifications;
-  while (S.notifSeen < n.length) { const x = n[S.notifSeen++]; toast(`Achievement unlocked: ${x.name}`, 'ach'); }
+  const fresh = [];
+  while (S.notifSeen < n.length) fresh.push(n[S.notifSeen++]);
+  if (fresh.length === 1) toast(`Achievement unlocked: ${fresh[0].name}`, 'ach');
+  else if (fresh.length > 1) toast(`${fresh.length} achievements unlocked: ${fresh.slice(0, 2).map((x) => x.name).join(', ')}${fresh.length > 2 ? '…' : ''}`, 'ach');
 }
 
 // ------------------------------------------------------------------ render

@@ -78,7 +78,7 @@ function worldEditor(c) {
     <div class="eyebrow">Style</div><div class="chips wrap">${STYLES.map((s) => chip('style', s, cap(s))).join('')}</div>
     <div class="eyebrow">Alignment</div><div class="chips">${['face', 'heel', 'tweener'].map((a) => chip('alignment', a, cap(a))).join('')}</div>
     <div class="eyebrow">Gender</div><div class="chips">${chip('gender', 'M', 'Male')}${chip('gender', 'F', 'Female')}</div>
-    <div class="eyebrow">Standing</div><div class="chips">${[[0, 'Rookie'], [1, 'Mid-card'], [2, 'Upper mid'], [3, 'Main eventer'], [4, 'Legend']].map(([v, l]) => chip('tier', v, l)).join('')}</div>
+    <div class="eyebrow">Standing</div><div class="chips wrap">${[[0, 'Rookie'], [1, 'Mid-card'], [2, 'Upper mid'], [3, 'Main eventer'], [4, 'Legend']].map(([v, l]) => chip('tier', v, l)).join('')}</div>
     <button class="btn" data-action="cwadd" id="btn-cwadd" ${custom.length >= 12 ? 'disabled' : ''}>Add to the world</button></details>`;
 }
 
@@ -107,8 +107,8 @@ export function create(S) {
       <label class="f">Name<input type="text" id="fin-name" value="${esc(c.finisher.name)}" maxlength="30"></label></div>`;
   } else if (step === 3) {
     body = `<div class="col"><div class="eyebrow">Entrance</div>${Object.entries(ENTRANCES).map(([id, e]) => `<button class="btn" data-action="cset" data-k="entrance" data-v="${id}" style="${c.entrance === id ? 'border-color:var(--rope);' : ''}"><span class="t"><b>${esc(e.label)}</b><small>${esc(e.desc)}</small></span></button>`).join('')}</div>
-      <div class="col"><div class="eyebrow">Career goal</div><div class="chips">${opts.goals.map((g) => `<button class="chip ${c.goal === g ? 'on' : ''}" data-action="cset" data-k="goal" data-v="${esc(g)}">${esc(g)}</button>`).join('')}</div></div>
-      <div class="col"><div class="eyebrow">Start year</div><div class="chips">${opts.startYears.map((y) => `<button class="chip ${c.startYear === y ? 'on' : ''}" data-action="cset" data-k="startYear" data-v="${y}">${y}</button>`).join('')}</div><p class="muted">${esc(eraForYear(c.startYear).name)}: ${esc(eraForYear(c.startYear).desc)}</p></div>
+      <div class="col"><div class="eyebrow">Career goal</div><div class="chips wrap">${opts.goals.map((g) => `<button class="chip ${c.goal === g ? 'on' : ''}" data-action="cset" data-k="goal" data-v="${esc(g)}">${esc(g)}</button>`).join('')}</div></div>
+      <div class="col"><div class="eyebrow">Start year</div><div class="chips wrap">${opts.startYears.map((y) => `<button class="chip ${c.startYear === y ? 'on' : ''}" data-action="cset" data-k="startYear" data-v="${y}">${y}</button>`).join('')}</div><p class="muted">${esc(eraForYear(c.startYear).name)}: ${esc(eraForYear(c.startYear).desc)}</p></div>
       <div class="col"><div class="eyebrow">World</div><div class="chips"><button class="chip ${c.world !== 'fictional' ? 'on' : ''}" data-action="cset" data-k="world" data-v="real">Real names (approximate)</button><button class="chip ${c.world === 'fictional' ? 'on' : ''}" data-action="cset" data-k="world" data-v="fictional">Fully fictional</button></div><p class="muted">${c.world === 'fictional' ? 'An invented roster and an alternate history. Nothing here is presented as real.' : 'Real wrestler names with approximate rosters and results flagged as unverified. Everything that happens afterwards is simulated alternate history.'}</p></div>
       ${worldEditor(c)}`;
   } else {
@@ -119,7 +119,7 @@ export function create(S) {
   return `<main class="screen noTab">
     ${header(titles[step], `Step ${step + 1} of 5`)}
     ${body}
-    <div class="row" style="margin-top:auto">
+    <div class="row create-nav" style="margin-top:auto">
       ${step > 0 ? `<button class="btn" data-action="cstep" data-d="-1">Back</button>` : `<button class="btn ghost" data-action="toTitle">Cancel</button>`}
       <div class="grow">${step < 4 ? `<button class="btn primary" style="width:100%" data-action="cstep" data-d="1" id="btn-next">Next</button>` : `<button class="btn primary" style="width:100%" data-action="beginCareer" id="btn-begin">Begin Career</button>`}</div>
     </div></main>`;
@@ -149,12 +149,12 @@ export function home(S) {
       ${today ? '<p class="muted">Training is off until after tonight\'s show.</p>' : `<div class="grid2">${Object.entries(TRAINING).map(([id, t]) => `<button class="btn small" data-action="train" data-id="${id}"><span class="t">${esc(t.label)}<small class="fx">+${cap(t.attr)}</small></span></button>`).join('')}</div>
       <div class="row"><button class="btn grow" data-action="rest" id="btn-rest">Rest a day <small class="muted">(-22 fatigue)</small></button></div>`}</div>` : '';
   const lf = ph === 'home' && !h.scenario && !c.flags.retired ? g.lifeView() : null;
-  const lifeCard = lf ? `<details class="fold card" id="life-card"><summary>Life outside the ring · ${esc(lf.mood)}</summary>
+  const lifeCard = lf ? `<details class="fold card" id="life-card"><summary>Life outside the ring · ${esc(lf.mood)}</summary><div class="col" style="margin-top:6px">
       <div class="stat"><span>Wellbeing</span>${bar(lf.wellbeing, 100, lf.wellbeing < 35 ? 'rope' : 'good')}<span class="num">${lf.wellbeing}</span></div>
       <div class="stat"><span>Family</span>${bar(lf.family, 100, lf.family < 20 ? 'rope' : 'good')}<span class="num">${lf.family}</span></div>
       <div class="stat"><span>Friends</span>${bar(lf.social, 100, 'brass')}<span class="num">${lf.social}</span></div>
       <p class="muted" style="font-size:.85rem">${lf.recovery >= 0 ? `Wellbeing speeds recovery by ${lf.recovery} fatigue a day.` : `Burnout slows recovery by ${-lf.recovery} fatigue a day.`} Family fades with time on the road.</p>
-      ${today ? '<p class="muted">Off-day activities are unavailable on show day.</p>' : Object.entries(lf.activities).map(([id, a]) => `<button class="btn" data-action="life" data-id="${id}"><span class="t"><b>${esc(a.label)}</b><small>${esc(a.desc)}</small></span><span class="r">${a.cost ? '$' + a.cost : 'Free'}</span></button>`).join('')}</details>` : '';
+      ${today ? '<p class="muted">Off-day activities are unavailable on show day.</p>' : Object.entries(lf.activities).map(([id, a]) => `<button class="btn" data-action="life" data-id="${id}"><span class="t"><b>${esc(a.label)}</b><small>${esc(a.desc)}</small></span><span class="r">${a.cost ? '$' + a.cost : 'Free'}</span></button>`).join('')}</div></details>` : '';
   const injuries = h.status.injuries;
   return `<main class="screen">
     <div class="banner">
@@ -167,8 +167,6 @@ export function home(S) {
     ${action}
     ${held.length ? `<div class="card" style="border-color:var(--brass-fill)"><div class="eyebrow">Champion</div>${held.map((t) => `<div class="row spread"><h3>${esc(t.name)}</h3><span class="pill brass">${c.day - t.since} days · ${t.defenses} def.</span></div>`).join('')}</div>` : ''}
     ${h.lastScenario && c.day - h.lastScenario.day < 3 ? `<div class="card plain"><div class="eyebrow">${esc(h.lastScenario.title)}</div><p>${esc(h.lastScenario.text)}</p></div>` : ''}
-    ${timeCard}
-    ${lifeCard}
     <div class="card">
       <div class="stat"><span>Fatigue</span>${bar(h.status.fatigue, 100, h.status.fatigue > 70 ? 'rope' : '')}<span class="num">${h.status.fatigue}</span></div>
       <div class="stat"><span>Popularity</span>${bar(h.status.popularity, 100, 'brass')}<span class="num">${h.status.popularity}</span></div>
@@ -176,6 +174,8 @@ export function home(S) {
       ${kv('Bank', `$${h.status.money.toLocaleString()}`)}
       ${injuries.length ? injuries.map((i) => `<div class="row"><span class="pill bad">${i.severity > 1 ? 'Serious' : 'Minor'}</span><span>${cap(i.part)} injury · ${i.daysLeft} days left</span></div>`).join('') : '<div class="row"><span class="pill good">Healthy</span></div>'}
     </div>
+    ${timeCard}
+    ${lifeCard}
     ${h.notifications.length ? `<div class="card"><h3>Recent</h3>${h.notifications.slice().reverse().map((n) => `<div class="row"><span class="pill brass">Achievement</span><span>${esc(n.name)}</span></div>`).join('')}</div>` : ''}
   </main>`;
 }
@@ -193,7 +193,7 @@ function book(S) {
     ${opps.map((o) => oppCard(o, S.ui.oppId === o.id)).join('')}</main>`;
 }
 
-const stipBtn = (sel) => (s) => `<button class="btn" ${s.unlocked ? '' : 'disabled'} data-action="pset" data-k="type" data-v="${s.id}" style="${sel.type === s.id ? 'border-color:var(--rope)' : ''}"><span class="t"><b>${esc(s.name)}</b><small>${esc(s.desc)}</small></span><span class="r">${s.unlocked ? '' : (s.lock || `Rivalry ${s.need}`)}</span></button>`;
+const stipBtn = (sel) => (s) => `<button class="btn" ${s.unlocked ? '' : 'disabled'} data-action="pset" data-k="type" data-v="${s.id}" style="${sel.type === s.id ? 'border-color:var(--rope)' : ''}"><span class="t"><b>${esc(s.name)}</b><small>${esc(s.desc)}</small></span><span class="r">${s.unlocked ? '' : (s.lock || `Needs rivalry ${s.need} (yours: ${s.heat || 0})`)}</span></button>`;
 
 function prep(S) {
   const g = S.g, o = g.universe.get(S.ui.oppId);
@@ -223,7 +223,7 @@ function fighterBoard(f, right) {
   return `<div class="fighter ${right ? 'r' : ''}">
     <div class="meter sta"><span title="Stamina">STA <span class="val">${Math.round(f.stamina)}</span></span>${bar(f.stamina, f.maxStamina)}</div>
     <div class="meter mom"><span title="Momentum">MOM <span class="val">${Math.round(f.momentum)}</span></span>${bar(f.momentum)}</div>
-    <div class="dmg" aria-label="Damage by body part">${PARTS.map(([k, l]) => `<b title="${cap(k)} damage ${Math.round(f.dmg[k])}"><i style="width:${Math.max(f.dmg[k] > 0 ? 8 : 0, f.dmg[k])}%"></i><span>${l}</span><em>${Math.round(f.dmg[k])}</em></b>`).join('')}</div>
+    <div class="dmg" aria-label="Damage by body part">${PARTS.filter(([k]) => f.dmg[k] > 0).map(([k, l]) => `<b title="${cap(k)} damage ${Math.round(f.dmg[k])}"><i style="width:${Math.max(f.dmg[k] > 0 ? 8 : 0, f.dmg[k])}%"></i><span>${l}</span><em>${Math.round(f.dmg[k])}</em></b>`).join('')}</div>
     <div class="posrow"><span class="pill" style="color:var(--mat-ink)">${POSNAME[f.pos] || f.pos}</span>${f.dazed ? '<span class="pill" style="color:var(--brass-fill)">Dazed</span>' : ''}</div></div>`;
 }
 const feedClass = (l, me) => (/^(finisher_(connected|reversed)|pin_win|submission_win|match_end|knockout|objective)/.test(l.type) ? 'gold' : /^(pin_kickout|dq|warning|finisher|move_reversed|hot_tag|tag|injury)/.test(l.type) ? 'hot' : l.actor === me ? 'me' : '');
@@ -240,10 +240,10 @@ export function match(S) {
   } else if (d) panel = decisionPanel(S, d, mv);
   const lines = S.feed.slice(-40);
   return `<div class="match" id="match">
-    <div class="board" id="board" aria-live="polite">
+    <div class="board${mv.ways > 2 ? ' multi' : ''}" id="board" aria-live="polite">
       <div class="names"><div class="nm">${esc(mv.me.name)}</div><div class="clock num">${mmss(mv.time)}<small>${esc(mv.phase)} · ${mmss(mv.timeLimit)}</small></div><div class="nm r">${esc(mv.opp.name)}</div></div>
       <div class="grid2" style="gap:12px">${fighterBoard(mv.me, false)}${fighterBoard(mv.opp, true)}</div>
-      ${mv.ways > 2 ? `<div class="others"><span class="eyebrow" style="color:var(--mat-ink)">Also in the ring</span>${mv.others.map((o) => `<span class="pill" style="color:var(--mat-ink)">${esc(o.name)} · STA ${o.stamina} · MOM ${o.momentum}${mv.objective ? ` · Climb ${o.climb}/${mv.objective.steps}` : ''}</span>`).join('')}</div>` : ''}
+      ${mv.ways > 2 ? `<div class="others"><span class="eyebrow" style="color:var(--mat-ink);flex:none">Also in</span>${mv.others.map((o) => `<span class="pill" style="color:var(--mat-ink)">${esc(o.name)} · STA ${o.stamina} · MOM ${o.momentum}${mv.objective ? ` · Climb ${o.climb}/${mv.objective.steps}` : ''}</span>`).join('')}</div>` : ''}
       <div class="heat"><span>Crowd</span>${bar(mv.crowd)}<span>${mv.referee === 'watching' ? 'Ref watching' : mv.referee === 'down' ? 'REF DOWN' : 'Ref distracted'}</span></div>
       ${mv.rules.tag && mv.team ? `<div class="posrow"><span class="eyebrow" style="color:var(--mat-ink)">Legal: ${esc(mv.team.mine.find((x) => x.legal)?.name || '')}</span><span class="eyebrow" style="color:var(--mat-ink)">Legal: ${esc(mv.team.theirs.find((x) => x.legal)?.name || '')}</span></div>` : ''}
       ${mv.rules.ironMan ? `<div class="posrow"><b class="num">Falls ${mv.falls[mv.mySide]}</b><b class="num">Falls ${mv.falls[1 - mv.mySide]}</b></div>` : ''}
@@ -281,8 +281,10 @@ function decisionPanel(S, d, mv) {
     head = `<div class="prompt"><div class="eyebrow">On the apron</div><h2>${d.context.pin ? 'Your partner is being pinned!' : 'Support your partner'}</h2></div>`;
   }
   // when every option shows a success chance, rank them: best odds first and marked
-  if (shown.length > 1 && shown.every((o) => o.pct != null)) shown = [...shown].sort((a, b) => b.pct - a.pct);
-  const bestId = shown.length > 1 && shown.every((o) => o.pct != null) && shown[0].pct > shown[1].pct ? shown[0].id : null;
+  const oddsOf = (o) => (o.pct != null ? o.pct : (m => (m ? +m[1] : null))(/(\d+)\s*%/.exec(o.hint || '')));
+  const rated = shown.filter((o) => oddsOf(o) != null).sort((a, b) => oddsOf(b) - oddsOf(a));
+  if (shown.length > 1 && rated.length === shown.length) shown = [...rated];
+  const bestId = rated.length > 1 && oddsOf(rated[0]) > oddsOf(rated[1]) ? rated[0].id : null;
   const btn = (o) => {
     const hint = o.hint ? `<span class="hint ${(o.hint.split(' ')[0] || '').replace(/\W/g, '')} ${/%/.test(o.hint) ? 'n' : ''}">${esc(o.hint)}${o.pct != null ? ` ${o.pct}%` : ''}</span>` : '';
     const cost = o.cost > 0 ? `<span class="r">${o.cost} STA</span>` : o.cost < 0 ? `<span class="r">+${-o.cost} STA</span>` : o.free ? '<span class="r">Free</span>' : '';
@@ -318,14 +320,14 @@ export function career(S) {
   const g = S.g, c = g.career, p = c.player;
   if (S.sub === 'recordbook') return recordBook(S);
   if (S.sub === 'legacy') return legacy(S);
-  const tl = c.timeline({ minImportance: S.ui.tlMin || 2, limit: 40 });
+  const tl = c.timeline({ minImportance: S.ui.tlMin || 2, limit: 80 }).filter((e) => (S.ui.tlMin || 2) === 1 || e.type !== 'achievement_unlocked').slice(0, 40);
   const attrs = Object.entries(p.attrs);
   return `<main class="screen">${header(p.name, p.nickname || `${cap(p.style)} · ${cap(p.alignment)}`, `<span class="pill brass">OVR ${c.overall()}</span>`)}
+    ${storyCard(S)}
     <div class="card"><h3>Attributes</h3>${attrs.map(([k, v]) => `<div class="stat"><span>${cap(k)}</span>${bar(v)}<span class="num">${Math.round(v)}</span></div>`).join('')}
       <div class="stat"><span>Mic skills</span>${bar(p.mic, 100, 'good')}<span class="num">${Math.round(p.mic)}</span></div><div class="stat"><span>Charisma</span>${bar(p.charisma, 100, 'good')}<span class="num">${Math.round(p.charisma)}</span></div></div>
     ${g.universe.titlesOf(p.id).length || c.stats.s.titles.won ? `<div class="card"><h3>Championships</h3>${c.stats.s.titles.reigns.map((r) => `<div class="kv"><span>${esc(r.name)}</span><span class="v">${r.endDay == null ? 'Current' : ''} ${(r.endDay ?? c.day) - r.startDay}d · ${r.defenses} def.</span></div>`).join('')}</div>` : ''}
     <div class="card"><h3>Moves</h3>${kv('Finisher', esc(p.finisher?.name || 'Style default'))}${kv('Signatures', esc((p.signatures || []).map((s) => s.name).join(', ') || 'Style defaults'))}${kv('Entrance', esc(ENTRANCES[p.entrance.style]?.label || p.entrance.style))}${p.goals.length ? kv('Goal', esc(p.goals[0])) : ''}</div>
-    ${storyCard(S)}
     ${legacyCard(S)}
     <button class="btn" data-action="openSub" data-id="recordbook"><span class="t"><b>Career Record Book</b><small>Every number opens to its evidence</small></span><span class="r">Open</span></button>
     <div class="card"><div class="row spread"><h3>Timeline</h3><div class="chips" style="max-width:60%">${[[1, 'All'], [2, 'Notable'], [4, 'Major']].map(([n, l]) => `<button class="chip ${(S.ui.tlMin || 2) === n ? 'on' : ''}" data-action="tlmin" data-id="${n}">${l}</button>`).join('')}</div></div>
@@ -547,10 +549,10 @@ function media(S) {
     ${(() => { const pv = g.promiseView(); return pv.promises.length || pv.obligations.length ? `<div class="card"><h3>On the record</h3>${pv.promises.slice(0, 6).map((p) => `<div class="row spread"><span style="min-width:0">${esc(p.text)}${p.target ? ` <span class="muted">(${esc(p.target)})</span>` : ''}</span><span class="pill ${p.status === 'kept' ? 'good' : p.status === 'broken' ? 'bad' : 'brass'}">${p.status === 'open' ? (p.daysLeft != null ? `${Math.max(0, p.daysLeft)}d left` : 'Open') : cap(p.status)}</span></div>`).join('')}${pv.obligations.slice(0, 3).map((o) => `<div class="row spread"><span>${esc(o.from)} · ${esc(cap(o.kind))}</span><span class="pill warn">${o.dueIn <= 0 ? 'due' : `in ${o.dueIn}d`}</span></div>`).join('')}</div>` : ''; })()}
     <div class="col"><div class="eyebrow">Interviews &amp; press</div>${g.appearanceOptions().map((k) => `<button class="btn" data-action="apStart" data-id="${k.id}" ${k.available ? '' : 'disabled'}><span class="t"><b>${esc(k.label)}</b><small>${esc(k.reason || k.desc)}</small></span><span class="r">${k.questions} Qs</span></button>`).join('')}</div>
     <div class="eyebrow">Cut a promo</div>
-    <div class="col"><div class="eyebrow">Tone</div><div class="chips">${Object.entries(o.tones).map(([id, t]) => `<button class="chip ${ui.tone === id ? 'on' : ''}" data-action="promoSet" data-k="tone" data-v="${id}">${esc(t.label)}</button>`).join('')}</div><p class="muted">${esc(tone.desc)}</p></div>
+    <div class="col"><div class="eyebrow">Tone</div><div class="chips wrap">${Object.entries(o.tones).map(([id, t]) => `<button class="chip ${ui.tone === id ? 'on' : ''}" data-action="promoSet" data-k="tone" data-v="${id}">${esc(t.label)}</button>`).join('')}</div><p class="muted">${esc(tone.desc)}</p></div>
     ${tone.needsTarget ? `<label class="f">Target<select id="promo-target" data-action-change="promoTarget">${targets.map((w) => `<option value="${w.id}" ${ui.target === w.id ? 'selected' : ''}>${esc(w.name)}</option>`).join('')}</select></label>` : ''}
-    <div class="col"><div class="eyebrow">Promise</div><div class="chips">${Object.entries(o.claims).filter(([id, cl]) => !cl.needsTarget || tone.needsTarget).map(([id, cl]) => `<button class="chip ${ui.claim === id ? 'on' : ''}" data-action="promoSet" data-k="claim" data-v="${id}">${esc(cl.label)}</button>`).join('')}</div><p class="muted">Promises are public and remembered. Break one and the media will bring it up.</p></div>
-    <button class="btn primary" data-action="deliverPromo" id="btn-promo">Grab the mic</button></main>`;
+    <div class="col"><div class="eyebrow">Promise</div><div class="chips wrap">${Object.entries(o.claims).filter(([id, cl]) => !cl.needsTarget || tone.needsTarget).map(([id, cl]) => `<button class="chip ${ui.claim === id ? 'on' : ''}" data-action="promoSet" data-k="claim" data-v="${id}">${esc(cl.label)}</button>`).join('')}</div><p class="muted">Promises are public and remembered. Break one and the media will bring it up.</p></div>
+    <button class="btn primary sticky-cta" data-action="deliverPromo" id="btn-promo">Grab the mic</button></main>`;
 }
 
 function matches(S) {
