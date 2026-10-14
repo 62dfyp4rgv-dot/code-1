@@ -66,7 +66,7 @@ export default [
     cast: { rival: { pick: 'rivalry', minHeat: 20 }, ally: { pick: 'tag', tag: 'ally' } }, memory: { role: 'rival', max: 2 },
     trigger: { mem: [{ role: 'ally', trustGte: 5 }] },
     slots: { where: [`in the corridor outside the arena`, `while taping up in the next locker room`, `across the barricade, almost quietly`], proof: [`a photo of a hotel receipt`, `a voicemail you are free to hear`, `a name written on a napkin`] },
-    body: [`{rival.name} catches you {where} and says {ally.name} has been talking to another company. The offer of proof is {proof}, and it would be more convincing from someone who had ever told you the time of day without an angle.`, `If it is true, you deserve to know. If it is a trick, the point of it is to make you ask.`],
+    body: [`{rival.name} catches you {where} and says {ally.name} has been talking to another company. The offer of proof is {proof}, and it would be more convincing from someone with fewer reasons to want you rattled.`, `If it is true, you deserve to know. If it is a trick, the point of it is to make you ask.`],
     choices: [
       { id: 'confront', label: `Take the proof to {ally.first} and ask for the truth`, risk: 'high', outcomes: [
         { weight: 1, text: `{ally.first} admits to one meeting, one coffee and no signature, and says the plan was to tell you if it went anywhere. It is an honest answer, and you both recognise it as a mixed one.`, effects: [{ rel: { who: 'ally', trust: -4, respect: 3 } }, { conf: -1 }, { fatigue: 2 }] },
