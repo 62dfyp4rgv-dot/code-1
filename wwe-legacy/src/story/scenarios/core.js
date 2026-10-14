@@ -31,11 +31,11 @@ export default [
     id: 'seek_revenge', category: 'betrayal', title: '{rival.name} Wants Payback', weight: 4, cooldownDays: 30, maxPerCareer: 20, categoryCooldown: 3, major: true, memory: { role: 'rival', max: 2 },
     cast: { rival: { pick: 'obligation', kind: 'seek_revenge' } }, trigger: {},
     slots: { where: ['at ringside', 'in the hallway', 'after a show', 'at the hotel'] },
-    body: ['{rival.name} finds you {where}. {rival.they} has been replaying the betrayal in {rival.their} head for weeks, and it shows.', 'This is not going to end on its own.'],
+    body: ['{rival.name} finds you {where}. {rival.they} has been stewing over what happened between you for weeks, and it shows.', 'This is not going to end on its own.'],
     choices: [
       { id: 'face_it', label: 'Face it: let {rival.them} say {rival.their} piece', result: 'You listen to every word. It does not fix anything, but {rival.first} respects that you did not hide.', effects: [{ rel: { who: 'rival', respect: 5, heat: -4 } }, { conf: -1 }] },
       { id: 'make_peace', label: 'Offer to make amends', risk: 'med', outcomes: [
-        { weight: 1, bonus: { charisma: 0.5 }, text: 'It takes time, but something shifts. {rival.first} lets the hostility drop - for now.', effects: [{ event: { type: 'reconciliation', participants: ['rival'], summary: 'Reconciled with {rival.name} after the betrayal.', data: { formerRival: true } } }, { pop: 0.4 }] },
+        { weight: 1, bonus: { charisma: 0.5 }, text: 'It takes time, but something shifts. {rival.first} lets the hostility drop - for now.', effects: [{ event: { type: 'reconciliation', participants: ['rival'], summary: 'Reconciled with {rival.name} after the bad blood.', data: { formerRival: true } } }, { pop: 0.4 }] },
         { weight: 2, text: '{rival.first} laughs in your face. Some things are not forgiven.', effects: [{ rel: { who: 'rival', heat: 6 } }, { conf: -3 }] } ] },
       { id: 'double_down', label: 'Double down: you did what you had to', risk: 'high', result: 'You refuse to apologise. {rival.first} leaves with murder in {rival.their} eyes.', effects: [{ rivalry: { who: 'rival', heat: 20 } }, { rel: { who: 'rival', heat: 12 } }, { pop: 0.3 }] },
     ],

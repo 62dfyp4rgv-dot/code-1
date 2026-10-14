@@ -1,6 +1,6 @@
 // Versioned, checksummed, compressed saves with multiple slots, an autosave slot, and
 // backup-on-write so one corrupted write never destroys a career.
-import { hash53 } from '../core/util.js';
+import { hash53, sha256 } from '../core/util.js';
 import { Career, CAREER_VERSION } from '../career/career.js';
 
 export const SAVE_FORMAT = 'wwe-legacy-save';
@@ -57,16 +57,21 @@ export function makeEnvelope(career, meta = {}) {
       matches: career.stats.s.matches, wins: career.stats.s.wins, titles: career.stats.s.titles.won, popularity: Math.round(career.player.popularity),
       events: career.memory.ledger.size, achievements: Object.keys(career.achievements.unlocked).length,
     },
-    checksum: hash53(payload), payload,
+    checksum: sha256(payload).slice(0, 40), checksumAlg: 'sha256', ledgerHead: career.memory.ledger.head, ledgerSize: career.memory.ledger.size, payload,
   };
 }
 
 export function openEnvelope(env) {
   if (!env || env.format !== SAVE_FORMAT) throw new Error('not a WWE Legacy save');
   if (env.version > SAVE_VERSION) throw new Error('save file is from a newer version of the game');
-  if (hash53(env.payload) !== env.checksum) throw new Error('save is corrupted (checksum mismatch)');
+  const sum = env.checksumAlg === 'sha256' ? sha256(env.payload).slice(0, 40) : hash53(env.payload);
+  if (sum !== env.checksum) throw new Error('save is corrupted (checksum mismatch)');
   const json = migrateCareerJSON(JSON.parse(env.payload));
-  return Career.fromJSON(json); // also verifies the ledger hash chain
+  const career = Career.fromJSON(json); // also verifies the ledger hash chain
+  // the chain proves the events present are consistent; the stored head and count prove none were cut from the end
+  const L = career.memory.ledger;
+  if (env.ledgerHead !== undefined && (env.ledgerHead !== L.head || env.ledgerSize !== L.size)) throw new Error('save is corrupted (ledger was truncated or replaced)');
+  return career;
 }
 
 export class MemoryAdapter {
@@ -145,7 +150,7 @@ export class SaveManager {
       if (!text) { out.push({ slot, empty: true }); continue; }
       try {
         const env = JSON.parse(await codec.decode(text));
-        out.push({ slot, empty: false, savedAt: env.savedAt, ...env.meta, bytes: text.length, ok: hash53(env.payload) === env.checksum });
+        out.push({ slot, empty: false, savedAt: env.savedAt, ...env.meta, bytes: text.length, ok: (env.checksumAlg === 'sha256' ? sha256(env.payload).slice(0, 40) : hash53(env.payload)) === env.checksum });
       } catch { out.push({ slot, empty: false, ok: false, error: 'unreadable' }); }
     }
     return out;

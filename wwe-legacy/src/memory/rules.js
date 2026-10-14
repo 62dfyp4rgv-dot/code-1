@@ -64,6 +64,8 @@ const RULES = {
     const win = d.result === 'win', loss = d.result === 'loss';
     const dirty = ['dq', 'countout'].includes(d.finish) || d.interference;
     for (const o of opps) {
+      // a newer meeting settles an old grudge: the "last match" the rival wants to avenge is no longer the last match
+      for (const ob of world.obligations) if (ob.status === 'pending' && ob.kind === 'grudge_rematch' && ob.from === o && ob.source !== ev.id) ob.status = 'superseded';
       const heat = 6 + (d.titleOnLine ? 8 : 0) + (dirty ? 10 : 0) + (d.rating >= 4 ? 4 : 0);
       const rv = bumpRivalry(world, me, o, { heat, eventId: ev.id, day: ev.day });
       rv.matches += 1;

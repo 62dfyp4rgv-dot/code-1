@@ -1,6 +1,7 @@
 // Promos and media segments. Quality is computed from stats and choices (never from text);
 // the words are composed afterwards, and every historical reference comes from dialogue.hooks().
 import { clamp } from '../core/util.js';
+import { plesInYear } from '../universe/calendar.js';
 import PACK from './promo_pack.js';
 import { hash53 } from '../core/util.js';
 import { gainPop } from '../career/pace.js';
@@ -53,6 +54,13 @@ const BODY = {
   inspire: ['When I stumble, you are the ones who pull me up.', 'Every chant is a promise I owe you back.'],
 };
 
+/** the Royal Rumble year a guarantee made today can still be kept in (the show is the last Saturday of January) */
+function nextRumbleYear(career) {
+  const today = new Date(Date.UTC(career.startYear, 0, 1) + career.day * 86400000);
+  const y = today.getUTCFullYear();
+  const rr = plesInYear(y).find((p) => p.rumble);
+  return rr && today.getTime() <= Date.UTC(y, 0, 1) + rr.dayOfYear * 86400000 ? y : y + 1;
+}
 function pick(arr, seed) { return arr[parseInt(hash53(seed), 36) % arr.length]; }
 
 /**
@@ -125,7 +133,7 @@ export function deliverPromo(career, { tone, targetId = null, claim = 'none', co
   };
   if (claimDef === 'win_match' && target) { addPromiseClaim({ kind: 'win_match', target: targetId, text: `I will beat ${tn}`, deadlineDay: career.day + 150 }, { text: pick([`I promise this: I will beat you, ${tl}.`, `${tl}, I am putting it on the record: I will beat you next time.`, `Next time we meet, ${tl}, it is my hand that gets raised.`], seed + 'p'), refs: [], promise: true }); }
   if (claimDef === 'win_streak') addPromiseClaim({ kind: 'win_streak', params: { n: 5 }, text: 'I will win five in a row', deadlineDay: career.day + 120 }, { text: 'Five wins in a row, starting now. Mark my words.', refs: [], promise: true });
-  if (claimDef === 'win_rumble') { const y = year || career.year + (career.day % 365 > 40 ? 1 : 0); addPromiseClaim({ kind: 'win_rumble', params: { year: y }, text: `I will win the ${y} Royal Rumble`, deadlineDay: career.day + 420 }, { text: `I guarantee I will win the ${y} Royal Rumble.`, refs: [], promise: true }); }
+  if (claimDef === 'win_rumble') { const y = year || nextRumbleYear(career); addPromiseClaim({ kind: 'win_rumble', params: { year: y }, text: `I will win the ${y} Royal Rumble`, deadlineDay: career.day + 420 }, { text: `I guarantee I will win the ${y} Royal Rumble.`, refs: [], promise: true }); }
   if (claimDef === 'win_title') addPromiseClaim({ kind: 'win_title', text: 'I will win a championship', deadlineDay: career.day + 365 }, { text: 'I will be champion. Nothing will stop me.', refs: [], promise: true });
   lines.push({ text: pick(promises.length ? [...PACK.closePromise, ...CLOSE_PROMISE] : [...PACK.close, ...CLOSE], seed + 'c'), refs: [] });
   const out = career.record({

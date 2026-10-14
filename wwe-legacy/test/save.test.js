@@ -76,9 +76,21 @@ test('corrupted or tampered saves are detected; the previous good save is recove
   // re-checksummed forgery still fails the ledger hash chain
   const forged2 = JSON.parse(JSON.stringify(env));
   forged2.payload = forged2.payload.replace('"result":"win"', '"result":"loss"');
-  const { hash53 } = await import('../src/core/util.js');
-  forged2.checksum = hash53(forged2.payload);
+  const { sha256 } = await import('../src/core/util.js');
+  forged2.checksum = sha256(forged2.payload).slice(0, 40);
   assert.throws(() => openEnvelope(forged2), /ledger integrity/);
+  // legacy saves with the old checksum still open
+  const legacy = JSON.parse(JSON.stringify(env));
+  const { hash53 } = await import('../src/core/util.js');
+  delete legacy.checksumAlg; delete legacy.ledgerHead; delete legacy.ledgerSize; legacy.checksum = hash53(legacy.payload);
+  assert.equal(openEnvelope(legacy).stats.s.matches, c.stats.s.matches);
+  // cutting events off the END of the ledger keeps the chain valid, so the stored head/count must catch it
+  const cut = JSON.parse(env.payload);
+  cut.memory.ledger.events = cut.memory.ledger.events.slice(0, -3);
+  const forged3 = JSON.parse(JSON.stringify(env));
+  forged3.payload = JSON.stringify(cut);
+  forged3.checksum = sha256(forged3.payload).slice(0, 40);
+  assert.throws(() => openEnvelope(forged3), /truncated|integrity/);
 });
 
 test('versioned saves: newer saves are rejected, older ones migrate through registered steps', () => {

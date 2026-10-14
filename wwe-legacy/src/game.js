@@ -25,7 +25,7 @@ export const scenarioEngine = new ScenarioEngine(SCENARIO_TEMPLATES);
 import { generateRoster, TIERS, SIG_NAMES, FIN_NAMES } from './data/generator.js';
 import { nextEvent, eventsOn, formatDate, brandsInYear, weekdayOf } from './universe/calendar.js';
 import { eraForYear } from './data/eras.js';
-import { getRel, getRivalry } from './memory/world.js';
+import { getRel, getRivalry, hasOpenPromise } from './memory/world.js';
 import { buildPairSummary } from './memory/summaries.js';
 import { memoryLines } from './story/dialogue.js';
 import { deliverPromo, PROMO_TONES, CLAIMS } from './story/media.js';
@@ -709,7 +709,7 @@ export class Game {
         rec({ category: 'personal', type: 'decision', summary: `${p.name} paid $${cost} for medical treatment.`, data: { choice: id, cost } }); text = `Treatment costs $${cost}. You feel better.`; break;
       }
       case 'vow_revenge':
-        c.record({ key: `promise:${pm.matchId}:revenge`, category: 'promo', type: 'promise_made', refs: ref, participants: [p.id, opp.id], summary: `${p.name} vowed to beat ${opp.name}.`, importance: 3,
+        if (!hasOpenPromise(c.memory.world, { by: p.id, kind: 'win_match', target: opp.id, params: {} })) c.record({ key: `promise:${pm.matchId}:revenge`, category: 'promo', type: 'promise_made', refs: ref, participants: [p.id, opp.id], summary: `${p.name} vowed to beat ${opp.name}.`, importance: 3,
           data: { promiseId: `pr:revenge:${pm.matchId}`, kind: 'win_match', target: opp.id, text: `I will beat ${opp.name}`, deadlineDay: c.day + 120 } });
         rec({ category: 'story', type: 'decision', summary: `${p.name} vowed revenge on ${opp.name}.`, data: { choice: id } }); text = 'You promise the world you will get your win back.'; break;
       case 'request_rematch': rec({ category: 'story', type: 'decision', summary: `${p.name} demanded a rematch with ${opp.name}.`, importance: 3, data: { choice: id, effects: this._heatFx(opp.id, 8, {}) } }); text = 'Management notes your request.'; break;
@@ -761,9 +761,9 @@ export class Game {
     const threads = [...rank.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5).map(([id]) => {
       const sum = buildPairSummary(c.memory, me, id, nm);
       const rel = getRel(w, me, id);
-      return { id, name: nm(id), tags: rel.tags || [], lines: sum.facts.map((f) => ({ text: f.text, eventId: f.eventIds[f.eventIds.length - 1], count: f.eventIds.length })) };
+      return { id, name: nm(id), tags: rel.tags || [], lines: sum.facts.map((f) => ({ text: f.text, eventId: f.eventIds[f.eventIds.length - 1], count: f.kind === 'rivalry' ? 0 : f.eventIds.length })) };
     }).filter((t) => t.lines.length);
-    const moments = c.memory.ledger.query({ scope: 'player', newestFirst: true, limit: 60 }).filter((e) => e.importance >= 4 && e.type !== 'finance_month').slice(0, 5).map((e) => ({ id: e.id, date: e.date, day: e.day, text: e.summary }));
+    const moments = c.memory.ledger.query({ scope: 'player', newestFirst: true, limit: 60 }).filter((e) => e.importance >= 4 && !['finance_month', 'achievement_unlocked'].includes(e.type)).slice(0, 5).map((e) => ({ id: e.id, date: e.date, day: e.day, text: e.summary.length > 150 ? `${e.summary.slice(0, 147).replace(/\s+\S*$/, '')}...` : e.summary }));
     return { threads, promises: this.promiseView().promises.filter((p) => p.status === 'open'), moments };
   }
 

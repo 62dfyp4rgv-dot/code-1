@@ -93,6 +93,53 @@
      "summary": "Coherent identity and 44px targets; toast covered titles, match HUD dense and decision list long, home lacked a primary CTA, record book spreadsheet-like."
     }
    ]
+  },
+  {
+   "round": 6,
+   "note": "Fresh reviewers on the round-6 build (authored prose packs, colour events, Story-so-far, mobile fixes from round 5). Fixes for these findings were made afterwards, in round 7.",
+   "scores": {
+    "narrativeQuality": 4.6,
+    "memoryConsistency": 6.5,
+    "mobileUsability": 6.5
+   },
+   "reviewers": [
+    {
+     "area": "narrative",
+     "kind": "agent",
+     "scores": {
+      "narrativeQuality": 4.6,
+      "variety": 4.0,
+      "voice": 5.5,
+      "callbacks": 4.5
+     },
+     "errorsFound": 38,
+     "summary": "Authored scenes, promo one-liners and stance answers have wit and the ledger-backed numbers are accurate; generated text is undermined by lowercase 'i', outlet names on fans, reflexives for named people, wrong-direction memory lines, placeholder move names and stock commentary repeats."
+    },
+    {
+     "area": "memory",
+     "kind": "agent",
+     "scores": {
+      "memoryConsistency": 6.5,
+      "invention_risk": 7,
+      "player_visibility": 6.5
+     },
+     "claimsVerified": 7500,
+     "claimsFalse": 52,
+     "summary": "Ledger, replay, save/load, tamper detection and promise bookkeeping are rigorous (about 7,500 automated checks across 7 careers); contradictions live in the narrative layer: 'every one was clean' lines, scenario text citing betrayals that never happened, tag/triple-threat perspective errors, outcome-blind interview answers, h2h counts that differ between surfaces."
+    },
+    {
+     "area": "mobile",
+     "kind": "agent",
+     "scores": {
+      "mobileUsability": 6.5,
+      "clarity": 7,
+      "hierarchy": 7,
+      "matchScreen": 6.5,
+      "visualPolish": 7.5
+     },
+     "summary": "Strong identity, one red CTA per screen, 44px targets, no horizontal overflow at 360/390/430 or 20px text; held back by a long match-prep page with unreachable CTA, heavy sticky HUD on small phones, noisy record book, flat Rumble/result screens and clipping toasts."
+    }
+   ]
   }
  ]
 }

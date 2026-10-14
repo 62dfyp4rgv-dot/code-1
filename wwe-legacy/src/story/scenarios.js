@@ -6,7 +6,7 @@
 import { hash53, clamp } from '../core/util.js';
 import { Rng } from '../core/rng.js';
 import { gainPop } from '../career/pace.js';
-import { getRel, getRivalry, openPromises, brokenPromises, dueObligations } from '../memory/world.js';
+import { getRel, getRivalry, openPromises, brokenPromises, dueObligations, hasOpenPromise } from '../memory/world.js';
 import { memoryLines } from './dialogue.js';
 import { eventsOn } from '../universe/calendar.js';
 
@@ -458,6 +458,8 @@ export class ScenarioEngine {
     }
     // 3. promises
     eff.promises.forEach((pr, i) => {
+      // the same public claim made again is one promise: do not write a second promise_made the world would drop
+      if (hasOpenPromise(c.memory.world, { by: c.player.id, kind: pr.kind, target: pr.target || null, params: pr.params || {} })) return;
       const r = c.record({ key: `scn:${inst.id}:promise${i}`, category: 'promo', type: 'promise_made', refs: [rec.event.id], participants: [c.player.id, ...(pr.target ? [pr.target] : [])], summary: `Promise: "${pr.text}"`, importance: 3,
         data: { promiseId: `pr:${inst.id}:${i}`, kind: pr.kind, target: pr.target, text: pr.text, params: pr.params, deadlineDay: c.day + pr.deadlineDays } });
       events.push(r.event);

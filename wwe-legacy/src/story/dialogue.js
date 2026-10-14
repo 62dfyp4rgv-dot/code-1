@@ -11,13 +11,14 @@ export function hooks(memory, me, other) {
   // head-to-head means they were an OPPONENT: a tag partner's wins and losses are not ours against them
   const h2h = ledger.query({ types: ['match_result'], allParticipants: [me, other] }).filter((e) => (e.data.opponents || []).includes(other));
   if (h2h.length) {
-    const wins = h2h.filter((e) => e.data.winner === me), losses = h2h.filter((e) => e.data.winner === other);
+    // team result, the same definition the rivalry screen and opponent card use (a partner's pin is still our win)
+    const wins = h2h.filter((e) => e.data.result === 'win'), losses = h2h.filter((e) => e.data.result === 'loss');
     if (wins.length) out.push({ kind: 'i_beat_you', n: wins.length, last: wins[wins.length - 1], refs: wins.map((e) => e.id).slice(-40) });
     if (losses.length) out.push({ kind: 'you_beat_me', n: losses.length, last: losses[losses.length - 1], refs: losses.map((e) => e.id).slice(-40) });
     const clean = wins.filter((e) => e.data.clean);
-    if (clean.length >= 2) out.push({ kind: 'clean_dominance', n: clean.length, refs: clean.map((e) => e.id).slice(-40) });
+    if (clean.length >= 2) out.push({ kind: 'clean_dominance', n: clean.length, total: wins.length, refs: clean.map((e) => e.id).slice(-40) });
     const cleanLost = losses.filter((e) => e.data.clean);
-    if (cleanLost.length >= 2) out.push({ kind: 'clean_losses', n: cleanLost.length, refs: cleanLost.map((e) => e.id).slice(-40) });
+    if (cleanLost.length >= 2) out.push({ kind: 'clean_losses', n: cleanLost.length, total: losses.length, refs: cleanLost.map((e) => e.id).slice(-40) });
     const dirty = h2h.filter((e) => ['dq', 'countout'].includes(e.data.finish) || e.data.interference);
     // "last time" is only true if the MOST RECENT meeting was the controversial one
     const lastMeeting = h2h[h2h.length - 1];
@@ -42,7 +43,8 @@ export function hooks(memory, me, other) {
   if (respect.length) out.push({ kind: 'respect', n: respect.length, refs: respect.map((e) => e.id).slice(-2) });
   const rv = getRivalry(world, me, other);
   if (h2h.length >= 2) out.push({ kind: 'long_rivalry', n: h2h.length, refs: h2h.map((e) => e.id).slice(-40) });
-  const open = openPromises(world, me);
+  // a promise is only a talking point with the person it was made about
+  const open = openPromises(world, me).filter((p) => p.target === other);
   if (open.length) out.push({ kind: 'open_promise', refs: [open[open.length - 1].madeEvent], text: open[open.length - 1].text });
   return out;
 }
@@ -64,7 +66,7 @@ const LINES = {
     (h, n) => `${h.n === 1 ? 'One loss' : `${h.n} losses`} to ${who(n)}. Tonight I fix that.`,
   ],
   clean_losses: [
-    (h, n) => `${h.n} clean losses to ${who(n)}, and I remember every one.`,
+    (h, n) => `${h.n} clean ${h.n === 1 ? 'loss' : 'losses'} to ${who(n)}, and I remember every one.`,
     (h, n) => `${who(n) === 'you' ? 'You' : n} beat me clean ${times(h.n)}. No excuses.`,
   ],
   reconciled: [
@@ -73,7 +75,7 @@ const LINES = {
   ],
   clean_dominance: [
     (h, n) => `${h.n} clean victories over ${who(n)}. Not one fluke among them.`,
-    (h, n) => `Every one of those ${h.n} wins over ${who(n)} was clean. Nobody can argue that.`,
+    (h, n) => (h.total === h.n ? `Every one of those ${h.n} wins over ${who(n)} was clean. Nobody can argue that.` : `${h.n} of my ${h.total} wins over ${who(n)} were clean. Nobody can argue those.`),
   ],
   controversial_finish: [
     (h, n) => `Don't pretend the way we finished last time was clean${voc(n)}.`,
@@ -103,6 +105,10 @@ const LINES = {
     (h, n) => `We shook hands once${voc(n)}. Don't mistake respect for weakness.`,
     (h, n) => `I gave ${who(n)} respect when it was earned. That can change.`,
   ],
+  respect_from_you: [
+    (h, n) => `You showed me respect after we fought${voc(n)}. I noticed. Don't expect it back for free.`,
+    (h, n) => `You offered a hand once${voc(n)}. I have not forgotten who made the first gesture.`,
+  ],
   long_rivalry: [
     (h, n) => `${h.n} matches and we're still here${voc(n)}.`,
     (h, n) => `${h.n} matches. Neither of us has learned to walk away${voc(n)}.`,
@@ -119,7 +125,7 @@ const times2 = (n) => (n === 1 ? 'once' : n === 2 ? 'twice' : `${n} times`);
 const NARR = {
   i_beat_you: (h, n) => `You have beaten ${n} ${times2(h.n)}.`,
   you_beat_me: (h, n) => `${n} has beaten you ${times2(h.n)}.`,
-  clean_dominance: (h, n) => `${h.n} of your wins over ${n} were clean.`,
+  clean_dominance: (h, n) => (h.total === h.n ? `All ${h.n} of your wins over ${n} were clean.` : `${h.n} of your ${h.total} wins over ${n} were clean.`),
   clean_losses: (h, n) => `${n} has beaten you clean ${times2(h.n)}.`,
   controversial_finish: (h, n) => `Your last match with ${n} ended in controversy.`,
   controversial_finish_old: (h, n) => `Not every finish between you and ${n} was clean.`,
@@ -127,7 +133,7 @@ const NARR = {
   i_betrayed_you: (h, n) => `You turned on ${n} once, and ${n} knows it.`,
   old_insult: (h, n) => (h.quote ? `You once said of ${n}: "${String(h.quote).replace(/[.!?]+$/, '')}".` : `You have insulted ${n} in public before.`),
   broken_promise: (h) => `You once promised "${h.text}", and it did not happen.`,
-  respect: (h, n) => `You and ${n} have shown each other respect before.`,
+  respect: (h, n) => `You showed ${n} respect after a match once, and ${n} remembers.`,
   long_rivalry: (h, n) => `You and ${n} have shared the ring ${h.n} times.`,
   reconciled: (h, n) => `You and ${n} settled things after the trouble between you.`,
   open_promise: (h) => `You promised "${h.text}", and that promise is still open.`,
@@ -136,7 +142,7 @@ const NARR = {
 /** speaker: 'player' | 'other' | 'narrator'. `cooldown` ({ store, day, days }) stops the same callback being repeated every scene. */
 export function memoryLines(memory, me, other, otherName, { speaker = 'other', max = 3, allow, cooldown } = {}) {
   const hs = hooks(memory, me, other).filter((h) => !allow || allow.includes(h.kind));
-  const priority = ['you_betrayed_me', 'i_betrayed_you', 'broken_promise', 'old_insult', 'controversial_finish', 'clean_dominance', 'clean_losses', 'you_beat_me', 'i_beat_you', 'controversial_finish_old', 'long_rivalry', 'reconciled', 'respect', 'open_promise'];
+  const priority = ['you_betrayed_me', 'i_betrayed_you', 'broken_promise', 'old_insult', 'controversial_finish', 'clean_dominance', 'clean_losses', 'you_beat_me', 'i_beat_you', 'controversial_finish_old', 'long_rivalry', 'reconciled', 'respect', 'respect_from_you', 'open_promise'];
   hs.sort((a, b) => priority.indexOf(a.kind) - priority.indexOf(b.kind));
   const lines = [];
   for (const h of hs) {
@@ -153,7 +159,7 @@ export function memoryLines(memory, me, other, otherName, { speaker = 'other', m
     // perspective: when the *other* speaks, "I beat you" / "you beat me" swap
     let hh = h;
     if (speaker === 'other') {
-      const swap = { i_beat_you: 'you_beat_me', you_beat_me: 'i_beat_you', i_betrayed_you: 'you_betrayed_me', you_betrayed_me: 'i_betrayed_you', clean_dominance: 'clean_losses', clean_losses: 'clean_dominance' };
+      const swap = { i_beat_you: 'you_beat_me', you_beat_me: 'i_beat_you', i_betrayed_you: 'you_betrayed_me', you_betrayed_me: 'i_betrayed_you', clean_dominance: 'clean_losses', clean_losses: 'clean_dominance', respect: 'respect_from_you' };
       if (h.kind === 'open_promise') continue; // someone else's promise is not theirs to quote at you
       if (swap[h.kind]) hh = { ...h, kind: swap[h.kind] };
     }

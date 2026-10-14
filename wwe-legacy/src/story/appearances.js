@@ -49,14 +49,15 @@ export function candidateQuestions(c, extras = {}) {
   const me = c.player.id, qs = [];
   const m = lastMatch(c);
   if (m) {
-    const opp = m.data.opponents && m.data.opponents[0];
+    // in a multi-man loss the person who beat you is the winner, not simply the first name on the card
+    const opp = (m.data.result === 'loss' && m.data.winner && m.data.winner !== me) ? m.data.winner : (m.data.opponents && m.data.opponents[0]);
     const oppName = opp ? nameOf(c, opp) : 'your opponent';
     const days = c.day - m.day;
-    const when = days <= 1 ? 'last night' : days <= 7 ? `${days} days ago` : 'recently';
+    const when = days === 0 ? 'tonight' : days === 1 ? 'last night' : days <= 7 ? `${days} days ago` : 'recently';
     const fx = { finish: String(m.data.finish || 'finish').replace(/_/g, ' '), move: m.data.finishMoveName || null };
     if (m.data.result === 'win') qs.push({ id: 'last_match', fx, ctx: 'last_match_win', subject: opp, refs: [m.id], text: `You beat ${oppName} ${when} by ${String(m.data.finish).replace(/_/g, ' ')}. What did you see out there that others missed?` });
     else if (m.data.result === 'loss') qs.push({ id: 'last_match', fx, ctx: 'last_match_loss', subject: opp, refs: [m.id], text: `${oppName} beat you ${when}. People are asking whether you were outclassed. Were you?` });
-    else qs.push({ id: 'last_match', fx, ctx: 'last_match_loss', subject: opp, refs: [m.id], text: `Your match with ${oppName} ${when} ended without a winner. Who do you think deserved the win?` });
+    else qs.push({ id: 'last_match', draw: true, fx, ctx: 'last_match_loss', subject: opp, refs: [m.id], text: `Your match with ${oppName} ${when} ended without a winner. Who do you think deserved the win?` });
   }
   const rivals = Object.values(c.memory.world.rivalries).filter((r) => (r.a === me || r.b === me) && r.status === 'active').sort((a, b) => b.heat - a.heat);
   if (rivals[0]) {
@@ -251,7 +252,8 @@ export function answerAppearance(c, answerId, extras = {}) {
   const facts = { won: q.ctx === 'last_match_win', opp, they, finish: q.fx ? q.fx.finish : 'finish', move: q.fx ? q.fx.move : null, event: nxt ? (nxt.displayName || nxt.name) : 'the next show' };
   const legacy = (SAY[answerId][q.id] || (() => 'No comment.'))(facts);
   // authored variants (src/story/answers_pack.js) share the pool with the fact-specific line above, picked by a seeded hash
-  const pack = ((ANSWER_PACK[answerId] || {})[q.id] || []).map((l) => fillAnswer(l, facts, subj));
+  const packTopic = q.id === 'last_match' && q.ctx !== 'last_match_win' ? (q.draw ? 'last_match_draw' : 'last_match_loss') : q.id; // the authored last_match lines assume a win
+  const pack = ((ANSWER_PACK[answerId] || {})[packTopic] || []).map((l) => fillAnswer(l, facts, subj));
   const pool = [...pack, legacy];
   const text = pool[parseInt(hash53(`${s.seed}:${q.id}:${answerId}:say`), 36) % pool.length];
   const sr = REACT_STANCE[answerId] ? REACT_STANCE[answerId][tier(quality)] : REACT[tier(quality)];
